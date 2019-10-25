@@ -6,16 +6,23 @@
 namespace Sosage
 {
 
-#if defined(SOSAGE_ERRORS_AS_EXCEPTIONS)
-inline void error (const std::string& str)
+#if defined(NDEBUG)
+#define check(test, msg) (static_cast<void>(0))
+#else
+#define check(test, msg) if (!(test)) check_impl (__FILE__, __LINE__, msg)
+#endif
+
+#if defined(SOSAGE_ASSERTIONS_AS_EXCEPTIONS)
+inline void check_impl (const char* file, int line, const std::string& str)
 {
-  throw std::runtime_error(str);
+  throw std::runtime_error(str + " (" + file + ":" + std::to_string(line));
 }
 #else
-inline void error (const std::string& str)
+inline void check_impl (const char* file, int line, const std::string& str)
 {
-  std::cerr << "Error: " << str << std::endl;
-  exit(EXIT_FAILURE);
+  std::cerr << "Error: " << file << ":" << line << std::endl
+            << "Error: "<< str << std::endl;
+  abort();
 }
 #endif
 

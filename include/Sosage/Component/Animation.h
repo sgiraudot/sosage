@@ -19,7 +19,7 @@ public:
     int y;
     int duration;
     int ellapsed;
-    Frame (int x, int y, int duration)
+    Frame (int x = 0, int y = 0, int duration = 1)
       : x(x), y(y), duration(duration), ellapsed(0)
     { }
   };
@@ -33,7 +33,7 @@ private:
 
 public:
 
-  Animation (const std::string& file_name, int z,
+  Animation (const std::string& id, const std::string& file_name, int z,
              int width_subdiv, int height_subdiv);
 
   void reset();
@@ -48,8 +48,12 @@ public:
 
   void next_frame()
   {
-    if (++ m_current == m_frames.size())
-      m_current = 0;
+    if (++ m_frames[m_current].ellapsed == m_frames[m_current].duration)
+    {
+      m_frames[m_current].ellapsed = 0;
+      if (++ m_current == m_frames.size())
+        m_current = 0;
+    }
   }
 };
 

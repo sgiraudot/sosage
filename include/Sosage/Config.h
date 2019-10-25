@@ -10,9 +10,11 @@ struct Config
 {
   const int world_width;
   const int world_height;
+  const int world_depth;
   const int ground_map_width;
   const int ground_map_height;
   const int character_speed;
+  const int animation_frame_rate;
   
   int camera_width;
   int camera_height;
@@ -24,9 +26,11 @@ struct Config
   Config (int camera_width = 1200, bool fullscreen = false)
     : world_width (1920)
     , world_height (1080)
+    , world_depth (3240)
     , ground_map_width (300)
     , ground_map_height (ground_map_height * world_height / world_width)
     , character_speed (5)
+    , animation_frame_rate (5)
     , camera_width (camera_width)
     , camera_height (camera_width * world_height / world_width)
     , camera_scaling (world_width / double(camera_width))
@@ -37,6 +41,7 @@ struct Config
 };
 
 inline Config& config (int camera_width = 1200, bool fullscreen = false)
+//inline Config& config (int camera_width = 1920, bool fullscreen = true)
 {
   static std::unique_ptr<Config> c;
   if (c == std::unique_ptr<Config>())

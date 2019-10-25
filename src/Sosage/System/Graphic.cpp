@@ -10,7 +10,7 @@ namespace Sosage::System
 
 Graphic::Graphic (Content& content, const std::string& game_name)
   : m_content (content)
-  , m_core (game_name, config().camera_width, config().camera_height, false)
+  , m_core (game_name, config().camera_width, config().camera_height, config().fullscreen)
 {
 
 
@@ -18,78 +18,77 @@ Graphic::Graphic (Content& content, const std::string& game_name)
 
 void Graphic::main()
 {
-  std::vector<std::pair<Component::Image_handle,
-                        Component::Path_handle> >
-    components;
+  std::vector<Component::Image_handle> images;
 
   while (this->running())
   {
     m_core.begin();
 
-    bool image_found = false, coordinates_found = false;
-    
-    m_content.lock_components();
-    for (const auto& e : m_content)
-    {
-      Component::Image_handle image;
-      Component::Path_handle coordinates;
-      
-      for (const auto& c : e.second)
-        if (c.first == "image")
-          image = Component::component_cast<Component::Image>(c.second);
-        else if (c.first == "position")
-          coordinates = Component::component_cast<Component::Path>(c.second);
-      
-      if (image != Component::Image_handle() &&
-          coordinates != Component::Path_handle())
-        components.push_back (std::make_pair (image, coordinates));
-    }
-    m_content.unlock_components();
+    get_images (images);
+    display_images (images);
+    images.clear();
 
-    for (const auto& c : components)
-    {
-      c.first->lock();
-      c.second->lock();
-    }
-    
-    std::sort (components.begin(), components.end(),
-               [](const std::pair<Component::Image_handle, Component::Path_handle>& a,
-                  const std::pair<Component::Image_handle, Component::Path_handle>& b)
-               -> bool
-               {
-                 return (a.first->z() < b.first->z());
-               });
-
-    for (const auto& c : components)
-    {
-      m_core.draw (c.first->core(),
-                   (*c.second)[0].x(CAMERA),
-                   (*c.second)[0].y(CAMERA));
-      c.first->unlock();
-      c.second->unlock();
-    }
-
-    components.clear();
-
-    Component::Path_handle path = m_content.get<Component::Path>("character", "path");
-    if (path)
-    {
-      path->lock();
-
-      for (std::size_t i = 0; i < path->size() - 1; ++ i)
-        m_core.draw_line ((*path)[i].x(CAMERA),
-                          (*path)[i].y(CAMERA),
-                          (*path)[i+1].x(CAMERA),
-                          (*path)[i+1].y(CAMERA));
-
-      path->unlock();
-    }
+    display_path();
 
     m_core.end();
     
     this->wait();
   }
+}
 
+void Graphic::get_images (std::vector<Component::Image_handle>& images)
+{
+  m_content.lock();
+  for (const auto& e : m_content)
+    if (Component::Image_handle img
+        = Component::component_cast<Component::Image>(e))
+      images.push_back(img);
+  m_content.unlock();
+}
+
+void Graphic::display_images (std::vector<Component::Image_handle>& images)
+{
+  for (const auto& img : images)
+    img->lock();
+  
+  std::sort (images.begin(), images.end(),
+             [](Component::Image_handle a, Component::Image_handle b) -> bool
+             {
+               return (a->z() < b->z());
+             });
+
+  for (const auto& img : images)
+  {
+    if (img->on())
+    {
+      Component::Path_handle p = m_content.get<Component::Path>(img->entity() + ":position");
+      p->lock();
+      m_core.draw (img->core(),
+                   (*p)[0].x(CAMERA),
+                   (*p)[0].y(CAMERA),
+                   img->xmin(), img->xmax(),
+                   img->ymin(), img->ymax());
+      p->unlock();
+    }
+    img->unlock();
+  }
+}
+
+void Graphic::display_path()
+{
+  Component::Path_handle path = m_content.request<Component::Path>("character:path");
+  if (path)
+  {
+    path->lock();
+
+    for (std::size_t i = 0; i < path->size() - 1; ++ i)
+      m_core.draw_line ((*path)[i].x(CAMERA),
+                        (*path)[i].y(CAMERA),
+                        (*path)[i+1].x(CAMERA),
+                        (*path)[i+1].y(CAMERA));
+
+    path->unlock();
+  }
 }
 
 } // namespace Sosage::System

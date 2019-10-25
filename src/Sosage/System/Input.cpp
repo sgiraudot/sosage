@@ -1,4 +1,5 @@
 #include <Sosage/Component/Path.h>
+#include <Sosage/Component/Status.h>
 #include <Sosage/System/Input.h>
 
 namespace Sosage::System
@@ -16,10 +17,10 @@ void Input::main()
   {
     Input_core::Event ev = m_core.next_event();
     if (m_core.is_exit(ev))
-      this->stop();
+      m_content.set<Component::Status>("game:status", Component::EXIT);
     
     if (m_core.is_left_click(ev))
-      m_content.set<Component::Path>("character", "target_query",
+      m_content.set<Component::Path>("character:target_query",
                                      Point(m_core.click_target(ev),
                                            CAMERA));
   }

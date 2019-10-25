@@ -14,7 +14,7 @@ class Status : public Base
   
 public:
 
-  Status (const STATUS& value ) : m_value (value) { }
+  Status (const std::string& id,const STATUS& value) : Base(id), m_value (value) { }
 
   bool exit() const { return (m_value == EXIT); }
 };

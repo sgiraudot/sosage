@@ -1,3 +1,4 @@
+#include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Path.h>
@@ -7,7 +8,8 @@ namespace Sosage
 {
 
 Engine::Engine (const std::string& game_name)
-  : m_graphic (m_content, game_name)
+  : m_animation (m_content)
+  , m_graphic (m_content, game_name)
   , m_sound (m_content)
   , m_input (m_content)
   , m_logic (m_content)
@@ -17,21 +19,24 @@ Engine::Engine (const std::string& game_name)
 
 void Engine::main()
 {
-  std::thread graphic_thread ([&]() { m_graphic.main(); });
-  std::thread sound_thread ([&]() { m_sound.main(); });
-  std::thread input_thread ([&]() { m_input.main(); });
-  std::thread logic_thread ([&]() { m_logic.main(); });
+  m_animation.start();
+  m_graphic.start();
+  m_sound.start();
+  m_input.start();
+  m_logic.start();
   
-  input_thread.join();
+  m_logic.join();
 
-  // Once input thread has stopped, stop the others
+  // Once logic thread has stopped, stop the others
+  m_animation.stop();
   m_graphic.stop();
-  m_logic.stop();
+  m_input.stop();
   m_sound.stop();
-  
-  graphic_thread.join();
-  sound_thread.join();
-  logic_thread.join();
+
+  m_animation.join();
+  m_graphic.join();
+  m_sound.join();
+  m_input.join();
 }
 
 int Engine::run_file (const std::string& file_name)
@@ -48,23 +53,47 @@ int Engine::run_directory (const std::string& directory_name)
   return EXIT_SUCCESS;
 }
 
-
-void Engine::set_image (const std::string& key,
-                                const std::string& file_name,
-                                int x, int y, int z)
+void Engine::set_background (const std::string& image, const std::string& ground_map)
 {
-  std::cerr << "Setting image " << key << " to " << file_name << std::endl;
+  std::cerr << "Setting background " << image << " with ground_map " << ground_map << std::endl;
 
-  m_content.set<Component::Image>(key, "image", local_file_name(file_name), z);
-  m_content.set<Component::Path>(key, "position", Point(x, y, WORLD));
+  m_content.set<Component::Image>("background:image", local_file_name(image), 0);
+  m_content.set<Component::Path>("background:position", Point(0, 0, WORLD));
+  m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map));
 }
 
-void Engine::set_ground_map (const std::string& key,
-                                     const std::string& file_name)
+void Engine::set_character (const std::string& body, const std::string& head, int x, int y)
 {
-  std::cerr << "Setting ground map " << key << " to " << file_name << std::endl;
+  std::cerr << "Setting character " << body << "/" << head << " at " << x << "*" << y << std::endl;
 
-  m_content.set<Component::Ground_map>(key, "ground_map", local_file_name(file_name));
+  Component::Animation_handle abody
+     = m_content.set<Component::Animation>("character:image", local_file_name(body),
+                                           0, 6, 6);
+  Component::Animation_handle ahead
+     = m_content.set<Component::Animation>("character:head", local_file_name(head),
+                                           0, 6, 2);
+  Component::Path_handle position
+    = m_content.set<Component::Path>("character:position", Point(x, y, WORLD));
+  Component::Ground_map_handle ground_map
+    = m_content.get<Component::Ground_map>("background:ground_map");
+  
+  abody->lock();
+  ahead->lock();
+  position->lock();
+  Vector translation (abody->width() / 2,
+                      abody->height(), CAMERA);
+  Point pos = (*position)[0] + translation;
+  abody->rescale (ground_map->z_at_point (pos));
+  ahead->rescale (ground_map->z_at_point (pos));
+  ahead->z() += 1;
+  Vector back_translation (abody->width() / 2,
+                           abody->height(), CAMERA);
+  (*position)[0] = pos - back_translation;
+    
+  position->unlock();
+  ahead->unlock();
+  abody->unlock();
 }
+
 
 } // namespace Sosage

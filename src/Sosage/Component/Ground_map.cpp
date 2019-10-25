@@ -1,13 +1,16 @@
 #include <Sosage/Component/Ground_map.h>
 
 #include <algorithm>
-#include <cassert>
+#include <fstream>
+#include <queue>
 #include <set>
 
 namespace Sosage::Component
 {
 
-Ground_map::Ground_map (const std::string& file_name)
+Ground_map::Ground_map (const std::string& id,
+                        const std::string& file_name)
+  : Base(id)
 {
   std::cerr << "Creating ground map " << file_name << std::endl;
   Core::Image source = Core::load_image (file_name);
@@ -30,17 +33,17 @@ Ground_map::Ground_map (const std::string& file_name)
       std::array<unsigned char, 3> color
         = Core::get_color (source, xx, yy);
 
-      if (color[0] == 0 && color[1] == 0 && color[2] == 255) // non-ground
+      if (color[0] == color[1] && color[0] == color[2])
+      {
+        m_data(x,y).z = config().world_depth * (1. - (color[0] / 255.)) + 1;
+        m_data(x,y).target_x = -1;
+        m_data(x,y).target_y = -1;
+      }
+      else
       {
         m_data(x,y).z = -1;
         m_data(x,y).target_x = 0;
         m_data(x,y).target_y = 0;
-      }
-      else
-      {
-        m_data(x,y).z = ((color[0] + color[1] + color[2]) / (3. * 255.));
-        m_data(x,y).target_x = -1;
-        m_data(x,y).target_y = -1;
       }
     }
 
@@ -72,7 +75,7 @@ Ground_map::Ground_map (const std::string& file_name)
         double dist_min = std::numeric_limits<double>::max();
         for (std::size_t i = 0; i < border.size(); ++ i)
         {
-          double dist = distance(x,y, border[i].first, border[i].second);
+          double dist = Sosage::distance(x,y, border[i].first, border[i].second);
           if (dist < dist_min)
           {
             dist_min = dist;
@@ -92,6 +95,60 @@ Ground_map::Ground_map (const std::string& file_name)
         std::cerr << " ";
     std::cerr << "]" << std::endl;
   }
+
+  {
+          std::ofstream dbg ("dbg.ppm");
+    dbg << "P3" << std::endl << m_data.width() << " " << m_data.height()
+        << std::endl << "255" << std::endl;
+
+    std::size_t nb = 0;
+    for (std::size_t y = 0; y < m_data.height(); ++ y)
+      for (std::size_t x = 0; x < m_data.width(); ++ x)
+      {
+        int r, g, b;
+        if (m_data(x,y).target_x == -1)
+        {
+          bool is_border = false;
+          if (x > 0 && m_data(x-1,y).target_x != -1)
+            is_border = true;
+          else if (x < m_data.width() - 1 && m_data(x+1,y).target_x != -1)
+            is_border = true;
+          if (y > 0 && m_data(x,y-1).target_x != -1)
+            is_border = true;
+          else if (y < m_data.height() - 1 && m_data(x,y+1).target_x != -1)
+            is_border = true;
+
+          if (is_border)
+          {
+            srand(x + m_data.width() * y);
+            r = 64 + rand() % 128;
+            g = 64 + rand() % 128;
+            b = 64 + rand() % 128;
+          }
+          else
+          {
+            r = int(255 * (m_data(x,y).z / double(config().world_depth)));
+            g = int(255 * (m_data(x,y).z / double(config().world_depth)));
+            b = int(255 * (m_data(x,y).z / double(config().world_depth)));
+          }
+        }
+        else
+        {
+          int xx = m_data(x,y).target_x;
+          int yy = m_data(x,y).target_y;
+          srand(xx + m_data.width() * yy);
+          r = 64 + rand() % 128;
+          g = 64 + rand() % 128;
+          b = 64 + rand() % 128;
+        }
+        dbg << r << " " << g << " " << b << " ";
+        if (nb ++ == 4)
+        {
+          dbg << std::endl;
+          nb = 0;
+        }
+      }
+  }
 }
 
 void Ground_map::find_path (const Point& origin,
@@ -101,7 +158,6 @@ void Ground_map::find_path (const Point& origin,
   //  correct target position to reach true ground
   int x = target.x(GROUND);
   int y = target.y(GROUND);
-  std::cerr << x << "*" << y << std::endl;
 
   if (m_data(x,y).target_x != -1)
   {
@@ -111,58 +167,48 @@ void Ground_map::find_path (const Point& origin,
     y = yy;
   }
 
-  Point corrected (x, y, GROUND);
+  int xorig = origin.x(GROUND);
+  int yorig = origin.y(GROUND);
+  
+  if (m_data(xorig,yorig).target_x != -1)
+  {
+    int xx = m_data(xorig,yorig).target_x;
+    int yy = m_data(xorig,yorig).target_y;
+    xorig = xx;
+    yorig = yy;
+  }
 
-  std::cerr << "Finding path from " << origin << " to " << corrected
-            << " (corrected from " << target << ")" << std::endl;
+  Point origin_corrected (xorig, yorig, GROUND);
+  Point target_corrected (x, y, GROUND);
 
-  // shortest path
-//  1  function Dijkstra(Graph, source):
-//  2
-//  3      create vertex set Q
-//  4
-//  5      for each vertex v in Graph:             
-//  6          dist[v] ← INFINITY                  
-//  7          prev[v] ← UNDEFINED                 
-//  8          add v to Q                      
-// 10      dist[source] ← 0                        
-// 11      
-// 12      while Q is not empty:
-// 13          u ← vertex in Q with min dist[u]    
-// 14                                              
-// 15          remove u from Q 
-// 16          
-// 17          for each neighbor v of u:           // only v that are still in Q
-// 18              alt ← dist[u] + length(u, v)
-// 19              if alt < dist[v]:               
-// 20                  dist[v] ← alt 
-// 21                  prev[v] ← u 
-// 22
-// 23      return dist[], prev[]
+  // std::cerr << "Finding path from " << origin_corrected << " (corrected from "
+  //           << origin << ") to " << target_corrected
+  //           << " (corrected from " << target << ")" << std::endl;
+
+  // Dijkstra
 
   Sort_by_distance sorter (m_data);
   std::set<std::pair<int, int>, Sort_by_distance> todo (sorter);
   
-  int xorig = origin.x(GROUND);
-  int yorig = origin.y(GROUND);
-  
+  std::size_t nb_nodes = 0;
   for (std::size_t x = 0; x < m_data.width(); ++ x)
     for (std::size_t y = 0; y < m_data.height(); ++ y)
       if (m_data(x,y).target_x == -1)
       {
-        m_data(x,y).distance = std::numeric_limits<int>::max();
+        m_data(x,y).distance = std::numeric_limits<double>::max();
         m_data(x,y).prev_x = -1;
         m_data(x,y).prev_y = -1;
         if (x == xorig && y == yorig)
-          m_data(x,y).distance = 0;
+          m_data(x,y).distance = 0.;
         todo.insert (std::make_pair(x,y));
+        ++ nb_nodes;
       }
+  check (nb_nodes == todo.size(), "Node set wrongly formed");
 
   while (!todo.empty())
   {
     int current_x = todo.begin()->first;
     int current_y = todo.begin()->second;
-//    std::cerr << current_x << "*" << current_y << " (" << m_data(current_x, current_y).distance << ")" << std::endl;
     todo.erase (todo.begin());
 
     for (int x = -1; x <= 1; ++ x)
@@ -184,7 +230,8 @@ void Ground_map::find_path (const Point& origin,
         if (iter == todo.end())
           continue;
 
-        int dist = m_data(current_x,current_y).distance + 100 * std::abs(x) + std::abs(y);
+        double dist = m_data(current_x,current_y).distance
+          + distance(current_x, current_y, xx, yy);
         if (dist < m_data(xx, yy).distance)
         {
           todo.erase(iter);
@@ -197,17 +244,73 @@ void Ground_map::find_path (const Point& origin,
     }
   }
 
+  std::vector<Point> path;
   while (!(x == xorig && y == yorig))
   {
-    assert (x != -1 && y != -1);
-    out.push_back (Point (x, y, GROUND));
+    check (x != -1 && y != -1, "Node has no parent");
+    path.push_back (Point (x, y, GROUND));
     int next_x = m_data(x,y).prev_x;
     int next_y = m_data(x,y).prev_y;
     x = next_x;
     y = next_y;
   }
+  path.push_back (Point (x, y, GROUND));
 
-  std::reverse(out.begin(), out.end());
+  std::reverse(path.begin(), path.end());
+
+  // Filter
+  {
+    std::vector<bool> insert (path.size(), false);
+    insert.back() = true;
+    std::queue<std::pair<std::size_t, std::size_t> > todo;
+    todo.push(std::make_pair (0, path.size()));
+    while (!todo.empty())
+    {
+      std::size_t first = todo.front().first;
+      std::size_t last = todo.front().second;
+      todo.pop();
+
+      Vector v (path[first], path[last-1]);
+      v.normalize();
+
+      double dist_max = 0;
+      std::size_t farthest;
+      for (std::size_t i = first+1; i < last; ++ i)
+      {
+        Vector vh (path[first], path[i]);
+        double hypo = vh.length();
+        vh.normalize();
+        double angle = std::acos(v * vh);
+        double sin = std::sin(angle);
+        double dist = hypo * sin;
+        if (dist > dist_max)
+        {
+          dist_max = dist;
+          farthest = i;
+        }
+      }
+
+      if (dist_max > config().ground_map_scaling)
+      {
+        insert[farthest] = true;
+        todo.push(std::make_pair(first, farthest));
+        todo.push(std::make_pair(farthest, last));
+      }
+    }
+
+    for (std::size_t i = 0; i < path.size(); ++ i)
+      if (insert[i])
+        out.push_back (path[i]);
+  }
+}
+
+double Ground_map::z_at_point (const Point& p) const
+{
+  const Node& n = m_data(p.x(GROUND), p.y(GROUND));
+  if (n.target_x != -1)
+    return m_data(n.target_x, n.target_y).z;
+  // else
+  return n.z;
 }
 
 } // namespace Sosage::Component

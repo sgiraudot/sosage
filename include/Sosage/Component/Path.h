@@ -17,8 +17,8 @@ class Path : public Base
 
 public:
 
-  Path (const Point& coord);
-  Path (std::vector<Point>& steps);
+  Path (const std::string& id, const Point& coord);
+  Path (const std::string& id, std::vector<Point>& steps);
   std::size_t size() const { return m_steps.size(); }
   const Point& operator[] (const std::size_t& idx) const { return m_steps[idx]; }
   Point& operator[] (const std::size_t& idx) { return m_steps[idx]; }

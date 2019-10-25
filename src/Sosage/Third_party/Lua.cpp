@@ -22,29 +22,7 @@ Lua::Lua ()
   }
 
   lua_register
-    (m_state, "set_image",
-     [](lua_State* L) -> int
-     {
-       int n = lua_gettop(L);
-       if(n != 5)
-       {
-         lua_pushstring(L, "Not enough parameter.");
-         lua_error(L);
-       }
-
-       const char* key = lua_tostring(L, 1);
-       const char* file_name = lua_tostring(L, 2);
-       int x = std::atoi(lua_tostring(L, 3));
-       int y = std::atoi(lua_tostring(L, 4));
-       int z = std::atoi(lua_tostring(L, 5));
-
-       engine().set_image(key, file_name, x, y, z);
-
-       return 0;
-     });
-  
-  lua_register
-    (m_state, "set_ground_map",
+    (m_state, "set_background",
      [](lua_State* L) -> int
      {
        int n = lua_gettop(L);
@@ -54,10 +32,29 @@ Lua::Lua ()
          lua_error(L);
        }
 
-       const char* key = lua_tostring(L, 1);
-       const char* file_name = lua_tostring(L, 2);
+       const char* image = lua_tostring(L, 1);
+       const char* ground_map = lua_tostring(L, 2);
+       engine().set_background(image, ground_map);
 
-       engine().set_ground_map(key, file_name);
+       return 0;
+     });
+  
+  lua_register
+    (m_state, "set_character",
+     [](lua_State* L) -> int
+     {
+       int n = lua_gettop(L);
+       if(n != 4)
+       {
+         lua_pushstring(L, "Not enough parameter.");
+         lua_error(L);
+       }
+
+       const char* body = lua_tostring(L, 1);
+       const char* head = lua_tostring(L, 2);
+       int x = std::atoi(lua_tostring(L, 3));
+       int y = std::atoi(lua_tostring(L, 4));
+       engine().set_character(body, head, x, y);
 
        return 0;
      });
@@ -92,9 +89,9 @@ Lua::~Lua ()
 
 void Lua::read (const std::string& file_name)
 {
-  if (luaL_loadfile (m_state, file_name.c_str())
-      || lua_pcall (m_state, 0, 0, 0))
-    error ("Cannot read " + file_name + ":\n" + lua_tostring(m_state, -1));
+  bool ok = !(luaL_loadfile (m_state, file_name.c_str())
+              || lua_pcall (m_state, 0, 0, 0));
+  check (ok, "Cannot read " + file_name + ":\n" + lua_tostring(m_state, -1));
 }
 
 } // namespace Sosage::Third_party

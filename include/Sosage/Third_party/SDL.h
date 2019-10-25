@@ -19,7 +19,7 @@ class SDL
 {
 public:
 
-  typedef std::shared_ptr<SDL_Surface> Image;
+  typedef SDL_Surface* Image;
   
 private:
 
@@ -34,8 +34,7 @@ public:
   {
     SDL_Surface* out = IMG_Load (file_name.c_str());
     
-    if (out == NULL)
-      error ("Cannot load image " + file_name);
+    check (out != nullptr, "Cannot load image " + file_name);
 
     if (config().world_height != config().camera_height)
     {
@@ -45,12 +44,27 @@ public:
       SDL_FreeSurface (scaled);
     }
     
-    return std::shared_ptr<SDL_Surface>(out);
+    return out;
+  }
+
+  static Image copy_image (const Image& source)
+  {
+    return zoomSurface (source, 1, 1, 1);
+  }
+
+  static Image rescale (const Image& source, double scaling)
+  {
+    return zoomSurface (source, scaling, scaling, 1);
+  }
+
+  static void delete_image (const Image& source)
+  {
+    SDL_FreeSurface (source);
   }
 
   static std::array<unsigned char, 3> get_color (Image image, int x, int y)
   {
-    SDL_LockSurface (image.get());
+    SDL_LockSurface (image);
 
     int bpp = image->format->BytesPerPixel;
     Uint8 *p = (Uint8 *)image->pixels + y * image->pitch + x * bpp;
@@ -81,14 +95,16 @@ public:
     }
     std::array<unsigned char, 3> out;
     SDL_GetRGB(data, image->format, &out[0], &out[1], &out[2]);
-    SDL_UnlockSurface (image.get());
+    SDL_UnlockSurface (image);
     return out;
   }
   static int width (Image image) { return image->w; }
   static int height (Image image) { return image->h; }
 
   void begin();
-  void draw (const Image& image, const int x, const int y);
+  void draw (const Image& image, const int x, const int y,
+             const int xmin, const int xmax,
+             const int ymin, const int ymax);
   void draw_line (const int xa, const int ya, const int xb, const int yb);
   void end();
 
