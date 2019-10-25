@@ -15,12 +15,10 @@ SDL_events::~SDL_events ()
 
 }
 
-SDL_events::Event
-SDL_events::next_event ()
+bool
+SDL_events::next_event (SDL_events::Event& ev)
 {
-  SDL_Event event;
-  SDL_WaitEvent (&event);
-  return event;
+  return (SDL_PollEvent (&ev) == 1);
 }
 
 bool

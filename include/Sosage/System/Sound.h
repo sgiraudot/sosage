@@ -2,13 +2,12 @@
 #define SOSAGE_SYSTEM_SOUND_H
 
 #include <Sosage/Content.h>
-#include <Sosage/Utils/thread.h>
 #include <Sosage/third_party_config.h>
 
 namespace Sosage::System
 {
 
-class Sound : public Threadable
+class Sound
 {
   Content& m_content;
   Sound_core m_core;

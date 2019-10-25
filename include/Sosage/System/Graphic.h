@@ -4,14 +4,13 @@
 #include <Sosage/Component/Image.h>
 #include <Sosage/Content.h>
 #include <Sosage/third_party_config.h>
-#include <Sosage/Utils/thread.h>
 
 #include <vector>
 
 namespace Sosage::System
 {
 
-class Graphic : public Threadable
+class Graphic
 {
 private:
 

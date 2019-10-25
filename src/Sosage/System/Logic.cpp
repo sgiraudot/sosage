@@ -18,49 +18,30 @@ Logic::Logic (Content& content)
 
 void Logic::main()
 {
-  while (this->running())
-  {
-    if (exit())
-    {
-      this->stop();
-      break;
-    }
-    
-    Component::Path_handle target
-      = m_content.request<Component::Path>("character:target_query");
-    if (target)
-      compute_path_from_target(target);
+  Component::Path_handle target
+    = m_content.request<Component::Path>("character:target_query");
+  if (target)
+    compute_path_from_target(target);
 
-    Component::Path_handle path
-      = m_content.request<Component::Path>("character:path");
-    if (path)
-      compute_movement_from_path(path);
-    
-    this->wait();
-  }
+  Component::Path_handle path
+    = m_content.request<Component::Path>("character:path");
+  if (path)
+    compute_movement_from_path(path);
 }
 
 bool Logic::exit()
 {
-  bool out = false;
   Component::Status_handle status
     = m_content.request<Component::Status>("game:status");
-  if (status)
-  {
-    status->lock();
-    if (status->exit())
-      out = true;
-    status->unlock();
-  }
-  return out;
+  if (status && status->exit())
+    return true;
+  return false;
 }
 
 void Logic::compute_path_from_target (Component::Path_handle target)
 {
   std::vector<Point> path;
   
-  target->lock();
-
   m_content.remove("character:target_query");
       
   Component::Ground_map_handle ground_map
@@ -68,11 +49,9 @@ void Logic::compute_path_from_target (Component::Path_handle target)
 
   Component::Animation_handle image
     = m_content.get<Component::Animation>("character:image");
-  image->lock();
       
   Component::Path_handle position
     = m_content.get<Component::Path>("character:position");
-  position->lock();
       
   Point origin = (*position)[0];
   origin = origin + Vector (image->width() / 2,
@@ -83,26 +62,18 @@ void Logic::compute_path_from_target (Component::Path_handle target)
   m_content.set<Component::Path>("character:path", path);
   path.clear();
       
-  position->unlock();
-  image->unlock();
-  target->unlock();
 }
 
 void Logic::compute_movement_from_path (Component::Path_handle path)
 {
-  path->lock();
-
   Component::Animation_handle image
     = m_content.get<Component::Animation>("character:image");
-  image->lock();
 
   Component::Animation_handle head
     = m_content.get<Component::Animation>("character:head");
-  head->lock();
 
   Component::Path_handle position
     = m_content.get<Component::Path>("character:position");
-  position->lock();
 
   Component::Ground_map_handle ground_map
     = m_content.get<Component::Ground_map>("background:ground_map");
@@ -153,10 +124,6 @@ void Logic::compute_movement_from_path (Component::Path_handle path)
                            image->height(), CAMERA);
   (*position)[0] = pos - back_translation;
       
-  position->unlock();
-  head->unlock();
-  image->unlock();
-  path->unlock();
 }
 
 void Logic::set_move_animation (Component::Animation_handle image,
@@ -185,7 +152,7 @@ void Logic::set_move_animation (Component::Animation_handle image,
   {
     image->frames()[i].x = i;
     image->frames()[i].y = row_index;
-    image->frames()[i].duration = 1;
+    image->frames()[i].duration = config().animation_frame_rate;
   }
 
   head->on() = false;

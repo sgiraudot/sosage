@@ -24,10 +24,10 @@ public:
     debug ("~Input_core ();");
   }
 
-  Event next_event()
+  bool next_event(const Event&)
   {
     debug ("Input_core::next_event ();");
-    return 0;
+    return true;
   }
 
   bool is_exit (const Event&)

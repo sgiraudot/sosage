@@ -8,6 +8,7 @@
 #include <Sosage/System/Input.h>
 #include <Sosage/System/Logic.h>
 #include <Sosage/Third_party/Lua.h>
+#include <Sosage/Utils/time.h>
 
 namespace Sosage
 {
@@ -22,6 +23,7 @@ class Engine
   System::Sound m_sound;
   System::Input m_input;
   System::Logic m_logic;
+  Clock m_clock;
 
   std::string m_file_name;
   Core m_core;

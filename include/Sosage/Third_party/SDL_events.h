@@ -24,7 +24,7 @@ public:
 
   ~SDL_events();
 
-  Event next_event();
+  bool next_event(Event& ev);
 
   bool is_exit (const Event& ev);
   bool is_left_click (const Event& ev);

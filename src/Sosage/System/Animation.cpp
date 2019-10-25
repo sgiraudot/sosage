@@ -14,31 +14,14 @@ Animation::Animation (Content& content)
 void Animation::main()
 {
   std::vector<Component::Animation_handle> animations;
-  
-  int frame = 0;
-  while (this->running())
-  {
-    if (frame ++ == config().animation_frame_rate)
-    {
-      frame = 0;
 
-      m_content.lock();
-      for (const auto& e : m_content)
-        if (Component::Animation_handle anim
-            = Component::component_cast<Component::Animation>(e))
-          animations.push_back(anim);
-      m_content.unlock();
+  for (const auto& e : m_content)
+    if (Component::Animation_handle anim
+        = Component::component_cast<Component::Animation>(e))
+      animations.push_back(anim);
 
-      for (const auto& animation : animations)
-      {
-        animation->lock();
-        animation->next_frame();
-        animation->unlock();
-      }
-      
-    }
-    this->wait();
-  }
+  for (const auto& animation : animations)
+    animation->next_frame();
 }
 
 } // namespace Sosage::System

@@ -4,7 +4,6 @@
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Utils/error.h>
 
-#include <mutex>
 #include <unordered_set>
 
 namespace Sosage
@@ -36,28 +35,21 @@ public:
 private:
 
   Handle_set m_data;
-  std::mutex m_mutex;
-  
   Component::Handle m_finder;
 
 public:
 
   Content ();
 
-  void lock() { m_mutex.lock(); }
-  void unlock() { m_mutex.unlock(); }
-
   std::size_t size() const { return m_data.size(); }
 
   template <typename T>
   void set (const std::shared_ptr<T>& t)
   {
-    lock();
     Handle_set::iterator iter = m_data.find(t);
     if (iter != m_data.end())
       m_data.erase(iter);
     m_data.insert(t);
-    unlock();
   }
   
   template <typename T, typename ... Args>
@@ -73,29 +65,21 @@ public:
 
   void remove (const std::string& key)
   {
-    lock();
     m_finder->set_id(key);
     Handle_set::iterator iter = m_data.find(m_finder);
     check (iter != m_data.end(), "Entity " + key + " doesn't exist");
     m_data.erase(iter);
-    unlock();
   }
 
   template <typename T>
   std::shared_ptr<T> request (const std::string& key)
   {
-    lock();
     m_finder->set_id(key);
     Handle_set::iterator iter = m_data.find(m_finder);
     if (iter == m_data.end())
-    {
-      unlock();
       return std::shared_ptr<T>();
-    }
 
     std::shared_ptr<T> out = Component::component_cast<T>(*iter);
-    unlock();
-
     return out;
   }
   
