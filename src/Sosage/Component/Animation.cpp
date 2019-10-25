@@ -4,9 +4,9 @@
 namespace Sosage::Component
 {
 
-Animation::Animation (const std::string& file_name, int z,
+Animation::Animation (const std::string& id, const std::string& file_name, int z,
                       int width_subdiv, int height_subdiv)
-  : Image(file_name, z)
+  : Image(id, file_name, z)
   , m_width_subdiv (width_subdiv)
   , m_height_subdiv (height_subdiv)
   , m_current(0)
@@ -19,6 +19,7 @@ void Animation::reset()
 {
   m_frames.clear();
   m_frames.push_back (Frame(0,0,1));
+  m_current = 0;
 }
 
 int Animation::xmin() const

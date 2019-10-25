@@ -16,7 +16,7 @@ inline T square (const T& t) { return t*t; }
 
 inline double distance (double xa, double ya, double xb, double yb)
 {
-  return std::sqrt (square(xa - xb) + square(ya - yb));;
+  return std::sqrt (square(xa - xb) + square(ya - yb));
 }
 
 class Vector;
@@ -43,9 +43,9 @@ public:
     if (space == WORLD)
       return v;
     else if (space == CAMERA)
-      return v * config().camera_scaling;
+      return (v + 0.5) * config().camera_scaling;
     else
-      return v * config().ground_map_scaling;
+      return (v + 0.5) * config().ground_map_scaling;
   }
   
   double to (const double& v, const Space& space) const
@@ -53,9 +53,9 @@ public:
     if (space == WORLD)
       return v;
     else if (space == CAMERA)
-      return v / config().camera_scaling;
+      return (v / config().camera_scaling) - 0.5;
     else
-      return v / config().ground_map_scaling;
+      return (v / config().ground_map_scaling) - 0.5;
   }
   
   double convert (const double& v, const Space& f, const Space& t) const
@@ -113,6 +113,14 @@ public:
   friend Point operator- (const Point& a, const Vector& b)
   {
     return Point(a.x() - b.x(), a.y() - b.y(), WORLD);
+  }
+  friend double operator* (const Vector& a, const Vector& b)
+  {
+    return a.x() * b.x() + a.y() * b.y();
+  }
+  friend Vector operator* (const double& a, const Vector& b)
+  {
+    return Vector (a * b.x(), a * b.y(), WORLD);
   }
 };
 

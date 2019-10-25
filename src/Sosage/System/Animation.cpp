@@ -1,4 +1,6 @@
 #include <Sosage/Component/Animation.h>
+#include <Sosage/System/Animation.h>
+#include <Sosage/Config.h>
 
 namespace Sosage::System
 {
@@ -20,25 +22,18 @@ void Animation::main()
     {
       frame = 0;
 
-      m_content.lock_components();
+      m_content.lock();
       for (const auto& e : m_content)
-      {
-        Component::Animation_handle animation;
-      
-        for (const auto& c : e.second)
-          if (c.first == "image")
-            animation = Component::component_cast<Component::Animation>(c.second);
-      
-        if (animation)
-          animations.push_back (animation);
-      }
-      m_content.unlock_components();
+        if (Component::Animation_handle anim
+            = Component::component_cast<Component::Animation>(e))
+          animations.push_back(anim);
+      m_content.unlock();
 
       for (const auto& animation : animations)
       {
-        animations->lock();
-        animations->next_frame();
-        animations->unlock();
+        animation->lock();
+        animation->next_frame();
+        animation->unlock();
       }
       
     }

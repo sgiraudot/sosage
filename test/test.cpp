@@ -7,10 +7,7 @@ int main (int argc, char** argv)
   if (argc > 1)
     sosage.run_file (argv[1]);
   else
-  {
-    sosage.set_image("background", "dummy.png", 0, 0, 0);
-    sosage.main();
-  }
-
+    std::cerr << "No file provided" << std::endl;
+  
   return EXIT_SUCCESS;
 }

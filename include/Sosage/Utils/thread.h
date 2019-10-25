@@ -4,7 +4,6 @@
 #include <Sosage/Utils/time.h>
 
 #include <atomic>
-#include <mutex>
 #include <thread>
 
 namespace Sosage
@@ -13,6 +12,7 @@ namespace Sosage
 class Threadable
 {
 private:
+  std::thread m_thread;
   Clock m_clock;
   std::atomic<bool> m_running;
 
@@ -20,20 +20,12 @@ public:
 
   Threadable() : m_running(true) { }
 
+  void start() { m_thread = std::thread([&]() { this->main(); }); }
+  void join() { m_thread.join(); }
   bool running() { return m_running; }
   void stop() { m_running = false; }
   void wait() { m_clock.wait(); }
-};
-
-template <typename T>
-class Lockable : public T
-{
-private:
-  std::mutex m_mutex;
-public:
-
-  void lock() { m_mutex.lock(); }
-  void unlock() { m_mutex.unlock(); }
+  virtual void main() = 0;
 };
 
 } // namespace Sosage

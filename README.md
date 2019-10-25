@@ -2,7 +2,7 @@
 
 ## Actions
 
- * Défaut : regarder
+ * Regarder
 
 ## Système de coordonnées
 
@@ -15,9 +15,9 @@
  * 10 images tête idle : 2 x (normal, regard gauche, regard droite, regard haut, regard blasé)
 
 
-G: N  H  P  B  T  T
-D: N  H  P  B  T  T
 G: M  M  M  M  M  M
 D: M  M  M  M  M  M
 H: M  M  M  M  M  M
 B: M  M  M  M  M  M
+G: N  H  P  B  T  T
+D: N  H  P  B  T  T

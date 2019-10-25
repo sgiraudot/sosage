@@ -15,15 +15,15 @@ class Ground_map : public Base
 
   struct Node
   {
-    double z;
+    int z;
     int target_x;
     int target_y;
 
     int prev_x;
     int prev_y;
-    int distance;
+    double distance;
     
-    Node() : z(0.), target_x(-1), target_y(-1), prev_x(-1), prev_y(-1), distance(0) { }
+    Node() : z(0.), target_x(-1), target_y(-1), prev_x(-1), prev_y(-1), distance(0.) { }
   };
 
   class Sort_by_distance
@@ -35,8 +35,8 @@ class Ground_map : public Base
 
     bool operator() (const std::pair<int, int>& a, const std::pair<int, int>& b) const
     {
-      int da = m_data(a.first, a.second).distance;
-      int db = m_data(b.first, b.second).distance;
+      double da = m_data(a.first, a.second).distance;
+      double db = m_data(b.first, b.second).distance;
       if (da == db)
         return a < b;
       return da < db;
@@ -47,11 +47,26 @@ class Ground_map : public Base
   
 public:
 
-  Ground_map (const std::string& file_name);
+  Ground_map (const std::string& id, const std::string& file_name);
 
   void find_path (const Point& origin, const Point& target,
                   std::vector<Point>& out);
 
+  double z_at_point (const Point& p) const;
+
+private:
+
+  double distance (int xa, int ya, int xb, int yb)
+  {
+    Point pa (xa, ya, GROUND);
+    Point pb (xb, yb, GROUND);
+    double za = m_data(xa,ya).z;
+    double zb = m_data(xb,yb).z;
+
+    return std::sqrt (square(pa.x() - pb.x())
+                      + square(pa.y() - pb.y())
+                      + square(za - zb));
+  }
 };
 typedef std::shared_ptr<Ground_map> Ground_map_handle;
 

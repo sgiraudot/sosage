@@ -2,6 +2,7 @@
 #define SOSAGE_ENGINE_H
 
 #include <Sosage/Content.h>
+#include <Sosage/System/Animation.h>
 #include <Sosage/System/Graphic.h>
 #include <Sosage/System/Sound.h>
 #include <Sosage/System/Input.h>
@@ -16,6 +17,7 @@ class Engine
   typedef Third_party::Lua Core;
   
   Content m_content;
+  System::Animation m_animation;
   System::Graphic m_graphic;
   System::Sound m_sound;
   System::Input m_input;
@@ -34,8 +36,8 @@ public:
   
   int run_directory (const std::string& directory_name);
 
-  void set_image (const std::string& key, const std::string& file_name, int x, int y, int z);
-  void set_ground_map (const std::string& key, const std::string& file_name);
+  void set_background (const std::string& image, const std::string& ground_map);
+  void set_character (const std::string& body, const std::string& head, int x, int y);
 
 private:
   

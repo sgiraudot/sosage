@@ -1,6 +1,8 @@
 #ifndef SOSAGE_SYSTEM_LOGIC_H
 #define SOSAGE_SYSTEM_LOGIC_H
 
+#include <Sosage/Component/Animation.h>
+#include <Sosage/Component/Path.h>
 #include <Sosage/Content.h>
 #include <Sosage/Utils/thread.h>
 
@@ -18,7 +20,19 @@ public:
   Logic (Content& content);
 
   void main();
-  
+
+private:
+
+  bool exit();
+
+  void compute_path_from_target (Component::Path_handle target);
+  void compute_movement_from_path (Component::Path_handle path);
+  void set_move_animation (Component::Animation_handle image,
+                           Component::Animation_handle head,
+                           const Vector& direction);
+  void stop_move_animation (Component::Animation_handle image,
+                            Component::Animation_handle head);
+                           
 };
 
 } // namespace Sosage::System

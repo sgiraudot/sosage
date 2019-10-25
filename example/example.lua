@@ -1,8 +1,6 @@
 
-set_image ("background", "background.png", 0, 0, 0)
-set_ground_map ("background", "ground_map_obstacle.png")
-
-set_image ("character", "sophie.png", 800, 530, 1)
+set_background("background.png", "ground_map.png")
+set_character ("indy.png", "indy_head.png", 800, 470)
 
 -- character =
 --   {

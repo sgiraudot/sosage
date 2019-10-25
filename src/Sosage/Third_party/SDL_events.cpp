@@ -26,7 +26,8 @@ SDL_events::next_event ()
 bool
 SDL_events::is_exit (const Event& ev)
 {
-  return (ev.type == SDL_QUIT);
+  return (ev.type == SDL_QUIT ||
+          (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_ESCAPE));
 }
 
 bool

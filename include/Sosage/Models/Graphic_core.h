@@ -10,7 +10,7 @@ class Graphic_core
 {
 public:
 
-  typedef int Image;
+  typedef int* Image;
   
 public:
 
@@ -30,7 +30,24 @@ public:
   static Image load_image (const std::string& file_name)
   {
     debug ("Graphic_core::load_image (" + file_name + ");");
-    return 0;
+    return nullptr;
+  }
+
+  static Image copy_image (const Image&)
+  {
+    debug ("Graphic_core::copy_image ()");
+    return nullptr;
+  }
+
+  static Image rescale (const Image&, double scaling)
+  {
+    debug ("Graphic_core::rescale (" + std::to_string(scaling) + ");");
+    return nullptr;
+  }
+
+  static void delete_image (const Image&)
+  {
+    debug ("Graphic_core::delete_image ()");
   }
 
   static std::array<unsigned char,3> get_color (Image, int x, int y)
@@ -46,7 +63,9 @@ public:
     debug ("Graphic_core::begin ();");
   }
 
-  void draw (const Image& image, const int x, const int y)
+  void draw (const Image& image, const int x, const int y,
+             const int xmin, const int xmax,
+             const int ymin, const int ymax)
   {
     debug ("Graphic_core::draw ();");
   }
