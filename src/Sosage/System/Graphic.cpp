@@ -20,37 +20,27 @@ void Graphic::main()
 {
   std::vector<Component::Image_handle> images;
 
-  while (this->running())
-  {
-    m_core.begin();
+  m_core.begin();
 
-    get_images (images);
-    display_images (images);
-    images.clear();
+  get_images (images);
+  display_images (images);
+  images.clear();
 
-    display_path();
+  display_path();
 
-    m_core.end();
-    
-    this->wait();
-  }
+  m_core.end();
 }
 
 void Graphic::get_images (std::vector<Component::Image_handle>& images)
 {
-  m_content.lock();
   for (const auto& e : m_content)
     if (Component::Image_handle img
         = Component::component_cast<Component::Image>(e))
       images.push_back(img);
-  m_content.unlock();
 }
 
 void Graphic::display_images (std::vector<Component::Image_handle>& images)
 {
-  for (const auto& img : images)
-    img->lock();
-  
   std::sort (images.begin(), images.end(),
              [](Component::Image_handle a, Component::Image_handle b) -> bool
              {
@@ -62,15 +52,12 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
     if (img->on())
     {
       Component::Path_handle p = m_content.get<Component::Path>(img->entity() + ":position");
-      p->lock();
       m_core.draw (img->core(),
                    (*p)[0].x(CAMERA),
                    (*p)[0].y(CAMERA),
                    img->xmin(), img->xmax(),
                    img->ymin(), img->ymax());
-      p->unlock();
     }
-    img->unlock();
   }
 }
 
@@ -79,15 +66,12 @@ void Graphic::display_path()
   Component::Path_handle path = m_content.request<Component::Path>("character:path");
   if (path)
   {
-    path->lock();
-
     for (std::size_t i = 0; i < path->size() - 1; ++ i)
       m_core.draw_line ((*path)[i].x(CAMERA),
                         (*path)[i].y(CAMERA),
                         (*path)[i+1].x(CAMERA),
                         (*path)[i+1].y(CAMERA));
 
-    path->unlock();
   }
 }
 

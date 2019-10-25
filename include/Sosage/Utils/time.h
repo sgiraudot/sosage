@@ -23,7 +23,7 @@ public:
     m_latest = std::chrono::high_resolution_clock::now();
   }
 
-  void wait()
+  void wait(bool verbose)
   {
     std::chrono::time_point<std::chrono::high_resolution_clock>
       now = m_clock.now();
@@ -32,7 +32,10 @@ public:
 
     if (duration < m_refresh_time)
       std::this_thread::sleep_for(m_refresh_time - duration);
-    
+
+    now = m_clock.now();
+    if (verbose)
+      std::cerr << "\rFPS: " << 1. / (now - m_latest).count();
     m_latest = m_clock.now();
   }
   

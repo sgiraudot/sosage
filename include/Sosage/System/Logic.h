@@ -4,12 +4,11 @@
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Content.h>
-#include <Sosage/Utils/thread.h>
 
 namespace Sosage::System
 {
 
-class Logic : public Threadable
+class Logic
 {
 private:
 
@@ -20,10 +19,9 @@ public:
   Logic (Content& content);
 
   void main();
+  bool exit();
 
 private:
-
-  bool exit();
 
   void compute_path_from_target (Component::Path_handle target);
   void compute_movement_from_path (Component::Path_handle path);

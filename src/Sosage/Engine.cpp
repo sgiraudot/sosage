@@ -19,24 +19,15 @@ Engine::Engine (const std::string& game_name)
 
 void Engine::main()
 {
-  m_animation.start();
-  m_graphic.start();
-  m_sound.start();
-  m_input.start();
-  m_logic.start();
-  
-  m_logic.join();
-
-  // Once logic thread has stopped, stop the others
-  m_animation.stop();
-  m_graphic.stop();
-  m_input.stop();
-  m_sound.stop();
-
-  m_animation.join();
-  m_graphic.join();
-  m_sound.join();
-  m_input.join();
+  while (!m_logic.exit())
+  {
+    m_input.main();
+    m_logic.main();
+    m_animation.main();
+    m_graphic.main();
+    m_sound.main();
+    m_clock.wait(true);
+  }
 }
 
 int Engine::run_file (const std::string& file_name)
@@ -77,9 +68,6 @@ void Engine::set_character (const std::string& body, const std::string& head, in
   Component::Ground_map_handle ground_map
     = m_content.get<Component::Ground_map>("background:ground_map");
   
-  abody->lock();
-  ahead->lock();
-  position->lock();
   Vector translation (abody->width() / 2,
                       abody->height(), CAMERA);
   Point pos = (*position)[0] + translation;
@@ -89,10 +77,6 @@ void Engine::set_character (const std::string& body, const std::string& head, in
   Vector back_translation (abody->width() / 2,
                            abody->height(), CAMERA);
   (*position)[0] = pos - back_translation;
-    
-  position->unlock();
-  ahead->unlock();
-  abody->unlock();
 }
 
 

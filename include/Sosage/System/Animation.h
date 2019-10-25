@@ -3,12 +3,11 @@
 
 #include <Sosage/Content.h>
 #include <Sosage/third_party_config.h>
-#include <Sosage/Utils/thread.h>
 
 namespace Sosage::System
 {
 
-class Animation : public Threadable
+class Animation
 {
 private:
 

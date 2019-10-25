@@ -13,9 +13,10 @@ Input::Input (Content& content)
 
 void Input::main()
 {
-  while (this->running())
+  Input_core::Event ev;
+
+  while (m_core.next_event(ev))
   {
-    Input_core::Event ev = m_core.next_event();
     if (m_core.is_exit(ev))
       m_content.set<Component::Status>("game:status", Component::EXIT);
     
