@@ -3,6 +3,9 @@
 ## Actions
 
  * Regarder
+ * Pousser
+ * Tirer
+ * Utiliser
 
 ## Système de coordonnées
 

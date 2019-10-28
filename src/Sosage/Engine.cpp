@@ -14,7 +14,7 @@ Engine::Engine (const std::string& game_name)
   , m_input (m_content)
   , m_logic (m_content)
 {
-
+  srand(time(nullptr));
 }
 
 void Engine::main()
@@ -59,7 +59,7 @@ void Engine::set_character (const std::string& body, const std::string& head, in
 
   Component::Animation_handle abody
      = m_content.set<Component::Animation>("character:image", local_file_name(body),
-                                           0, 6, 6);
+                                           0, 9, 5);
   Component::Animation_handle ahead
      = m_content.set<Component::Animation>("character:head", local_file_name(head),
                                            0, 6, 2);
@@ -77,6 +77,8 @@ void Engine::set_character (const std::string& body, const std::string& head, in
   Vector back_translation (abody->width() / 2,
                            abody->height(), CAMERA);
   (*position)[0] = pos - back_translation;
+
+  m_logic.generate_random_idle_animation(abody, ahead, Vector(1,0,WORLD));
 }
 
 
