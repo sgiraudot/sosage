@@ -28,8 +28,10 @@ private:
   void set_move_animation (Component::Animation_handle image,
                            Component::Animation_handle head,
                            const Vector& direction);
-  void stop_move_animation (Component::Animation_handle image,
-                            Component::Animation_handle head);
+public:
+  void generate_random_idle_animation (Component::Animation_handle image,
+                                       Component::Animation_handle head,
+                                       const Vector& direction);
                            
 };
 
