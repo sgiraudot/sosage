@@ -1,7 +1,7 @@
+#include <Sosage/Component/Condition.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Path.h>
-#include <Sosage/Component/Status.h>
 #include <Sosage/System/Logic.h>
 #include <Sosage/Utils/geometry.h>
 #include <Sosage/Utils/random.h>
@@ -32,9 +32,9 @@ void Logic::main()
 
 bool Logic::exit()
 {
-  Component::Status_handle status
-    = m_content.request<Component::Status>("game:status");
-  if (status && status->exit())
+  Component::Boolean_handle status
+    = m_content.request<Component::Boolean>("game:status");
+  if (status && status->value())
     return true;
   return false;
 }

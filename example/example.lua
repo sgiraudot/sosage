@@ -1,6 +1,5 @@
-set_background("background.png", "ground_map.png")
-set_character ("test_character.png", "indy_head.png", 800, 470)
-
+  set_background("background.png", "ground_map.png")
+  set_character ("test_character.png", "indy_head.png", 800, 470)
 coffre_fort_verrouille = true
 coffre_fort_ouvert = false
 clef_usb_inseree = false

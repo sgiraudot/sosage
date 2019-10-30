@@ -2,6 +2,7 @@
 #define SOSAGE_CONTENT_H
 
 #include <Sosage/Component/Handle.h>
+#include <Sosage/Component/cast.h>
 #include <Sosage/Utils/error.h>
 
 #include <unordered_set>
@@ -79,7 +80,7 @@ public:
     if (iter == m_data.end())
       return std::shared_ptr<T>();
 
-    std::shared_ptr<T> out = Component::component_cast<T>(*iter);
+    std::shared_ptr<T> out = Component::cast<T>(*iter);
     return out;
   }
   
