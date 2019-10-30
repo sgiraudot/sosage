@@ -26,12 +26,6 @@ public:
 
 typedef std::shared_ptr<Base> Handle;
 
-template <typename T>
-inline std::shared_ptr<T> component_cast (Handle h)
-{
-  return std::dynamic_pointer_cast<T>(h);
-}
-
 } // namespace Sosage::Component
 
 #endif // SOSAGE_COMPONENT_HANDLE_H

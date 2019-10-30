@@ -17,7 +17,7 @@ void Animation::main()
 
   for (const auto& e : m_content)
     if (Component::Animation_handle anim
-        = Component::component_cast<Component::Animation>(e))
+        = Component::cast<Component::Animation>(e))
       animations.push_back(anim);
 
   for (const auto& animation : animations)

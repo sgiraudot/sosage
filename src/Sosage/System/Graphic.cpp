@@ -35,7 +35,7 @@ void Graphic::get_images (std::vector<Component::Image_handle>& images)
 {
   for (const auto& e : m_content)
     if (Component::Image_handle img
-        = Component::component_cast<Component::Image>(e))
+        = Component::cast<Component::Image>(e))
       images.push_back(img);
 }
 
