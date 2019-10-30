@@ -1,0 +1,74 @@
+
+section_type "section_name"
+variable = "value"
+syscall "sys_call
+
+object "coffre_fort"
+{
+  name = "Coffre fort"
+  position = [10, 10]
+
+  state "cache"
+  {
+    skin = null
+  }
+
+  state "verrouille"
+  {
+    skin = "coffre_fort_ferme.png"
+    
+    action "Regarder"
+    {
+      window "code"
+      {
+        // code window
+      }
+    }
+    action "Ouvrir"
+    {
+      comment "Il est verrouillé."
+    }
+  }
+
+  state "ouvert"
+  {
+    skin = "coffre_fort_ouvert.png"
+
+    action "Regarder"
+    {
+      if "inventaire:clef_usb"
+      {
+        comment "Il est vide."
+      }
+      else
+      {
+        comment "Il y a une clef USB à l'intérieur."
+      }
+    }
+
+    action "Fermer"
+    {
+      action_animation
+      play_sound "closing.wav"
+      set_state "coffre_fort:ferme"
+    }
+  }
+
+  state "ferme"
+  {
+    skin = "coffre_fort_ferme.png"
+
+    action "Regarder"
+    {
+      comment "Il est déverrouillé."
+    }
+
+    action "Ouvrir"
+    {
+      action_animation
+      play_sound "opening.wav"
+      set_state "coffre_fort:ouvert"
+    }
+  }
+}
+  

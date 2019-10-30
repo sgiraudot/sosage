@@ -1,0 +1,44 @@
+<sosage_room
+    version="0.0.1"
+    background="background.png"
+    ground_map="ground_map.png"
+    body="test_character.png"
+    head="indy_head.png"
+    x=800 y=470>
+  
+  <object id="coffre_fort"
+          name="Coffre fort"
+          x=10 y=10>
+    <state id="cache"
+           skin="">
+    </state>
+    <state id="verrouille"
+           skin="coffre_fort_ferme.png">
+      <action name="Regarder">
+        <window id="code">
+        </window>
+      </action>
+      <action name="Ouvrir">
+        <comment text="Il est verrouillé." />
+      </action>
+    </state>
+    <state id="ouvert"
+           skin="coffre_fort_ouvert.png">
+      <action name="Regarder">
+        <comment if="inventaire:clef_usb"
+                 text="Il est vide." />
+        <comment ifnot="invetaire:clef_usb"
+                 text="Il y a une clef USB à l'intérieur." />
+      </action>
+      <action name="Fermer">
+        <action_animation />
+        <play_sound file="closing.wav" />
+        <set_state object="coffre_fort" state="ferme" />
+      </action>
+    </state>
+    <state id="ferme"
+           skin="coffre_fort_ferme.png">
+    </state>
+  </object>
+    
+</sosage_room>
