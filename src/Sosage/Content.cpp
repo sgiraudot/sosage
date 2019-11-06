@@ -4,7 +4,7 @@ namespace Sosage
 {
 
 Content::Content()
-  : m_data (), m_finder (new Component::Base("finder"))
+  : m_data ()
 {
 
 }

@@ -8,16 +8,25 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(project_linked_libraries)
 set(project_compilation_definitions)
 
-find_package(Lua51 REQUIRED)
-if (Lua51_FOUND)
-  include_directories(${LUA_INCLUDE_DIR})
-  set(project_linked_libraries ${project_linked_libraries}
-    ${LUA_LIBRARIES})
+# find_package(Lua51 REQUIRED)
+# if (Lua51_FOUND)
+#   include_directories(${LUA_INCLUDE_DIR})
+#   set(project_linked_libraries ${project_linked_libraries}
+#     ${LUA_LIBRARIES})
+# else()
+#   message(STATUS "LUA 5.1 is required and not found, nothing will be compiled.")
+#   return()
+# endif()
+find_package(LibXml2 REQUIRED)
+if (LIBXML2_FOUND)
+  include_directories(${LIBXML2_INCLUDE_DIRS})
+   set(project_linked_libraries ${project_linked_libraries}
+     ${LIBXML2_LIBRARIES})
 else()
-  message(STATUS "LUA 5.1 is required and not found, nothing will be compiled.")
+  message(STATUS "LibXml2 is required and not found, nothing will be compiled.")
   return()
 endif()
-
+  
 include_directories ("include")
 file(GLOB_RECURSE sosage_SRC "src/*.cpp")
 

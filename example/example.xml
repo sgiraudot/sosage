@@ -1,44 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <sosage_room
     version="0.0.1"
+    name="Bureau"
     background="background.png"
     ground_map="ground_map.png"
     body="test_character.png"
     head="indy_head.png"
-    x=800 y=470>
+    x="800" y="470">
+
+  <boolean id="clef_usb_prise" value="false" />
   
   <object id="coffre_fort"
           name="Coffre fort"
-          x=10 y=10>
+          x="10" y="10">
+    
     <state id="cache"
            skin="">
     </state>
+    
     <state id="verrouille"
            skin="coffre_fort_ferme.png">
+      
       <action name="Regarder">
-        <window id="code">
+        <window id="digicode"
+                skin="digicode.png">
         </window>
       </action>
+      
       <action name="Ouvrir">
         <comment text="Il est verrouillé." />
       </action>
+      
     </state>
+    
     <state id="ouvert"
            skin="coffre_fort_ouvert.png">
+      
       <action name="Regarder">
-        <comment if="inventaire:clef_usb"
-                 text="Il est vide." />
-        <comment ifnot="invetaire:clef_usb"
-                 text="Il y a une clef USB à l'intérieur." />
+        <if cond="clef_usb_prise">
+          <comment text="Il est vide." />
+        </if>
+        <else>
+          <comment text="Il y a une clef USB à l'intérieur." />
+        </else>
       </action>
+
       <action name="Fermer">
         <action_animation />
         <play_sound file="closing.wav" />
         <set_state object="coffre_fort" state="ferme" />
       </action>
+      
     </state>
+    
     <state id="ferme"
            skin="coffre_fort_ferme.png">
     </state>
+    
+  </object>
+
+  <object id="bouteille"
+          name="Bouteille d'eau"
+          x="10" y="10">
+    
+    <state id="defaut"
+           skin="bouteille.png">
+      
+      <action name="Regarder">
+        <comment text="Pas moyen de lui faire utiliser une gourde… Il adore son plastique." />
+      </action>
+
+      <action name="Prendre">
+        <pick />
+      </action>
+
+      <action name="Pousser">
+        <comment text="Je n'ai pas envie d'en renverser sur le clavier." />
+      </action>
+      
+    </state>
+
+    <inventory_state skin="bouteille_inventaire.png">
+
+      <action target="ordinateur">
+        <comment text="Pour me faire virer ?" />
+      </action>
+
+      <action target="plante">
+        <animate skin="verse_eau.png" duration="10" />
+        <comment text="Voilà, elle est arrosée." />
+      </action>
+
+    </inventory_state>
+
+  </object>
+
+  <object id="telephone"
+          name="Téléphone"
+          x="-1" y="-1">
+    <inventory_state skin="telephone.png">
+      <action>
+        <comment text="Je vais essayer d'appeler Harpagon." />
+        <animate skin="telephone.png" duration="10" />
+        <comment text="Ça ne répond pas." />
+      </action>
+    </inventory_state>
   </object>
     
 </sosage_room>

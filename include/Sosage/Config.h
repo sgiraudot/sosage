@@ -13,9 +13,9 @@ struct Config
   const int world_depth;
   const int ground_map_width;
   const int ground_map_height;
-  const int character_speed;
   const int target_fps;
   const int animation_frame_rate;
+  const int character_speed;
   
   int camera_width;
   int camera_height;
@@ -30,9 +30,9 @@ struct Config
     , world_depth (3240)
     , ground_map_width (300)
     , ground_map_height (ground_map_height * world_height / world_width)
-    , character_speed (34)
     , target_fps (10)
-    , animation_frame_rate (1)
+    , animation_frame_rate (target_fps / 10)
+    , character_speed (34 / animation_frame_rate)
     , camera_width (camera_width)
     , camera_height (camera_width * world_height / world_width)
     , camera_scaling (world_width / double(camera_width))

@@ -2,7 +2,9 @@
 #define SOSAGE_COMPONENT_CONDITIONAL_H
 
 #include <Sosage/Component/Condition.h>
+#include <Sosage/Component/State.h>
 #include <Sosage/Component/Handle.h>
+#include <Sosage/Utils/error.h>
 
 namespace Sosage::Component
 {
@@ -40,6 +42,37 @@ public:
 };
 
 typedef std::shared_ptr<Conditional> Conditional_handle;
+
+class State_conditional : public Base
+{
+  State_handle m_state;
+  Handle_set m_handles;
+  
+public:
+
+  State_conditional (const std::string& id,
+                     State_handle state)
+    : Base(id)
+    , m_state (state)
+  { }
+
+  virtual ~State_conditional()
+  {
+    m_state = State_handle();
+    m_handles.clear();
+  }
+
+  Handle get()
+  {
+    Component::Handle_set::iterator iter
+      = m_handles.find(std::make_shared<Component::Base>(m_state->value()));
+    check (iter != m_handles.end(), "Cannot find state " + m_state->value());
+    return *iter;
+  }
+
+};
+
+typedef std::shared_ptr<State_conditional> State_conditional_handle;
 
 } // namespace Sosage::Component
 

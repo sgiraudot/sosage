@@ -5,39 +5,14 @@
 #include <Sosage/Component/cast.h>
 #include <Sosage/Utils/error.h>
 
-#include <unordered_set>
-
 namespace Sosage
 {
 
 class Content
 {
-  struct Hash_ids
-  {
-    std::size_t operator() (const Component::Handle& h) const
-    {
-      return std::hash<std::string>()(h->id());
-    }
-  };
-
-  struct Equal_ids
-  {
-    bool operator() (const Component::Handle& a,
-                     const Component::Handle& b) const
-    {
-      return (a->id() == b->id());
-    }
-  };
-    
-public:
-
-  typedef std::unordered_set<Component::Handle, Hash_ids, Equal_ids> Handle_set;
-  
 private:
 
-  Handle_set m_data;
-  Component::Handle m_finder;
-
+  Component::Handle_set m_data;
 public:
 
   Content ();
@@ -47,7 +22,7 @@ public:
   template <typename T>
   void set (const std::shared_ptr<T>& t)
   {
-    Handle_set::iterator iter = m_data.find(t);
+    Component::Handle_set::iterator iter = m_data.find(t);
     if (iter != m_data.end())
       m_data.erase(iter);
     m_data.insert(t);
@@ -61,13 +36,12 @@ public:
     return new_component;
   }
 
-  Handle_set::const_iterator begin() { return m_data.begin(); }
-  Handle_set::const_iterator end() { return m_data.end(); }
+  Component::Handle_set::const_iterator begin() { return m_data.begin(); }
+  Component::Handle_set::const_iterator end() { return m_data.end(); }
 
   void remove (const std::string& key)
   {
-    m_finder->set_id(key);
-    Handle_set::iterator iter = m_data.find(m_finder);
+    Component::Handle_set::iterator iter = m_data.find(std::make_shared<Component::Base>(key));
     check (iter != m_data.end(), "Entity " + key + " doesn't exist");
     m_data.erase(iter);
   }
@@ -75,8 +49,7 @@ public:
   template <typename T>
   std::shared_ptr<T> request (const std::string& key)
   {
-    m_finder->set_id(key);
-    Handle_set::iterator iter = m_data.find(m_finder);
+    Component::Handle_set::iterator iter = m_data.find(std::make_shared<Component::Base>(key));
     if (iter == m_data.end())
       return std::shared_ptr<T>();
 

@@ -7,7 +7,6 @@
 #include <Sosage/System/Sound.h>
 #include <Sosage/System/Input.h>
 #include <Sosage/System/Logic.h>
-#include <Sosage/Third_party/Lua.h>
 #include <Sosage/Utils/time.h>
 
 namespace Sosage
@@ -15,8 +14,6 @@ namespace Sosage
 
 class Engine
 {
-  typedef Third_party::Lua Core;
-  
   Content m_content;
   System::Animation m_animation;
   System::Graphic m_graphic;
@@ -26,7 +23,6 @@ class Engine
   Clock m_clock;
 
   std::string m_file_name;
-  Core m_core;
 
 public:
 
@@ -34,9 +30,7 @@ public:
 
   void main ();
 
-  int run_file (const std::string& file_name);
-  
-  int run_directory (const std::string& directory_name);
+  int read_file (const std::string& file_name);
 
   void set_background (const std::string& image, const std::string& ground_map);
   void set_character (const std::string& body, const std::string& head, int x, int y);
@@ -53,14 +47,6 @@ private:
   }
 
 };
-
-inline Engine& engine (const std::string& game_name = std::string())
-{
-  static std::unique_ptr<Engine> e;
-  if (game_name != std::string())
-    e = std::unique_ptr<Engine>(new Engine(game_name));
-  return *e;
-}
 
 } // namespace Sosage
 
