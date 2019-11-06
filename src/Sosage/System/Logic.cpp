@@ -49,10 +49,10 @@ void Logic::compute_path_from_target (Component::Path_handle target)
     = m_content.get<Component::Ground_map>("background:ground_map");
 
   Component::Animation_handle image
-    = m_content.get<Component::Animation>("character:image");
+    = m_content.get<Component::Animation>("character_body:image");
       
   Component::Path_handle position
-    = m_content.get<Component::Path>("character:position");
+    = m_content.get<Component::Path>("character_body:position");
       
   Point origin = (*position)[0];
   origin = origin + Vector (image->width() / 2,
@@ -67,21 +67,24 @@ void Logic::compute_path_from_target (Component::Path_handle target)
 
 void Logic::compute_movement_from_path (Component::Path_handle path)
 {
-  Component::Animation_handle image
-    = m_content.get<Component::Animation>("character:image");
+  Component::Animation_handle abody
+    = m_content.get<Component::Animation>("character_body:image");
 
-  Component::Animation_handle head
-    = m_content.get<Component::Animation>("character:head");
+  Component::Animation_handle ahead
+    = m_content.get<Component::Animation>("character_head:image");
 
-  Component::Path_handle position
-    = m_content.get<Component::Path>("character:position");
+  Component::Path_handle pbody
+    = m_content.get<Component::Path>("character_body:position");
+  
+  Component::Path_handle phead
+    = m_content.get<Component::Path>("character_head:position");
 
   Component::Ground_map_handle ground_map
     = m_content.get<Component::Ground_map>("background:ground_map");
 
-  Vector translation (image->width() / 2,
-                      image->height(), CAMERA);
-  Point pos = (*position)[0] + translation;
+  Vector translation (abody->width() / 2,
+                      abody->height(), CAMERA);
+  Point pos = (*pbody)[0] + translation;
 
   double to_walk = config().character_speed * ground_map->z_at_point (pos) / config().world_depth;
       
@@ -99,7 +102,7 @@ void Logic::compute_movement_from_path (Component::Path_handle path)
     {
       current_vector.normalize();
       pos = pos + to_walk * current_vector;
-      set_move_animation(image, head, current_vector);
+      set_move_animation(abody, ahead, current_vector);
       break;
     }
 
@@ -109,21 +112,26 @@ void Logic::compute_movement_from_path (Component::Path_handle path)
     {
       pos = (*path)[path->current()];
       m_content.remove("character:path");
-      generate_random_idle_animation(image, head, current_vector);
+      generate_random_idle_animation(abody, ahead, current_vector);
       break;
     }
     path->current() ++;
   }
 
-  int new_z = ground_map->z_at_point (pos);
-//  if (std::abs(image->z() - new_z) > image->z() / 20)
+  double new_z = ground_map->z_at_point (pos);
+//  if (std::abs(abody->z() - new_z) > abody->z() / 20)
   {
-    image->rescale (new_z);
-    head->rescale (new_z);
+    abody->rescale (new_z);
+    ahead->rescale (new_z);
   }
-  Vector back_translation (image->width() / 2,
-                           image->height(), CAMERA);
-  (*position)[0] = pos - back_translation;
+  Vector back_translation (abody->width() / 2,
+                           abody->height(), CAMERA);
+  (*pbody)[0] = pos - back_translation;
+  
+  if (direction.x() > 0)
+    (*phead)[0] = (*pbody)[0] + ( (new_z / double(config().world_depth))) * Vector (66, 0, WORLD);
+  else
+    (*phead)[0] = (*pbody)[0] + ( (new_z / double(config().world_depth))) * Vector (84, 0, WORLD);
       
 }
 
@@ -170,23 +178,12 @@ void Logic::generate_random_idle_animation (Component::Animation_handle image,
   image->reset();
   head->reset();
   head->on() = true;
-//  head->on() = false;
 
   std::size_t row_index = 0;
-  if (std::abs(direction.x()) > std::abs(direction.y()))
-  {
-    if (direction.x() > 0)
-      row_index = 1;
-    else
-      row_index = 2;
-  }
+  if (direction.x() > 0)
+    row_index = 1;
   else
-  {
-    if (direction.y() > 0)
-      row_index = 0;
-    else
-      row_index = 3;
-  }
+    row_index = 2;
   
   // Stand still for a while
   image->frames().push_back
@@ -196,7 +193,6 @@ void Logic::generate_random_idle_animation (Component::Animation_handle image,
   std::size_t offset = 0;
   if (direction.x() < 0)
     offset = 4;
-
   
   // Generate 10 poses with transitions
   int pose = 0;
@@ -225,7 +221,11 @@ void Logic::generate_random_idle_animation (Component::Animation_handle image,
     pose = new_pose;
   }
 
-#if 0 // TODO
+  if (row_index == 1)
+    row_index = 0;
+  else
+    row_index = 1;
+
   // Same for the head
   pose = 0;
   for (int i = 0; i < 10; ++ i)
@@ -233,21 +233,28 @@ void Logic::generate_random_idle_animation (Component::Animation_handle image,
     // Stand still for a while
     head->frames().push_back
       (Component::Animation::Frame
-       (pose, row_index, random_int(10, 150) * config().animation_frame_rate));
+       (pose, row_index, random_int(10, 50) * config().animation_frame_rate));
 
-    int new_pose;
-    do
+    head->frames().push_back
+      (Component::Animation::Frame
+       (1, row_index, config().animation_frame_rate));
+
+    if (random_int(0,4) == 0)
     {
-      new_pose = random_int(0,6);
+      int new_pose;
+      do
+      {
+        new_pose = random_int(2,6);
+      }
+      while (new_pose == pose);
+      pose = new_pose;
     }
-    while (new_pose == pose);
-    pose = new_pose;
 
     // Change direction from time to time
     if (random_int(0,5) == 0)
       row_index = (row_index == 1 ? 0 : 1);
   }
-#endif
+
 }
 
   

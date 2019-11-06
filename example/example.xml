@@ -5,12 +5,63 @@
     name="Bureau"
     background="background.png"
     ground_map="ground_map.png"
-    body="test_character.png"
-    head="indy_head.png"
-    x="800" y="470">
+    body="sophie_corps.png"
+    head="sophie_tete.png"
+    x="600" y="470">
 
   <boolean id="clef_usb_prise" value="false" />
   
+  <object id="bouteille"
+          name="Bouteille d'eau"
+          x="10" y="10">
+    
+    <state id="defaut"
+           skin="bouteille.png">
+      
+      <look>
+        <comment text="Pas moyen de lui faire utiliser une gourde… Il adore son plastique." />
+      </look>
+
+      <pick>
+        <set_state object="bouteille" state="inventory" />
+      </pick>
+
+      <move>
+        <comment text="Je n'ai pas envie d'en renverser sur le clavier." />
+      </move>
+      
+    </state>
+
+    <state id="inventory"
+           skin="bouteille_inventaire.png">
+
+      <use target="ordinateur">
+        <comment text="Pour me faire virer ?" />
+      </use>
+
+      <use target="plante">
+        <animate skin="verse_eau.png" duration="10" />
+        <sync />
+        <comment text="Voilà, elle est arrosée." />
+      </use>
+
+    </state>
+
+  </object>
+
+  <object id="cendres"
+          name="Cendres">
+    
+    <state id="null">
+    </state>
+
+    <state id="inventory"
+           skin="cendres.png">
+
+    </state>
+
+  </object>
+
   <object id="coffre_fort"
           name="Coffre fort"
           x="10" y="10">
@@ -22,35 +73,35 @@
     <state id="verrouille"
            skin="coffre_fort_ferme.png">
       
-      <action name="Regarder">
+      <look>
         <window id="digicode"
                 skin="digicode.png">
         </window>
-      </action>
+      </look>
       
-      <action name="Ouvrir">
+      <open>
         <comment text="Il est verrouillé." />
-      </action>
+      </open>>
       
     </state>
     
     <state id="ouvert"
            skin="coffre_fort_ouvert.png">
       
-      <action name="Regarder">
+      <look>
         <if cond="clef_usb_prise">
           <comment text="Il est vide." />
         </if>
         <else>
           <comment text="Il y a une clef USB à l'intérieur." />
         </else>
-      </action>
+      </look>
 
-      <action name="Fermer">
+      <close>
         <action_animation />
         <play_sound file="closing.wav" />
         <set_state object="coffre_fort" state="ferme" />
-      </action>
+      </close>
       
     </state>
     
@@ -60,52 +111,50 @@
     
   </object>
 
-  <object id="bouteille"
-          name="Bouteille d'eau"
-          x="10" y="10">
-    
-    <state id="defaut"
-           skin="bouteille.png">
-      
-      <action name="Regarder">
-        <comment text="Pas moyen de lui faire utiliser une gourde… Il adore son plastique." />
-      </action>
-
-      <action name="Prendre">
-        <pick />
-      </action>
-
-      <action name="Pousser">
-        <comment text="Je n'ai pas envie d'en renverser sur le clavier." />
-      </action>
-      
-    </state>
-
-    <inventory_state skin="bouteille_inventaire.png">
-
-      <action target="ordinateur">
-        <comment text="Pour me faire virer ?" />
-      </action>
-
-      <action target="plante">
-        <animate skin="verse_eau.png" duration="10" />
-        <comment text="Voilà, elle est arrosée." />
-      </action>
-
-    </inventory_state>
-
-  </object>
-
   <object id="telephone"
           name="Téléphone"
           x="-1" y="-1">
-    <inventory_state skin="telephone.png">
-      <action>
+    
+    <state id="inventory"
+           skin="telephone.png">
+      
+      <look>
+        <comment text="C'est mon téléphone. C'est pas le dernier cri, mais il marche." />
+      </look>
+      
+      <use>
         <comment text="Je vais essayer d'appeler Harpagon." />
+        <sync />
         <animate skin="telephone.png" duration="10" />
+        <sync />
         <comment text="Ça ne répond pas." />
-      </action>
-    </inventory_state>
+      </use>
+      
+    </state>
+    
+  </object>
+
+  <object id="tisonnier"
+          name="Tisonnier"
+          x ="-1" y="-1">
+
+    <state id="default"
+           skin="tisonnier.png">
+
+      <look>
+        <comment text="Un beau tisonnier plein de cendres…" />
+      </look>
+
+      <pick>
+        <animate skin="prendre.png" duration="1" />
+        <sync />
+        <set_state object="cendres" state="inventory" />
+        <set_state object="tisonnier" state="inventory" />
+        <comment text="Beurk, j'ai ramassé un gros paquet de cendres avec…" />
+      </pick>
+
+    </state>
+    
   </object>
     
 </sosage_room>
