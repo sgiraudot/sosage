@@ -53,25 +53,40 @@ void Engine::set_character (const std::string& body, const std::string& head, in
   std::cerr << "Setting character " << body << "/" << head << " at " << x << "*" << y << std::endl;
 
   Component::Animation_handle abody
-     = m_content.set<Component::Animation>("character:image", local_file_name(body),
+     = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
                                            0, 9, 5);
   Component::Animation_handle ahead
-     = m_content.set<Component::Animation>("character:head", local_file_name(head),
-                                           0, 6, 2);
-  Component::Path_handle position
-    = m_content.set<Component::Path>("character:position", Point(x, y, WORLD));
+     = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
+                                           0, 7, 2);
+  Component::Path_handle pbody
+    = m_content.set<Component::Path>("character_body:position", Point(x, y, WORLD));
+
+  abody->z() = 1;
+  
+  Component::Path_handle phead
+    = m_content.set<Component::Path>("character_head:position", Point(x + 66, y, WORLD));
+//    = m_content.set<Component::Path>("character_head:position", Point(x, y, WORLD));
+  
+  ahead->z() = 2;
+  
   Component::Ground_map_handle ground_map
     = m_content.get<Component::Ground_map>("background:ground_map");
   
-  Vector translation (abody->width() / 2,
-                      abody->height(), CAMERA);
-  Point pos = (*position)[0] + translation;
-  abody->rescale (ground_map->z_at_point (pos));
-  ahead->rescale (ground_map->z_at_point (pos));
+  Vector tbody (abody->width() / 2,
+                abody->height(), CAMERA);
+  
+  Point pos_body = (*pbody)[0] + tbody;
+
+  double z_at_point = ground_map->z_at_point (pos_body);
+  abody->rescale (z_at_point);
+  ahead->rescale (z_at_point);
   ahead->z() += 1;
-  Vector back_translation (abody->width() / 2,
-                           abody->height(), CAMERA);
-  (*position)[0] = pos - back_translation;
+    
+  Vector btbody (abody->width() / 2,
+                 abody->height(), CAMERA);
+  
+  (*pbody)[0] = pos_body - btbody;
+  (*phead)[0] = (*pbody)[0] + (1. / (z_at_point / double(config().world_depth))) * Vector (66, 0, WORLD);
 
   m_logic.generate_random_idle_animation(abody, ahead, Vector(1,0,WORLD));
 }

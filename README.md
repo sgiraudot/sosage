@@ -2,10 +2,14 @@
 
 ## Actions
 
- * Regarder
- * Pousser
- * Tirer
- * Utiliser
+ * Ouvrir `open`
+ * Fermer `close`
+ * Prendre `take`
+ * Donner `give`
+ * Regarder `look`
+ * Parler `talk`
+ * Utiliser `use`
+ * Déplacer `move`
 
 ## Système de coordonnées
 
