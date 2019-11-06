@@ -32,9 +32,9 @@ void Logic::main()
 
 bool Logic::exit()
 {
-  Component::Boolean_handle status
-    = m_content.request<Component::Boolean>("game:status");
-  if (status && status->value())
+  Component::Boolean_handle exit
+    = m_content.request<Component::Boolean>("game:exit");
+  if (exit && exit->value())
     return true;
   return false;
 }

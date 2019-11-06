@@ -2,6 +2,7 @@
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Path.h>
+#include <Sosage/Third_party/XML.h>
 #include <Sosage/Engine.h>
 
 namespace Sosage
@@ -30,17 +31,11 @@ void Engine::main()
   }
 }
 
-int Engine::run_file (const std::string& file_name)
+int Engine::read_file (const std::string& file_name)
 {
   m_file_name = file_name;
-  m_core.read (file_name);
+  Third_party::XML().read (file_name, *this);
   main();
-  return EXIT_SUCCESS;
-}
-
-int Engine::run_directory (const std::string& directory_name)
-{
-
   return EXIT_SUCCESS;
 }
 
@@ -80,6 +75,5 @@ void Engine::set_character (const std::string& body, const std::string& head, in
 
   m_logic.generate_random_idle_animation(abody, ahead, Vector(1,0,WORLD));
 }
-
 
 } // namespace Sosage
