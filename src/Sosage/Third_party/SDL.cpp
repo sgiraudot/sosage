@@ -1,7 +1,5 @@
 #include <Sosage/Third_party/SDL.h>
 
-#ifdef SOSAGE_LINKED_WITH_SDL
-
 namespace Sosage::Third_party
 {
 
@@ -67,4 +65,3 @@ void SDL::end ()
 
 } // namespace Sosage::Third_party
 
-#endif

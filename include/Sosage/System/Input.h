@@ -2,7 +2,7 @@
 #define SOSAGE_SYSTEM_INPUT_H
 
 #include <Sosage/Content.h>
-#include <Sosage/third_party_config.h>
+#include <Sosage/Core/Input.h>
 
 namespace Sosage::System
 {
@@ -10,7 +10,7 @@ namespace Sosage::System
 class Input
 {
   Content& m_content;
-  Input_core m_core;
+  Core::Input m_core;
 
 public:
 

@@ -2,8 +2,8 @@
 #define SOSAGE_SYSTEM_GRAPHIC_H
 
 #include <Sosage/Component/Image.h>
+#include <Sosage/Core/Graphic.h>
 #include <Sosage/Content.h>
-#include <Sosage/third_party_config.h>
 
 #include <vector>
 
@@ -15,7 +15,7 @@ class Graphic
 private:
 
   Content& m_content;
-  Graphic_core m_core;
+  Core::Graphic m_core;
 
 public:
 

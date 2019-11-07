@@ -1,8 +1,6 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_EVENTS_H
 #define SOSAGE_THIRD_PARTY_SDL_EVENTS_H
 
-#ifdef SOSAGE_LINKED_WITH_SDL
-
 #include <utility>
 
 #include <SDL/SDL.h>
@@ -32,7 +30,5 @@ public:
 };
 
 } // namespace Sosage::Third_party
-
-#endif
 
 #endif // SOSAGE_THIRD_PARTY_SDL_EVENTS_H

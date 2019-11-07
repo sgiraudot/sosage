@@ -1,8 +1,6 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_H
 #define SOSAGE_THIRD_PARTY_SDL_H
 
-#ifdef SOSAGE_LINKED_WITH_SDL
-
 #include <Sosage/Utils/error.h>
 #include <Sosage/Config.h>
 
@@ -111,7 +109,5 @@ public:
 };
 
 } // namespace Sosage::Third_party
-
-#endif
 
 #endif // SOSAGE_THIRD_PARTY_SDL_H
