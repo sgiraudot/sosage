@@ -33,6 +33,8 @@ template <>
 int get<int> (xmlNode* node, const std::string& id)
 {
   xmlChar* c = xmlGetProp (node, (const xmlChar*)(id.c_str()));
+  if (!c)
+    return -1;
   int out = std::atoi ((const char*)c);
   xmlFree(c);
   return out;

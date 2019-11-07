@@ -3,7 +3,7 @@
 
 #include <utility>
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 
 namespace Sosage::Third_party
 {
