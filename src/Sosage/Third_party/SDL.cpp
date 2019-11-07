@@ -45,23 +45,24 @@ void SDL::begin ()
 }
 
 void SDL::draw (const Image& image,
-                const int x, const int y,
-                const int xmin, const int xmax,
-                const int ymin, const int ymax)
+                const int xsource, const int ysource,
+                const int wsource, const int hsource,
+                const int xtarget, const int ytarget,
+                const int wtarget, const int htarget)
 {
   SDL_Rect source;
-  source.x = xmin;
-  source.y = ymin;
-  source.w = (xmax - xmin);
-  source.h = (ymax - ymin);
+  source.x = xsource;
+  source.y = ysource;
+  source.w = wsource;
+  source.h = hsource;
   
-  SDL_Rect destination;
-  destination.x = x + (source.w / 2) * (1 - image.second);
-  destination.y = y + source.h * (1 - image.second);
-  destination.w = source.w * image.second;
-  destination.h = source.h * image.second;
+  SDL_Rect target;
+  target.x = xtarget;
+  target.y = ytarget;
+  target.w = wtarget;
+  target.h = htarget;
   
-  SDL_RenderCopy(m_renderer, image.first, &source, &destination);
+  SDL_RenderCopy(m_renderer, image.first, &source, &target);
 }
 
 void SDL::draw_line (const int xa, const int ya, const int xb, const int yb)

@@ -23,6 +23,9 @@ public:
 
   const Core::Graphic::Image& core() const { return m_core; }
 
+  const Point& origin() const { return m_origin; }
+  Point& origin() { return m_origin; }
+  
   const bool& on() const { return m_on; }
   bool& on() { return m_on; }
   
