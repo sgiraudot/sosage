@@ -28,8 +28,6 @@ private:
   void get_images (std::vector<Component::Image_handle>& images);
 
   void display_images (std::vector<Component::Image_handle>& images);
-
-  void display_path();
 };
 
 } // namespace Sosage::System

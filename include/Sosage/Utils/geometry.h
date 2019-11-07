@@ -9,7 +9,7 @@
 namespace Sosage
 {
 
-enum Space { WORLD, CAMERA, GROUND };
+enum Space { WORLD, GROUND };
 
 template <typename T>
 inline T square (const T& t) { return t*t; }
@@ -28,13 +28,13 @@ class Point
   
 public:
 
-  Point (double x, double y, const Space& space)
+  Point (double x, double y, const Space& space = WORLD)
   {
     m_x = from(x,space);
     m_y = from(y,space);
   }
 
-  Point (const std::pair<double, double>& coord, const Space& space)
+  Point (const std::pair<double, double>& coord, const Space& space = WORLD)
     : Point (coord.first, coord.second, space)
   { }
 
@@ -42,20 +42,16 @@ public:
   {
     if (space == WORLD)
       return v;
-    else if (space == CAMERA)
-      return (v + 0.5) * config().camera_scaling;
-    else
-      return (v + 0.5) * config().ground_map_scaling;
+    // else
+    return (v + 0.5) * config().ground_map_scaling;
   }
   
   double to (const double& v, const Space& space) const
   {
     if (space == WORLD)
       return v;
-    else if (space == CAMERA)
-      return (v / config().camera_scaling) - 0.5;
-    else
-      return (v / config().ground_map_scaling) - 0.5;
+    // else
+    return (v / config().ground_map_scaling) - 0.5;
   }
   
   double convert (const double& v, const Space& f, const Space& t) const
@@ -86,12 +82,18 @@ class Vector : public Point
 {
 public:
 
-  Vector (double x, double y, const Space& space)
+  Vector (double x, double y, const Space& space = WORLD)
     : Point (x, y, space)
   { }
 
   Vector (const Point& a, const Point& b)
     : Point (b.x() - a.x(), b.y() - a.y(), WORLD)
+  {
+    
+  }
+  
+  Vector (const Point& p)
+    : Point (p.x(), p.y())
   {
     
   }

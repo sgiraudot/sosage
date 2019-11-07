@@ -5,7 +5,7 @@ namespace Sosage::Component
 {
 
 Image::Image (const std::string& id, const std::string& file_name, int z)
-  : Base(id), m_z(z), m_on(true)
+  : Base(id), m_origin(0,0), m_z(z), m_on(true)
 {
   std::cerr << "Creating image " << file_name << std::endl;
   m_core = Core::Graphic::load_image (file_name);

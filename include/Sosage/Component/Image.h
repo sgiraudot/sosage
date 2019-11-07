@@ -3,6 +3,7 @@
 
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Core/Graphic.h>
+#include <Sosage/Utils/geometry.h>
 
 namespace Sosage::Component
 {
@@ -11,6 +12,7 @@ class Image : public Base
 {
 private:
   Core::Graphic::Image m_core;
+  Point m_origin;
   int m_z;
   bool m_on;
   
