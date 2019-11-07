@@ -1,5 +1,5 @@
 #include <Sosage/Component/Condition.h>
-#include <Sosage/Component/Path.h>
+#include <Sosage/Component/Position.h>
 #include <Sosage/System/Input.h>
 
 namespace Sosage::System
@@ -21,9 +21,8 @@ void Input::main()
       m_content.set<Component::Boolean>("game:exit", true);
     
     if (m_core.is_left_click(ev))
-      m_content.set<Component::Path>("character:target_query",
-                                     Point(m_core.click_target(ev),
-                                           CAMERA));
+      m_content.set<Component::Position>("character:target_query",
+                                         Point(m_core.click_target(ev)));
   }
 }
 

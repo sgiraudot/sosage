@@ -2,6 +2,7 @@
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Path.h>
+#include <Sosage/Component/Position.h>
 #include <Sosage/System/Logic.h>
 #include <Sosage/Utils/geometry.h>
 #include <Sosage/Utils/random.h>
@@ -19,8 +20,8 @@ Logic::Logic (Content& content)
 
 void Logic::main()
 {
-  Component::Path_handle target
-    = m_content.request<Component::Path>("character:target_query");
+  Component::Position_handle target
+    = m_content.request<Component::Position>("character:target_query");
   if (target)
     compute_path_from_target(target);
 
@@ -39,7 +40,7 @@ bool Logic::exit()
   return false;
 }
 
-void Logic::compute_path_from_target (Component::Path_handle target)
+void Logic::compute_path_from_target (Component::Position_handle target)
 {
   std::vector<Point> path;
   
@@ -51,14 +52,14 @@ void Logic::compute_path_from_target (Component::Path_handle target)
   Component::Animation_handle image
     = m_content.get<Component::Animation>("character_body:image");
       
-  Component::Path_handle position
-    = m_content.get<Component::Path>("character_body:position");
+  Component::Position_handle position
+    = m_content.get<Component::Position>("character_body:position");
       
-  Point origin = (*position)[0];
+  Point origin = position->value();
   origin = origin + Vector (image->width() / 2,
-                            image->height(), CAMERA);
+                            image->height());
 
-  ground_map->find_path (origin, (*target)[0], path);
+  ground_map->find_path (origin, target->value(), path);
       
   m_content.set<Component::Path>("character:path", path);
   path.clear();
@@ -73,18 +74,18 @@ void Logic::compute_movement_from_path (Component::Path_handle path)
   Component::Animation_handle ahead
     = m_content.get<Component::Animation>("character_head:image");
 
-  Component::Path_handle pbody
-    = m_content.get<Component::Path>("character_body:position");
+  Component::Position_handle pbody
+    = m_content.get<Component::Position>("character_body:position");
   
-  Component::Path_handle phead
-    = m_content.get<Component::Path>("character_head:position");
+  Component::Position_handle phead
+    = m_content.get<Component::Position>("character_head:position");
 
   Component::Ground_map_handle ground_map
     = m_content.get<Component::Ground_map>("background:ground_map");
 
   Vector translation (abody->width() / 2,
-                      abody->height(), CAMERA);
-  Point pos = (*pbody)[0] + translation;
+                      abody->height());
+  Point pos = pbody->value() + translation;
 
   double to_walk = config().character_speed * ground_map->z_at_point (pos) / config().world_depth;
       
@@ -119,19 +120,16 @@ void Logic::compute_movement_from_path (Component::Path_handle path)
   }
 
   double new_z = ground_map->z_at_point (pos);
-//  if (std::abs(abody->z() - new_z) > abody->z() / 20)
-  {
-    abody->rescale (new_z);
-    ahead->rescale (new_z);
-  }
+  abody->rescale (new_z);
+  ahead->rescale (new_z);
   Vector back_translation (abody->width() / 2,
-                           abody->height(), CAMERA);
-  (*pbody)[0] = pos - back_translation;
+                           abody->height());
+  pbody->set(pos - back_translation);
   
   if (direction.x() > 0)
-    (*phead)[0] = (*pbody)[0] + ( (new_z / double(config().world_depth))) * Vector (66, 0, WORLD);
+    phead->set (pbody->value() + ( (new_z / double(config().world_depth))) * Vector (66, 0, WORLD));
   else
-    (*phead)[0] = (*pbody)[0] + ( (new_z / double(config().world_depth))) * Vector (84, 0, WORLD);
+    phead->set (pbody->value() + ( (new_z / double(config().world_depth))) * Vector (84, 0, WORLD));
       
 }
 

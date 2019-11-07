@@ -3,6 +3,7 @@
 
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Path.h>
+#include <Sosage/Component/Position.h>
 #include <Sosage/Content.h>
 
 namespace Sosage::System
@@ -23,7 +24,7 @@ public:
 
 private:
 
-  void compute_path_from_target (Component::Path_handle target);
+  void compute_path_from_target (Component::Position_handle target);
   void compute_movement_from_path (Component::Path_handle path);
   void set_move_animation (Component::Animation_handle image,
                            Component::Animation_handle head,

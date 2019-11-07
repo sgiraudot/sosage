@@ -1,5 +1,5 @@
 #include <Sosage/Component/Image.h>
-#include <Sosage/Component/Path.h>
+#include <Sosage/Component/Position.h>
 #include <Sosage/System/Graphic.h>
 
 #include <algorithm>
@@ -26,8 +26,6 @@ void Graphic::main()
   display_images (images);
   images.clear();
 
-  display_path();
-
   m_core.end();
 }
 
@@ -51,27 +49,13 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
   {
     if (img->on())
     {
-      Component::Path_handle p = m_content.get<Component::Path>(img->entity() + ":position");
+      Component::Position_handle p = m_content.get<Component::Position>(img->entity() + ":position");
       m_core.draw (img->core(),
-                   (*p)[0].x(CAMERA),
-                   (*p)[0].y(CAMERA),
+                   p->value().x(),
+                   p->value().y(),
                    img->xmin(), img->xmax(),
                    img->ymin(), img->ymax());
     }
-  }
-}
-
-void Graphic::display_path()
-{
-  Component::Path_handle path = m_content.request<Component::Path>("character:path");
-  if (path)
-  {
-    for (std::size_t i = 0; i < path->size() - 1; ++ i)
-      m_core.draw_line ((*path)[i].x(CAMERA),
-                        (*path)[i].y(CAMERA),
-                        (*path)[i+1].x(CAMERA),
-                        (*path)[i+1].y(CAMERA));
-
   }
 }
 

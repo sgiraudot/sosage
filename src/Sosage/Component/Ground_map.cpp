@@ -17,7 +17,7 @@ Ground_map::Ground_map (const std::string& id,
   Core::Graphic::Surface source = Core::Graphic::load_surface (file_name);
 
   Point size (Core::Graphic::width(source), Core::Graphic::height(source),
-              CAMERA);
+              WORLD);
 
   m_data = vector_2<Node> (size.x(GROUND),
                            size.y(GROUND));
@@ -28,8 +28,8 @@ Ground_map::Ground_map (const std::string& id,
     for (std::size_t y = 0; y < m_data.height(); ++ y)
     {
       Point point(x,y, GROUND);
-      int xx = point.x(CAMERA);
-      int yy = point.y(CAMERA);
+      int xx = point.x(WORLD);
+      int yy = point.y(WORLD);
 
       std::array<unsigned char, 3> color
         = Core::Graphic::get_color (source, xx, yy);
