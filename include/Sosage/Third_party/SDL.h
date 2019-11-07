@@ -105,9 +105,12 @@ public:
   }
 
   void begin();
-  void draw (const Image& image, const int x, const int y,
-             const int xmin, const int xmax,
-             const int ymin, const int ymax);
+  void draw (const Image& image,
+             const int xsource, const int ysource,
+             const int wsource, const int hsource,
+             const int xtarget, const int ytarget,
+             const int wtarget, const int htarget);
+
   void draw_line (const int xa, const int ya, const int xb, const int yb);
   void end();
 

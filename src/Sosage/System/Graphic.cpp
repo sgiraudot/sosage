@@ -50,11 +50,18 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
     if (img->on())
     {
       Component::Position_handle p = m_content.get<Component::Position>(img->entity() + ":position");
-      m_core.draw (img->core(),
-                   p->value().x(),
-                   p->value().y(),
-                   img->xmin(), img->xmax(),
-                   img->ymin(), img->ymax());
+
+      int xmin = img->xmin();
+      int ymin = img->ymin();
+      int xmax = img->xmax();
+      int ymax = img->ymax();
+      
+      Point screen_position = p->value() - img->core().second * Vector(img->origin());
+
+      m_core.draw (img->core(), xmin, ymin, (xmax - xmin), (ymax - ymin),
+                   screen_position.x(), screen_position.y(),
+                   img->core().second * (xmax - xmin),
+                   img->core().second * (ymax - ymin));
     }
   }
 }

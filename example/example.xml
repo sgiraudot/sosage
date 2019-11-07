@@ -7,7 +7,7 @@
     ground_map="ground_map.png"
     body="sophie_corps.png"
     head="sophie_tete.png"
-    x="600" y="470">
+    x="800" y="1070">
 
   <boolean id="clef_usb_prise" value="false" />
   

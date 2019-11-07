@@ -55,36 +55,32 @@ void Engine::set_character (const std::string& body, const std::string& head, in
   Component::Animation_handle abody
      = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
                                            0, 9, 5);
+  abody->origin() = Point (abody->width() / 2, 0.9 * abody->height());
+  
   Component::Animation_handle ahead
      = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
                                            0, 7, 2);
+  ahead->origin() = Point (ahead->width() / 2, ahead->height());
+  
   Component::Position_handle pbody
-    = m_content.set<Component::Position>("character_body:position", Point(x, y, WORLD));
+    = m_content.set<Component::Position>("character_body:position", Point(x, y));
 
-  abody->z() = 1;
   
   Component::Position_handle phead
-    = m_content.set<Component::Position>("character_head:position", Point(x + 66, y, WORLD));
-//    = m_content.set<Component::Position>("character_head:position", Point(x, y, WORLD));
-  
-  ahead->z() = 2;
+    = m_content.set<Component::Position>("character_head:position", Point(x, y - 290));
   
   Component::Ground_map_handle ground_map
     = m_content.get<Component::Ground_map>("background:ground_map");
   
-  Vector tbody (abody->width() / 2, abody->height());
-  
-  Point pos_body = pbody->value() + tbody;
+  Point pos_body = pbody->value();
 
+  // abody->z() = 1;
+  // ahead->z() = 2;
   double z_at_point = ground_map->z_at_point (pos_body);
   abody->rescale (z_at_point);
   ahead->rescale (z_at_point);
   ahead->z() += 1;
-    
-  Vector btbody (abody->width() / 2, abody->height());
-  
-  pbody->set (pos_body - btbody);
-  phead->set (pbody->value() + (1. / (z_at_point / double(config().world_depth))) * Vector (66, 0));
+  phead->set (pbody->value() - abody->core().second * Vector(0, 290));
 
   m_logic.generate_random_idle_animation(abody, ahead, Vector(1,0));
 }

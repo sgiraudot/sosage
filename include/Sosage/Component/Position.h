@@ -1,6 +1,7 @@
 #ifndef SOSAGE_COMPONENT_POSITION_H
 #define SOSAGE_COMPONENT_POSITION_H
 
+#include <Sosage/Component/Image.h>
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Utils/geometry.h>
 
@@ -13,17 +14,13 @@ namespace Sosage::Component
 class Position : public Base
 {
   Point m_pos;
-  std::shared_ptr<Position> m_ref;
 
 public:
 
-  Position (const std::string& id, const Point& coord,
-            std::shared_ptr<Position> ref = std::shared_ptr<Position>());
+  Position (const std::string& id, const Point& coord);
 
   Point value () const
   {
-    if (m_ref != std::shared_ptr<Position>())
-      return m_pos + Vector(m_ref->value());
     return m_pos;
   }
 

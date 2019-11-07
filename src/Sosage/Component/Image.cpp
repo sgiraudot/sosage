@@ -18,6 +18,7 @@ Image::~Image()
 
 void Image::rescale (int z)
 {
+  m_z = z;
   double scaling = z / double(config().world_depth);
   Core::Graphic::rescale (m_core, scaling);
 }

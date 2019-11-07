@@ -56,8 +56,6 @@ void Logic::compute_path_from_target (Component::Position_handle target)
     = m_content.get<Component::Position>("character_body:position");
       
   Point origin = position->value();
-  origin = origin + Vector (image->width() / 2,
-                            image->height());
 
   ground_map->find_path (origin, target->value(), path);
       
@@ -83,9 +81,7 @@ void Logic::compute_movement_from_path (Component::Path_handle path)
   Component::Ground_map_handle ground_map
     = m_content.get<Component::Ground_map>("background:ground_map");
 
-  Vector translation (abody->width() / 2,
-                      abody->height());
-  Point pos = pbody->value() + translation;
+  Point pos = pbody->value();
 
   double to_walk = config().character_speed * ground_map->z_at_point (pos) / config().world_depth;
       
@@ -122,14 +118,14 @@ void Logic::compute_movement_from_path (Component::Path_handle path)
   double new_z = ground_map->z_at_point (pos);
   abody->rescale (new_z);
   ahead->rescale (new_z);
-  Vector back_translation (abody->width() / 2,
-                           abody->height());
-  pbody->set(pos - back_translation);
-  
+  pbody->set(pos);
+
+
   if (direction.x() > 0)
-    phead->set (pbody->value() + ( (new_z / double(config().world_depth))) * Vector (66, 0, WORLD));
+    phead->set (pbody->value() - abody->core().second * Vector(0, 290));
   else
-    phead->set (pbody->value() + ( (new_z / double(config().world_depth))) * Vector (84, 0, WORLD));
+    phead->set (pbody->value() - abody->core().second * Vector(-10, 290));
+
       
 }
 

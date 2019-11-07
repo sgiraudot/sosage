@@ -86,70 +86,70 @@ Ground_map::Ground_map (const std::string& id,
         }
       }
 
-  for (std::size_t y = 0; y < m_data.height(); y += m_data.height() / 50)
-  {
-    std::cerr << "[";
-    for (std::size_t x = 0; x < m_data.width(); x += m_data.width() / 50)
-      if (m_data(x,y).target_x == -1)
-        std::cerr << "#";
-      else
-        std::cerr << " ";
-    std::cerr << "]" << std::endl;
-  }
+  // for (std::size_t y = 0; y < m_data.height(); y += m_data.height() / 50)
+  // {
+  //   std::cerr << "[";
+  //   for (std::size_t x = 0; x < m_data.width(); x += m_data.width() / 50)
+  //     if (m_data(x,y).target_x == -1)
+  //       std::cerr << "#";
+  //     else
+  //       std::cerr << " ";
+  //   std::cerr << "]" << std::endl;
+  // }
 
-  {
-          std::ofstream dbg ("dbg.ppm");
-    dbg << "P3" << std::endl << m_data.width() << " " << m_data.height()
-        << std::endl << "255" << std::endl;
+  // {
+  //         std::ofstream dbg ("dbg.ppm");
+  //   dbg << "P3" << std::endl << m_data.width() << " " << m_data.height()
+  //       << std::endl << "255" << std::endl;
 
-    std::size_t nb = 0;
-    for (std::size_t y = 0; y < m_data.height(); ++ y)
-      for (std::size_t x = 0; x < m_data.width(); ++ x)
-      {
-        int r, g, b;
-        if (m_data(x,y).target_x == -1)
-        {
-          bool is_border = false;
-          if (x > 0 && m_data(x-1,y).target_x != -1)
-            is_border = true;
-          else if (x < m_data.width() - 1 && m_data(x+1,y).target_x != -1)
-            is_border = true;
-          if (y > 0 && m_data(x,y-1).target_x != -1)
-            is_border = true;
-          else if (y < m_data.height() - 1 && m_data(x,y+1).target_x != -1)
-            is_border = true;
+  //   std::size_t nb = 0;
+  //   for (std::size_t y = 0; y < m_data.height(); ++ y)
+  //     for (std::size_t x = 0; x < m_data.width(); ++ x)
+  //     {
+  //       int r, g, b;
+  //       if (m_data(x,y).target_x == -1)
+  //       {
+  //         bool is_border = false;
+  //         if (x > 0 && m_data(x-1,y).target_x != -1)
+  //           is_border = true;
+  //         else if (x < m_data.width() - 1 && m_data(x+1,y).target_x != -1)
+  //           is_border = true;
+  //         if (y > 0 && m_data(x,y-1).target_x != -1)
+  //           is_border = true;
+  //         else if (y < m_data.height() - 1 && m_data(x,y+1).target_x != -1)
+  //           is_border = true;
 
-          if (is_border)
-          {
-            srand(x + m_data.width() * y);
-            r = 64 + rand() % 128;
-            g = 64 + rand() % 128;
-            b = 64 + rand() % 128;
-          }
-          else
-          {
-            r = int(255 * (m_data(x,y).z / double(config().world_depth)));
-            g = int(255 * (m_data(x,y).z / double(config().world_depth)));
-            b = int(255 * (m_data(x,y).z / double(config().world_depth)));
-          }
-        }
-        else
-        {
-          int xx = m_data(x,y).target_x;
-          int yy = m_data(x,y).target_y;
-          srand(xx + m_data.width() * yy);
-          r = 64 + rand() % 128;
-          g = 64 + rand() % 128;
-          b = 64 + rand() % 128;
-        }
-        dbg << r << " " << g << " " << b << " ";
-        if (nb ++ == 4)
-        {
-          dbg << std::endl;
-          nb = 0;
-        }
-      }
-  }
+  //         if (is_border)
+  //         {
+  //           srand(x + m_data.width() * y);
+  //           r = 64 + rand() % 128;
+  //           g = 64 + rand() % 128;
+  //           b = 64 + rand() % 128;
+  //         }
+  //         else
+  //         {
+  //           r = int(255 * (m_data(x,y).z / double(config().world_depth)));
+  //           g = int(255 * (m_data(x,y).z / double(config().world_depth)));
+  //           b = int(255 * (m_data(x,y).z / double(config().world_depth)));
+  //         }
+  //       }
+  //       else
+  //       {
+  //         int xx = m_data(x,y).target_x;
+  //         int yy = m_data(x,y).target_y;
+  //         srand(xx + m_data.width() * yy);
+  //         r = 64 + rand() % 128;
+  //         g = 64 + rand() % 128;
+  //         b = 64 + rand() % 128;
+  //       }
+  //       dbg << r << " " << g << " " << b << " ";
+  //       if (nb ++ == 4)
+  //       {
+  //         dbg << std::endl;
+  //         nb = 0;
+  //       }
+  //     }
+  // }
 }
 
 void Ground_map::find_path (const Point& origin,
