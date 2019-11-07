@@ -2,7 +2,7 @@
 #define SOSAGE_SYSTEM_SOUND_H
 
 #include <Sosage/Content.h>
-#include <Sosage/third_party_config.h>
+#include <Sosage/Core/Sound.h>
 
 namespace Sosage::System
 {
@@ -10,7 +10,7 @@ namespace Sosage::System
 class Sound
 {
   Content& m_content;
-  Sound_core m_core;
+  Core::Sound m_core;
 
 public:
 

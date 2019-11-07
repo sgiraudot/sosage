@@ -1,4 +1,5 @@
 #include <Sosage/Component/Ground_map.h>
+#include <Sosage/Core/Graphic.h>
 
 #include <algorithm>
 #include <fstream>
@@ -13,9 +14,9 @@ Ground_map::Ground_map (const std::string& id,
   : Base(id)
 {
   std::cerr << "Creating ground map " << file_name << std::endl;
-  Core::Image source = Core::load_image (file_name);
+  Core::Graphic::Image source = Core::Graphic::load_image (file_name);
 
-  Point size (Core::width(source), Core::height(source),
+  Point size (Core::Graphic::width(source), Core::Graphic::height(source),
               CAMERA);
 
   m_data = vector_2<Node> (size.x(GROUND),
@@ -31,7 +32,7 @@ Ground_map::Ground_map (const std::string& id,
       int yy = point.y(CAMERA);
 
       std::array<unsigned char, 3> color
-        = Core::get_color (source, xx, yy);
+        = Core::Graphic::get_color (source, xx, yy);
 
       if (color[0] == color[1] && color[0] == color[2])
       {

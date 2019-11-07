@@ -1,8 +1,6 @@
 #include <Sosage/Third_party/SDL_mixer.h>
 #include <Sosage/Utils/error.h>
 
-#ifdef SOSAGE_LINKED_WITH_SDL_MIXER
-
 namespace Sosage::Third_party
 {
 
@@ -19,4 +17,3 @@ SDL_mixer::~SDL_mixer()
 
 } // namespace Sosage::Third_party
 
-#endif

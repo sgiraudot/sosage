@@ -4,15 +4,12 @@
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Utils/geometry.h>
 #include <Sosage/Utils/vector_2.h>
-#include <Sosage/third_party_config.h>
 
 namespace Sosage::Component
 {
 
 class Ground_map : public Base
 {
-  typedef Graphic_core Core;
-
   struct Node
   {
     int z;

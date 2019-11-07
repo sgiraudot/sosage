@@ -2,7 +2,6 @@
 #define SOSAGE_SYSTEM_ANIMATION_H
 
 #include <Sosage/Content.h>
-#include <Sosage/third_party_config.h>
 
 namespace Sosage::System
 {

@@ -1,7 +1,5 @@
 #include <Sosage/Third_party/SDL_events.h>
 
-#ifdef SOSAGE_LINKED_WITH_SDL
-
 namespace Sosage::Third_party
 {
 
@@ -47,4 +45,3 @@ SDL_events::click_target (const Event& ev)
 
 } // namespace Sosage::Third_party
 
-#endif

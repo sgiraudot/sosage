@@ -13,7 +13,7 @@ Input::Input (Content& content)
 
 void Input::main()
 {
-  Input_core::Event ev;
+  Core::Input::Event ev;
 
   while (m_core.next_event(ev))
   {
