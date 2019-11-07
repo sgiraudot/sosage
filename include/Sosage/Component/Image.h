@@ -11,7 +11,6 @@ class Image : public Base
 {
 private:
   Core::Graphic::Image m_core;
-  Core::Graphic::Image m_original;
   int m_z;
   bool m_on;
   

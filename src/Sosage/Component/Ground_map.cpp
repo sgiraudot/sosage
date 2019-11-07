@@ -14,7 +14,7 @@ Ground_map::Ground_map (const std::string& id,
   : Base(id)
 {
   std::cerr << "Creating ground map " << file_name << std::endl;
-  Core::Graphic::Image source = Core::Graphic::load_image (file_name);
+  Core::Graphic::Surface source = Core::Graphic::load_surface (file_name);
 
   Point size (Core::Graphic::width(source), Core::Graphic::height(source),
               CAMERA);

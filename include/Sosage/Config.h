@@ -43,7 +43,7 @@ struct Config
 };
 
 inline Config& config (int camera_width = 1200, bool fullscreen = false)
-//inline Config& config (int camera_width = 1920, bool fullscreen = true)
+//inline Config& config (int camera_width = 1920, bool fullscreen = false)
 {
   static std::unique_ptr<Config> c;
   if (c == std::unique_ptr<Config>())

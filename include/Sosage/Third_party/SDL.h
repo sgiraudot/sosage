@@ -4,11 +4,9 @@
 #include <Sosage/Utils/error.h>
 #include <Sosage/Config.h>
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL_gfxPrimitives.h>
-#include <SDL/SDL_rotozoom.h>
-#include <SDL/SDL_ttf.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 namespace Sosage::Third_party
 {
@@ -17,50 +15,45 @@ class SDL
 {
 public:
 
-  typedef SDL_Surface* Image;
+  typedef std::pair<SDL_Texture*, double> Image;
+  typedef SDL_Surface* Surface;
   
-private:
+  static SDL_Window* m_window;
+  static SDL_Renderer* m_renderer;
 
-  SDL_Surface* m_window;
   
 public:
 
   SDL (const std::string& game_name, int width, int height, bool fullscreen);
   ~SDL ();
 
+  static Surface load_surface (const std::string& file_name)
+  {
+    SDL_Surface* surf = IMG_Load (file_name.c_str());
+    check (surf != nullptr, "Cannot load image " + file_name);
+    return surf;
+  }
+
   static Image load_image (const std::string& file_name)
   {
-    SDL_Surface* out = IMG_Load (file_name.c_str());
-    
-    check (out != nullptr, "Cannot load image " + file_name);
-
-    if (config().world_height != config().camera_height)
-    {
-      SDL_Surface* scaled = zoomSurface (out, 1. / config().camera_scaling,
-                                         1. / config().camera_scaling, 1);
-      std::swap (out, scaled);
-      SDL_FreeSurface (scaled);
-    }
-    
-    return out;
+    SDL_Surface* surf = load_surface (file_name);
+    SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, surf);
+    check (out != nullptr, "Cannot create texture from " + file_name);
+    SDL_FreeSurface (surf);
+    return std::make_pair (out, 1);
   }
 
-  static Image copy_image (const Image& source)
+  static void rescale (Image& source, double scaling)
   {
-    return zoomSurface (source, 1, 1, 1);
-  }
-
-  static Image rescale (const Image& source, double scaling)
-  {
-    return zoomSurface (source, scaling, scaling, 1);
+    source.second = scaling;
   }
 
   static void delete_image (const Image& source)
   {
-    SDL_FreeSurface (source);
+    SDL_DestroyTexture (source.first);
   }
 
-  static std::array<unsigned char, 3> get_color (Image image, int x, int y)
+  static std::array<unsigned char, 3> get_color (Surface image, int x, int y)
   {
     SDL_LockSurface (image);
 
@@ -96,8 +89,20 @@ public:
     SDL_UnlockSurface (image);
     return out;
   }
-  static int width (Image image) { return image->w; }
-  static int height (Image image) { return image->h; }
+  static int width (Surface image) { return image->w; }
+  static int height (Surface image) { return image->h; }
+  static int width (Image image)
+  {
+    int out;
+    SDL_QueryTexture (image.first, NULL, NULL, &out, NULL);
+    return out;
+  }
+  static int height (Image image)
+  {
+    int out;
+    SDL_QueryTexture (image.first, NULL, NULL, NULL, &out);
+    return out;
+  }
 
   void begin();
   void draw (const Image& image, const int x, const int y,

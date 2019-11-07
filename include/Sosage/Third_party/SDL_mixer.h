@@ -1,7 +1,7 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_MIXER_H
 #define SOSAGE_THIRD_PARTY_SDL_MIXER_H
 
-#include <SDL/SDL_mixer.h>
+#include <SDL2/SDL_mixer.h>
 
 namespace Sosage::Third_party
 {
