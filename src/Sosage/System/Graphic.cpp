@@ -16,6 +16,11 @@ Graphic::Graphic (Content& content, const std::string& game_name)
 
 }
 
+void Graphic::set_cursor (const std::string& file_name)
+{
+  m_core.set_cursor (file_name);
+}
+
 void Graphic::main()
 {
   std::vector<Component::Image_handle> images;

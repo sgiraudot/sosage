@@ -3,11 +3,14 @@
 <sosage_room
     version="0.0.1"
     name="Bureau"
-    background="background.png"
-    ground_map="ground_map.png"
-    body="sophie_corps.png"
-    head="sophie_tete.png"
-    x="800" y="1070">
+    interface_font="TovariSans"
+    interface_color="B9CE73"
+    cursor="cursor"
+    background="example"
+    ground_map="example_map"
+    body="sophie_corps"
+    head="sophie_tete"
+    x="800" y="870">
 
   <boolean id="clef_usb_prise" value="false" />
   
@@ -16,7 +19,7 @@
           x="10" y="10">
     
     <state id="defaut"
-           skin="bouteille.png">
+           skin="bouteille">
       
       <look>
         <comment text="Pas moyen de lui faire utiliser une gourde… Il adore son plastique." />
@@ -33,14 +36,14 @@
     </state>
 
     <state id="inventory"
-           skin="bouteille_inventaire.png">
+           skin="bouteille_inventaire">
 
       <use target="ordinateur">
         <comment text="Pour me faire virer ?" />
       </use>
 
       <use target="plante">
-        <animate skin="verse_eau.png" duration="10" />
+        <animate skin="verse_eau" duration="10" />
         <sync />
         <comment text="Voilà, elle est arrosée." />
       </use>
@@ -56,7 +59,7 @@
     </state>
 
     <state id="inventory"
-           skin="cendres.png">
+           skin="cendres">
 
     </state>
 
@@ -71,11 +74,11 @@
     </state>
     
     <state id="verrouille"
-           skin="coffre_fort_ferme.png">
+           skin="coffre_fort_ferme">
       
       <look>
         <window id="digicode"
-                skin="digicode.png">
+                skin="digicode">
         </window>
       </look>
       
@@ -86,7 +89,7 @@
     </state>
     
     <state id="ouvert"
-           skin="coffre_fort_ouvert.png">
+           skin="coffre_fort_ouvert">
       
       <look>
         <if cond="clef_usb_prise">
@@ -106,7 +109,7 @@
     </state>
     
     <state id="ferme"
-           skin="coffre_fort_ferme.png">
+           skin="coffre_fort_ferme">
     </state>
     
   </object>
@@ -116,7 +119,7 @@
           x="-1" y="-1">
     
     <state id="inventory"
-           skin="telephone.png">
+           skin="telephone">
       
       <look>
         <comment text="C'est mon téléphone. C'est pas le dernier cri, mais il marche." />
@@ -125,7 +128,7 @@
       <use>
         <comment text="Je vais essayer d'appeler Harpagon." />
         <sync />
-        <animate skin="telephone.png" duration="10" />
+        <animate skin="telephone" duration="10" />
         <sync />
         <comment text="Ça ne répond pas." />
       </use>
@@ -139,14 +142,14 @@
           x ="-1" y="-1">
 
     <state id="default"
-           skin="tisonnier.png">
+           skin="tisonnier">
 
       <look>
         <comment text="Un beau tisonnier plein de cendres…" />
       </look>
 
       <pick>
-        <animate skin="prendre.png" duration="1" />
+        <animate skin="prendre" duration="1" />
         <sync />
         <set_state object="cendres" state="inventory" />
         <set_state object="tisonnier" state="inventory" />

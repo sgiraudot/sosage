@@ -26,7 +26,8 @@ public:
 
   bool is_exit (const Event& ev);
   bool is_left_click (const Event& ev);
-  std::pair<int, int> click_target (const Event& ev);
+  bool is_mouse_motion (const Event& ev);
+  std::pair<int, int> mouse_position (const Event& ev);
 };
 
 } // namespace Sosage::Third_party

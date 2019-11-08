@@ -48,6 +48,43 @@ void Engine::set_background (const std::string& image, const std::string& ground
   m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map));
 }
 
+void Engine::set_interface (const std::string& cursor,
+                            const std::string& font, const std::string& color_str)
+{
+  m_graphic.set_cursor (local_file_name(cursor));
+  
+  m_content.set<Component::Image> ("interface:image", 1080, 200);
+  m_content.set<Component::Position> ("interface:position", Point(0,880));
+  
+  Component::Font_handle interface_font
+    = m_content.set<Component::Font> ("interface:font", local_file_name(font), 80);
+
+  for (const auto& verb : { std::make_tuple (std::string("open"), std::string("Ouvrir"), 145, 960),
+        std::make_tuple (std::string("close"), std::string("Fermer"), 145, 1030),
+        std::make_tuple (std::string("give"), std::string("Donner"), 398, 960),
+        std::make_tuple (std::string("take"), std::string("Prendre"), 398, 1030),
+        std::make_tuple (std::string("look"), std::string("Regarder"), 674, 960),
+        std::make_tuple (std::string("talk"), std::string("Parler"), 674, 1030),
+        std::make_tuple (std::string("use"), std::string("Utiliser"), 960, 960),
+        std::make_tuple (std::string("move"), std::string("Déplacer"), 960, 1030) })
+  {
+    Component::Image_handle verb_img
+      = m_content.set<Component::Image> ("verb_" + std::get<0>(verb) + ":image",
+                                         interface_font, color_str, std::get<1>(verb));
+    verb_img->origin() = Point (verb_img->width() / 2, verb_img->height() / 2);
+    verb_img->set_scale(0.75);
+    Component::Position_handle verb_pos
+      = m_content.set<Component::Position>("verb_" + std::get<0>(verb) + ":position",
+                                           Point(std::get<2>(verb), std::get<3>(verb)));
+  }
+
+  Component::Image_handle text_img
+    = m_content.set<Component::Image>("chosen_verb:image", interface_font, "FFFFFF", "Aller vers");
+  text_img->origin() = Point (text_img->width() / 2, text_img->height() / 2);
+  text_img->set_scale(0.5);
+  m_content.set<Component::Position>("chosen_verb:position", Point(960, 905));
+}
+
 void Engine::set_character (const std::string& body, const std::string& head, int x, int y)
 {
   std::cerr << "Setting character " << body << "/" << head << " at " << x << "*" << y << std::endl;

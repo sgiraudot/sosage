@@ -8,6 +8,8 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
+#include <sstream>
+
 namespace Sosage::Third_party
 {
 
@@ -17,9 +19,13 @@ public:
 
   typedef std::pair<SDL_Texture*, double> Image;
   typedef SDL_Surface* Surface;
+  typedef TTF_Font* Font;
   
   static SDL_Window* m_window;
   static SDL_Renderer* m_renderer;
+
+  SDL_Surface* m_cursor_surf;
+  SDL_Cursor* m_cursor;
 
   
 public:
@@ -27,6 +33,20 @@ public:
   SDL (const std::string& game_name, int width, int height, bool fullscreen);
   ~SDL ();
 
+  void set_cursor (const std::string& file_name);
+    
+
+  static Image create_rectangle (int w, int h, int r, int g, int b)
+  {
+    // To fix
+    SDL_Surface* surf= SDL_CreateRGBSurface (0, w, h, 32, r, g, b, 0);
+    check (surf != nullptr, "Cannot create rectangle surface");
+    SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, surf);
+    check (out != nullptr, "Cannot create rectangle texture");
+    SDL_FreeSurface (surf);
+    return std::make_pair (out, 1);
+  }
+  
   static Surface load_surface (const std::string& file_name)
   {
     SDL_Surface* surf = IMG_Load (file_name.c_str());
@@ -43,6 +63,46 @@ public:
     return std::make_pair (out, 1);
   }
 
+  static Font load_font (const std::string& file_name, int size)
+  {
+    TTF_Font* out = TTF_OpenFont (file_name.c_str(), size);
+    check (out != nullptr, "Cannot load font " + file_name);
+    return out;
+  }
+
+  static SDL_Color black()
+  {
+    SDL_Color out;
+    out.r = 0;
+    out.g = 0;
+    out.b = 0;
+    return out;
+  }
+  
+  static SDL_Color color (const std::string& color_str)
+  {
+    std::stringstream ss(color_str);
+    int num;
+    ss >> std::hex >> num;
+    
+    SDL_Color out;
+    out.r = num / 0x10000;
+    out.g = (num / 0x100) % 0x100;
+    out.b = num % 0x100;
+    return out;
+  }
+  
+  static Image create_text (const Font& font, const std::string& color_str,
+                            const std::string& text)
+  {
+    SDL_Surface* surf = TTF_RenderUTF8_Shaded (font, text.c_str(), color(color_str), black());
+    check (surf != nullptr, "Cannot create text \"" + text + "\"");
+    SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, surf);
+    check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
+    SDL_FreeSurface (surf);
+    return std::make_pair (out, 1);
+  }
+
   static void rescale (Image& source, double scaling)
   {
     source.second = scaling;
@@ -51,6 +111,11 @@ public:
   static void delete_image (const Image& source)
   {
     SDL_DestroyTexture (source.first);
+  }
+
+  static void delete_font (const Font& font)
+  {
+    TTF_CloseFont(font);
   }
 
   static std::array<unsigned char, 3> get_color (Surface image, int x, int y)

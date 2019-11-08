@@ -1,6 +1,7 @@
 #ifndef SOSAGE_COMPONENT_IMAGE_H
 #define SOSAGE_COMPONENT_IMAGE_H
 
+#include <Sosage/Component/Font.h>
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Core/Graphic.h>
 #include <Sosage/Utils/geometry.h>
@@ -18,7 +19,10 @@ private:
   
 public:
 
+  Image (const std::string& id, int w, int h, int r = 0, int g = 0, int b = 0);
   Image (const std::string& id, const std::string& file_name, int z);
+  Image (const std::string& id, Font_handle font, const std::string& color_str, const std::string& text);
+  
   virtual ~Image();
 
   const Core::Graphic::Image& core() const { return m_core; }
@@ -41,6 +45,7 @@ public:
   int& z() { return m_z; }
 
   void rescale (int z);
+  void set_scale (double scale);
 };
 
 typedef std::shared_ptr<Image> Image_handle;
