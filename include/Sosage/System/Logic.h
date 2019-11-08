@@ -14,6 +14,7 @@ class Logic
 private:
 
   Content& m_content;
+  Component::Handle_set m_collisions;
 
 public:
 
@@ -33,7 +34,9 @@ public:
   void generate_random_idle_animation (Component::Animation_handle image,
                                        Component::Animation_handle head,
                                        const Vector& direction);
-                           
+
+private:
+  void detect_collisions (Component::Position_handle mouse);
 };
 
 } // namespace Sosage::System

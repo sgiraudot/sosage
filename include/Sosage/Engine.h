@@ -31,7 +31,9 @@ public:
   void main ();
 
   int read_file (const std::string& file_name);
-
+  
+  void set_interface (const std::string& cursor,
+                      const std::string& font, const std::string& color_str);
   void set_background (const std::string& image, const std::string& ground_map);
   void set_character (const std::string& body, const std::string& head, int x, int y);
 

@@ -29,6 +29,11 @@ void Logic::main()
     = m_content.request<Component::Path>("character:path");
   if (path)
     compute_movement_from_path(path);
+
+  Component::Position_handle mouse
+    = m_content.request<Component::Position>("mouse:position");
+  if (mouse)
+    detect_collisions (mouse);
 }
 
 bool Logic::exit()
@@ -224,14 +229,33 @@ void Logic::generate_random_idle_animation (Component::Animation_handle image,
   pose = 0;
   for (int i = 0; i < 10; ++ i)
   {
-    // Stand still for a while
-    head->frames().push_back
-      (Component::Animation::Frame
-       (pose, row_index, random_int(10, 50) * config().animation_frame_rate));
+    int remaining = random_int(10, 150);
 
-    head->frames().push_back
-      (Component::Animation::Frame
+    while (true)
+    {
+      int next_blink = random_int(5, 50);
+
+      if (remaining > next_blink)
+        remaining -= next_blink;
+      else
+      {
+        next_blink = remaining;
+        remaining = 0;
+      }
+
+      // Stand still for a while
+      head->frames().push_back
+        (Component::Animation::Frame
+         (pose, row_index, next_blink * config().animation_frame_rate));
+
+      if (remaining == 0)
+        break;
+
+      // Blink eyes
+      head->frames().push_back
+        (Component::Animation::Frame
        (1, row_index, config().animation_frame_rate));
+    }
 
     if (random_int(0,4) == 0)
     {
@@ -251,6 +275,47 @@ void Logic::generate_random_idle_animation (Component::Animation_handle image,
 
 }
 
+void Logic::detect_collisions (Component::Position_handle mouse)
+{
+  // Deactive previous collisions
+  for (const auto& c : m_collisions)
+  {
+    Component::Image_handle img
+      = Component::cast<Component::Image>(c);
+    if (img->entity().find("verb_") == 0)
+      img->set_scale(0.75);
+  }
+
+  m_collisions.clear();
   
+  for (const auto& e : m_content)
+    if (Component::Image_handle img
+        = Component::cast<Component::Image>(e))
+    {
+      if (!img->on())
+        continue;
+      
+      Component::Position_handle p = m_content.get<Component::Position>(img->entity() + ":position");
+
+      Point screen_position = p->value() - img->core().second * Vector(img->origin());
+      int xmin = screen_position.x();
+      int ymin = screen_position.y();
+      int xmax = xmin + (img->core().second * (img->xmax() - img->xmin()));
+      int ymax = ymin + (img->core().second * (img->ymax() - img->ymin()));
+
+      if (mouse->value().x() < xmin ||
+          mouse->value().x() > xmax ||
+          mouse->value().y() < ymin ||
+          mouse->value().y() > ymax)
+        continue;
+
+      // Now, collision happened
+      m_collisions.insert (img);
+
+      if (img->entity().find("verb_") == 0)
+        img->set_scale(1.0);
+    }
+
+}
 
 } // namespace Sosage::System

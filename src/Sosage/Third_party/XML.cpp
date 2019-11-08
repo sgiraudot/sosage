@@ -58,12 +58,17 @@ void XML::read (const std::string& file_name, Engine& engine)
          "Error: room version " + v + " incompatible with Sosage " + Sosage::version());
   
   std::string name = get<std::string> (node, "name");
-  std::string background = get<std::string> (node, "background");
-  std::string ground_map = get<std::string> (node, "ground_map");
+  std::string background = "backgrounds/" + get<std::string> (node, "background") + ".png";
+  std::string ground_map = "backgrounds/" + get<std::string> (node, "ground_map") + ".png";
   engine.set_background (background, ground_map);
-  
-  std::string body = get<std::string> (node, "body");
-  std::string head = get<std::string> (node, "head");
+
+  std::string cursor = "sprites/" + get<std::string> (node, "cursor") + ".png";
+  std::string interface_font = "fonts/" + get<std::string> (node, "interface_font") + ".ttf";
+  std::string interface_color = get<std::string> (node, "interface_color");
+  engine.set_interface (cursor, interface_font, interface_color);
+
+  std::string body = "sprites/" + get<std::string> (node, "body") + ".png";
+  std::string head = "sprites/" + get<std::string> (node, "head") + ".png";
   int x = get<int> (node, "x");
   int y = get<int> (node, "y");
   engine.set_character (body, head, x, y);

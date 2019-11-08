@@ -35,8 +35,14 @@ SDL_events::is_left_click (const Event& ev)
           ev.button.state == SDL_RELEASED);
 }
 
+bool
+SDL_events::is_mouse_motion (const Event& ev)
+{
+  return (ev.type == SDL_MOUSEMOTION);
+}
+
 std::pair<int, int>
-SDL_events::click_target (const Event& ev)
+SDL_events::mouse_position (const Event& ev)
 {
   int x = ev.button.x;
   int y = ev.button.y;

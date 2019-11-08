@@ -4,11 +4,24 @@
 namespace Sosage::Component
 {
 
+Image::Image (const std::string& id, int w, int h, int r, int g, int b)
+  : Base(id), m_origin(0,0), m_z(1000000), m_on(true)
+{
+  m_core = Core::Graphic::create_rectangle (w, h, r, g, b);
+}
+
 Image::Image (const std::string& id, const std::string& file_name, int z)
   : Base(id), m_origin(0,0), m_z(z), m_on(true)
 {
   std::cerr << "Creating image " << file_name << std::endl;
   m_core = Core::Graphic::load_image (file_name);
+}
+
+Image::Image (const std::string& id, Font_handle font, const std::string& color_str,
+              const std::string& text)
+  : Base(id), m_origin(0,0), m_z(1000001), m_on(true)
+{
+  m_core = Core::Graphic::create_text (font->core(), color_str, text);
 }
 
 Image::~Image()
@@ -21,6 +34,11 @@ void Image::rescale (int z)
   m_z = z;
   double scaling = z / double(config().world_depth);
   Core::Graphic::rescale (m_core, scaling);
+}
+
+void Image::set_scale (double scale)
+{
+  Core::Graphic::rescale (m_core, scale);
 }
 
 
