@@ -22,7 +22,7 @@ class Engine
   System::Logic m_logic;
   Clock m_clock;
 
-  std::string m_file_name;
+  std::string m_folder_name;
 
 public:
 
@@ -30,7 +30,7 @@ public:
 
   void main ();
 
-  int read_file (const std::string& file_name);
+  int run (const std::string& folder_name);
   
   void set_interface (const std::string& cursor,
                       const std::string& font, const std::string& color_str);
@@ -41,11 +41,7 @@ private:
   
   inline std::string local_file_name (const std::string& file_name)
   {
-    std::size_t last = m_file_name.find_last_of('/');
-    if (last == std::string::npos)
-      return file_name;
-
-    return std::string(m_file_name.begin(), m_file_name.begin() + last + 1) + file_name;
+    return m_folder_name + file_name;
   }
 
 };

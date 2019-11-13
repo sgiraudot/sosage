@@ -1,5 +1,6 @@
 #include <Sosage/Component/Condition.h>
 #include <Sosage/Component/Ground_map.h>
+#include <Sosage/Component/Font.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
@@ -55,6 +56,14 @@ bool Logic::paused()
     {
       m_content.set<Component::Image>("pause_screen:image", config().world_width, config().world_height, 0, 0, 0, 128);
       m_content.set<Component::Position>("pause_screen:position", Point(0, 0));
+      Component::Font_handle interface_font
+        = m_content.get<Component::Font>("interface:font");
+      Component::Image_handle pause_text
+        = m_content.set<Component::Image>("pause_text:image", interface_font, "FFFFFF", "PAUSE");
+      pause_text->origin() = Point (pause_text->width() / 2, pause_text->height() / 2);
+      m_content.set<Component::Position>("pause_text:position", Point(config().world_width / 2,
+                                                                      config().world_height / 2));
+
     }
     return true;
   }
@@ -63,6 +72,8 @@ bool Logic::paused()
   {
     m_content.remove ("pause_screen:image");
     m_content.remove ("pause_screen:position");
+    m_content.remove ("pause_text:image");
+    m_content.remove ("pause_text:position");
   }
   return false;
 }

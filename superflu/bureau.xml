@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <sosage_room
-    version="0.0.1"
     name="Bureau"
-    interface_font="TovariSans"
-    interface_color="B9CE73"
-    cursor="cursor"
     background="example"
     ground_map="example_map"
     body="sophie_corps"

@@ -22,7 +22,7 @@ public:
   XML ();
   ~XML ();
 
-  void read (const std::string& file_name, Engine& engine);
+  std::string read (const std::string& file_name, Engine& engine);
 };
 
 } // namespace Sosage::Third_party
