@@ -23,10 +23,13 @@ void Engine::main()
   while (!m_logic.exit())
   {
     m_input.main();
-    m_logic.main();
-    m_animation.main();
+    if (!m_logic.paused())
+    {
+      m_logic.main();
+      m_animation.main();
+      m_sound.main();
+    }
     m_graphic.main();
-    m_sound.main();
     m_clock.wait(true);
   }
 }

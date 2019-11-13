@@ -22,6 +22,7 @@ public:
 
   void main();
   bool exit();
+  bool paused();
 
 private:
 

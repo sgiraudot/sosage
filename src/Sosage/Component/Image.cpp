@@ -4,10 +4,10 @@
 namespace Sosage::Component
 {
 
-Image::Image (const std::string& id, int w, int h, int r, int g, int b)
+Image::Image (const std::string& id, int w, int h, int r, int g, int b, int a)
   : Base(id), m_origin(0,0), m_z(1000000), m_on(true)
 {
-  m_core = Core::Graphic::create_rectangle (w, h, r, g, b);
+  m_core = Core::Graphic::create_rectangle (w, h, r, g, b, a);
 }
 
 Image::Image (const std::string& id, const std::string& file_name, int z)
