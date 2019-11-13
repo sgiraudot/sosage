@@ -34,11 +34,18 @@ void Engine::main()
   }
 }
 
-int Engine::read_file (const std::string& file_name)
+int Engine::run (const std::string& folder_name)
 {
-  m_file_name = file_name;
-  Third_party::XML().read (file_name, *this);
-  main();
+  m_folder_name = folder_name;
+  std::string file_name = folder_name + "init.xml";
+  std::string room_name = Third_party::XML().read (file_name, *this);
+
+  while (room_name != std::string())
+  {
+    room_name = Third_party::XML().read (local_file_name(room_name), *this);
+    main();
+  }
+  
   return EXIT_SUCCESS;
 }
 

@@ -54,6 +54,6 @@ file(GLOB_RECURSE sosage_SRC "src/*.cpp")
 add_library(sosage SHARED ${sosage_SRC})
 target_link_libraries(sosage PUBLIC ${project_linked_libraries})
 
-add_executable(sosage_test "test/test.cpp")
-target_link_libraries(sosage_test PUBLIC sosage)
-
+add_executable(superflu "test/superflu.cpp")
+target_link_libraries(superflu PUBLIC sosage)
+target_compile_options(superflu PUBLIC -DSUPERFLU_DATA_FOLDER="${CMAKE_CURRENT_LIST_DIR}/superflu/")
