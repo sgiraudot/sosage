@@ -19,7 +19,7 @@ private:
   
 public:
 
-  Image (const std::string& id, int w, int h, int r = 0, int g = 0, int b = 0);
+  Image (const std::string& id, int w, int h, int r = 0, int g = 0, int b = 0, int a = 255);
   Image (const std::string& id, const std::string& file_name, int z);
   Image (const std::string& id, Font_handle font, const std::string& color_str, const std::string& text);
   

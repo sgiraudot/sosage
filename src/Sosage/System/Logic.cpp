@@ -45,6 +45,28 @@ bool Logic::exit()
   return false;
 }
 
+bool Logic::paused()
+{
+  Component::Boolean_handle paused
+    = m_content.request<Component::Boolean>("game:paused");
+  if (paused && paused->value())
+  {
+    if (!m_content.request<Component::Image>("pause_screen:image"))
+    {
+      m_content.set<Component::Image>("pause_screen:image", config().world_width, config().world_height, 0, 0, 0, 128);
+      m_content.set<Component::Position>("pause_screen:position", Point(0, 0));
+    }
+    return true;
+  }
+  
+  if (m_content.request<Component::Image>("pause_screen:image"))
+  {
+    m_content.remove ("pause_screen:image");
+    m_content.remove ("pause_screen:position");
+  }
+  return false;
+}
+
 void Logic::compute_path_from_target (Component::Position_handle target)
 {
   std::vector<Point> path;

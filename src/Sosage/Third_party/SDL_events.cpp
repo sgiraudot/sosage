@@ -13,21 +13,23 @@ SDL_events::~SDL_events ()
 
 }
 
-bool
-SDL_events::next_event (SDL_events::Event& ev)
+bool SDL_events::next_event (SDL_events::Event& ev)
 {
   return (SDL_PollEvent (&ev) == 1);
 }
 
-bool
-SDL_events::is_exit (const Event& ev)
+bool SDL_events::is_exit (const Event& ev)
 {
   return (ev.type == SDL_QUIT ||
           (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_ESCAPE));
 }
 
-bool
-SDL_events::is_left_click (const Event& ev)
+bool SDL_events::is_pause (const Event& ev)
+{
+  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_SPACE);
+}
+
+bool SDL_events::is_left_click (const Event& ev)
 {
   return (ev.type == SDL_MOUSEBUTTONUP &&
           ev.button.type == SDL_MOUSEBUTTONUP &&
@@ -35,14 +37,12 @@ SDL_events::is_left_click (const Event& ev)
           ev.button.state == SDL_RELEASED);
 }
 
-bool
-SDL_events::is_mouse_motion (const Event& ev)
+bool SDL_events::is_mouse_motion (const Event& ev)
 {
   return (ev.type == SDL_MOUSEMOTION);
 }
 
-std::pair<int, int>
-SDL_events::mouse_position (const Event& ev)
+std::pair<int, int> SDL_events::mouse_position (const Event& ev)
 {
   int x = ev.button.x;
   int y = ev.button.y;

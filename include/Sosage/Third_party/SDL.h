@@ -36,10 +36,10 @@ public:
   void set_cursor (const std::string& file_name);
     
 
-  static Image create_rectangle (int w, int h, int r, int g, int b)
+  static Image create_rectangle (int w, int h, int r, int g, int b, int a)
   {
     // To fix
-    SDL_Surface* surf= SDL_CreateRGBSurface (0, w, h, 32, r, g, b, 0);
+    SDL_Surface* surf= SDL_CreateRGBSurface (0, w, h, 32, r, g, b, a);
     check (surf != nullptr, "Cannot create rectangle surface");
     SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, surf);
     check (out != nullptr, "Cannot create rectangle texture");
