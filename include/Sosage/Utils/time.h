@@ -3,59 +3,66 @@
 
 #include <Sosage/Config.h>
 
-#include <chrono>
-#include <thread>
+#include <Sosage/Core/Time.h>
 
 namespace Sosage
 {
+using namespace Core;
 
 class Clock
 {
-  std::chrono::time_point<std::chrono::high_resolution_clock> m_latest;
-  const std::chrono::duration<double> m_refresh_time;
-  std::chrono::high_resolution_clock m_clock;
+  Time::Unit m_latest;
+  Time::Duration m_refresh_time;
 
   double m_mean;
   double m_active;
   std::size_t m_nb;
+  
+  double m_fps;
+  double m_cpu;
+
+  Clock (const Clock&) { }
 
 public:
 
   Clock()
-    : m_refresh_time (1. / double(config().target_fps))
-    , m_mean(0), m_active(0), m_nb(0)
+    : m_refresh_time (1000. / double(config().target_fps))
+    , m_mean(0), m_active(0), m_nb(0), m_fps(config().target_fps), m_cpu(0)
   {
-    m_latest = std::chrono::high_resolution_clock::now();
+    m_latest = Time::now();
   }
 
   void wait(bool verbose)
   {
-    std::chrono::time_point<std::chrono::high_resolution_clock>
-      now = m_clock.now();
-    
-    std::chrono::duration<double> duration = now - m_latest;
+    Uint32 now = Time::now();
+    Uint32 duration = now - m_latest;
 
     if (duration < m_refresh_time)
-      std::this_thread::sleep_for(m_refresh_time - duration);
+      Time::wait (m_refresh_time - duration);
 
-    now = m_clock.now();
+    now = Time::now();
     if (verbose)
     {
-      m_active += (duration.count()) / double(m_refresh_time.count());
-      m_mean += (now - m_latest).count();
+      m_active += duration;
+      m_mean += (now - m_latest);
       ++ m_nb;
       if (m_nb == 20)
       {
-        std::cerr << "\rFPS: " << (m_nb / m_mean) * 1e9
-                  << ", CPU: " << 100. * (m_active / m_nb) << "%";
+        m_fps = 1000. / (m_mean / m_nb);
+        m_cpu = 100. * (m_active / (m_nb * m_refresh_time));
+        
+        debug ("FPS: " + std::to_string (m_fps)
+               + ", CPU: " + std::to_string (m_cpu));
         m_mean = 0.;
         m_active = 0.;
         m_nb = 0;
       }
     }
-    m_latest = m_clock.now();
+    m_latest = now;
   }
-  
+
+  double fps() const { return m_fps; }
+  double cpu() const { return m_cpu; }
 
 };
 

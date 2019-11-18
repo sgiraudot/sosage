@@ -12,7 +12,7 @@ Animation::Animation (const std::string& id, const std::string& file_name, int z
   , m_height_subdiv (height_subdiv)
   , m_current(0)
 {
-  std::cerr << "Creating animation " << file_name << std::endl;
+  debug ("Creating animation " + file_name);
   reset();
 }
 
