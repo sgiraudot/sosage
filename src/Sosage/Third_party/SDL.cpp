@@ -13,13 +13,12 @@ SDL::SDL (const std::string& game_name,
   int init = SDL_Init(SDL_INIT_VIDEO);
   check (init != -1, "Cannot initialize SDL");
 
-  char *base_path = SDL_GetBasePath();
-  if (base_path)
-    std::cerr << "Base path = " << base_path << std::endl;
-  char *pref_path = SDL_GetPrefPath("Ptilouk", "Sosage");
-  if (pref_path)
-    std::cerr << "Base path = " << pref_path << std::endl;
-//  exit(0);
+  // char *base_path = SDL_GetBasePath();
+  // if (base_path)
+  //   std::cerr << "Base path = " << base_path << std::endl;
+  // char *pref_path = SDL_GetPrefPath("Ptilouk", "Sosage");
+  // if (pref_path)
+  //   std::cerr << "Base path = " << pref_path << std::endl;
 
   init = TTF_Init();
   check (init != -1, "Cannot initialize SDL TTF");

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<sosage_room
+    name="Example"
+    background="example"
+    ground_map="example_map"
+    body="sophie_corps"
+    head="sophie_tete"
+    x="800" y="870">
+
+  <object id="voiture"
+          name="Voiture"
+          x="666" y="496">
+    
+    <state id="defaut"
+           skin="voiture">
+      
+      <look>
+        <comment text="C'est la Flumobile…" />
+      </look>
+    </state>
+
+  </object>
+
+</sosage_room>

@@ -13,7 +13,7 @@ Image::Image (const std::string& id, int w, int h, int r, int g, int b, int a)
 Image::Image (const std::string& id, const std::string& file_name, int z)
   : Base(id), m_origin(0,0), m_z(z), m_on(true)
 {
-  std::cerr << "Creating image " << file_name << std::endl;
+  debug ("Creating image " + file_name);
   m_core = Core::Graphic::load_image (file_name);
 }
 

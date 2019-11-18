@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<sosage_init
+    version="0.0.1"
+    cursor="cursor"
+    debug_font="DejaVuSansMono"
+    interface_font="TovariSans"
+    interface_color="B9CE73">
+
+  <load room="example" />
+    
+</sosage_init>

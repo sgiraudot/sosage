@@ -26,6 +26,7 @@ public:
     : Condition(id), m_value(value) { }
 
   void set(const bool& value) { m_value = value; }
+  void toggle() { m_value = !m_value; }
   virtual bool value() const { return m_value; }
 };
 

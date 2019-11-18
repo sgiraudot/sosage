@@ -27,15 +27,18 @@ class Engine
 public:
 
   Engine (const std::string& game_name);
+  ~Engine();
 
   void main ();
 
   int run (const std::string& folder_name);
   
-  void set_interface (const std::string& cursor,
+  void set_interface (const std::string& cursor, const std::string& dbg_font,
                       const std::string& font, const std::string& color_str);
   void set_background (const std::string& image, const std::string& ground_map);
   void set_character (const std::string& body, const std::string& head, int x, int y);
+
+  void add_object (const std::string& id, const std::string& image, int x, int y);
 
 private:
   

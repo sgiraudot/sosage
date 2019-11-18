@@ -17,6 +17,8 @@ public:
 
   Content ();
 
+  void clear() { m_data.clear(); }
+
   std::size_t size() const { return m_data.size(); }
 
   template <typename T>
@@ -29,15 +31,15 @@ public:
   }
   
   template <typename T, typename ... Args>
-  std::shared_ptr<T> set (Args ... args)
+  std::shared_ptr<T> set (Args&& ... args)
   {
     std::shared_ptr<T> new_component = std::make_shared<T>(args...);
     set (new_component);
     return new_component;
   }
 
-  Component::Handle_set::const_iterator begin() { return m_data.begin(); }
-  Component::Handle_set::const_iterator end() { return m_data.end(); }
+  Component::Handle_set::const_iterator begin() const { return m_data.begin(); }
+  Component::Handle_set::const_iterator end() const { return m_data.end(); }
 
   void remove (const std::string& key)
   {

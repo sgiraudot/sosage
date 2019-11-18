@@ -35,6 +35,8 @@ void Logic::main()
     = m_content.request<Component::Position>("mouse:position");
   if (mouse)
     detect_collisions (mouse);
+
+  update_debug_info (m_content.get<Component::Debug>("game:debug"));
 }
 
 bool Logic::exit()
@@ -48,34 +50,7 @@ bool Logic::exit()
 
 bool Logic::paused()
 {
-  Component::Boolean_handle paused
-    = m_content.request<Component::Boolean>("game:paused");
-  if (paused && paused->value())
-  {
-    if (!m_content.request<Component::Image>("pause_screen:image"))
-    {
-      m_content.set<Component::Image>("pause_screen:image", config().world_width, config().world_height, 0, 0, 0, 128);
-      m_content.set<Component::Position>("pause_screen:position", Point(0, 0));
-      Component::Font_handle interface_font
-        = m_content.get<Component::Font>("interface:font");
-      Component::Image_handle pause_text
-        = m_content.set<Component::Image>("pause_text:image", interface_font, "FFFFFF", "PAUSE");
-      pause_text->origin() = Point (pause_text->width() / 2, pause_text->height() / 2);
-      m_content.set<Component::Position>("pause_text:position", Point(config().world_width / 2,
-                                                                      config().world_height / 2));
-
-    }
-    return true;
-  }
-  
-  if (m_content.request<Component::Image>("pause_screen:image"))
-  {
-    m_content.remove ("pause_screen:image");
-    m_content.remove ("pause_screen:position");
-    m_content.remove ("pause_text:image");
-    m_content.remove ("pause_text:position");
-  }
-  return false;
+  return m_content.get<Component::Boolean>("game:paused")->value();
 }
 
 void Logic::compute_path_from_target (Component::Position_handle target)
@@ -178,20 +153,18 @@ void Logic::set_move_animation (Component::Animation_handle image,
     head->on() = false;
   }
   std::size_t row_index = 0;
-  if (std::abs(direction.x()) > std::abs(direction.y()))
-  {
-    if (direction.x() > 0)
-      row_index = 1;
-    else
-      row_index = 2;
-  }
+
+  int angle = (int(180 * std::atan2 (direction.y(), direction.x()) / M_PI) + 360) % 360;
+
+  const int limit = 18;
+  if (angle < limit || angle >= (360 - limit))
+    row_index = 1;
+  else if (angle < (180 - limit))
+    row_index = 0;
+  else if (angle < (180 + limit))
+    row_index = 2;
   else
-  {
-    if (direction.y() > 0)
-      row_index = 0;
-    else
-      row_index = 3;
-  }
+    row_index = 3;
 
   image->frames().resize(8);
   for (std::size_t i = 0; i < 8; ++ i)
@@ -348,6 +321,29 @@ void Logic::detect_collisions (Component::Position_handle mouse)
       if (img->entity().find("verb_") == 0)
         img->set_scale(1.0);
     }
+
+}
+
+void Logic::update_debug_info (Component::Debug_handle debug_info)
+{
+  if (debug_info->value())
+  {
+    Component::Font_handle debug_font
+      = m_content.get<Component::Font> ("debug:font");
+    Component::Image_handle dbg_img
+      = m_content.set<Component::Image> ("debug:image",
+                                         debug_font, "FF0000",
+                                         debug_info->str());
+    Component::Position_handle dbg_pos
+      = m_content.set<Component::Position>("debug:position", Point(0,0));
+  }
+  else
+  {
+    Component::Image_handle dbg_img = m_content.request<Component::Image> ("debug:image");
+    if (dbg_img)
+      dbg_img->on() = false;
+    
+  }
 
 }
 

@@ -32,6 +32,12 @@ public:
 
 typedef std::shared_ptr<Base> Handle;
 
+template <typename T, typename ... Args>
+std::shared_ptr<T> make_handle (Args ... args)
+{
+  return std::make_shared<T>(args...);
+}
+
 struct Hash_ids
 {
   std::size_t operator() (const Handle& h) const

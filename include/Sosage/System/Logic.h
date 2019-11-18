@@ -2,6 +2,7 @@
 #define SOSAGE_SYSTEM_LOGIC_H
 
 #include <Sosage/Component/Animation.h>
+#include <Sosage/Component/Debug.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Content.h>
@@ -38,6 +39,7 @@ public:
 
 private:
   void detect_collisions (Component::Position_handle mouse);
+  void update_debug_info (Component::Debug_handle debug_info);
 };
 
 } // namespace Sosage::System

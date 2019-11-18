@@ -1,9 +1,11 @@
 #include <Sosage/Component/Animation.h>
+#include <Sosage/Component/Debug.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Third_party/XML.h>
 #include <Sosage/Engine.h>
+#include <Sosage/Utils/profiling.h>
 
 namespace Sosage
 {
@@ -16,6 +18,12 @@ Engine::Engine (const std::string& game_name)
   , m_logic (m_content)
 {
   srand(time(nullptr));
+}
+
+Engine::~Engine()
+{
+  // Clear content before shutting down systems
+  m_content.clear();
 }
 
 void Engine::main()
@@ -51,7 +59,7 @@ int Engine::run (const std::string& folder_name)
 
 void Engine::set_background (const std::string& image, const std::string& ground_map)
 {
-  std::cerr << "Setting background " << image << " with ground_map " << ground_map << std::endl;
+  debug("Setting background " + image + " with ground_map " + ground_map);
 
   m_content.set<Component::Image>("background:image", local_file_name(image), 0);
   m_content.set<Component::Position>("background:position", Point(0, 0, WORLD));
@@ -59,7 +67,9 @@ void Engine::set_background (const std::string& image, const std::string& ground
 }
 
 void Engine::set_interface (const std::string& cursor,
-                            const std::string& font, const std::string& color_str)
+                            const std::string& dbg_font,
+                            const std::string& font,
+                            const std::string& color_str)
 {
   m_graphic.set_cursor (local_file_name(cursor));
   
@@ -68,6 +78,7 @@ void Engine::set_interface (const std::string& cursor,
   
   Component::Font_handle interface_font
     = m_content.set<Component::Font> ("interface:font", local_file_name(font), 80);
+  m_content.set<Component::Font> ("debug:font", local_file_name(dbg_font), 15);
 
   for (const auto& verb : { std::make_tuple (std::string("open"), std::string("Ouvrir"), 145, 960),
         std::make_tuple (std::string("close"), std::string("Fermer"), 145, 1030),
@@ -93,11 +104,45 @@ void Engine::set_interface (const std::string& cursor,
   text_img->origin() = Point (text_img->width() / 2, text_img->height() / 2);
   text_img->set_scale(0.5);
   m_content.set<Component::Position>("chosen_verb:position", Point(960, 905));
+
+  // Create debug info
+  Component::Debug_handle debug_info
+    = m_content.set<Component::Debug>("game:debug", m_content, m_clock);
+
+  // Create pause screen
+  Component::Boolean_handle paused
+    = m_content.set<Component::Boolean>("game:paused", false);
+
+  Component::Image_handle pause_screen_img
+    = Component::make_handle<Component::Image>
+    ("pause_screen:image", config().world_width, config().world_height,
+     0, 0, 0, 192);
+  pause_screen_img->z() += 10;
+      
+  Component::Conditional_handle pause_screen
+    = m_content.set<Component::Conditional>("pause_screen:conditional", paused,
+                                            pause_screen_img, Component::Handle());
+  
+  m_content.set<Component::Position>("pause_screen:position", Point(0, 0));
+
+  Component::Image_handle pause_text_img
+    = Component::make_handle<Component::Image>("pause_text:image", interface_font, "FFFFFF", "PAUSE");
+  pause_text_img->z() += 10;
+  pause_text_img->origin() = Point (pause_text_img->width() / 2, pause_text_img->height() / 2);
+
+  Component::Conditional_handle pause_text
+    = m_content.set<Component::Conditional>("pause_text:conditional", paused,
+                                            pause_text_img, Component::Handle());
+    
+  m_content.set<Component::Position>("pause_text:position", Point(config().world_width / 2,
+                                                                  config().world_height / 2));
+
 }
 
 void Engine::set_character (const std::string& body, const std::string& head, int x, int y)
 {
-  std::cerr << "Setting character " << body << "/" << head << " at " << x << "*" << y << std::endl;
+  debug ("Setting character " + body + "/" + head + " at " + std::to_string(x)
+         + "*" + std::to_string(y));
 
   Component::Animation_handle abody
      = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
@@ -131,5 +176,21 @@ void Engine::set_character (const std::string& body, const std::string& head, in
 
   m_logic.generate_random_idle_animation(abody, ahead, Vector(1,0));
 }
+
+void Engine::add_object (const std::string& id, const std::string& image, int x, int y)
+{
+  Component::Image_handle img
+    = m_content.set<Component::Image>(id + ":image", local_file_name(image), 0);
+  img->origin() = Point (img->width() / 2, img->height());
+
+  Component::Position_handle pos
+    = m_content.set<Component::Position>(id + ":position", Point(x + img->width() / 2, y + img->height()));
+  
+  Component::Ground_map_handle ground_map
+    = m_content.get<Component::Ground_map>("background:ground_map");
+  img->z() = ground_map->z_at_point (pos->value()) - 1;
+  debug("Object " + id + " at position " + std::to_string(img->z()));
+}
+
 
 } // namespace Sosage

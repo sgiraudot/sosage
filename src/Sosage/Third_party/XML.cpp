@@ -59,11 +59,13 @@ std::string XML::read (const std::string& file_name, Engine& engine)
            "Error: room version " + v + " incompatible with Sosage " + Sosage::version());
 
     std::string cursor = "sprites/" + get<std::string> (node, "cursor") + ".png";
+    std::string debug_font = "fonts/" + get<std::string> (node, "debug_font") + ".ttf";
     std::string interface_font = "fonts/" + get<std::string> (node, "interface_font") + ".ttf";
     std::string interface_color = get<std::string> (node, "interface_color");
-    engine.set_interface (cursor, interface_font, interface_color);
+    engine.set_interface (cursor, debug_font, interface_font, interface_color);
     
-    node = node->xmlChildrenNode;
+    node = node->children->next;
+
     check(get_name(node) == "load", "Error: init file should load room");
     out = get<std::string> (node, "room") + ".xml";
   }
@@ -83,8 +85,8 @@ std::string XML::read (const std::string& file_name, Engine& engine)
     engine.set_character (body, head, x, y);
 
     // Then, get room content
-    node = node->xmlChildrenNode;
-    do
+    node = node->children;
+    while ((node = node->next))
     {
       if (get_name(node) == "object")
       {
@@ -92,6 +94,11 @@ std::string XML::read (const std::string& file_name, Engine& engine)
         std::string name = get<std::string> (node, "name");
         int x = get<int> (node, "x");
         int y = get<int> (node, "y");
+
+        node = node->children->next;
+        check (get_name(node) == "state", "Object " + id + " has no state.");
+        std::string skin = "sprites/" + get<std::string>(node, "skin") + ".png";
+        engine.add_object (id, skin, x, y);
       }
       else if (get_name(node) == "npc")
       {
@@ -102,7 +109,6 @@ std::string XML::read (const std::string& file_name, Engine& engine)
 
       }
     }
-    while (node = node->next);
   }  
 
   xmlFreeDoc (file);

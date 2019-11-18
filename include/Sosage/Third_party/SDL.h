@@ -38,11 +38,29 @@ public:
 
   static Image create_rectangle (int w, int h, int r, int g, int b, int a)
   {
-    // To fix
-    SDL_Surface* surf= SDL_CreateRGBSurface (0, w, h, 32, r, g, b, a);
+    Uint32 rmask, gmask, bmask, amask;
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    rmask = 0xff000000;
+    gmask = 0x00ff0000;
+    bmask = 0x0000ff00;
+    amask = 0x000000ff;
+#else
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = 0xff000000;
+#endif
+
+    SDL_Surface* surf= SDL_CreateRGBSurface (0, w, h, 32, rmask, gmask, bmask, amask);
     check (surf != nullptr, "Cannot create rectangle surface");
+
+    SDL_FillRect(surf, nullptr, SDL_MapRGBA(surf->format, r, g, b, a));
+
     SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, surf);
     check (out != nullptr, "Cannot create rectangle texture");
+    if (a != 255)
+      SDL_SetTextureBlendMode(out, SDL_BLENDMODE_BLEND);
+    
     SDL_FreeSurface (surf);
     return std::make_pair (out, 1);
   }
@@ -76,6 +94,7 @@ public:
     out.r = 0;
     out.g = 0;
     out.b = 0;
+    out.a = 0;
     return out;
   }
   
@@ -95,7 +114,12 @@ public:
   static Image create_text (const Font& font, const std::string& color_str,
                             const std::string& text)
   {
-    SDL_Surface* surf = TTF_RenderUTF8_Shaded (font, text.c_str(), color(color_str), black());
+    SDL_Surface* surf;
+    if (text.find('\n') == std::string::npos)
+      surf = TTF_RenderUTF8_Blended (font, text.c_str(), color(color_str));
+    else
+      surf = TTF_RenderUTF8_Blended_Wrapped (font, text.c_str(), color(color_str), 8000);
+    
     check (surf != nullptr, "Cannot create text \"" + text + "\"");
     SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, surf);
     check (out != nullptr, "Cannot create texture from text \"" + text + "\"");

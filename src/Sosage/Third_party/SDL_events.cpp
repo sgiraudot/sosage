@@ -29,6 +29,11 @@ bool SDL_events::is_pause (const Event& ev)
   return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_SPACE);
 }
 
+bool SDL_events::is_debug (const Event& ev)
+{
+  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_d);
+}
+
 bool SDL_events::is_left_click (const Event& ev)
 {
   return (ev.type == SDL_MOUSEBUTTONUP &&
@@ -44,9 +49,10 @@ bool SDL_events::is_mouse_motion (const Event& ev)
 
 std::pair<int, int> SDL_events::mouse_position (const Event& ev)
 {
-  int x = ev.button.x;
-  int y = ev.button.y;
-  return std::make_pair (x, y);
+  if (ev.type == SDL_MOUSEMOTION)
+    return std::make_pair (ev.motion.x, ev.motion.y);
+  // else
+  return std::make_pair (ev.button.x, ev.button.y);
 }
 
 } // namespace Sosage::Third_party
