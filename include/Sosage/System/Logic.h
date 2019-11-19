@@ -5,6 +5,7 @@
 #include <Sosage/Component/Debug.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
+#include <Sosage/Component/Text.h>
 #include <Sosage/Content.h>
 
 namespace Sosage::System
@@ -15,7 +16,8 @@ class Logic
 private:
 
   Content& m_content;
-  Component::Handle_set m_collisions;
+  Component::Image_handle m_collision;
+  Component::Text_handle m_chosen_verb;
 
 public:
 
@@ -38,7 +40,8 @@ public:
                                        const Vector& direction);
 
 private:
-  void detect_collisions (Component::Position_handle mouse);
+  void detect_collision (Component::Position_handle mouse);
+  void update_interface ();
   void update_debug_info (Component::Debug_handle debug_info);
 };
 

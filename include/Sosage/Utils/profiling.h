@@ -9,16 +9,25 @@ using namespace Core;
 
 class Timer
 {
+  std::string m_id;
   Time::Unit m_start;
   Time::Duration m_duration;
+  unsigned int m_nb;
   
 public:
 
-  Timer() { }
+  Timer (const std::string& id) : m_id (id) { }
+
+  ~Timer()
+  {
+    output("[" + m_id + " profiling] " + std::to_string(m_duration) + "ms ("
+           + std::to_string(mean_duration()) + "ms per iteration)");
+  }
 
   void start()
   {
     m_start = Time::now();
+    ++ m_nb;
   }
 
 
@@ -27,41 +36,9 @@ public:
     m_duration += Time::now() - m_start;
   }
 
-  double duration() const { return m_duration / 1000.; }
-
+  double mean_duration() const { return m_duration / double(m_nb); }
 };
 
-class Profiling
-{
-  std::vector<std::pair<std::string, Timer> > m_timers;
-
-public:
-
-  Profiling() { }
-
-  ~Profiling()
-  {
-    debug("Profiling results:");
-
-    double total = 0;
-    for (const auto& t : m_timers)
-      total += t.second.duration();
-
-    for (const auto& t : m_timers)
-      debug(" * " + t.first + ": " +  std::to_string(t.second.duration()) + "s ("
-            + std::to_string(100. * t.second.duration() / total) + "%)");
-  }
-
-  std::size_t init(const std::string& name)
-  {
-    m_timers.push_back (std::make_pair (name, Timer()));
-    return m_timers.size() - 1;
-  }
-
-  void start (std::size_t idx) { m_timers[idx].second.start(); }
-  void stop (std::size_t idx) { m_timers[idx].second.stop(); }
-
-};
 
 }
 

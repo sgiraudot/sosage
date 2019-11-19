@@ -50,9 +50,6 @@ public:
       {
         m_fps = 1000. / (m_mean / m_nb);
         m_cpu = 100. * (m_active / (m_nb * m_refresh_time));
-        
-        debug ("FPS: " + std::to_string (m_fps)
-               + ", CPU: " + std::to_string (m_cpu));
         m_mean = 0.;
         m_active = 0.;
         m_nb = 0;

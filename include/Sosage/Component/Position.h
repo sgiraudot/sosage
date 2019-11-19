@@ -19,6 +19,12 @@ public:
 
   Position (const std::string& id, const Point& coord);
 
+  virtual std::string str() const
+  {
+    return this->id() + " (" + std::to_string (m_pos.x())
+      + ";" + std::to_string(m_pos.y()) + ")";
+  }
+  
   Point value () const
   {
     return m_pos;

@@ -25,6 +25,13 @@ public:
   
   virtual ~Image();
 
+  virtual std::string str() const
+  {
+    return this->id() + " at (" + std::to_string (m_origin.x())
+      + ";" + std::to_string(m_origin.y())
+      + ";" + std::to_string(m_z) + "), " + (m_on ? "ON" : "OFF");
+  }
+
   const Core::Graphic::Image& core() const { return m_core; }
 
   const Point& origin() const { return m_origin; }

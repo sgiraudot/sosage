@@ -118,7 +118,7 @@ public:
     if (text.find('\n') == std::string::npos)
       surf = TTF_RenderUTF8_Blended (font, text.c_str(), color(color_str));
     else
-      surf = TTF_RenderUTF8_Blended_Wrapped (font, text.c_str(), color(color_str), 8000);
+      surf = TTF_RenderUTF8_Blended_Wrapped (font, text.c_str(), color(color_str), 1920);
     
     check (surf != nullptr, "Cannot create text \"" + text + "\"");
     SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, surf);

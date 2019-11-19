@@ -35,13 +35,7 @@ void Input::main()
       m_content.set<Component::Position>("mouse:position", Point(m_core.mouse_position(ev)));
     
     if (m_core.is_left_click(ev))
-    {
-      if (m_core.mouse_position(ev).second < 880) // Out of interface
-        m_content.set<Component::Position>("character:target_query",
-                                           Point(m_core.mouse_position(ev)));
-      else
-        m_content.set<Component::Position>("mouse:clicked", Point(m_core.mouse_position(ev)));
-    }
+      m_content.set<Component::Position>("mouse:clicked", Point(m_core.mouse_position(ev)));
   }
 }
 

@@ -13,13 +13,18 @@ template <typename T>
 inline std::shared_ptr<T> cast (Handle h)
 {
   std::shared_ptr<T> out = std::dynamic_pointer_cast<T>(h);
-  if (!out)
-  {
-    Conditional_handle cond = std::dynamic_pointer_cast<Conditional>(h);
-    if (cond)
-      out = std::dynamic_pointer_cast<T>(cond->get());
-  }
-  return out;
+  if (out)
+    return out;
+  
+  Conditional_handle cond = std::dynamic_pointer_cast<Conditional>(h);
+  if (cond)
+    return std::dynamic_pointer_cast<T>(cond->get());
+
+  State_conditional_handle state_cond = std::dynamic_pointer_cast<State_conditional>(h);
+  if (state_cond)
+    return std::dynamic_pointer_cast<T>(state_cond->get());
+
+  return std::shared_ptr<T>();
 }
 
 

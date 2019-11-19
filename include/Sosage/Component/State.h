@@ -18,6 +18,11 @@ public:
 
   virtual ~State() {} 
 
+  virtual std::string str() const
+  {
+    return this->id() + " " + m_value;
+  }
+
   const std::string& value() const { return m_value; }
   void set (const std::string& value) { m_value = value; }
 

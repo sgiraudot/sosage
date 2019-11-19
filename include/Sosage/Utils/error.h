@@ -38,6 +38,11 @@ inline void debug (const std::string&)
 }
 #endif
 
+inline void output (const std::string& str)
+{
+  std::cerr << str << std::endl;
+}
+
 } // namespace Sosage
 
 #endif // SOSAGE_UTILS_ERROR_H
