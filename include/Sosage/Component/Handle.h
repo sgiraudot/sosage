@@ -15,7 +15,7 @@ public:
   Base(const std::string& id) : m_id (id) { }
   virtual ~Base() { }
 
-  const std::string& id() { return m_id; }
+  const std::string& id() const { return m_id; }
 
   std::string entity()
   {
@@ -26,6 +26,8 @@ public:
   {
     return std::string (m_id.begin() + m_id.find_last_of(':'), m_id.end());
   }
+
+  virtual std::string str() const { return m_id; }
 
   void set_id (const std::string& id) { m_id = id; }
 };

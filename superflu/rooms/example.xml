@@ -9,15 +9,23 @@
     x="800" y="870">
 
   <object id="voiture"
-          name="Voiture"
+          name="voiture"
           x="666" y="496">
     
     <state id="defaut"
            skin="voiture">
       
       <look>
+        <lookat target="voiture" />
         <comment text="C'est la Flumobile…" />
       </look>
+
+      <pick>
+        <goto target="voiture" />
+        <sync />
+        <animate target="character" skin="pick" duration="3" />
+        <set_state target="voiture" state="inventory" />
+      </pick>
     </state>
 
   </object>

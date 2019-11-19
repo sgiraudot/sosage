@@ -6,6 +6,8 @@
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Utils/error.h>
 
+#include <unordered_map>
+
 namespace Sosage::Component
 {
 
@@ -27,6 +29,14 @@ public:
     , m_if_false (if_false)
   { }
 
+  virtual std::string str() const
+  {
+    std::string ift = "[" + (m_if_true ? m_if_true->str() : "NULL") + "]";
+    std::string iff = "[" + (m_if_false ? m_if_false->str() : "NULL") + "]";
+    return this->id() + " -> " + m_condition->id() + " ? "
+      + ift + " : " + iff;
+  }
+
   virtual ~Conditional()
   {
     m_condition = Condition_handle();
@@ -46,7 +56,7 @@ typedef std::shared_ptr<Conditional> Conditional_handle;
 class State_conditional : public Base
 {
   State_handle m_state;
-  Handle_set m_handles;
+  std::unordered_map<std::string, Handle> m_handles;
   
 public:
 
@@ -56,18 +66,29 @@ public:
     , m_state (state)
   { }
 
+  virtual std::string str() const
+  {
+    return this->id() + " -> " + m_state->id() + " ? "
+      + get()->id();
+  }
+
   virtual ~State_conditional()
   {
     m_state = State_handle();
     m_handles.clear();
   }
 
-  Handle get()
+  void add (const std::string& state, Handle h)
   {
-    Component::Handle_set::iterator iter
-      = m_handles.find(std::make_shared<Component::Base>(m_state->value()));
+    m_handles.insert (std::make_pair (state, h));
+  }
+  
+  Handle get() const
+  {
+    auto iter
+      = m_handles.find(m_state->value());
     check (iter != m_handles.end(), "Cannot find state " + m_state->value());
-    return *iter;
+    return iter->second;
   }
 
 };

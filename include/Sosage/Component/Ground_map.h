@@ -41,7 +41,7 @@ class Ground_map : public Base
   };
 
   vector_2<Node> m_data;
-  
+
 public:
 
   Ground_map (const std::string& id, const std::string& file_name);

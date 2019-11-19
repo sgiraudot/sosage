@@ -13,6 +13,12 @@ public:
   Condition (const std::string& id) : Base(id) { }
 
   virtual bool value() const = 0;
+
+  virtual std::string str() const
+  {
+    return this->id() + " " + (value() ? "TRUE" : "FALSE");
+  }
+
 };
 
 typedef std::shared_ptr<Condition> Condition_handle;

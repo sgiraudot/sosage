@@ -1,8 +1,10 @@
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Core/Graphic.h>
+#include <Sosage/Utils/profiling.h>
 
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <queue>
 #include <set>
 
@@ -156,6 +158,9 @@ void Ground_map::find_path (const Point& origin,
                             const Point& target,
                             std::vector<Point>& out)
 {
+  static Timer t ("Path finder");
+  t.start();
+  
   //  correct target position to reach true ground
   int x = target.x(GROUND);
   int y = target.y(GROUND);
@@ -181,7 +186,7 @@ void Ground_map::find_path (const Point& origin,
 
   Point origin_corrected (xorig, yorig, GROUND);
   Point target_corrected (x, y, GROUND);
-
+  
   // std::cerr << "Finding path from " << origin_corrected << " (corrected from "
   //           << origin << ") to " << target_corrected
   //           << " (corrected from " << target << ")" << std::endl;
@@ -244,7 +249,7 @@ void Ground_map::find_path (const Point& origin,
       }
     }
   }
-
+  
   std::vector<Point> path;
   while (!(x == xorig && y == yorig))
   {
@@ -258,7 +263,7 @@ void Ground_map::find_path (const Point& origin,
   path.push_back (Point (x, y, GROUND));
 
   std::reverse(path.begin(), path.end());
-
+  
   // Filter
   {
     std::vector<bool> insert (path.size(), false);
@@ -303,6 +308,8 @@ void Ground_map::find_path (const Point& origin,
       if (insert[i])
         out.push_back (path[i]);
   }
+
+  t.stop();
 }
 
 double Ground_map::z_at_point (const Point& p) const
