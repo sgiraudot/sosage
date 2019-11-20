@@ -17,7 +17,17 @@ class SDL
 {
 public:
 
-  typedef std::pair<SDL_Texture*, double> Image;
+  struct Image
+  {
+    SDL_Surface* surface;
+    SDL_Texture* texture;
+    double scaling;
+
+    Image (SDL_Surface* surface = nullptr, SDL_Texture* texture = nullptr, double scaling = 1.)
+      : surface (surface), texture (texture), scaling (scaling)
+    { }
+  };
+
   typedef SDL_Surface* Surface;
   typedef TTF_Font* Font;
   
@@ -61,8 +71,7 @@ public:
     if (a != 255)
       SDL_SetTextureBlendMode(out, SDL_BLENDMODE_BLEND);
     
-    SDL_FreeSurface (surf);
-    return std::make_pair (out, 1);
+    return Image (surf, out, 1);
   }
   
   static Surface load_surface (const std::string& file_name)
@@ -77,8 +86,7 @@ public:
     SDL_Surface* surf = load_surface (file_name);
     SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, surf);
     check (out != nullptr, "Cannot create texture from " + file_name);
-    SDL_FreeSurface (surf);
-    return std::make_pair (out, 1);
+    return Image (surf, out, 1);
   }
 
   static Font load_font (const std::string& file_name, int size)
@@ -123,18 +131,18 @@ public:
     check (surf != nullptr, "Cannot create text \"" + text + "\"");
     SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, surf);
     check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
-    SDL_FreeSurface (surf);
-    return std::make_pair (out, 1);
+    return Image (surf, out, 1);
   }
 
   static void rescale (Image& source, double scaling)
   {
-    source.second = scaling;
+    source.scaling = scaling;
   }
 
   static void delete_image (const Image& source)
   {
-    SDL_DestroyTexture (source.first);
+    SDL_FreeSurface (source.surface);
+    SDL_DestroyTexture (source.texture);
   }
 
   static void delete_font (const Font& font)
@@ -178,18 +186,56 @@ public:
     SDL_UnlockSurface (image);
     return out;
   }
+  
+  static bool is_inside_image (Image image, int x, int y)
+  {
+    SDL_LockSurface (image.surface);
+
+    int bpp = image.surface->format->BytesPerPixel;
+    Uint8 *p = (Uint8 *)image.surface->pixels + y * image.surface->pitch + x * bpp;
+    Uint32 data;
+    switch (bpp)
+    {
+      case 1:
+        data = *p;
+        break;
+
+      case 2:
+        data = *(Uint16 *)p;
+        break;
+
+      case 3:
+        if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
+          data = p[0] << 16 | p[1] << 8 | p[2];
+        else
+          data = p[0] | p[1] << 8 | p[2] << 16;
+        break;
+
+      case 4:
+        data = *(Uint32 *)p;
+        break;
+
+      default:
+        exit(0);
+    }
+    unsigned char r, g, b, a;
+    SDL_GetRGBA(data, image.surface->format, &r, &g, &b, &a);
+    SDL_UnlockSurface (image.surface);
+    return (a != 0);
+  }
+  
   static int width (Surface image) { return image->w; }
   static int height (Surface image) { return image->h; }
   static int width (Image image)
   {
     int out;
-    SDL_QueryTexture (image.first, NULL, NULL, &out, NULL);
+    SDL_QueryTexture (image.texture, NULL, NULL, &out, NULL);
     return out;
   }
   static int height (Image image)
   {
     int out;
-    SDL_QueryTexture (image.first, NULL, NULL, NULL, &out);
+    SDL_QueryTexture (image.texture, NULL, NULL, NULL, &out);
     return out;
   }
 

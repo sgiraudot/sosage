@@ -15,7 +15,6 @@ Ground_map::Ground_map (const std::string& id,
                         const std::string& file_name)
   : Base(id)
 {
-  debug ("Creating ground map " + file_name);
   Core::Graphic::Surface source = Core::Graphic::load_surface (file_name);
 
   Point size (Core::Graphic::width(source), Core::Graphic::height(source),
@@ -23,8 +22,6 @@ Ground_map::Ground_map (const std::string& id,
 
   m_data = vector_2<Node> (size.x(GROUND),
                            size.y(GROUND));
-
-  debug ("Size = " + std::to_string(m_data.width()) + " * " + std::to_string(m_data.height()));
 
   for (std::size_t x = 0; x < m_data.width(); ++ x)
     for (std::size_t y = 0; y < m_data.height(); ++ y)
@@ -68,8 +65,6 @@ Ground_map::Ground_map (const std::string& id,
         if (is_border)
           border.push_back (std::make_pair(x,y));
       }
-
-  debug (std::to_string(border.size()) + " border point(s)");
 
   for (std::size_t x = 0; x < m_data.width(); ++ x)
     for (std::size_t y = 0; y < m_data.height(); ++ y)

@@ -165,9 +165,9 @@ void Logic::compute_movement_from_path (Component::Path_handle path)
 
 
   if (direction.x() > 0)
-    phead->set (pbody->value() - abody->core().second * Vector(0, 290));
+    phead->set (pbody->value() - abody->core().scaling * Vector(0, 290));
   else
-    phead->set (pbody->value() - abody->core().second * Vector(-10, 290));
+    phead->set (pbody->value() - abody->core().scaling * Vector(-10, 290));
 
       
 }
@@ -333,11 +333,11 @@ void Logic::detect_collision (Component::Position_handle mouse)
       
       Component::Position_handle p = m_content.get<Component::Position>(img->entity() + ":position");
 
-      Point screen_position = p->value() - img->core().second * Vector(img->origin());
+      Point screen_position = p->value() - img->core().scaling * Vector(img->origin());
       int xmin = screen_position.x();
       int ymin = screen_position.y();
-      int xmax = xmin + (img->core().second * (img->xmax() - img->xmin()));
-      int ymax = ymin + (img->core().second * (img->ymax() - img->ymin()));
+      int xmax = xmin + (img->core().scaling * (img->xmax() - img->xmin()));
+      int ymax = ymin + (img->core().scaling * (img->ymax() - img->ymin()));
 
       if (mouse->value().x() < xmin ||
           mouse->value().x() > xmax ||
@@ -345,6 +345,14 @@ void Logic::detect_collision (Component::Position_handle mouse)
           mouse->value().y() > ymax)
         continue;
 
+      if (img->id() != "background:image" && img->id().find("verb_") != 0)
+      {
+        int x_in_image = mouse->value().x() - xmin;
+        int y_in_image = mouse->value().y() - ymin;
+        if (!img->is_target_inside (x_in_image, y_in_image))
+          continue;
+      }
+      
       // Now, collision happened
       
       if (m_collision)
@@ -376,7 +384,7 @@ void Logic::update_interface ()
     = m_content.set<Component::Image>("chosen_verb:image",
                                       m_content.get<Component::Font>("interface:font"), "FFFFFF",
                                       m_chosen_verb->value() + " " + target_object);
-  text_img->origin() = Point (text_img->width() / 2, text_img->height() / 2);
+  text_img->set_relative_origin(0.5, 0.5);
   text_img->set_scale(0.5);
 }
 

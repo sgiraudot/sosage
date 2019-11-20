@@ -12,7 +12,6 @@ Animation::Animation (const std::string& id, const std::string& file_name, int z
   , m_height_subdiv (height_subdiv)
   , m_current(0)
 {
-  debug ("Creating animation " + file_name);
   reset();
 }
 
@@ -51,5 +50,14 @@ int Animation::ymax() const
   return h * (m_frames[m_current].y + 1);
 }
 
+void Animation::next_frame()
+{
+  if (++ m_frames[m_current].ellapsed == m_frames[m_current].duration)
+  {
+    m_frames[m_current].ellapsed = 0;
+    if (++ m_current == m_frames.size())
+      m_current = 0;
+  }
+}
 
 } // namespace Sosage::Component

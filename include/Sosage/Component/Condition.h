@@ -10,15 +10,9 @@ class Condition : public Base
 {
 public:
 
-  Condition (const std::string& id) : Base(id) { }
-
+  Condition (const std::string& id);
   virtual bool value() const = 0;
-
-  virtual std::string str() const
-  {
-    return this->id() + " " + (value() ? "TRUE" : "FALSE");
-  }
-
+  virtual std::string str() const;
 };
 
 typedef std::shared_ptr<Condition> Condition_handle;
@@ -30,7 +24,6 @@ public:
 
   Boolean (const std::string& id, const bool& value)
     : Condition(id), m_value(value) { }
-
   void set(const bool& value) { m_value = value; }
   void toggle() { m_value = !m_value; }
   virtual bool value() const { return m_value; }
@@ -47,7 +40,6 @@ public:
   And (const std::string& id,
        Boolean_handle first, Boolean_handle second)
     : Condition(id), m_values(first, second) { }
-
   virtual bool value() const { return (m_values.first->value() && m_values.second->value()); }
 };
 
@@ -62,7 +54,6 @@ public:
   Or (const std::string& id,
       Boolean_handle first, Boolean_handle second)
     : Condition(id), m_values(first, second) { }
-
   virtual bool value() const { return (m_values.first->value() || m_values.second->value()); }
 };
 

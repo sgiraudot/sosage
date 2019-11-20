@@ -82,7 +82,7 @@ void Engine::init_interface ()
     Component::Image_handle verb_img
       = m_content.set<Component::Image> ("verb_" + std::get<0>(verb) + ":image",
                                          interface_font, color_str, std::get<1>(verb));
-    verb_img->origin() = Point (verb_img->width() / 2, verb_img->height() / 2);
+    verb_img->set_relative_origin(0.5, 0.5);
     verb_img->set_scale(0.75);
     Component::Position_handle verb_pos
       = m_content.set<Component::Position>("verb_" + std::get<0>(verb) + ":position",
@@ -115,7 +115,7 @@ void Engine::init_interface ()
   Component::Image_handle pause_text_img
     = Component::make_handle<Component::Image>("pause_text:image", interface_font, "FFFFFF", "PAUSE");
   pause_text_img->z() += 10;
-  pause_text_img->origin() = Point (pause_text_img->width() / 2, pause_text_img->height() / 2);
+  pause_text_img->set_relative_origin(0.5, 0.5);
 
   Component::Conditional_handle pause_text
     = m_content.set<Component::Conditional>("pause_text:conditional", paused,

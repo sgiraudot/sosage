@@ -13,6 +13,7 @@ class Content
 private:
 
   Component::Handle_set m_data;
+
 public:
 
   Content ();
