@@ -22,7 +22,7 @@ if (NOT SDL2_FOUND)
   set(SUPERFLU_PNC_DEPENDENCIES_OKAY false)
 endif()  
 
-find_package(SDL2_mixer REQUIRED)
+find_package(SDL2_mixer QUIET)
 if (NOT SDL2_MIXER_FOUND)
   message(STATUS "SDL2 Mixer is optional and not found (no sound will be available)")
 endif()  
@@ -61,7 +61,6 @@ target_include_directories (superflu_pnc PUBLIC
   "include"
   ${LIBXML2_INCLUDE_DIRS}
   ${SDL2_INCLUDE_DIR}
-  ${SDL2_MIXER_INCLUDE_DIR}
   ${SDL2_IMAGE_INCLUDE_DIR}
   ${SDL2_TTF_INCLUDE_DIR})
 
@@ -70,9 +69,13 @@ target_include_directories (superflu_pnc PUBLIC
 target_link_libraries(superflu_pnc PUBLIC
   ${LIBXML2_LIBRARIES}
   ${SDL2_LIBRARY}
-  ${SDL2_MIXER_LIBRARIES}
   ${SDL2_IMAGE_LIBRARIES}
   ${SDL2_TTF_LIBRARIES})
+
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Android")
+  message(STATUS "Linking with atomic for Android")
+  target_link_libraries(superflu_pnc PUBLIC atomic)
+endif()
 
 ## Optional sound
 if (SDL2_MIXER_FOUND)
