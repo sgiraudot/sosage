@@ -8,6 +8,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
+#include <array>
 #include <sstream>
 
 namespace Sosage::Third_party

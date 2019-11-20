@@ -165,7 +165,7 @@ std::string IO::read_room (const std::string& file_name)
 
 std::string IO::read_character (const std::string& file_name)
 {
-
+  return std::string();
 }
 
 
