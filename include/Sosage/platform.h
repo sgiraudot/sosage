@@ -11,4 +11,4 @@
 #  define SOSAGE_LINUX
 #endif
 
-#endif SOSAGE_PLATFORM_H
+#endif // SOSAGE_PLATFORM_H
