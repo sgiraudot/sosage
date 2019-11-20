@@ -27,7 +27,7 @@ SDL::SDL (const std::string& game_name,
                                SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED,
                                width, height,
-                               SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
+                               SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
   check (m_window != nullptr, "Cannot create SDL Window");
   
   m_renderer = SDL_CreateRenderer (m_window, -1, 0);

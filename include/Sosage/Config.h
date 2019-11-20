@@ -1,6 +1,7 @@
 #ifndef SOSAGE_CONFIG_H
 #define SOSAGE_CONFIG_H
 
+#include <Sosage/platform.h>
 #include <memory>
 
 namespace Sosage
@@ -40,8 +41,11 @@ struct Config
 
 };
 
+#ifdef SOSAGE_ANDROID
+inline Config& config (int camera_width = 1200, bool fullscreen = true)
+#else
 inline Config& config (int camera_width = 1200, bool fullscreen = false)
-//inline Config& config (int camera_width = 1920, bool fullscreen = false)
+#endif
 {
   static std::unique_ptr<Config> c;
   if (c == std::unique_ptr<Config>())
