@@ -7,7 +7,6 @@ namespace Sosage::Component
 Font::Font (const std::string& id, const std::string& file_name, int size)
   : Base(id)
 {
-  debug("Creating font " + file_name);
   m_core = Core::Graphic::load_font (file_name, size);
 }
 

@@ -35,26 +35,14 @@ public:
 
   Animation (const std::string& id, const std::string& file_name, int z,
              int width_subdiv, int height_subdiv);
-
+  const std::vector<Frame>& frames() const { return m_frames; }
+  std::vector<Frame>& frames() { return m_frames; }
   void reset();
-  
   virtual int xmin() const;
   virtual int xmax() const;
   virtual int ymin() const;
   virtual int ymax() const;
-
-  const std::vector<Frame>& frames() const { return m_frames; }
-  std::vector<Frame>& frames() { return m_frames; }
-
-  void next_frame()
-  {
-    if (++ m_frames[m_current].ellapsed == m_frames[m_current].duration)
-    {
-      m_frames[m_current].ellapsed = 0;
-      if (++ m_current == m_frames.size())
-        m_current = 0;
-    }
-  }
+  void next_frame();
 };
 
 typedef std::shared_ptr<Animation> Animation_handle;

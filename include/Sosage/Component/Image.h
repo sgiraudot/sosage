@@ -22,37 +22,25 @@ public:
   Image (const std::string& id, int w, int h, int r = 0, int g = 0, int b = 0, int a = 255);
   Image (const std::string& id, const std::string& file_name, int z);
   Image (const std::string& id, Font_handle font, const std::string& color_str, const std::string& text);
-  
   virtual ~Image();
-
-  virtual std::string str() const
-  {
-    return this->id() + " at (" + std::to_string (m_origin.x())
-      + ";" + std::to_string(m_origin.y())
-      + ";" + std::to_string(m_z) + "), " + (m_on ? "ON" : "OFF");
-  }
-
+  virtual std::string str() const;
+  void set_relative_origin (double ratio_x, double ratio_y);
   const Core::Graphic::Image& core() const { return m_core; }
-
   const Point& origin() const { return m_origin; }
   Point& origin() { return m_origin; }
-  
   const bool& on() const { return m_on; }
   bool& on() { return m_on; }
-  
   virtual int xmin() const { return 0; }
   virtual int xmax() const { return Core::Graphic::width(m_core); }
   virtual int ymin() const { return 0; }
   virtual int ymax() const { return Core::Graphic::height(m_core); }
-
   int width() const { return xmax() - xmin(); }
   int height() const { return ymax() - ymin(); }
-  
   const int& z() const { return m_z; }
   int& z() { return m_z; }
-
   void rescale (int z);
   void set_scale (double scale);
+  bool is_target_inside (int x, int y) const;
 };
 
 typedef std::shared_ptr<Image> Image_handle;

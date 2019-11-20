@@ -61,12 +61,12 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
       int xmax = img->xmax();
       int ymax = img->ymax();
       
-      Point screen_position = p->value() - img->core().second * Vector(img->origin());
+      Point screen_position = p->value() - img->core().scaling * Vector(img->origin());
 
       m_core.draw (img->core(), xmin, ymin, (xmax - xmin), (ymax - ymin),
                    screen_position.x(), screen_position.y(),
-                   img->core().second * (xmax - xmin),
-                   img->core().second * (ymax - ymin));
+                   img->core().scaling * (xmax - xmin),
+                   img->core().scaling * (ymax - ymin));
     }
   }
 }

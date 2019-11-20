@@ -84,7 +84,7 @@ void SDL::draw (const Image& image,
   target.w = wtarget;
   target.h = htarget;
   
-  SDL_RenderCopy(m_renderer, image.first, &source, &target);
+  SDL_RenderCopy(m_renderer, image.texture, &source, &target);
 }
 
 void SDL::draw_line (const int xa, const int ya, const int xb, const int yb)

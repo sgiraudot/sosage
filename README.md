@@ -1,30 +1,24 @@
-# SOSAGE - Superfluous Open Source Adventure Game Engine
+# Superflu PnC
 
-## Actions
+## Dépendances
 
- * Ouvrir `open`
- * Fermer `close`
- * Prendre `take`
- * Donner `give`
- * Regarder `look`
- * Parler `talk`
- * Utiliser `use`
- * Déplacer `move`
+ - SDL2
+ - SDL2_Image
+ - SDL2_TTF
+ - SDL2_Mixer
+ - libXML2
 
-## Système de coordonnées
+## Installation (GNU/Linux)
 
- * 48x27
+`# apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev libxml2-dev`
 
-## Skin
+`$ mkdir build && cd build`
 
- * 6x4 = 24 images marche
- * 14 images idle : 2 x (normal, 2 x mains sur les hanches, 2 x mains dans les poches, 2 x bras croisés)
- * 10 images tête idle : 2 x (normal, regard gauche, regard droite, regard haut, regard blasé)
+`$ cmake .. -DCMAKE_BUILD_TYPE=Release`
 
+`$ make`
 
-G: M  M  M  M  M  M
-D: M  M  M  M  M  M
-H: M  M  M  M  M  M
-B: M  M  M  M  M  M
-G: N  H  P  B  T  T
-D: N  H  P  B  T  T
+## Installation (Android)
+
+## Installation (Navigateur)
+

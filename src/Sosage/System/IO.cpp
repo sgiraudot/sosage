@@ -66,12 +66,12 @@ std::string IO::read_room (const std::string& file_name)
     Component::Animation_handle abody
       = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
                                             0, 9, 5);
-    abody->origin() = Point (abody->width() / 2, 0.9 * abody->height());
+    abody->set_relative_origin(0.5, 0.9);
   
     Component::Animation_handle ahead
       = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
                                             0, 7, 2);
-    ahead->origin() = Point (ahead->width() / 2, ahead->height());
+    ahead->set_relative_origin(0.5, 1.0);
   
     Component::Position_handle pbody
       = m_content.set<Component::Position>("character_body:position", Point(x, y));
@@ -91,7 +91,7 @@ std::string IO::read_room (const std::string& file_name)
     abody->rescale (z_at_point);
     ahead->rescale (z_at_point);
     ahead->z() += 1;
-    phead->set (pbody->value() - abody->core().second * Vector(0, 290));
+    phead->set (pbody->value() - abody->core().scaling * Vector(0, 290));
 
   }
   
@@ -134,7 +134,7 @@ std::string IO::read_room (const std::string& file_name)
     
         Component::Image_handle img
           = Component::make_handle<Component::Image>(id + ":image", local_file_name(skin), 0);
-        img->origin() = Point (img->width() / 2, img->height());
+        img->set_relative_origin(0.5, 1.0);
 
         if (init)
           pos->set (Point(pos->value().x() + img->width() / 2, pos->value().y() + img->height()));
@@ -159,7 +159,8 @@ std::string IO::read_room (const std::string& file_name)
     }
   }
   while ((input = input.next()));
-  
+
+  return std::string();
 }
 
 std::string IO::read_character (const std::string& file_name)
