@@ -28,13 +28,19 @@ Engine::~Engine()
 
 void Engine::main()
 {
+  std::size_t frame_id = m_clock.frame_id();
+  
   while (!m_logic.exit())
   {
     m_input.main();
     if (!m_logic.paused())
     {
       m_logic.main();
-      m_animation.main();
+      std::size_t new_frame_id = m_clock.frame_id();
+      if (new_frame_id != frame_id)
+        for (std::size_t i = frame_id; i < new_frame_id; ++ i)
+          m_animation.main();
+      frame_id = new_frame_id;
       m_sound.main();
     }
     m_graphic.main();
@@ -51,7 +57,7 @@ int Engine::run (const std::string& folder_name)
   while (room_name != std::string())
   {
     room_name = m_io.read_room (room_name);
-    m_logic.generate_random_idle_animation
+    m_animation.generate_random_idle_animation
       (m_content.get<Component::Animation>("character_body:image"),
        m_content.get<Component::Animation>("character_head:image"), Vector(1,0));
     
