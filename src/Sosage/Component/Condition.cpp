@@ -13,4 +13,4 @@ std::string Condition::str() const
 }
 
 
-}
+} // namespace Sosage::Component

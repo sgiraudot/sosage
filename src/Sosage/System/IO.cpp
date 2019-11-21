@@ -172,5 +172,9 @@ std::string IO::read_character (const std::string& file_name)
   return std::string();
 }
 
+std::string IO::local_file_name (const std::string& file_name) const
+{
+  return m_folder_name + file_name;
+}
 
 } // namespace Sosage::System

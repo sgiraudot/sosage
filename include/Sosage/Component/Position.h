@@ -18,22 +18,9 @@ class Position : public Base
 public:
 
   Position (const std::string& id, const Point& coord);
-
-  virtual std::string str() const
-  {
-    return this->id() + " (" + std::to_string (m_pos.x())
-      + ";" + std::to_string(m_pos.y()) + ")";
-  }
-  
-  Point value () const
-  {
-    return m_pos;
-  }
-
-  void set (const Point& p)
-  {
-    m_pos = p;
-  }
+  virtual std::string str() const;
+  Point value () const { return m_pos; }
+  void set (const Point& p) { m_pos = p; }
 };
 typedef std::shared_ptr<Position> Position_handle;
 
