@@ -33,16 +33,16 @@ void Engine::main()
   while (!m_logic.exit())
   {
     m_input.main();
+    std::size_t new_frame_id = m_clock.frame_id();
     if (!m_logic.paused())
     {
       m_logic.main();
-      std::size_t new_frame_id = m_clock.frame_id();
       if (new_frame_id != frame_id)
         for (std::size_t i = frame_id; i < new_frame_id; ++ i)
           m_animation.main();
-      frame_id = new_frame_id;
       m_sound.main();
     }
+    frame_id = new_frame_id;
     m_graphic.main();
     m_clock.wait(true);
   }

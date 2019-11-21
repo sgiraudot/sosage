@@ -20,8 +20,10 @@ bool SDL_events::next_event (SDL_events::Event& ev)
 
 bool SDL_events::is_exit (const Event& ev)
 {
+  // Quit on: interface X-cross / Escape key / Q key
   return (ev.type == SDL_QUIT ||
-          (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_ESCAPE));
+          (ev.type == SDL_KEYUP && (ev.key.keysym.sym == SDLK_ESCAPE
+                                    || ev.key.keysym.sym == SDLK_q)));
 }
 
 bool SDL_events::is_pause (const Event& ev)
@@ -36,23 +38,27 @@ bool SDL_events::is_debug (const Event& ev)
 
 bool SDL_events::is_left_click (const Event& ev)
 {
-  return (ev.type == SDL_MOUSEBUTTONUP &&
+  return ((ev.type == SDL_MOUSEBUTTONUP &&
           ev.button.type == SDL_MOUSEBUTTONUP &&
           ev.button.button == SDL_BUTTON_LEFT &&
-          ev.button.state == SDL_RELEASED);
+          ev.button.state == SDL_RELEASED) ||
+          (ev.type == SDL_FINGERUP));
 }
 
 bool SDL_events::is_mouse_motion (const Event& ev)
 {
-  return (ev.type == SDL_MOUSEMOTION);
+  return ((ev.type == SDL_MOUSEMOTION) ||
+          (ev.type == SDL_FINGERMOTION));
 }
 
 std::pair<int, int> SDL_events::mouse_position (const Event& ev)
 {
   if (ev.type == SDL_MOUSEMOTION)
     return std::make_pair (ev.motion.x, ev.motion.y);
-  // else
-  return std::make_pair (ev.button.x, ev.button.y);
+  else if (ev.type == SDL_MOUSEBUTTONUP)
+    return std::make_pair (ev.button.x, ev.button.y);
+  // else if (ev.type == SDL_FINGERMOTION || ev.type == SDL_FINGERUP)
+  return std::make_pair (ev.tfinger.x, ev.tfinger.y);
 }
 
 } // namespace Sosage::Third_party

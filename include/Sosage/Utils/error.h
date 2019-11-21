@@ -23,7 +23,7 @@ inline void check_impl (const char* file, int line, const std::string& str)
 inline void check_impl (const char* file, int line, const std::string& str)
 {
   std::cerr << "Error: "<< str << " [" << file << ":" << line << "]" << std::endl;
-  abort();
+  exit(EXIT_FAILURE);
 }
 #endif
 
