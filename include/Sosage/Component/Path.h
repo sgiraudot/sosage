@@ -19,15 +19,7 @@ public:
 
   Path (const std::string& id, const Point& coord);
   Path (const std::string& id, std::vector<Point>& steps);
-
-  virtual std::string str() const
-  {
-    std::string out = this->id();
-    for (const Point& p : m_steps)
-      out += " (" + std::to_string(p.x()) + ";" + std::to_string(p.y()) + ")";
-    return out;
-  }
-
+  virtual std::string str() const;
   std::size_t size() const { return m_steps.size(); }
   const Point& operator[] (const std::size_t& idx) const { return m_steps[idx]; }
   Point& operator[] (const std::size_t& idx) { return m_steps[idx]; }

@@ -17,9 +17,7 @@ public:
 
   Font (const std::string& id, const std::string& file_name, int size);
   virtual ~Font();
-
   const Core::Graphic::Font& core() const { return m_core; }
-
 };
 
 typedef std::shared_ptr<Font> Font_handle;

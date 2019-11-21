@@ -25,10 +25,7 @@ public:
 
 private:
   
-  inline std::string local_file_name (const std::string& file_name)
-  {
-    return m_folder_name + file_name;
-  }
+  std::string local_file_name (const std::string& file_name) const;
 
 };
 

@@ -13,12 +13,7 @@ private:
   
 public:
 
-  Text (const std::string& id, const std::string& value)
-    : Base (id), m_value (value)
-  { }
-  
-  virtual ~Text() { }
-
+  Text (const std::string& id, const std::string& value);
   const std::string& value() const { return m_value; }
 };
 

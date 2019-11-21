@@ -28,11 +28,8 @@ public:
 
   Engine (const std::string& game_name);
   ~Engine();
-
   void main ();
-
   int run (const std::string& folder_name);
-  
   void init_interface ();
 };
 

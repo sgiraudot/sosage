@@ -45,25 +45,13 @@ class Ground_map : public Base
 public:
 
   Ground_map (const std::string& id, const std::string& file_name);
-
   void find_path (const Point& origin, const Point& target,
                   std::vector<Point>& out);
-
   double z_at_point (const Point& p) const;
 
 private:
 
-  double distance (int xa, int ya, int xb, int yb)
-  {
-    Point pa (xa, ya, GROUND);
-    Point pb (xb, yb, GROUND);
-    double za = m_data(xa,ya).z;
-    double zb = m_data(xb,yb).z;
-
-    return std::sqrt (square(pa.x() - pb.x())
-                      + square(pa.y() - pb.y())
-                      + square(za - zb));
-  }
+  double distance (int xa, int ya, int xb, int yb) const;
 };
 typedef std::shared_ptr<Ground_map> Ground_map_handle;
 

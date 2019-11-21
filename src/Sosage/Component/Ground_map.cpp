@@ -333,4 +333,16 @@ double Ground_map::z_at_point (const Point& p) const
   return n.z;
 }
 
+double Ground_map::distance (int xa, int ya, int xb, int yb) const
+{
+  Point pa (xa, ya, GROUND);
+  Point pb (xb, yb, GROUND);
+  double za = m_data(xa,ya).z;
+  double zb = m_data(xb,yb).z;
+
+  return std::sqrt (square(pa.x() - pb.x())
+                    + square(pa.y() - pb.y())
+                    + square(za - zb));
+}
+
 } // namespace Sosage::Component

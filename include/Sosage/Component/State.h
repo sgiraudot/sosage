@@ -12,20 +12,11 @@ class State : public Base
   
 public:
 
-  State (const std::string& id)
-    : Base(id)
-  { }
-
-  virtual ~State() {} 
-
-  virtual std::string str() const
-  {
-    return this->id() + " " + m_value;
-  }
-
+  State (const std::string& id);
+  virtual ~State();
+  virtual std::string str() const;
   const std::string& value() const { return m_value; }
   void set (const std::string& value) { m_value = value; }
-
 };
 
 typedef std::shared_ptr<State> State_handle;
