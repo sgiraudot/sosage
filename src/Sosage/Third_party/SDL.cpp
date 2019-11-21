@@ -13,6 +13,9 @@ SDL::SDL (const std::string& game_name,
   int init = SDL_Init(SDL_INIT_VIDEO);
   check (init != -1, "Cannot initialize SDL");
 
+  init = IMG_Init(IMG_INIT_PNG);
+  check (init != -1, "Cannot initialize SDL Image");
+
   // char *base_path = SDL_GetBasePath();
   // if (base_path)
   //   std::cerr << "Base path = " << base_path << std::endl;
@@ -35,11 +38,17 @@ SDL::SDL (const std::string& game_name,
 
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
   SDL_RenderSetLogicalSize(m_renderer, 1920, 1080);
+
+  // Render black screen while the rest is loading
+  SDL_SetRenderDrawColor (m_renderer, 0, 0, 0, 255);
+  SDL_RenderClear (m_renderer);
+  SDL_RenderPresent (m_renderer);
 }
 
 SDL::~SDL ()
 {
   TTF_Quit ();
+  IMG_Quit ();
   
   SDL_DestroyRenderer (m_renderer);
   SDL_DestroyWindow (m_window);

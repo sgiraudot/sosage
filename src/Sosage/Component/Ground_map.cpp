@@ -42,8 +42,8 @@ Ground_map::Ground_map (const std::string& id,
       else
       {
         m_data(x,y).z = -1;
-        m_data(x,y).target_x = 0;
-        m_data(x,y).target_y = 0;
+        m_data(x,y).target_x = -2;
+        m_data(x,y).target_y = -2;
       }
     }
 
@@ -66,87 +66,104 @@ Ground_map::Ground_map (const std::string& id,
           border.push_back (std::make_pair(x,y));
       }
 
-  for (std::size_t x = 0; x < m_data.width(); ++ x)
-    for (std::size_t y = 0; y < m_data.height(); ++ y)
-      if (m_data(x,y).target_x != -1)
+  struct Todo
+  {
+    int xorig, yorig;
+    int x, y;
+    double distance;
+    Todo (int xorig, int yorig, int x, int y, double distance)
+      : xorig(xorig), yorig(yorig), x(x), y(y), distance(distance)
+    { }
+  };
+  std::priority_queue<Todo, std::vector<Todo>, std::function<bool(Todo,Todo)> > todo
+    ([](const Todo& a, const Todo& b) -> bool { return a.distance > b.distance; });
+  for (const std::pair<int, int>& b : border)
+    todo.push (Todo(b.first, b.second, b.first, b.second, 0.));
+
+  while (!todo.empty())
+  {
+    Todo current = todo.top();
+    todo.pop();
+
+    for (int dx = -1; dx <= 1; ++ dx)
+    {
+      int xx = current.x + dx;
+      if (xx < 0 || xx >= m_data.width())
+        continue;
+
+      for (int dy = -1; dy <= 1; ++ dy)
       {
-        double dist_min = std::numeric_limits<double>::max();
-        for (std::size_t i = 0; i < border.size(); ++ i)
+        int yy = current.y + dy;
+        if (yy < 0 || yy >= m_data.height())
+          continue;
+        if (dx == 0 && dy == 0)
+          continue;
+        if (m_data(xx,yy).target_x == -2)
         {
-          double dist = Sosage::distance(x,y, border[i].first, border[i].second);
-          if (dist < dist_min)
-          {
-            dist_min = dist;
-            m_data(x,y).target_x = border[i].first;
-            m_data(x,y).target_y = border[i].second;
-          }
+          m_data(xx,yy).target_x = current.xorig;
+          m_data(xx,yy).target_y = current.yorig;
+          todo.push(Todo(current.xorig, current.yorig, xx, yy,
+                         Sosage::distance(xx,yy, current.xorig, current.yorig)));
         }
       }
+    }
+  }
 
-  // for (std::size_t y = 0; y < m_data.height(); y += m_data.height() / 50)
-  // {
-  //   std::cerr << "[";
-  //   for (std::size_t x = 0; x < m_data.width(); x += m_data.width() / 50)
-  //     if (m_data(x,y).target_x == -1)
-  //       std::cerr << "#";
-  //     else
-  //       std::cerr << " ";
-  //   std::cerr << "]" << std::endl;
-  // }
+#if 0
+  {
+    std::ofstream dbg ("dbg.ppm");
+    dbg << "P3" << std::endl << m_data.width() << " " << m_data.height()
+        << std::endl << "255" << std::endl;
 
-  // {
-  //         std::ofstream dbg ("dbg.ppm");
-  //   dbg << "P3" << std::endl << m_data.width() << " " << m_data.height()
-  //       << std::endl << "255" << std::endl;
+    std::size_t nb = 0;
+    for (std::size_t y = 0; y < m_data.height(); ++ y)
+      for (std::size_t x = 0; x < m_data.width(); ++ x)
+      {
+        int r, g, b;
+        if (m_data(x,y).target_x == -1)
+        {
+          bool is_border = false;
+          if (x > 0 && m_data(x-1,y).target_x != -1)
+            is_border = true;
+          else if (x < m_data.width() - 1 && m_data(x+1,y).target_x != -1)
+            is_border = true;
+          if (y > 0 && m_data(x,y-1).target_x != -1)
+            is_border = true;
+          else if (y < m_data.height() - 1 && m_data(x,y+1).target_x != -1)
+            is_border = true;
 
-  //   std::size_t nb = 0;
-  //   for (std::size_t y = 0; y < m_data.height(); ++ y)
-  //     for (std::size_t x = 0; x < m_data.width(); ++ x)
-  //     {
-  //       int r, g, b;
-  //       if (m_data(x,y).target_x == -1)
-  //       {
-  //         bool is_border = false;
-  //         if (x > 0 && m_data(x-1,y).target_x != -1)
-  //           is_border = true;
-  //         else if (x < m_data.width() - 1 && m_data(x+1,y).target_x != -1)
-  //           is_border = true;
-  //         if (y > 0 && m_data(x,y-1).target_x != -1)
-  //           is_border = true;
-  //         else if (y < m_data.height() - 1 && m_data(x,y+1).target_x != -1)
-  //           is_border = true;
-
-  //         if (is_border)
-  //         {
-  //           srand(x + m_data.width() * y);
-  //           r = 64 + rand() % 128;
-  //           g = 64 + rand() % 128;
-  //           b = 64 + rand() % 128;
-  //         }
-  //         else
-  //         {
-  //           r = int(255 * (m_data(x,y).z / double(config().world_depth)));
-  //           g = int(255 * (m_data(x,y).z / double(config().world_depth)));
-  //           b = int(255 * (m_data(x,y).z / double(config().world_depth)));
-  //         }
-  //       }
-  //       else
-  //       {
-  //         int xx = m_data(x,y).target_x;
-  //         int yy = m_data(x,y).target_y;
-  //         srand(xx + m_data.width() * yy);
-  //         r = 64 + rand() % 128;
-  //         g = 64 + rand() % 128;
-  //         b = 64 + rand() % 128;
-  //       }
-  //       dbg << r << " " << g << " " << b << " ";
-  //       if (nb ++ == 4)
-  //       {
-  //         dbg << std::endl;
-  //         nb = 0;
-  //       }
-  //     }
-  // }
+          if (is_border)
+          {
+            srand(x + m_data.width() * y);
+            r = 64 + rand() % 128;
+            g = 64 + rand() % 128;
+            b = 64 + rand() % 128;
+          }
+          else
+          {
+            r = int(255 * (m_data(x,y).z / double(config().world_depth)));
+            g = int(255 * (m_data(x,y).z / double(config().world_depth)));
+            b = int(255 * (m_data(x,y).z / double(config().world_depth)));
+          }
+        }
+        else
+        {
+          int xx = m_data(x,y).target_x;
+          int yy = m_data(x,y).target_y;
+          srand(xx + m_data.width() * yy);
+          r = 64 + rand() % 128;
+          g = 64 + rand() % 128;
+          b = 64 + rand() % 128;
+        }
+        dbg << r << " " << g << " " << b << " ";
+        if (nb ++ == 4)
+        {
+          dbg << std::endl;
+          nb = 0;
+        }
+      }
+  }
+#endif
 }
 
 void Ground_map::find_path (const Point& origin,

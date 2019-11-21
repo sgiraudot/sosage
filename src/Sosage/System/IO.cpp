@@ -6,6 +6,7 @@
 #include <Sosage/Component/Text.h>
 #include <Sosage/System/IO.h>
 #include <Sosage/version.h>
+#include <Sosage/Utils/profiling.h>
 
 namespace Sosage::System
 {
@@ -46,6 +47,8 @@ std::string IO::read_init (const std::string& folder_name)
 
 std::string IO::read_room (const std::string& file_name)
 {
+  Timer t ("Room reading");
+  t.start();
   Core::IO::Element input (local_file_name(file_name));
   check (input.name() == "sosage_room", file_name + " is not a Sosage room.");
 
@@ -160,6 +163,7 @@ std::string IO::read_room (const std::string& file_name)
   }
   while ((input = input.next()));
 
+  t.stop();
   return std::string();
 }
 

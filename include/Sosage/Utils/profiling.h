@@ -16,12 +16,12 @@ class Timer
   
 public:
 
-  Timer (const std::string& id) : m_id (id) { }
+  Timer (const std::string& id) : m_id (id), m_nb(0) { }
 
   ~Timer()
   {
-    output("[" + m_id + " profiling] " + std::to_string(m_duration) + "ms ("
-           + std::to_string(mean_duration()) + "ms per iteration)");
+    output("[" + m_id + " profiling] " + to_string(m_duration) + " ("
+           + to_string(mean_duration()) + " per iteration)");
   }
 
   void start()
@@ -37,6 +37,13 @@ public:
   }
 
   double mean_duration() const { return m_duration / double(m_nb); }
+
+  std::string to_string (double d)
+  {
+    if (d < 100)
+      return std::to_string(d) + "ms";
+    return std::to_string(d / 1000.) + "s";
+  }
 };
 
 
