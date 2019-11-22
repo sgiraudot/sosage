@@ -28,7 +28,7 @@ class Point
   
 public:
 
-  Point (double x, double y, const Space& space = WORLD)
+  Point (double x = 0, double y = 0, const Space& space = WORLD)
   {
     m_x = from(x,space);
     m_y = from(y,space);

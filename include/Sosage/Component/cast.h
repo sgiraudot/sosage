@@ -15,6 +15,10 @@ inline std::shared_ptr<T> cast (Handle h)
   std::shared_ptr<T> out = std::dynamic_pointer_cast<T>(h);
   if (out)
     return out;
+
+  Variable_handle var =  std::dynamic_pointer_cast<Variable>(h);
+  if (var)
+    return std::dynamic_pointer_cast<T>(var->get());
   
   Conditional_handle cond = std::dynamic_pointer_cast<Conditional>(h);
   if (cond)

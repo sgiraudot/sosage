@@ -45,6 +45,12 @@ bool SDL_events::is_left_click (const Event& ev)
           (ev.type == SDL_FINGERUP));
 }
 
+bool SDL_events::is_window_resized (const Event& ev)
+{
+  return ((ev.type == SDL_WINDOWEVENT &&
+           ev.window.event == SDL_WINDOWEVENT_RESIZED));
+}
+
 bool SDL_events::is_mouse_motion (const Event& ev)
 {
   return ((ev.type == SDL_MOUSEMOTION) ||
@@ -59,6 +65,11 @@ std::pair<int, int> SDL_events::mouse_position (const Event& ev)
     return std::make_pair (ev.button.x, ev.button.y);
   // else if (ev.type == SDL_FINGERMOTION || ev.type == SDL_FINGERUP)
   return std::make_pair (ev.tfinger.x, ev.tfinger.y);
+}
+
+std::pair<int, int> SDL_events::window_size (const Event& ev)
+{
+  return std::make_pair (ev.window.data1, ev.window.data2);
 }
 
 } // namespace Sosage::Third_party

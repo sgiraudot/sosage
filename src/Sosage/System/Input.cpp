@@ -36,6 +36,13 @@ void Input::main()
     
     if (m_core.is_left_click(ev))
       m_content.set<Component::Position>("mouse:clicked", Point(m_core.mouse_position(ev)));
+
+    if (m_core.is_window_resized(ev))
+    {
+      std::tie (config().window_width, config().window_height)
+        = m_core.window_size(ev);
+      m_content.set<Component::Boolean>("window:rescaled", true);
+    }
   }
 }
 

@@ -3,6 +3,10 @@
 namespace Sosage::Component
 {
 
+Variable::Variable (const std::string& id, Handle target)
+  : Base(id), m_target (target)
+{ }
+
 Conditional::Conditional (const std::string& id,
                           Condition_handle condition,
                           Handle if_true,

@@ -11,6 +11,20 @@
 namespace Sosage::Component
 {
 
+class Variable : public Base
+{
+  Handle m_target;
+
+public:
+
+  Variable (const std::string& id, Handle target);
+
+  void set (Handle target) { m_target = target; }
+  Handle get() { return m_target; }
+};
+
+typedef std::shared_ptr<Variable> Variable_handle;
+
 class Conditional : public Base
 {
   Condition_handle m_condition;
