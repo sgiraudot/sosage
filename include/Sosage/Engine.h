@@ -6,6 +6,7 @@
 #include <Sosage/System/Graphic.h>
 #include <Sosage/System/Sound.h>
 #include <Sosage/System/Input.h>
+#include <Sosage/System/Interface.h>
 #include <Sosage/System/IO.h>
 #include <Sosage/System/Logic.h>
 #include <Sosage/Utils/time.h>
@@ -20,6 +21,7 @@ class Engine
   System::Graphic m_graphic;
   System::Sound m_sound;
   System::Input m_input;
+  System::Interface m_interface;
   System::IO m_io;
   System::Logic m_logic;
   Clock m_clock;

@@ -10,10 +10,8 @@ namespace Sosage::System
 
 Graphic::Graphic (Content& content, const std::string& game_name)
   : m_content (content)
-  , m_core (game_name, config().camera_width, config().camera_height, config().fullscreen)
+  , m_core (game_name)
 {
-
-
 }
 
 void Graphic::set_cursor (const std::string& file_name)
@@ -23,6 +21,14 @@ void Graphic::set_cursor (const std::string& file_name)
 
 void Graphic::main()
 {
+  Component::Boolean_handle rescaled
+    = m_content.request<Component::Boolean>("window:rescaled");
+  if (rescaled && rescaled->value())
+  {
+    m_core.update_view();
+    m_content.remove ("window:rescaled");
+  }
+  
   std::vector<Component::Image_handle> images;
 
   m_core.begin();

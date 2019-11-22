@@ -17,24 +17,25 @@ struct Config
   const int animation_fps;
   const int character_speed;
   
-  int camera_width;
-  int camera_height;
-  double camera_scaling;
+  int interface_height;
+  int window_width;
+  int window_height;
+  
   double ground_map_scaling;
 
   bool fullscreen;
 
-  Config (int camera_width = 1200, bool fullscreen = false)
+  Config (int window_width = 1200, bool fullscreen = false)
     : world_width (1920)
-    , world_height (1080)
+    , world_height (1000)
     , world_depth (3240)
     , ground_map_width (150)
     , gui_fps (30)
     , animation_fps (12)
     , character_speed (340 / animation_fps)
-    , camera_width (camera_width)
-    , camera_height (camera_width * world_height / world_width)
-    , camera_scaling (world_width / double(camera_width))
+    , interface_height (200)
+    , window_width (window_width)
+    , window_height (window_width * 10 / 16)
     , ground_map_scaling (world_width / double(ground_map_width))
     , fullscreen (fullscreen)
   { }
@@ -42,14 +43,14 @@ struct Config
 };
 
 #ifdef SOSAGE_ANDROID
-inline Config& config (int camera_width = 1200, bool fullscreen = true)
+inline Config& config (int window_width = 1200, bool fullscreen = true)
 #else
-inline Config& config (int camera_width = 1200, bool fullscreen = false)
+inline Config& config (int window_width = 1200, bool fullscreen = false)
 #endif
 {
   static std::unique_ptr<Config> c;
   if (c == std::unique_ptr<Config>())
-    c = std::unique_ptr<Config>(new Config(camera_width, fullscreen));
+    c = std::unique_ptr<Config>(new Config(window_width, fullscreen));
   return *c;
 }
 

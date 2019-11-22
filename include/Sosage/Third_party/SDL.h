@@ -59,9 +59,11 @@ public:
   static int width (Image image);
   static int height (Image image);
 
-  SDL (const std::string& game_name, int width, int height, bool fullscreen);
+  SDL (const std::string& game_name);
   ~SDL ();
 
+  void update_view();
+  void get_window_size (int& w, int& h);
   void set_cursor (const std::string& file_name);
   void begin();
   void draw (const Image& image,

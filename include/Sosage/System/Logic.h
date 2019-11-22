@@ -15,8 +15,6 @@ class Logic
 private:
 
   Content& m_content;
-  Component::Image_handle m_collision;
-  Component::Text_handle m_chosen_verb;
 
 public:
 
@@ -28,8 +26,6 @@ public:
 
 private:
   void compute_path_from_target (Component::Position_handle target);
-  void detect_collision (Component::Position_handle mouse);
-  void update_interface ();
   void update_debug_info (Component::Debug_handle debug_info);
 };
 

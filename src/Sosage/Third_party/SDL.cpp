@@ -84,7 +84,8 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
 {
   SDL_Surface* surf;
   if (text.find('\n') == std::string::npos)
-    surf = TTF_RenderUTF8_Blended (font, text.c_str(), color(color_str));
+//    surf = TTF_RenderUTF8_Blended (font, text.c_str(), color(color_str));
+    surf = TTF_RenderUTF8_Shaded (font, text.c_str(), color(color_str), black());
   else
     surf = TTF_RenderUTF8_Blended_Wrapped (font, text.c_str(), color(color_str), 1920);
     
@@ -199,9 +200,7 @@ int SDL::height (SDL::Image image)
   return out;
 }
 
-SDL::SDL (const std::string& game_name,
-          int width, int height,
-          bool fullscreen)
+SDL::SDL (const std::string& game_name)
 {
   int init = SDL_Init(SDL_INIT_VIDEO);
   check (init != -1, "Cannot initialize SDL");
@@ -209,28 +208,27 @@ SDL::SDL (const std::string& game_name,
   init = IMG_Init(IMG_INIT_PNG);
   check (init != -1, "Cannot initialize SDL Image");
 
-  // char *base_path = SDL_GetBasePath();
-  // if (base_path)
-  //   std::cerr << "Base path = " << base_path << std::endl;
-  // char *pref_path = SDL_GetPrefPath("Ptilouk", "Sosage");
-  // if (pref_path)
-  //   std::cerr << "Base path = " << pref_path << std::endl;
-
   init = TTF_Init();
   check (init != -1, "Cannot initialize SDL TTF");
+
+  std::cerr << config().window_width << " * " << config().window_height << std::endl;
 
   m_window = SDL_CreateWindow (game_name.c_str(),
                                SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED,
-                               width, height,
-                               SDL_WINDOW_RESIZABLE | (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
+                               config().window_width, config().window_height,
+                               SDL_WINDOW_RESIZABLE |
+                               (config().fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
   check (m_window != nullptr, "Cannot create SDL Window");
   
   m_renderer = SDL_CreateRenderer (m_window, -1, 0);
   check (m_renderer != nullptr, "Cannot create SDL Renderer");
 
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
-  SDL_RenderSetLogicalSize(m_renderer, 1920, 1080);
+  
+  SDL_GetWindowSize (m_window, &(config().window_width), &(config().window_height));
+
+  update_view();
 
   // Render black screen while the rest is loading
   SDL_SetRenderDrawColor (m_renderer, 0, 0, 0, 255);
@@ -248,6 +246,14 @@ SDL::~SDL ()
 //  SDL_FreeSurface (m_cursor_surf);
 //  SDL_FreeCursor (m_cursor);
   SDL_Quit ();
+}
+
+void SDL::update_view()
+{
+  int window_width = config().world_width;
+  int window_height = config().world_height + config().interface_height;
+
+  SDL_RenderSetLogicalSize(m_renderer, window_width, window_height);
 }
 
 void SDL::set_cursor (const std::string& file_name)
