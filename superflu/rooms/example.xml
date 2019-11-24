@@ -2,32 +2,27 @@
 
 <sosage_room
     name="Example"
-    background="example"
-    ground_map="example_map"
+    background="bureau"
+    ground_map="bureau_map"
+    front_z="3240"
+    back_z="2330"
     body="sophie_corps"
     head="sophie_tete"
-    x="800" y="870">
+    x="800" y="950">
 
-  <object id="voiture"
-          name="voiture"
-          x="666" y="496">
-    
+  <scenery id="bureau"
+           x="363" y="934" z="2785"
+           skin="bureau" />
+
+  <object id="plante"
+           name="plante verte"
+           x="962" y="705" z="2325"
+           skin="plante">
+
     <state id="defaut"
-           skin="voiture">
-      
-      <look>
-        <lookat target="voiture" />
-        <comment text="C'est la Flumobile…" />
-      </look>
-
-      <pick>
-        <goto target="voiture" />
-        <sync />
-        <animate target="character" skin="pick" duration="3" />
-        <set_state target="voiture" state="inventory" />
-      </pick>
+           skin="plante">
     </state>
 
   </object>
-
+  
 </sosage_room>

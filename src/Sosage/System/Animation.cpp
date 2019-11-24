@@ -87,13 +87,14 @@ void Animation::compute_movement_from_path (Component::Path_handle path)
   double new_z = ground_map->z_at_point (pos);
   abody->rescale (new_z);
   ahead->rescale (new_z);
+  ahead->z() += 1;
   pbody->set(pos);
 
 
   if (direction.x() > 0)
-    phead->set (pbody->value() - abody->core().scaling * Vector(0, 290));
+    phead->set (pbody->value() - abody->core().scaling * Vector(0, config().head_gap));
   else
-    phead->set (pbody->value() - abody->core().scaling * Vector(-10, 290));
+    phead->set (pbody->value() - abody->core().scaling * Vector(-10, config().head_gap));
 
       
 }

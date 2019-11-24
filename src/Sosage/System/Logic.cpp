@@ -25,9 +25,7 @@ void Logic::main()
     = m_content.request<Component::Position>("mouse:clicked");
   if (clicked && collision)
   {
-    if (collision->id() == "background:image")
-      compute_path_from_target(clicked);
-    else if (Component::Text_handle name = m_content.request<Component::Text>(collision->entity() + ":name"))
+    if (Component::Text_handle name = m_content.request<Component::Text>(collision->entity() + ":name"))
     {
       if (m_content.get<Component::Text> ("chosen_verb:text")->entity() == "verb_goto")
         compute_path_from_target(m_content.get<Component::Position>(collision->entity() + ":position"));
@@ -37,6 +35,9 @@ void Logic::main()
 
       }
     }
+    else
+      compute_path_from_target(clicked);
+    
     m_content.remove("mouse:clicked");
     m_content.remove("mouse:target");
   }

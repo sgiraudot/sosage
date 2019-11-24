@@ -16,11 +16,12 @@ struct Config
   const int gui_fps;
   const int animation_fps;
   const int character_speed;
+  const int head_gap;
   
   int interface_height;
   int window_width;
   int window_height;
-  
+
   double ground_map_scaling;
 
   bool fullscreen;
@@ -29,10 +30,11 @@ struct Config
     : world_width (1920)
     , world_height (1000)
     , world_depth (3240)
-    , ground_map_width (150)
+    , ground_map_width (300)
     , gui_fps (30)
     , animation_fps (12)
-    , character_speed (340 / animation_fps)
+    , character_speed (34)
+    , head_gap (320)
     , interface_height (200)
     , window_width (window_width)
     , window_height (window_width * 10 / 16)

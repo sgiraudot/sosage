@@ -12,7 +12,8 @@ namespace Sosage::Component
 {
 
 Ground_map::Ground_map (const std::string& id,
-                        const std::string& file_name)
+                        const std::string& file_name,
+                        int front_z, int back_z)
   : Base(id)
 {
   Core::Graphic::Surface source = Core::Graphic::load_surface (file_name);
@@ -35,7 +36,7 @@ Ground_map::Ground_map (const std::string& id,
 
       if (color[0] == color[1] && color[0] == color[2])
       {
-        m_data(x,y).z = config().world_depth * (1. - (color[0] / 255.)) + 1;
+        m_data(x,y).z = back_z + (front_z - back_z) * (1. - (color[0] / 255.));
         m_data(x,y).target_x = -1;
         m_data(x,y).target_y = -1;
       }
@@ -109,7 +110,7 @@ Ground_map::Ground_map (const std::string& id,
     }
   }
 
-#if 0
+#if 1
   {
     std::ofstream dbg ("dbg.ppm");
     dbg << "P3" << std::endl << m_data.width() << " " << m_data.height()
@@ -141,9 +142,9 @@ Ground_map::Ground_map (const std::string& id,
           }
           else
           {
-            r = int(255 * (m_data(x,y).z / double(config().world_depth)));
-            g = int(255 * (m_data(x,y).z / double(config().world_depth)));
-            b = int(255 * (m_data(x,y).z / double(config().world_depth)));
+            r = 255;
+            g = 255;
+            b = 255;
           }
         }
         else
@@ -176,6 +177,11 @@ void Ground_map::find_path (const Point& origin,
   //  correct target position to reach true ground
   int x = target.x(GROUND);
   int y = target.y(GROUND);
+
+  if (x >= m_data.width())
+    x = m_data.width() - 1;
+  if (y >= m_data.height())
+    y = m_data.height() - 1;
 
   if (m_data(x,y).target_x != -1)
   {

@@ -59,11 +59,25 @@ public:
     {
       return prefix + property(key) + suffix;
     }
-    int int_property (const std::string& key)
+    
+    int int_property (const std::string& key, const int& def = -1)
     {
       xmlChar* c = xmlGetProp (m_node, (const xmlChar*)(key.c_str()));
+      if (def != -1 && c == nullptr)
+        return def;
       check (c != nullptr, "Cannot read int property " + key);
       int out = std::atoi ((const char*)c);
+      xmlFree(c);
+      return out;
+    }
+    double double_property (const std::string& key,
+                            const double& def = std::numeric_limits<double>::quiet_NaN())
+    {
+      xmlChar* c = xmlGetProp (m_node, (const xmlChar*)(key.c_str()));
+      if (def != std::numeric_limits<double>::quiet_NaN() && c == nullptr)
+        return def;
+      check (c != nullptr, "Cannot read double property " + key);
+      double out = std::atof ((const char*)c);
       xmlFree(c);
       return out;
     }
