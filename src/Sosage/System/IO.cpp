@@ -55,10 +55,13 @@ std::string IO::read_room (const std::string& file_name)
   std::string name = input.property("name");
   std::string background = input.property("backgrounds/", "background", ".png");
   std::string ground_map = input.property("backgrounds/", "ground_map", ".png");
+  int front_z = input.int_property("front_z");
+  int back_z = input.int_property("back_z");
   
   m_content.set<Component::Image>("background:image", local_file_name(background), 0);
   m_content.set<Component::Position>("background:position", Point(0, 0));
-  m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map));
+  m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map),
+                                       front_z, back_z);
 
   std::string body = input.property("sprites/", "body", ".png");
   std::string head = input.property("sprites/", "head", ".png");
@@ -69,7 +72,7 @@ std::string IO::read_room (const std::string& file_name)
     Component::Animation_handle abody
       = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
                                             0, 9, 5);
-    abody->set_relative_origin(0.5, 0.9);
+    abody->set_relative_origin(0.5, 0.95);
   
     Component::Animation_handle ahead
       = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
@@ -81,7 +84,7 @@ std::string IO::read_room (const std::string& file_name)
 
   
     Component::Position_handle phead
-      = m_content.set<Component::Position>("character_head:position", Point(x, y - 290));
+      = m_content.set<Component::Position>("character_head:position", Point(x, y - config().head_gap));
   
     Component::Ground_map_handle ground_map
       = m_content.get<Component::Ground_map>("background:ground_map");
@@ -94,7 +97,7 @@ std::string IO::read_room (const std::string& file_name)
     abody->rescale (z_at_point);
     ahead->rescale (z_at_point);
     ahead->z() += 1;
-    phead->set (pbody->value() - abody->core().scaling * Vector(0, 290));
+    phead->set (pbody->value() - abody->core().scaling * Vector(0, config().head_gap));
 
   }
   
@@ -108,6 +111,7 @@ std::string IO::read_room (const std::string& file_name)
       std::string name = input.property("name");
       int x = input.int_property("x");
       int y = input.int_property("y");
+      int z = input.int_property("z");
       
       m_content.set<Component::Text>(id + ":name", name);
       Component::State_handle state_handle
@@ -117,12 +121,12 @@ std::string IO::read_room (const std::string& file_name)
 
       Component::State_conditional_handle conditional_handle;
 
-      input = input.next_child();
+      Core::IO::Element child = input.next_child();
 //      do
       {
-        check (input.name() == "state", "Expected state for  " + id + ", got " + input.name());
-        std::string state = input.property("id");
-        std::string skin = input.property("sprites/", "skin", ".png");
+        check (child.name() == "state", "Expected state for  " + id + ", got " + child.name());
+        std::string state = child.property("id");
+        std::string skin = child.property("sprites/", "skin", ".png");
 
         // init with first state found
         bool init = false;
@@ -139,17 +143,12 @@ std::string IO::read_room (const std::string& file_name)
           = Component::make_handle<Component::Image>(id + ":image", local_file_name(skin), 0);
         img->set_relative_origin(0.5, 1.0);
 
-        if (init)
-          pos->set (Point(pos->value().x() + img->width() / 2, pos->value().y() + img->height()));
-
-        Component::Ground_map_handle ground_map = m_content.get<Component::Ground_map>("background:ground_map");
-  
-        img->z() = ground_map->z_at_point (pos->value()) - 1;
+        img->z() = z;
         debug("Object " + id + ":" + state + " at position " + std::to_string(img->z()));
 
         conditional_handle->add(state, img);
       }
-//      while ((input = input.next()));
+//      while ((child = child.next()));
 
     }
     else if (input.name() == "npc")
@@ -158,7 +157,19 @@ std::string IO::read_room (const std::string& file_name)
     }
     else if (input.name() == "scenery")
     {
-
+      std::string id = input.property("id");
+      int x = input.int_property("x");
+      int y = input.int_property("y");
+      int z = input.int_property("z");
+      std::string skin = input.property("sprites/", "skin", ".png");
+      
+      Component::Position_handle pos
+        = m_content.set<Component::Position>(id + ":position", Point(x,y));
+      Component::Image_handle img
+        = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
+      img->set_relative_origin(0.5, 1.0);
+      img->z() = z;
+      debug("Scenery " + id + " at position " + std::to_string(img->z()));
     }
   }
   while ((input = input.next()));

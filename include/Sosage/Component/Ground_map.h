@@ -44,7 +44,8 @@ class Ground_map : public Base
 
 public:
 
-  Ground_map (const std::string& id, const std::string& file_name);
+  Ground_map (const std::string& id, const std::string& file_name, int front_z, int back_z);
+  
   void find_path (const Point& origin, const Point& target,
                   std::vector<Point>& out);
   double z_at_point (const Point& p) const;

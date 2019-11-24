@@ -26,14 +26,14 @@ public:
   {
     dbg_check (x + m_width * y < m_data.size(), "Access to vector_2["
                + std::to_string(x) + ";" + std::to_string(y) + "] out of bounds ["
-               + std::to_string(width()) + "; " + std::to_string(height()));
+               + std::to_string(width()) + "; " + std::to_string(height()) + "]");
     return m_data[x + m_width * y];
   }
   T& operator() (std::size_t x, std::size_t y)
   {
     dbg_check (x + m_width * y < m_data.size(), "Access to vector_2["
                + std::to_string(x) + ";" + std::to_string(y) + "] out of bounds ["
-               + std::to_string(width()) + "; " + std::to_string(height()));
+               + std::to_string(width()) + "; " + std::to_string(height()) + "]");
     return m_data[x + m_width * y];
   }
 };
