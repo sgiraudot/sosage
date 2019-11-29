@@ -1,8 +1,7 @@
 cmake_minimum_required (VERSION 3.2)
 project (superflu_pnc)
 
-## Use C++14 and load local CMake modules
-
+## Use C++17 and load local CMake modules
 set(CMAKE_CXX_STANDARD 17)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<sosage_character name="Sophie">
+
+  <head skin="sophie_tete"
+        dx_right="0"
+        dx_left="-10"
+        dy="320" />
+
+  <body skin="sophie_corps" />
+
+</sosage_character>

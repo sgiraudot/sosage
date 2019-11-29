@@ -2,8 +2,8 @@
 
 <sosage_room
     name="Bureau"
-    background="example"
-    ground_map="example_map"
+    background="bureau"
+    ground_map="bureau_map"
     body="sophie_corps"
     head="sophie_tete"
     x="800" y="870">

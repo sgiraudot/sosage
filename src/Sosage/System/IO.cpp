@@ -1,3 +1,4 @@
+#include <Sosage/Component/Action.h>
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
@@ -19,7 +20,7 @@ IO::IO (Content& content)
 std::string IO::read_init (const std::string& folder_name)
 {
   m_folder_name = folder_name;
-  std::string file_name = folder_name + "init.xml";
+  std::string file_name = folder_name + "resources/init.xml";
   
   Core::IO::Element input (file_name);
   check (input.name() == "sosage_init", file_name + " is not a Sosage init file.");
@@ -42,7 +43,58 @@ std::string IO::read_init (const std::string& folder_name)
 
   input = input.next_child();
   check (input.name() == "load", "Init file should load room");
-  return input.property("rooms/", "room", ".xml");
+  return input.property("resources/", "room", ".xml");
+}
+
+void IO::read_character (const std::string& file_name, int x, int y)
+{
+  Core::IO::Element input (local_file_name(file_name));
+  check (input.name() == "sosage_character", file_name + " is not a Sosage character.");
+
+  std::string name = input.property("name");
+  input = input.next_child();
+  check (input.name() == "head", "Expected head, got " + input.name());
+  
+  std::string head = input.property("sprites/", "skin", ".png");
+  int dx_right = input.int_property("dx_right");
+  int dx_left = input.int_property("dx_left");
+  int dy = input.int_property("dy");
+  
+  input = input.next().next();
+  check (input.name() == "body", "Expected body, got " + input.name());
+  
+  std::string body = input.property("sprites/", "skin", ".png");
+  
+  Component::Animation_handle abody
+    = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
+                                          0, 8, 6);
+  abody->set_relative_origin(0.5, 0.95);
+  
+  Component::Animation_handle ahead
+    = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
+                                          0, 7, 2);
+  ahead->set_relative_origin(0.5, 1.0);
+  
+  Component::Position_handle pbody
+    = m_content.set<Component::Position>("character_body:position", Point(x, y));
+
+  m_content.set<Component::Position>("character_head:gap_right", Point(dx_right,dy));
+  m_content.set<Component::Position>("character_head:gap_left", Point(dx_left,dy));
+  
+  Component::Position_handle phead
+    = m_content.set<Component::Position>("character_head:position", Point(x - dx_right, y - dy));
+  
+  Component::Ground_map_handle ground_map
+    = m_content.get<Component::Ground_map>("background:ground_map");
+  
+  Point pos_body = pbody->value();
+
+  double z_at_point = ground_map->z_at_point (pos_body);
+  abody->rescale (z_at_point);
+  ahead->rescale (z_at_point);
+  ahead->z() += 1;
+  phead->set (pbody->value() - abody->core().scaling * Vector(dx_right, dy));
+
 }
 
 std::string IO::read_room (const std::string& file_name)
@@ -63,48 +115,21 @@ std::string IO::read_room (const std::string& file_name)
   m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map),
                                        front_z, back_z);
 
-  std::string body = input.property("sprites/", "body", ".png");
-  std::string head = input.property("sprites/", "head", ".png");
+  std::string character = input.property("resources/", "character", ".xml");
   int x = input.int_property("x");
   int y = input.int_property("y");
-
-  {
-    Component::Animation_handle abody
-      = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
-                                            0, 9, 5);
-    abody->set_relative_origin(0.5, 0.95);
-  
-    Component::Animation_handle ahead
-      = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
-                                            0, 7, 2);
-    ahead->set_relative_origin(0.5, 1.0);
-  
-    Component::Position_handle pbody
-      = m_content.set<Component::Position>("character_body:position", Point(x, y));
-
-  
-    Component::Position_handle phead
-      = m_content.set<Component::Position>("character_head:position", Point(x, y - config().head_gap));
-  
-    Component::Ground_map_handle ground_map
-      = m_content.get<Component::Ground_map>("background:ground_map");
-  
-    Point pos_body = pbody->value();
-
-    // abody->z() = 1;
-    // ahead->z() = 2;
-    double z_at_point = ground_map->z_at_point (pos_body);
-    abody->rescale (z_at_point);
-    ahead->rescale (z_at_point);
-    ahead->z() += 1;
-    phead->set (pbody->value() - abody->core().scaling * Vector(0, config().head_gap));
-
-  }
+  read_character (character, x, y);
   
   input = input.next_child();
 
   do
   {
+    if (input.name() == "boolean")
+    {
+      std::string id = input.property("id");
+      bool value = input.bool_property("value");
+      m_content.set<Component::Boolean>(id + ":boolean", value);
+    }
     if (input.name() == "object")
     {
       std::string id = input.property("id");
@@ -122,8 +147,11 @@ std::string IO::read_room (const std::string& file_name)
       Component::State_conditional_handle conditional_handle;
 
       Core::IO::Element child = input.next_child();
-//      do
+      do
       {
+        if (child.name() == "text")
+          continue;
+        
         check (child.name() == "state", "Expected state for  " + id + ", got " + child.name());
         std::string state = child.property("id");
         std::string skin = child.property("sprites/", "skin", ".png");
@@ -148,8 +176,43 @@ std::string IO::read_room (const std::string& file_name)
 
         conditional_handle->add(state, img);
       }
-//      while ((child = child.next()));
+      while ((child = child.next()));
 
+    }
+    else if (input.name() == "action")
+    {
+      std::string id = input.property("id");
+      std::string target = input.property("target");
+
+      Component::Action_handle action
+        = m_content.set<Component::Action>(target + ":" + id);
+      
+      Core::IO::Element child = input.next_child();
+      do
+      {
+        if (child.name() == "text")
+          continue;
+
+        if (child.name() == "comment")
+          action->add ({ child.name(),
+                child.property("text") });
+        else if (child.name() == "move")
+          action->add ({ child.name(),
+                child.property("target"),
+                child.property("x"),
+                child.property("y"),
+                child.property("z") });
+        else if (child.name() == "pick_animation")
+          action->add ({ child.name(),
+                child.property("duration") });
+        else if (child.name() == "set_state")
+          action->add ({ child.name(),
+                child.property("target"),
+                child.property("state") });
+        else if (child.name() == "sync")
+          action->add ({ child.name() });
+      }
+      while ((child = child.next()));
     }
     else if (input.name() == "npc")
     {
@@ -175,11 +238,6 @@ std::string IO::read_room (const std::string& file_name)
   while ((input = input.next()));
 
   t.stop();
-  return std::string();
-}
-
-std::string IO::read_character (const std::string& file_name)
-{
   return std::string();
 }
 

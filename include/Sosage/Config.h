@@ -16,7 +16,6 @@ struct Config
   const int gui_fps;
   const int animation_fps;
   const int character_speed;
-  const int head_gap;
   
   int interface_height;
   int window_width;
@@ -34,7 +33,6 @@ struct Config
     , gui_fps (30)
     , animation_fps (12)
     , character_speed (34)
-    , head_gap (320)
     , interface_height (200)
     , window_width (window_width)
     , window_height (window_width * 10 / 16)
