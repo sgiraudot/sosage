@@ -30,7 +30,7 @@ std::string IO::read_init (const std::string& folder_name)
          "Error: room version " + v + " incompatible with Sosage " + Sosage::version());
 
   std::string cursor = input.property("sprites/", "cursor", ".png");
-//  m_graphic.set_cursor (local_file_name(cursor));
+  m_content.set<Component::Text> ("cursor:path", local_file_name(cursor));
   
   std::string debug_font = input.property("fonts/", "debug_font", ".ttf");
   m_content.set<Component::Font> ("debug:font", local_file_name(debug_font), 15);
@@ -137,12 +137,15 @@ std::string IO::read_room (const std::string& file_name)
       int x = input.int_property("x");
       int y = input.int_property("y");
       int z = input.int_property("z");
+      int vx = input.int_property("view_x");
+      int vy = input.int_property("view_y");
       
       m_content.set<Component::Text>(id + ":name", name);
       Component::State_handle state_handle
         = m_content.set<Component::State>(id + ":state");
       Component::Position_handle pos
         = m_content.set<Component::Position>(id + ":position", Point(x,y));
+      m_content.set<Component::Position>(id + ":view", Point(vx,vy));
 
       Component::State_conditional_handle conditional_handle;
 
@@ -209,7 +212,7 @@ std::string IO::read_room (const std::string& file_name)
           action->add ({ child.name(),
                 child.property("target"),
                 child.property("state") });
-        else if (child.name() == "sync")
+        else
           action->add ({ child.name() });
       }
       while ((child = child.next()));

@@ -17,16 +17,19 @@
   <object id="plante"
            name="plante verte"
            x="962" y="705" z="2325"
+           view_x="862" view_y="755"
            skin="plante">
     <state id="defaut" skin="plante" />
     <state id="bougee" skin="plante" />
   </object>
 
   <action id="look" target="plante">
+    <look />
     <comment text="C'est un yucca… c'est joli et ça ne demande pas trop d'entretien." />
   </action>
   
   <action id="move" target="plante" state="defaut">
+    <goto />
     <pick_animation duration="1" />
     <sync />
     <pick_animation duration="1" />

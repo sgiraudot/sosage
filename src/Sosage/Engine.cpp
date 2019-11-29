@@ -4,6 +4,7 @@
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Text.h>
 #include <Sosage/Engine.h>
+#include <Sosage/platform.h>
 #include <Sosage/Utils/profiling.h>
 
 namespace Sosage
@@ -59,6 +60,10 @@ int Engine::run (const std::string& folder_name)
     = m_content.set<Component::Debug>("game:debug", m_content, m_clock);
 
   m_interface.init();
+
+#ifdef SOSAGE_ANDROID
+  m_graphic.set_cursor (m_content.get<Component::Text> ("cursor:path")->value());
+#endif
 
   while (room_name != std::string())
   {

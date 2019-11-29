@@ -201,6 +201,7 @@ int SDL::height (SDL::Image image)
 }
 
 SDL::SDL (const std::string& game_name)
+  : m_cursor_surf (nullptr)
 {
   int init = SDL_Init(SDL_INIT_VIDEO);
   check (init != -1, "Cannot initialize SDL");
@@ -243,8 +244,11 @@ SDL::~SDL ()
   
   SDL_DestroyRenderer (m_renderer);
   SDL_DestroyWindow (m_window);
-//  SDL_FreeSurface (m_cursor_surf);
-//  SDL_FreeCursor (m_cursor);
+  if (m_cursor_surf != nullptr)
+  {
+    SDL_FreeSurface (m_cursor_surf);
+    SDL_FreeCursor (m_cursor);
+  }
   SDL_Quit ();
 }
 
@@ -258,14 +262,14 @@ void SDL::update_view()
 
 void SDL::set_cursor (const std::string& file_name)
 {
-  // m_cursor_surf = IMG_Load (file_name.c_str());
-  // check (m_cursor_surf != nullptr, "Cannot create image from " + file_name);
+  m_cursor_surf = IMG_Load (file_name.c_str());
+  check (m_cursor_surf != nullptr, "Cannot create image from " + file_name);
   
-  // m_cursor = SDL_CreateColorCursor(m_cursor_surf,
-  //                                  m_cursor_surf->w / 2, m_cursor_surf->h / 2);
-  // check (m_cursor != nullptr, "Cannot create cursor from " + file_name);
+  m_cursor = SDL_CreateColorCursor(m_cursor_surf,
+                                   m_cursor_surf->w / 2, m_cursor_surf->h / 2);
+  check (m_cursor != nullptr, "Cannot create cursor from " + file_name);
   
-  // SDL_SetCursor(m_cursor);
+  SDL_SetCursor(m_cursor);
 }
 
 void SDL::begin ()
