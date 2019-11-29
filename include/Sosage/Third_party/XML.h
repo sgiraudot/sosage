@@ -70,6 +70,17 @@ public:
       xmlFree(c);
       return out;
     }
+    bool bool_property (const std::string& key)
+    {
+      xmlChar* c = xmlGetProp (m_node, (const xmlChar*)(key.c_str()));
+      check (c != nullptr, "Cannot read bool property " + key);
+      std::string out = (const char*)c;
+      xmlFree(c);
+      if (out == "true")
+        return true;
+      check (out == "false", "Wrong boolean value: " + out);
+      return false;
+    }
     double double_property (const std::string& key,
                             const double& def = std::numeric_limits<double>::quiet_NaN())
     {

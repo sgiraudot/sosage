@@ -1,3 +1,4 @@
+#include <Sosage/Component/Action.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Text.h>
 #include <Sosage/System/Interface.h>
@@ -37,7 +38,25 @@ void Interface::main()
     }
     else
     {
-      m_content.set<Component::Variable>("mouse:target", m_collision);
+      std::string verb
+        = m_content.get<Component::Text> ("chosen_verb:text")->entity();
+      verb = std::string (verb.begin() + 5, verb.end());
+
+      if (verb == "goto")
+        m_content.set<Component::Variable>("mouse:target", m_collision);
+      else
+      {
+        Component::Action_handle action
+          = m_content.request<Component::Action> (m_collision->entity() + ":" + verb);
+        if (action)
+          std::cerr << action->str() << std::endl;
+        else // default action
+        {
+
+        }
+        m_content.remove("mouse:clicked");
+      }
+      
       m_content.get<Component::Variable> ("chosen_verb:text")
         ->set(m_content.get<Component::Text>("verb_goto:text"));
     }

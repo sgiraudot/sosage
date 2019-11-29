@@ -92,10 +92,11 @@ void Animation::compute_movement_from_path (Component::Path_handle path)
 
 
   if (direction.x() > 0)
-    phead->set (pbody->value() - abody->core().scaling * Vector(0, config().head_gap));
+    phead->set (pbody->value() - abody->core().scaling
+                * Vector(m_content.get<Component::Position>("character_head:gap_right")->value()));
   else
-    phead->set (pbody->value() - abody->core().scaling * Vector(-10, config().head_gap));
-
+    phead->set (pbody->value() - abody->core().scaling
+                * Vector(m_content.get<Component::Position>("character_head:gap_left")->value()));
       
 }
 
@@ -126,7 +127,7 @@ void Animation::set_move_animation (Component::Animation_handle image,
   image->frames().resize(8);
   for (std::size_t i = 0; i < 8; ++ i)
   {
-    image->frames()[i].x = i+1;
+    image->frames()[i].x = i;
     image->frames()[i].y = row_index;
     image->frames()[i].duration = 1;
   }
@@ -138,52 +139,41 @@ void Animation::generate_random_idle_animation (Component::Animation_handle imag
 {
   // Reset all
   image->reset();
+  image->frames().clear();
   head->reset();
+  head->frames().clear();
   head->on() = true;
 
   std::size_t row_index = 0;
   if (direction.x() > 0)
-    row_index = 1;
+    row_index = 4;
   else
-    row_index = 2;
-  
-  // Stand still for a while
-  image->frames().push_back
-    (Component::Animation::Frame
-     (0, row_index, random_int(10, 150)));
-
-  std::size_t offset = 0;
-  if (direction.x() < 0)
-    offset = 4;
+    row_index = 5;
   
   // Generate 10 poses with transitions
-  int pose = 0;
+  int pose = 1;
   for (int i = 0; i < 10; ++ i)
   {
     // Stand still for a while
-    if (pose == 0)
-      image->frames().push_back
-        (Component::Animation::Frame
-         (0, row_index, random_int(10, 150)));
-    else
-      image->frames().push_back
-        (Component::Animation::Frame
-         (offset + pose, 4, random_int(10, 150)));
+    image->frames().push_back
+      (Component::Animation::Frame
+       (pose, row_index, random_int(20, 150)));
     
     // Transition
     image->frames().push_back
       (Component::Animation::Frame
-       (offset, 4, 2));
+       (0, row_index, 2));
+    
     int new_pose;
     do
     {
-      new_pose = random_int(0,4);
+      new_pose = random_int(1,5);
     }
     while (new_pose == pose);
     pose = new_pose;
   }
 
-  if (row_index == 1)
+  if (row_index == 4)
     row_index = 0;
   else
     row_index = 1;
@@ -192,7 +182,7 @@ void Animation::generate_random_idle_animation (Component::Animation_handle imag
   pose = 0;
   for (int i = 0; i < 10; ++ i)
   {
-    int remaining = random_int(10, 150);
+    int remaining = random_int(20, 150);
 
     while (true)
     {
