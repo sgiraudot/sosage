@@ -49,11 +49,16 @@ void Interface::main()
         Component::Action_handle action
           = m_content.request<Component::Action> (m_collision->entity() + ":" + verb);
         if (action)
-          std::cerr << action->str() << std::endl;
-        else // default action
         {
+          for (const Component::Step& s : *action)
+          {
+            if (s.get(0) == "goto")
+            {
 
+            }
+          }
         }
+
         m_content.remove("mouse:clicked");
       }
       

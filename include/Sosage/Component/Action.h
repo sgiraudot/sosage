@@ -38,6 +38,9 @@ public:
   void add (const std::initializer_list<std::string>& content);
   std::string str() const;
 
+  std::vector<Step>::const_iterator begin() const { return m_steps.begin(); }
+  std::vector<Step>::const_iterator end() const { return m_steps.end(); }
+
 };
 
 typedef std::shared_ptr<Action> Action_handle;
