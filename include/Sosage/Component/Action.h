@@ -8,26 +8,28 @@
 namespace Sosage::Component
 {
 
-class Step
-{
-private:
-
-  std::vector<std::string> m_content;
-
-public:
-
-  Step (const std::initializer_list<std::string>& content)
-    : m_content (content)
-  { }
-
-  std::size_t size() const { return m_content.size(); }
-  const std::string& get (const std::size_t& i) const { return m_content[i]; }
-
-
-};
-
 class Action : public Base
 {
+public:
+  
+  class Step
+  {
+  private:
+
+    std::vector<std::string> m_content;
+
+  public:
+
+    Step (const std::initializer_list<std::string>& content)
+      : m_content (content)
+    { }
+
+    std::size_t size() const { return m_content.size(); }
+    const std::string& get (const std::size_t& i) const { return m_content[i]; }
+    int get_int (const std::size_t& i) const { return std::atoi(m_content[i].c_str()); }
+
+  };
+
 private:
 
   std::vector<Step> m_steps;

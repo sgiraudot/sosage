@@ -38,7 +38,7 @@ void Engine::main()
     std::size_t new_frame_id = m_clock.frame_id();
     if (!m_logic.paused())
     {
-      m_logic.main();
+      m_logic.main(m_clock.frame_time());
       m_interface.main();
       if (new_frame_id != frame_id)
         for (std::size_t i = frame_id; i < new_frame_id; ++ i)

@@ -25,7 +25,7 @@
 
   <action id="look" target="plante">
     <look />
-    <comment text="C'est un yucca… c'est joli et ça ne demande pas trop d'entretien." />
+    <comment text="C'est un yucca... c'est joli et ça ne demande pas trop d'entretien." />
   </action>
   
   <action id="move" target="plante" state="defaut">

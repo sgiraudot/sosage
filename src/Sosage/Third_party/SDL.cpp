@@ -53,7 +53,11 @@ SDL::Font SDL::load_font (const std::string& file_name, int size)
 {
   TTF_Font* out = TTF_OpenFont (file_name.c_str(), size);
   check (out != nullptr, "Cannot load font " + file_name);
-  return out;
+  TTF_Font* out2 = TTF_OpenFont (file_name.c_str(), size);
+  check (out2 != nullptr, "Cannot load font " + file_name);
+  TTF_SetFontOutline(out2, config().text_outline);
+  
+  return std::make_pair(out, out2);
 }
 
 SDL_Color SDL::black()
@@ -84,15 +88,36 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
 {
   SDL_Surface* surf;
   if (text.find('\n') == std::string::npos)
-//    surf = TTF_RenderUTF8_Blended (font, text.c_str(), color(color_str));
-    surf = TTF_RenderUTF8_Shaded (font, text.c_str(), color(color_str), black());
+    surf = TTF_RenderUTF8_Blended (font.first, text.c_str(), color(color_str));
   else
-    surf = TTF_RenderUTF8_Blended_Wrapped (font, text.c_str(), color(color_str), 1920);
+    surf = TTF_RenderUTF8_Blended_Wrapped (font.first, text.c_str(), color(color_str), 1920);
     
   check (surf != nullptr, "Cannot create text \"" + text + "\"");
   SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, surf);
   check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
   return Image (surf, out, 1);
+}
+
+SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& color_str,
+                                      const std::string& text)
+{
+  SDL_Surface* surf
+    = TTF_RenderUTF8_Blended (font.first, text.c_str(), color(color_str));
+  check (surf != nullptr, "Cannot create text \"" + text + "\"");
+  
+  SDL_Surface* back
+    = TTF_RenderUTF8_Blended (font.second, text.c_str(), black());
+  check (back != nullptr, "Cannot create text \"" + text + "\"");
+  
+  SDL_Rect rect = {config().text_outline, config().text_outline, surf->w, surf->h};
+  SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_BLEND); 
+  SDL_BlitSurface(surf, NULL, back, &rect);
+
+  SDL_FreeSurface(surf);
+  
+  SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, back);
+  check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
+  return Image (back, out, 1);
 }
 
 void SDL::rescale (SDL::Image& source, double scaling)
@@ -108,7 +133,8 @@ void SDL::delete_image (const SDL::Image& source)
 
 void SDL::delete_font (const SDL::Font& font)
 {
-  TTF_CloseFont(font);
+  TTF_CloseFont(font.first);
+  TTF_CloseFont(font.second);
 }
 
 std::array<unsigned char, 3> SDL::get_color (SDL::Surface image, int x, int y)
