@@ -17,10 +17,13 @@ Image::Image (const std::string& id, const std::string& file_name, int z)
 }
 
 Image::Image (const std::string& id, Font_handle font, const std::string& color_str,
-              const std::string& text)
+              const std::string& text, bool outlined)
   : Base(id), m_origin(0,0), m_z(1000001), m_on(true)
 {
-  m_core = Core::Graphic::create_text (font->core(), color_str, text);
+  if (outlined)
+    m_core = Core::Graphic::create_outlined_text (font->core(), color_str, text);
+  else
+    m_core = Core::Graphic::create_text (font->core(), color_str, text);
 }
 
 Image::~Image()

@@ -30,7 +30,7 @@ public:
   };
 
   typedef SDL_Surface* Surface;
-  typedef TTF_Font* Font;
+  typedef std::pair<TTF_Font*, TTF_Font*> Font;
   
   static SDL_Window* m_window;
   static SDL_Renderer* m_renderer;
@@ -49,6 +49,8 @@ public:
   static SDL_Color color (const std::string& color_str);
   static Image create_text (const Font& font, const std::string& color_str,
                             const std::string& text);
+  static Image create_outlined_text (const Font& font, const std::string& color_str,
+                                     const std::string& text);
   static void rescale (Image& source, double scaling);
   static void delete_image (const Image& source);
   static void delete_font (const Font& font);
