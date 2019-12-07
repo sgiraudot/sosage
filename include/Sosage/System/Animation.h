@@ -23,6 +23,12 @@ public:
   void generate_random_idle_animation (Component::Animation_handle image,
                                        Component::Animation_handle head,
                                        const Vector& direction);
+
+  void generate_random_idle_head_animation (Component::Animation_handle head,
+                                            const Vector& direction);
+  void generate_random_idle_body_animation (Component::Animation_handle body,
+                                            const Vector& direction);
+
 private:
   
   void compute_movement_from_path (Component::Path_handle path);

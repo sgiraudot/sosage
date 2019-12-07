@@ -1,4 +1,5 @@
 #include <Sosage/Component/Action.h>
+#include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Condition.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Font.h>
@@ -17,6 +18,7 @@ namespace Sosage::System
 
 Logic::Logic (Content& content)
   : m_content (content), m_current_time(0)
+  , m_current_action (nullptr), m_next_step (0)
 {
 }
 
@@ -38,15 +40,11 @@ void Logic::main (const std::size_t& current_time)
     = m_content.request<Component::Position>("mouse:clicked");
   if (clicked && collision)
   {
+    std::cerr << "Collision with " << collision->id() << std::endl;
     if (Component::Text_handle name = m_content.request<Component::Text>(collision->entity() + ":name"))
     {
       if (m_content.get<Component::Text> ("chosen_verb:text")->entity() == "verb_goto")
         compute_path_from_target(m_content.get<Component::Position>(collision->entity() + ":view"));
-      else
-      {
-        // Action !
-
-      }
     }
     else
       compute_path_from_target(clicked);
@@ -57,21 +55,37 @@ void Logic::main (const std::size_t& current_time)
   
   Component::Action_handle action
     = m_content.request<Component::Action>("character:action");
-  if (action)
+  if (action && action != m_current_action)
   {
-    for (const Component::Action::Step& s : *action)
-    {
-      if (s.get(0) == "comment")
-        action_comment (s);
-      else if (s.get(0) == "move")
-        action_move (s);
-      else if (s.get(0) == "pick_animation")
-        action_pick_animation (s);
-      else if (s.get(0) == "set_state")
-        action_set_state (s);
-    }
-    
+    m_current_action = action;
+    m_next_step = 0;
     m_content.remove ("character:action");
+  }
+
+  if (m_current_action)
+  {
+    if (m_timed.empty())
+    {
+      while (m_next_step != action->size())
+      {
+        const Component::Action::Step& s = (*action)[m_next_step ++];
+
+        if (s.get(0) == "comment")
+          action_comment (s);
+        else if (s.get(0) == "goto")
+          action_goto (action->entity());
+        else if (s.get(0) == "look")
+          action_look (action->entity());
+        else if (s.get(0) == "move")
+          action_move (s);
+        else if (s.get(0) == "pick_animation")
+          action_pick_animation (s);
+        else if (s.get(0) == "set_state")
+          action_set_state (s);
+        else if (s.get(0) == "sync")
+          break;
+      }
+    }
   }
 
   update_debug_info (m_content.get<Component::Debug>("game:debug"));
@@ -143,8 +157,16 @@ void Logic::action_comment (Component::Action::Step step)
   int nb_words = int(std::count(text.begin(), text.end(), ' '));
   int nb_seconds = 1 + int(nb_words / double(config().words_per_second));
 
-  int x = config().world_width / 2;
   int y = 100;
+  int x = m_content.get<Component::Position>("character_body:position")->value().x();
+
+  for (Component::Image_handle img : dialog)
+    if (x + 0.75 * img->width() / 2 > int(0.95 * config().world_width))
+      x = int(0.95 * config().world_width) - 0.75 * img->width() / 2;
+    else if (x - 0.75 * img->width() / 2 < int(0.1 * config().world_width))
+      x = int(0.1 * config().world_width) + 0.75 * img->width() / 2;
+
+    
   for (Component::Image_handle img : dialog)
   {
     Component::Position_handle pos
@@ -156,6 +178,16 @@ void Logic::action_comment (Component::Action::Step step)
   }
 }
 
+void Logic::action_goto (const std::string& target)
+{
+}
+
+void Logic::action_look (const std::string& target)
+{
+  m_content.set<Component::Position>("character:lookat",
+                                     m_content.get<Component::Position>(target + ":position")->value());
+}
+  
 void Logic::action_move (Component::Action::Step step)
 {
   std::string target = step.get(1);
@@ -168,6 +200,7 @@ void Logic::action_move (Component::Action::Step step)
 void Logic::action_pick_animation (Component::Action::Step step)
 {
   int duration = step.get_int(1);
+
 }
 
 void Logic::action_set_state (Component::Action::Step step)
@@ -179,7 +212,7 @@ void Logic::action_set_state (Component::Action::Step step)
 void Logic::create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog)
 {
   static const double scale = 0.75;
-  static const int width_max = int(0.9 * config().world_width);
+  static const int width_max = int(0.95 * config().world_width);
   
   Component::Image_handle img
     = m_content.set<Component::Image> ("comment:image",
@@ -187,6 +220,7 @@ void Logic::create_dialog (const std::string& text, std::vector<Component::Image
                                        m_content.get<Component::Text> ("interface:color")->value(),
                                        text, true);
   img->set_scale(0.75);
+  img->set_relative_origin(0.5, 0.5);
 
   if (img->width() <= width_max)
     dialog.push_back (img);

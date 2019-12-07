@@ -22,6 +22,18 @@ void Animation::main()
   if (path)
     compute_movement_from_path(path);
 
+  Component::Position_handle lookat
+    = m_content.request<Component::Position>("character:lookat");
+  if (lookat)
+  {
+    Component::Position_handle phead
+      = m_content.get<Component::Position>("character_head:position");
+    
+    generate_random_idle_head_animation (m_content.get<Component::Animation>("character_head:image"),
+                                         Vector (phead->value(), lookat->value()));
+    m_content.remove("character:lookat");
+  }
+
   std::vector<Component::Animation_handle> animations;
 
   for (const auto& e : m_content)
@@ -137,49 +149,24 @@ void Animation::generate_random_idle_animation (Component::Animation_handle imag
                                                 Component::Animation_handle head,
                                                 const Vector& direction)
 {
+  generate_random_idle_body_animation (image, direction);
+  generate_random_idle_head_animation (head, direction);
+}
+
+void Animation::generate_random_idle_head_animation (Component::Animation_handle head,
+                                                     const Vector& direction)
+{
   // Reset all
-  image->reset();
-  image->frames().clear();
   head->reset();
   head->frames().clear();
   head->on() = true;
 
   std::size_t row_index = 0;
-  if (direction.x() > 0)
-    row_index = 4;
-  else
-    row_index = 5;
-  
-  // Generate 10 poses with transitions
-  int pose = 1;
-  for (int i = 0; i < 10; ++ i)
-  {
-    // Stand still for a while
-    image->frames().push_back
-      (Component::Animation::Frame
-       (pose, row_index, random_int(20, 150)));
-    
-    // Transition
-    image->frames().push_back
-      (Component::Animation::Frame
-       (0, row_index, 2));
-    
-    int new_pose;
-    do
-    {
-      new_pose = random_int(1,5);
-    }
-    while (new_pose == pose);
-    pose = new_pose;
-  }
-
-  if (row_index == 4)
-    row_index = 0;
-  else
+  if (direction.x() < 0)
     row_index = 1;
 
-  // Same for the head
-  pose = 0;
+  // Generate 10 poses with transitions
+  int pose = 0;
   for (int i = 0; i < 10; ++ i)
   {
     int remaining = random_int(20, 150);
@@ -226,6 +213,41 @@ void Animation::generate_random_idle_animation (Component::Animation_handle imag
       row_index = (row_index == 1 ? 0 : 1);
   }
 
+}
+
+void Animation::generate_random_idle_body_animation (Component::Animation_handle image,
+                                                     const Vector& direction)
+{
+  // Reset all
+  image->reset();
+  image->frames().clear();
+
+  std::size_t row_index = 4;
+  if (direction.x() < 0)
+    row_index = 5;
+  
+  // Generate 10 poses with transitions
+  int pose = 1;
+  for (int i = 0; i < 10; ++ i)
+  {
+    // Stand still for a while
+    image->frames().push_back
+      (Component::Animation::Frame
+       (pose, row_index, random_int(20, 150)));
+    
+    // Transition
+    image->frames().push_back
+      (Component::Animation::Frame
+       (0, row_index, 2));
+    
+    int new_pose;
+    do
+    {
+      new_pose = random_int(1,5);
+    }
+    while (new_pose == pose);
+    pose = new_pose;
+  }
 }
 
 } // namespace Sosage::System
