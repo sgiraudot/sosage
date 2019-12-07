@@ -40,8 +40,10 @@ public:
   void add (const std::initializer_list<std::string>& content);
   std::string str() const;
 
+  std::size_t size() const { return m_steps.size(); }
   std::vector<Step>::const_iterator begin() const { return m_steps.begin(); }
   std::vector<Step>::const_iterator end() const { return m_steps.end(); }
+  const Step& operator[] (const std::size_t& idx) const { return m_steps[idx]; }
 
 };
 

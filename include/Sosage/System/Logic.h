@@ -21,6 +21,9 @@ private:
   Content& m_content;
   std::size_t m_current_time;
 
+  Component::Action_handle m_current_action;
+  std::size_t m_next_step;
+
 public:
 
   Logic (Content& content);
@@ -34,6 +37,8 @@ private:
   void update_debug_info (Component::Debug_handle debug_info);
 
   void action_comment (Component::Action::Step step);
+  void action_goto (const std::string& target);
+  void action_look (const std::string& target);
   void action_move (Component::Action::Step step);
   void action_pick_animation (Component::Action::Step step);
   void action_set_state (Component::Action::Step step);

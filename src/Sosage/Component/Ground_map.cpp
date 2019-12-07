@@ -110,7 +110,7 @@ Ground_map::Ground_map (const std::string& id,
     }
   }
 
-#if 1
+#if 0
   {
     std::ofstream dbg ("dbg.ppm");
     dbg << "P3" << std::endl << m_data.width() << " " << m_data.height()

@@ -30,6 +30,8 @@ void Interface::main()
     = m_content.request<Component::Position>("mouse:clicked");
   if (clicked && m_collision)
   {
+    m_content.remove("mouse:clicked");
+    
     if (m_collision->entity().find("verb_") == 0)
     {
       m_content.get<Component::Variable> ("chosen_verb:text")
@@ -284,7 +286,9 @@ void Interface::detect_collision (Component::Position_handle mouse)
     {
       if (!img->on() ||
           img->id().find("character") == 0 ||
-          img->id().find("debug") == 0)
+          img->id().find("debug") == 0 ||
+          img->id().find("chosen_verb") == 0 ||
+          img->id().find("interface_") == 0)
         continue;
       
       Component::Position_handle p = m_content.get<Component::Position>(img->entity() + ":position");
