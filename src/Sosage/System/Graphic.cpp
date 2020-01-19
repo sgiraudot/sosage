@@ -1,3 +1,4 @@
+#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/System/Graphic.h>
@@ -21,9 +22,7 @@ void Graphic::set_cursor (const std::string& file_name)
 
 void Graphic::main()
 {
-  Component::Boolean_handle rescaled
-    = m_content.request<Component::Boolean>("window:rescaled");
-  if (rescaled && rescaled->value())
+  if (m_content.request<Component::Event>("window:rescaled"))
   {
     m_core.update_view();
     m_content.remove ("window:rescaled");
@@ -56,10 +55,17 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
                return (a->z() < b->z());
              });
 
+  bool locked = m_content.get<Component::Boolean>("game:locked")->value();
+  
   for (const auto& img : images)
   {
     if (img->on())
     {
+      if (locked &&
+          (img->entity().find("verb_") == 0 ||
+           img->entity() == "chosen_verb"))
+        continue;
+      
       Component::Position_handle p = m_content.get<Component::Position>(img->entity() + ":position");
 
       int xmin = img->xmin();

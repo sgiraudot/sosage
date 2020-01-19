@@ -22,9 +22,11 @@ public:
   
   void generate_random_idle_animation (Component::Animation_handle image,
                                        Component::Animation_handle head,
+                                       Component::Animation_handle mouth,
                                        const Vector& direction);
 
   void generate_random_idle_head_animation (Component::Animation_handle head,
+                                            Component::Animation_handle mouth,
                                             const Vector& direction);
   void generate_random_idle_body_animation (Component::Animation_handle body,
                                             const Vector& direction);
@@ -34,7 +36,12 @@ private:
   void compute_movement_from_path (Component::Path_handle path);
   void set_move_animation (Component::Animation_handle image,
                            Component::Animation_handle head,
+                           Component::Animation_handle mouth,
                            const Vector& direction);
+
+  void generate_random_mouth_animation (Component::Animation_handle mouth);
+  void generate_pick_animation (Component::Animation_handle body);
+                             
 };
 
 } // namespace Sosage::System

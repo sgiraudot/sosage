@@ -1,4 +1,5 @@
 #include <Sosage/Component/Condition.h>
+#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/System/Input.h>
 
@@ -18,7 +19,7 @@ void Input::main()
   while (m_core.next_event(ev))
   {
     if (m_core.is_exit(ev))
-      m_content.set<Component::Boolean>("game:exit", true);
+      m_content.set<Component::Event>("game:exit");
 
     if (m_core.is_pause(ev))
       m_content.get<Component::Boolean>("game:paused")->toggle();
@@ -31,18 +32,23 @@ void Input::main()
     if (m_core.is_debug(ev))
       m_content.get<Component::Boolean>("game:debug")->toggle();
     
+    if (m_core.is_window_resized(ev))
+    {
+      std::tie (config().window_width, config().window_height)
+        = m_core.window_size(ev);
+      m_content.set<Component::Event>("window:rescaled");
+    }
+
+    // If paused, ignore mouse events
+    if (m_content.get<Component::Boolean>("game:locked")->value())
+      continue;
+  
     if (m_core.is_mouse_motion(ev))
       m_content.set<Component::Position>("mouse:position", Point(m_core.mouse_position(ev)));
     
     if (m_core.is_left_click(ev))
       m_content.set<Component::Position>("mouse:clicked", Point(m_core.mouse_position(ev)));
 
-    if (m_core.is_window_resized(ev))
-    {
-      std::tie (config().window_width, config().window_height)
-        = m_core.window_size(ev);
-      m_content.set<Component::Boolean>("window:rescaled", true);
-    }
   }
 }
 

@@ -53,12 +53,20 @@ void IO::read_character (const std::string& file_name, int x, int y)
 
   std::string name = input.property("name");
   input = input.next_child();
+  check (input.name() == "mouth", "Expected mouth, got " + input.name());
+
+  std::string mouth = input.property("sprites/", "skin", ".png");
+  int mdx_right = input.int_property("dx_right");
+  int mdx_left = input.int_property("dx_left");
+  int mdy = input.int_property("dy");
+  
+  input = input.next().next();
   check (input.name() == "head", "Expected head, got " + input.name());
   
   std::string head = input.property("sprites/", "skin", ".png");
-  int dx_right = input.int_property("dx_right");
-  int dx_left = input.int_property("dx_left");
-  int dy = input.int_property("dy");
+  int hdx_right = input.int_property("dx_right");
+  int hdx_left = input.int_property("dx_left");
+  int hdy = input.int_property("dy");
   
   input = input.next().next();
   check (input.name() == "body", "Expected body, got " + input.name());
@@ -75,15 +83,27 @@ void IO::read_character (const std::string& file_name, int x, int y)
                                           0, 7, 2);
   ahead->set_relative_origin(0.5, 1.0);
   
+  Component::Animation_handle amouth
+    = m_content.set<Component::Animation>("character_mouth:image", local_file_name(mouth),
+                                          0, 11, 2);
+  amouth->set_relative_origin(0.5, 1.0);
+  
   Component::Position_handle pbody
     = m_content.set<Component::Position>("character_body:position", Point(x, y));
 
-  m_content.set<Component::Position>("character_head:gap_right", Point(dx_right,dy));
-  m_content.set<Component::Position>("character_head:gap_left", Point(dx_left,dy));
+  m_content.set<Component::Position>("character_head:gap_right", Point(hdx_right,hdy));
+  m_content.set<Component::Position>("character_head:gap_left", Point(hdx_left,hdy));
+
+  m_content.set<Component::Position>("character_mouth:gap_right", Point(mdx_right,mdy));
+  m_content.set<Component::Position>("character_mouth:gap_left", Point(mdx_left,mdy));
   
   Component::Position_handle phead
-    = m_content.set<Component::Position>("character_head:position", Point(x - dx_right, y - dy));
-  
+    = m_content.set<Component::Position>("character_head:position", Point(x - hdx_right, y - hdy));
+
+  Component::Position_handle pmouth
+    = m_content.set<Component::Position>("character_mouth:position", Point(x - hdx_right - mdx_right,
+                                                                           y - hdy - mdy));
+
   Component::Ground_map_handle ground_map
     = m_content.get<Component::Ground_map>("background:ground_map");
   
@@ -91,9 +111,14 @@ void IO::read_character (const std::string& file_name, int x, int y)
 
   double z_at_point = ground_map->z_at_point (pos_body);
   abody->rescale (z_at_point);
+  
   ahead->rescale (z_at_point);
   ahead->z() += 1;
-  phead->set (pbody->value() - abody->core().scaling * Vector(dx_right, dy));
+  phead->set (pbody->value() - abody->core().scaling * Vector(hdx_right, hdy));
+  
+  amouth->rescale (z_at_point);
+  amouth->z() += 2;
+  pmouth->set (phead->value() - ahead->core().scaling * Vector(mdx_right, mdy));
 
 }
 
@@ -186,9 +211,28 @@ std::string IO::read_room (const std::string& file_name)
     {
       std::string id = input.property("id");
       std::string target = input.property("target");
+      std::string state = input.property("state", "no_state");
 
-      Component::Action_handle action
-        = m_content.set<Component::Action>(target + ":" + id);
+      Component::Action_handle action;
+              
+      if (state != "no_state")
+      {
+        Component::State_conditional_handle conditional_handle
+          = m_content.request<Component::State_conditional>(target + ":" + id);
+
+        if (!conditional_handle)
+        {
+          Component::State_handle state_handle
+            = m_content.get<Component::State>(target + ":state");
+          conditional_handle
+            = m_content.set<Component::State_conditional>(target + ":" + id, state_handle);
+        }
+
+        action = Component::make_handle<Component::Action>(target + ":" + id + ":" + state);
+        conditional_handle->add (state, action);
+      }
+      else
+        action = m_content.set<Component::Action>(target + ":" + id);
       
       Core::IO::Element child = input.next_child();
       do

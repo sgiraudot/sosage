@@ -1,6 +1,7 @@
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Condition.h>
+#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Image.h>
@@ -29,8 +30,22 @@ void Logic::main (const std::size_t& current_time)
   std::vector<Timed_handle> new_timed_handle;
   
   for (const Timed_handle& th : m_timed)
-    if (th.first < m_current_time)
-      m_content.remove (th.second->id());
+    if (th.first == 0) // special case for Path
+    {
+      Component::Path_handle saved_path
+        = Component::cast<Component::Path>(th.second);
+      Component::Path_handle current_path
+        = m_content.request<Component::Path>("character:path");
+      if (saved_path == current_path)
+        new_timed_handle.push_back(th);
+    }
+    else if (th.first <= m_current_time)
+    {
+      if (Component::cast<Component::Event>(th.second))
+        m_content.set (th.second);
+      else
+        m_content.remove (th.second->id());
+    }
     else
       new_timed_handle.push_back(th);
   m_timed.swap(new_timed_handle);
@@ -51,6 +66,10 @@ void Logic::main (const std::size_t& current_time)
     
     m_content.remove("mouse:clicked");
     m_content.remove("mouse:target");
+
+    // Cancel current action
+    m_timed.clear();
+    m_current_action = nullptr;
   }
   
   Component::Action_handle action
@@ -66,25 +85,33 @@ void Logic::main (const std::size_t& current_time)
   {
     if (m_timed.empty())
     {
-      while (m_next_step != action->size())
-      {
-        const Component::Action::Step& s = (*action)[m_next_step ++];
+      if (m_next_step == m_current_action->size())
+        m_current_action = Component::Action_handle();
+      else
+        while (m_next_step != m_current_action->size())
+        {
+          const Component::Action::Step& s = (*m_current_action)[m_next_step ++];
+          std::cerr << s.get(0) << std::endl;
 
-        if (s.get(0) == "comment")
-          action_comment (s);
-        else if (s.get(0) == "goto")
-          action_goto (action->entity());
-        else if (s.get(0) == "look")
-          action_look (action->entity());
-        else if (s.get(0) == "move")
-          action_move (s);
-        else if (s.get(0) == "pick_animation")
-          action_pick_animation (s);
-        else if (s.get(0) == "set_state")
-          action_set_state (s);
-        else if (s.get(0) == "sync")
-          break;
-      }
+          if (s.get(0) == "comment")
+            action_comment (s);
+          else if (s.get(0) == "goto")
+            action_goto (m_current_action->entity());
+          else if (s.get(0) == "look")
+            action_look (m_current_action->entity());
+          else if (s.get(0) == "move")
+            action_move (s);
+          else if (s.get(0) == "pick_animation")
+            action_pick_animation (s);
+          else if (s.get(0) == "set_state")
+            action_set_state (s);
+          else if (s.get(0) == "lock")
+            m_content.get<Component::Boolean>("game:locked")->set(true);
+          else if (s.get(0) == "unlock")
+            m_content.get<Component::Boolean>("game:locked")->set(false);
+          else if (s.get(0) == "sync")
+            break;
+        }
     }
   }
 
@@ -93,11 +120,7 @@ void Logic::main (const std::size_t& current_time)
 
 bool Logic::exit()
 {
-  Component::Boolean_handle exit
-    = m_content.request<Component::Boolean>("game:exit");
-  if (exit && exit->value())
-    return true;
-  return false;
+  return (m_content.request<Component::Event>("game:exit") != Component::Handle());
 }
 
 bool Logic::paused()
@@ -107,8 +130,6 @@ bool Logic::paused()
 
 void Logic::compute_path_from_target (Component::Position_handle target)
 {
-  std::vector<Point> path;
-  
   Component::Ground_map_handle ground_map
     = m_content.get<Component::Ground_map>("background:ground_map");
 
@@ -117,11 +138,9 @@ void Logic::compute_path_from_target (Component::Position_handle target)
       
   Point origin = position->value();
 
+  std::vector<Point> path;
   ground_map->find_path (origin, target->value(), path);
-      
   m_content.set<Component::Path>("character:path", path);
-  path.clear();
-      
 }
 
 void Logic::update_debug_info (Component::Debug_handle debug_info)
@@ -176,10 +195,22 @@ void Logic::action_comment (Component::Action::Step step)
     m_timed.push_back (std::make_pair (m_current_time + nb_seconds, img));
     m_timed.push_back (std::make_pair (m_current_time + nb_seconds, pos));
   }
+
+  m_content.set<Component::Event>("character:start_talking");
+
+  std::cerr << nb_seconds << std::endl;
+  m_timed.push_back (std::make_pair (m_current_time + nb_seconds,
+                                     Component::make_handle<Component::Event>
+                                     ("character:stop_talking")));
 }
 
 void Logic::action_goto (const std::string& target)
 {
+  Component::Position_handle position
+    = m_content.request<Component::Position>(target + ":view");
+  compute_path_from_target(position);
+
+  m_timed.push_back (std::make_pair (0, m_content.get<Component::Path>("character:path")));
 }
 
 void Logic::action_look (const std::string& target)
@@ -195,11 +226,18 @@ void Logic::action_move (Component::Action::Step step)
   int y = step.get_int(3);
   int z = step.get_int(4);
 
+  m_content.set<Component::Position>(target + ":position", Point(x, y));
+  m_content.get<Component::Image>(target + ":conditional_image")->z() = z;
 }
 
 void Logic::action_pick_animation (Component::Action::Step step)
 {
   int duration = step.get_int(1);
+  m_content.set<Component::Event>("character:start_pick_animation");
+
+  m_timed.push_back (std::make_pair (m_current_time + duration,
+                                     Component::make_handle<Component::Event>
+                                     ("character:stop_pick_animation")));
 
 }
 
@@ -207,6 +245,8 @@ void Logic::action_set_state (Component::Action::Step step)
 {
   std::string target = step.get(1);
   std::string state = step.get(2);
+
+  m_content.get<Component::State>(target + ":state")->set (state);
 }
 
 void Logic::create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog)
