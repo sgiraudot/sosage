@@ -76,16 +76,19 @@
   
   <action id="move" target="plante" state="defaut">
     <goto />
+    <sync />
+    <lock />
     <pick_animation duration="1" />
     <sync />
-    <lock>
     <pick_animation duration="1" />
-    <move target="plante" x="200" y="705" z="2325" />
+    <move target="plante" x="741" y="723" z="2325" />
     <set_state target="plante" state="bougee" />
+    <sync />
     <unlock />
   </action>
 
   <action id="move" target="plante" state="bougee">
+    <look />
     <comment text="Je ne vais pas passer mon temps à la déplacer..." />
   </action>
   

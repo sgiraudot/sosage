@@ -70,7 +70,9 @@ int Engine::run (const std::string& folder_name)
     room_name = m_io.read_room (room_name);
     m_animation.generate_random_idle_animation
       (m_content.get<Component::Animation>("character_body:image"),
-       m_content.get<Component::Animation>("character_head:image"), Vector(1,0));
+       m_content.get<Component::Animation>("character_head:image"),
+       m_content.get<Component::Animation>("character_mouth:image"),
+       Vector(1,0));
     
     main();
   }

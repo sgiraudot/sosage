@@ -19,7 +19,7 @@ std::string Debug::debug_str() const
   out += "FPS = " + std::to_string(m_clock.fps()) + "\n";
   out += "CPU = " + std::to_string(m_clock.cpu()) + "%\n\n";
 
-  out += std::to_string(m_content.size()) + " components in memory:\n";
+  out += std::to_string(m_content.size()) + " components in memory:";
 
   std::vector<Component::Handle> components;
   components.reserve (m_content.size());
@@ -29,9 +29,18 @@ std::string Debug::debug_str() const
              {
                return a->id() < b->id();
              });
-    
+
+  std::string latest = "";
   for (const auto& c : components)
-    out += " * " + c->str() + "\n";
+  {
+    std::string entity = c->entity();
+    if (entity != latest)
+    {
+      out += "\n *";
+      latest = entity;
+    }
+    out += " [" + c->str() + "]";
+  }
 
   return out;
 }

@@ -47,9 +47,11 @@ public:
     { }
 
     std::string name() { return std::string((const char*)(m_node->name)); }
-    std::string property (const std::string& key)
+    std::string property (const std::string& key, const std::string& def = "")
     {
       xmlChar* c = xmlGetProp (m_node, (const xmlChar*)(key.c_str()));
+      if (def != "" && c == nullptr)
+        return def;
       check (c != nullptr, "Cannot read property " + key);
       std::string out = (const char*)c;
       xmlFree(c);

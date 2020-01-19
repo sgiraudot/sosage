@@ -1,4 +1,5 @@
 #include <Sosage/Component/Action.h>
+#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Text.h>
 #include <Sosage/System/Interface.h>
@@ -16,11 +17,9 @@ Interface::Interface (Content& content)
 
 void Interface::main()
 {
-  Component::Boolean_handle rescaled
-    = m_content.request<Component::Boolean>("window:rescaled");
-  if (rescaled && rescaled->value())
+  if (m_content.request<Component::Event>("window:rescaled"))
     update_responsive();
-  
+
   Component::Position_handle mouse
     = m_content.request<Component::Position>("mouse:position");
   if (mouse)
@@ -30,8 +29,6 @@ void Interface::main()
     = m_content.request<Component::Position>("mouse:clicked");
   if (clicked && m_collision)
   {
-    m_content.remove("mouse:clicked");
-    
     if (m_collision->entity().find("verb_") == 0)
     {
       m_content.get<Component::Variable> ("chosen_verb:text")
@@ -92,8 +89,10 @@ void Interface::init()
   m_content.set<Component::Variable>("chosen_verb:text", verb_goto);
 
   // Create pause screen
-  Component::Boolean_handle paused
-    = m_content.set<Component::Boolean>("game:paused", false);
+  m_content.set<Component::Boolean>("game:paused", false);
+  
+  // Create lock variable
+  m_content.set<Component::Boolean>("game:locked", false);
 
   m_content.set<Component::Position>("pause_screen:position", Point(0, 0));
 
