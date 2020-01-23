@@ -1,0 +1,17 @@
+name: "Sophie"
+
+mouth:
+  skin: "sophie_bouche"
+  dx_right: -30
+  dx_left: 40
+  dy: 54
+
+head:
+  skin: "sophie_tete"
+  dx_right: 0
+  dx_left: -10
+  dy: 320
+
+body:
+  skin: "sophie_corps"
+  

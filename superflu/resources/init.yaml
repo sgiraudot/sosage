@@ -1,0 +1,7 @@
+version: 0.0.1
+cursor: "cursor"
+debug_font: "DejaVuSansMono"
+interface_font: "TovariSans"
+interface_color: "B9CE73"
+load_room: "example"
+  

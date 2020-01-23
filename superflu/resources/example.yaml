@@ -1,0 +1,106 @@
+name: "Example"
+background: "bureau"
+ground_map: "bureau_map"
+front_z: 3240
+back_z: 2330
+character: "sophie"
+coordinates: [ 800, 950 ]
+
+booleans:
+  
+  - { id: "clef_usb_inseree", value: false }
+
+scenery:
+  
+  - id: "bureau"
+    coordinates: [ 363, 934, 2785 ]
+    skin: "bureau"
+    
+  - id: "chaise1"
+    coordinates: [ 93, 697, 2784 ]
+    skin: "chaise1"
+    
+  - id: "chaise2"
+    coordinates: [ 627, 1048, 3250 ]
+    skin: "chaise2"
+    
+  - id: "chaise3"
+    coordinates: [ 1166, 1093, 3250 ]
+    skin: "chaise3"
+
+objects:
+  
+  - id: "bouteille"
+    name: "bouteille"
+    coordinates: [ 351, 687, 2786 ]
+    view: [ 351, 687 ]
+    states:
+      - { id: "defaut", skin: "bouteille" }
+      - { id: "inventory", skin: "bouteille" }
+      
+  - id: "bouton"
+    name: "bouton"
+    coordinates: [ 964, 436, 2324 ]
+    view: [ 964, 436 ]
+    states:
+      - { id: "defaut", skin: "bouton" }
+      
+  - id: "documents"
+    name: "documents"
+    coordinates: [ 536, 697, 2786 ]
+    view: [ 429, 716 ]
+    states:
+      - { id: "defaut", skin: "documents" }
+      
+  - id: "ordinateur"
+    name: "ordinateur"
+    coordinates: [ 201, 722, 2786 ]
+    view: [ 202, 736 ]
+    states:
+      - { id: "defaut", skin: "ordinateur" }
+
+  - id: "plante"
+    name: "plante verte"
+    coordinates: [ 962, 705, 2325 ]
+    view: [ 862, 755 ]
+    states:
+      - { id: "defaut", skin: "plante" }
+      - { id: "bougee", skin: "plante" }
+
+  - id: "tableau"
+    name: "tableau"
+    coordinates: [ 111, 441, 1 ]
+    view: [ 302, 711 ]
+    states:
+      - { id: "defaut", skin: "tableau" }
+      
+actions:
+  
+  - id: "look"
+    target: "plante"
+    effect:
+      - [ look ]
+      - [ comment, "C'est un yucca... c'est joli et ça ne demande pas trop d'entretien." ]
+      
+  - id: "move"
+    target: "plante"
+    state: "defaut"
+    effect:
+      - [ goto ]
+      - [ sync ]
+      - [ lock ]
+      - [ look ]
+      - [ pick_animation, 1 ]
+      - [ sync ]
+      - [ pick_animation, 1 ]
+      - [ move, plante, 741, 723, 2325 ]
+      - [ set_state, "plante", "bougee" ]
+      - [ sync ]
+      - [ unlock ]
+      
+  - id: "move"
+    target: "plante"
+    state: "bougee"
+    effect:
+      - [ look ]
+      - [ comment, "Je ne vais pas passer mon temps à la déplacer..." ]

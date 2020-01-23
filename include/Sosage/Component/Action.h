@@ -20,7 +20,7 @@ public:
 
   public:
 
-    Step (const std::initializer_list<std::string>& content)
+    Step (const std::vector<std::string>& content)
       : m_content (content)
     { }
 
@@ -37,7 +37,7 @@ private:
 public:
 
   Action (const std::string& id);
-  void add (const std::initializer_list<std::string>& content);
+  void add (const std::vector<std::string>& content);
   std::string str() const;
 
   std::size_t size() const { return m_steps.size(); }
