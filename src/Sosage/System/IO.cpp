@@ -20,58 +20,46 @@ IO::IO (Content& content)
 std::string IO::read_init (const std::string& folder_name)
 {
   m_folder_name = folder_name;
-  std::string file_name = folder_name + "resources/init.xml";
-  
-  Core::IO::Element input (file_name);
-  check (input.name() == "sosage_init", file_name + " is not a Sosage init file.");
+  std::string file_name = folder_name + "resources/init.yaml";
 
-  std::string v = input.property("version");
+  Core::IO input (file_name);
+
+  std::string v = input["version"].string();
   check (version(v) == SOSAGE_VERSION,
          "Error: room version " + v + " incompatible with Sosage " + Sosage::version());
 
-  std::string cursor = input.property("sprites/", "cursor", ".png");
+  std::string cursor = input["cursor"].string("sprites/", ".png");
   m_content.set<Component::Text> ("cursor:path", local_file_name(cursor));
   
-  std::string debug_font = input.property("fonts/", "debug_font", ".ttf");
+  std::string debug_font =input["debug_font"].string("fonts/", ".ttf");
   m_content.set<Component::Font> ("debug:font", local_file_name(debug_font), 15);
 
-  std::string interface_font = input.property("fonts/", "interface_font", ".ttf");
+  std::string interface_font = input["interface_font"].string("fonts/", ".ttf");
   m_content.set<Component::Font> ("interface:font", local_file_name(interface_font), 80);
   
-  std::string interface_color = input.property("interface_color");
+  std::string interface_color = input["interface_color"].string();
   m_content.set<Component::Text> ("interface:color", interface_color);
-
-  input = input.next_child();
-  check (input.name() == "load", "Init file should load room");
-  return input.property("resources/", "room", ".xml");
+  
+  return input["load_room"].string("resources/", ".yaml");
 }
 
 void IO::read_character (const std::string& file_name, int x, int y)
 {
-  Core::IO::Element input (local_file_name(file_name));
-  check (input.name() == "sosage_character", file_name + " is not a Sosage character.");
+  Core::IO input (local_file_name(file_name));
 
-  std::string name = input.property("name");
-  input = input.next_child();
-  check (input.name() == "mouth", "Expected mouth, got " + input.name());
+  std::string name = input["name"].string();
 
-  std::string mouth = input.property("sprites/", "skin", ".png");
-  int mdx_right = input.int_property("dx_right");
-  int mdx_left = input.int_property("dx_left");
-  int mdy = input.int_property("dy");
+  std::string mouth = input["mouth"]["skin"].string("sprites/", ".png");
+  int mdx_right = input["mouth"]["dx_right"].integer();
+  int mdx_left = input["mouth"]["dx_left"].integer();
+  int mdy = input["mouth"]["dy"].integer();
   
-  input = input.next().next();
-  check (input.name() == "head", "Expected head, got " + input.name());
+  std::string head = input["head"]["skin"].string("sprites/", ".png");
+  int hdx_right = input["head"]["dx_right"].integer();
+  int hdx_left = input["head"]["dx_left"].integer();
+  int hdy = input["head"]["dy"].integer();
   
-  std::string head = input.property("sprites/", "skin", ".png");
-  int hdx_right = input.int_property("dx_right");
-  int hdx_left = input.int_property("dx_left");
-  int hdy = input.int_property("dy");
-  
-  input = input.next().next();
-  check (input.name() == "body", "Expected body, got " + input.name());
-  
-  std::string body = input.property("sprites/", "skin", ".png");
+  std::string body = input["body"]["skin"].string("sprites/", ".png");
   
   Component::Animation_handle abody
     = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
@@ -126,44 +114,62 @@ std::string IO::read_room (const std::string& file_name)
 {
   Timer t ("Room reading");
   t.start();
-  Core::IO::Element input (local_file_name(file_name));
-  check (input.name() == "sosage_room", file_name + " is not a Sosage room.");
+  Core::IO input (local_file_name(file_name));
 
-  std::string name = input.property("name");
-  std::string background = input.property("backgrounds/", "background", ".png");
-  std::string ground_map = input.property("backgrounds/", "ground_map", ".png");
-  int front_z = input.int_property("front_z");
-  int back_z = input.int_property("back_z");
+  std::string name = input["name"].string();
+  std::string background = input["background"].string("backgrounds/", ".png");
+  std::string ground_map = input["ground_map"].string("backgrounds/", ".png");
+  int front_z = input["front_z"].integer();
+  int back_z = input["back_z"].integer();
   
   m_content.set<Component::Image>("background:image", local_file_name(background), 0);
   m_content.set<Component::Position>("background:position", Point(0, 0));
   m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map),
                                        front_z, back_z);
 
-  std::string character = input.property("resources/", "character", ".xml");
-  int x = input.int_property("x");
-  int y = input.int_property("y");
+  std::string character = input["character"].string("resources/", ".yaml");
+  int x = input["coordinates"][0].integer();
+  int y = input["coordinates"][1].integer();
   read_character (character, x, y);
-  
-  input = input.next_child();
 
-  do
-  {
-    if (input.name() == "boolean")
+  if (input.has("booleans"))
+    for (std::size_t i = 0; i < input["booleans"].size(); ++ i)
     {
-      std::string id = input.property("id");
-      bool value = input.bool_property("value");
-      m_content.set<Component::Boolean>(id + ":boolean", value);
+
     }
-    if (input.name() == "object")
+
+  if (input.has("scenery"))
+    for (std::size_t i = 0; i < input["scenery"].size(); ++ i)
     {
-      std::string id = input.property("id");
-      std::string name = input.property("name");
-      int x = input.int_property("x");
-      int y = input.int_property("y");
-      int z = input.int_property("z");
-      int vx = input.int_property("view_x");
-      int vy = input.int_property("view_y");
+      const Core::IO::Node& iscenery = input["scenery"][i];
+      std::string id = iscenery["id"].string();
+      int x = iscenery["coordinates"][0].integer();
+      int y = iscenery["coordinates"][1].integer();
+      int z = iscenery["coordinates"][2].integer();
+      std::string skin = iscenery["skin"].string("sprites/", ".png");
+      
+      Component::Position_handle pos
+        = m_content.set<Component::Position>(id + ":position", Point(x,y));
+      Component::Image_handle img
+        = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
+      img->set_relative_origin(0.5, 1.0);
+      img->z() = z;
+      debug("Scenery " + id + " at position " + std::to_string(img->z()));
+
+    }
+  
+  if (input.has("objects"))
+    for (std::size_t i = 0; i < input["objects"].size(); ++ i)
+    {
+      const Core::IO::Node& iobject = input["objects"][i];
+      
+      std::string id = iobject["id"].string();
+      std::string name = iobject["name"].string();
+      int x = iobject["coordinates"][0].integer();
+      int y = iobject["coordinates"][1].integer();
+      int z = iobject["coordinates"][2].integer();
+      int vx = iobject["view"][0].integer();
+      int vy = iobject["view"][1].integer();
       
       m_content.set<Component::Text>(id + ":name", name);
       Component::State_handle state_handle
@@ -174,15 +180,12 @@ std::string IO::read_room (const std::string& file_name)
 
       Component::State_conditional_handle conditional_handle;
 
-      Core::IO::Element child = input.next_child();
-      do
+      for (std::size_t j = 0; j < iobject["states"].size(); ++ j)
       {
-        if (child.name() == "text")
-          continue;
-        
-        check (child.name() == "state", "Expected state for  " + id + ", got " + child.name());
-        std::string state = child.property("id");
-        std::string skin = child.property("sprites/", "skin", ".png");
+        const Core::IO::Node& istate = iobject["states"][j];
+
+        std::string state = istate["id"].string();
+        std::string skin = istate["skin"].string("sprites/", ".png");
 
         // init with first state found
         bool init = false;
@@ -204,19 +207,21 @@ std::string IO::read_room (const std::string& file_name)
 
         conditional_handle->add(state, img);
       }
-      while ((child = child.next()));
-
     }
-    else if (input.name() == "action")
+  
+  if (input.has("actions"))
+    for (std::size_t i = 0; i < input["actions"].size(); ++ i)
     {
-      std::string id = input.property("id");
-      std::string target = input.property("target");
-      std::string state = input.property("state", "no_state");
+      const Core::IO::Node& iaction = input["actions"][i];
+
+      std::string id = iaction["id"].string();
+      std::string target = iaction["target"].string();
 
       Component::Action_handle action;
               
-      if (state != "no_state")
+      if (iaction.has("state"))
       {
+        std::string state = iaction["state"].string();
         Component::State_conditional_handle conditional_handle
           = m_content.request<Component::State_conditional>(target + ":" + id);
 
@@ -233,56 +238,11 @@ std::string IO::read_room (const std::string& file_name)
       }
       else
         action = m_content.set<Component::Action>(target + ":" + id);
-      
-      Core::IO::Element child = input.next_child();
-      do
-      {
-        if (child.name() == "text")
-          continue;
 
-        if (child.name() == "comment")
-          action->add ({ child.name(),
-                child.property("text") });
-        else if (child.name() == "move")
-          action->add ({ child.name(),
-                child.property("target"),
-                child.property("x"),
-                child.property("y"),
-                child.property("z") });
-        else if (child.name() == "pick_animation")
-          action->add ({ child.name(),
-                child.property("duration") });
-        else if (child.name() == "set_state")
-          action->add ({ child.name(),
-                child.property("target"),
-                child.property("state") });
-        else
-          action->add ({ child.name() });
-      }
-      while ((child = child.next()));
-    }
-    else if (input.name() == "npc")
-    {
 
+      for (std::size_t j = 0; j < iaction["effect"].size(); ++ j)
+        action->add (iaction["effect"][j].string_array());
     }
-    else if (input.name() == "scenery")
-    {
-      std::string id = input.property("id");
-      int x = input.int_property("x");
-      int y = input.int_property("y");
-      int z = input.int_property("z");
-      std::string skin = input.property("sprites/", "skin", ".png");
-      
-      Component::Position_handle pos
-        = m_content.set<Component::Position>(id + ":position", Point(x,y));
-      Component::Image_handle img
-        = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
-      img->set_relative_origin(0.5, 1.0);
-      img->z() = z;
-      debug("Scenery " + id + " at position " + std::to_string(img->z()));
-    }
-  }
-  while ((input = input.next()));
 
   t.stop();
   return std::string();
@@ -292,5 +252,7 @@ std::string IO::local_file_name (const std::string& file_name) const
 {
   return m_folder_name + file_name;
 }
+
+
 
 } // namespace Sosage::System

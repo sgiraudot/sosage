@@ -7,7 +7,7 @@ Action::Action (const std::string& id)
   : Base (id)
 { }
 
-void Action::add (const std::initializer_list<std::string>& content)
+void Action::add (const std::vector<std::string>& content)
 {
   m_steps.push_back (Step (content));
 }

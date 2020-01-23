@@ -9,9 +9,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 set(SUPERFLU_PNC_DEPENDENCIES_OKAY true)
 
-find_package(LibXml2 REQUIRED)
-if (NOT LIBXML2_FOUND)
-  message(STATUS "LibXml2 is required and not found")
+find_package(YAML REQUIRED)
+if (NOT YAML_FOUND)
+  message(STATUS "libyaml is required and not found")
   set(SUPERFLU_PNC_DEPENDENCIES_OKAY false)
 endif()
 
@@ -58,15 +58,18 @@ target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_DATA_FOLDER="${CMAKE_CURRE
 
 target_include_directories (superflu_pnc PUBLIC
   "include"
-  ${LIBXML2_INCLUDE_DIRS}
+  ${YAML_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
   ${SDL2_IMAGE_INCLUDE_DIR}
   ${SDL2_TTF_INCLUDE_DIR})
 
 ## Link dependencies
 
+message(${YAML_LIBRARIES})
+message(${SDL2_LIBRARY})
+
 target_link_libraries(superflu_pnc PUBLIC
-  ${LIBXML2_LIBRARIES}
+  ${YAML_LIBRARIES}
   ${SDL2_LIBRARY}
   ${SDL2_IMAGE_LIBRARIES}
   ${SDL2_TTF_LIBRARIES})

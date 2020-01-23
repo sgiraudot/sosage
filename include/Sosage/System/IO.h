@@ -26,7 +26,7 @@ public:
 private:
   
   std::string local_file_name (const std::string& file_name) const;
-
+  
 };
 
 } // namespace Sosage::System
