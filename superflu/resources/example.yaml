@@ -75,6 +75,32 @@ objects:
       - { id: "defaut", skin: "tableau" }
       
 actions:
+
+  - id: "look"
+    target: "bouteille"
+    effect:
+      - [ look ]
+      - [ comment, "Pas moyen de lui faire utiliser une gourde… Harpagon adore son plastique jetable !" ]
+
+  - id: "look"
+    target: "bouton"
+    effect:
+      - [ show, "window" ]
+
+  - id: "look"
+    target: "documents"
+    effect:
+      - [ show, "morse" ]
+
+  - id: "look"
+    target: "ordinateur"
+    state: "defaut"
+    effect:
+      - [ goto ]
+      - [ sync ]
+      - [ look ]
+      - [ sync ]
+      - [ comment, "La session d'Harpagon est ouverte, mais je ne vois rien d'intéressant." ]
   
   - id: "look"
     target: "plante"
