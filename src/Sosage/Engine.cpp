@@ -1,6 +1,7 @@
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Debug.h>
 #include <Sosage/Component/Image.h>
+#include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Text.h>
 #include <Sosage/Engine.h>
@@ -58,6 +59,10 @@ int Engine::run (const std::string& folder_name)
   // Create debug info
   Component::Debug_handle debug_info
     = m_content.set<Component::Debug>("game:debug", m_content, m_clock);
+
+  // Create inventory
+  Component::Inventory_handle inventory
+    = m_content.set<Component::Inventory>("game:inventory");
 
   m_interface.init();
 

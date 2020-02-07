@@ -17,6 +17,8 @@ struct Config
   const int animation_fps;
   const int character_speed;
   const int text_outline;
+
+  const int displayed_inventory_size;
   
   int interface_height;
   int window_width;
@@ -37,6 +39,7 @@ struct Config
     , animation_fps (12)
     , character_speed (34)
     , text_outline (10)
+    , displayed_inventory_size(4)
     , interface_height (200)
     , window_width (window_width)
     , window_height (window_width * 10 / 16)
