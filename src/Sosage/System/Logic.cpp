@@ -5,6 +5,7 @@
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Image.h>
+#include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Text.h>
@@ -247,6 +248,9 @@ void Logic::action_set_state (Component::Action::Step step)
   std::string state = step.get(2);
 
   m_content.get<Component::State>(target + ":state")->set (state);
+
+  if (state == "inventory")
+    m_content.get<Component::Inventory>("game:inventory")->add(target);
 }
 
 void Logic::create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog)
