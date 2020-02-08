@@ -21,8 +21,10 @@ public:
   void remove (const std::string& entity);
   void next();
   void prev();
+
+  std::size_t size() const;
+  std::size_t position() const;
   std::string get (std::size_t i) const;
-  
 };
 
 typedef std::shared_ptr<Inventory> Inventory_handle;

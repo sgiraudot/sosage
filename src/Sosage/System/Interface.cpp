@@ -1,5 +1,6 @@
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Event.h>
+#include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Text.h>
 #include <Sosage/System/Interface.h>
@@ -59,7 +60,8 @@ void Interface::main()
   }
 
   update_action();
-
+  update_inventory();
+  
 }
 
 void Interface::init()
@@ -346,6 +348,27 @@ void Interface::update_action ()
                                       target_object);
   text_img->set_relative_origin(0.5, 0.5);
   text_img->set_scale(0.8 * m_action_height / text_img->height());
+}
+
+void Interface::update_inventory ()
+{
+  Component::Inventory_handle inventory = m_content.get<Component::Inventory>("game:inventory");
+
+  Component::Position_handle inv_pos = m_content.get<Component::Position>("interface_inventory:position");
+
+  std::size_t position = inventory->position();
+  for (std::size_t i = 0; i < inventory->size(); ++ i)
+  {
+    Component::Image_handle img = m_content.get<Component::Image>(inventory->get(i) + ":conditional_image");
+    
+    if (position <= i && i < position + config().displayed_inventory_size)
+    {
+      img->on() = true;
+      m_content.set<Component::Position>(inventory->get(i) + ":position", inv_pos->value());
+    }
+    else
+      img->on() = false;
+  }
 }
 
 

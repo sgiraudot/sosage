@@ -36,13 +36,20 @@ void Inventory::prev()
     -- m_position;
 }
 
+std::size_t Inventory::size() const
+{
+  return m_data.size();
+}
+
+std::size_t Inventory::position() const
+{
+  return m_position;
+}
+  
+
 std::string Inventory::get (std::size_t i) const
 {
-  if (i + m_position >= m_data.size() ||
-      i < m_position || 
-      i - m_position >= config().displayed_inventory_size)
-    return "";
-  return m_data[i + m_position];
+  return m_data[i];
 }
 
 

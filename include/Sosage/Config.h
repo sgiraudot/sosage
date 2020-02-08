@@ -43,7 +43,7 @@ struct Config
     , interface_height (200)
     , window_width (window_width)
     , window_height (window_width * 10 / 16)
-    , words_per_second (5)
+    , words_per_second (3)
     , ground_map_scaling (world_width / double(ground_map_width))
     , fullscreen (fullscreen)
   { }

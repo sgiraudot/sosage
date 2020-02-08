@@ -24,7 +24,7 @@ Logic::Logic (Content& content)
 {
 }
 
-void Logic::main (const std::size_t& current_time)
+void Logic::main (const double& current_time)
 {
   m_current_time = current_time;
 
@@ -175,7 +175,7 @@ void Logic::action_comment (Component::Action::Step step)
   create_dialog (text, dialog);
   
   int nb_words = int(std::count(text.begin(), text.end(), ' '));
-  int nb_seconds = 1 + int(nb_words / double(config().words_per_second));
+  double nb_seconds = nb_words / double(config().words_per_second);
 
   int y = 100;
   int x = m_content.get<Component::Position>("character_body:position")->value().x();
@@ -233,7 +233,7 @@ void Logic::action_move (Component::Action::Step step)
 
 void Logic::action_pick_animation (Component::Action::Step step)
 {
-  int duration = step.get_int(1);
+  double duration = step.get_double(1);
   m_content.set<Component::Event>("character:start_pick_animation");
 
   m_timed.push_back (std::make_pair (m_current_time + duration,
