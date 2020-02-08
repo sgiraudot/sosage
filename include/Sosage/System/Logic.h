@@ -15,11 +15,11 @@ class Logic
 {
 private:
 
-  typedef std::pair<std::size_t, Component::Handle> Timed_handle;
+  typedef std::pair<double, Component::Handle> Timed_handle;
   std::vector<Timed_handle> m_timed;
 
   Content& m_content;
-  std::size_t m_current_time;
+  double m_current_time;
 
   Component::Action_handle m_current_action;
   std::size_t m_next_step;
@@ -28,7 +28,7 @@ public:
 
   Logic (Content& content);
 
-  void main(const std::size_t& current_time);
+  void main(const double& current_time);
   bool exit();
   bool paused();
 

@@ -36,7 +36,7 @@ objects:
     view: [ 351, 687 ]
     states:
       - { id: "defaut", skin: "bouteille" }
-      - { id: "inventory", skin: "bouteille" }
+      - { id: "inventory", skin: "bouteille_inventaire" }
       
   - id: "bouton"
     name: "bouton"
@@ -80,7 +80,24 @@ actions:
     target: "bouteille"
     effect:
       - [ look ]
-      - [ comment, "Pas moyen de lui faire utiliser une gourde… Harpagon adore son plastique jetable !" ]
+      - [ comment, "Pas moyen de lui faire utiliser une gourde... Harpagon adore son plastique jetable !" ]
+
+  - id: "take"
+    target: "bouteille"
+    state: "defaut"
+    effect:
+      - [ goto ]
+      - [ sync ]
+      - [ lock ]
+      - [ look ]
+      - [ pick_animation, 0.2 ]
+      - [ set_state, "bouteille", "inventory" ]
+      - [ unlock ]
+
+  - id: "take"
+    target: "bouteille"
+    state: "inventory"
+    effect:
 
   - id: "look"
     target: "bouton"
@@ -116,9 +133,9 @@ actions:
       - [ sync ]
       - [ lock ]
       - [ look ]
-      - [ pick_animation, 1 ]
+      - [ pick_animation, 0.2 ]
       - [ sync ]
-      - [ pick_animation, 1 ]
+      - [ pick_animation, 0.2 ]
       - [ move, plante, 741, 723, 2325 ]
       - [ set_state, "plante", "bougee" ]
       - [ sync ]

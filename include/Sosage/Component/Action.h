@@ -27,6 +27,7 @@ public:
     std::size_t size() const { return m_content.size(); }
     const std::string& get (const std::size_t& i) const { return m_content[i]; }
     int get_int (const std::size_t& i) const { return std::atoi(m_content[i].c_str()); }
+    double get_double (const std::size_t& i) const { return std::atof(m_content[i].c_str()); }
 
   };
 

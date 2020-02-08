@@ -72,7 +72,7 @@ public:
   double cpu() const { return m_cpu; }
 
   std::size_t frame_id() const { return m_frame_id; }
-  std::size_t frame_time() const { return m_frame_id / config().animation_fps; }
+  double frame_time() const { return m_frame_id / double(config().animation_fps); }
 
 };
 

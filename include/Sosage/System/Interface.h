@@ -35,6 +35,7 @@ private:
   void update_responsive();
   void detect_collision (Component::Position_handle mouse);
   void update_action ();
+  void update_inventory ();
 
 };
 

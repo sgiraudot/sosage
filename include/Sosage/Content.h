@@ -56,6 +56,16 @@ public:
   std::shared_ptr<T> get (const std::string& key)
   {
     std::shared_ptr<T> out = request<T>(key);
+#ifndef NDEBUG
+    if (out == std::shared_ptr<T>())
+    {
+      std::cerr << "Candidate are:" << std::endl;
+      std::string entity (key.begin(), key.begin() + key.find_first_of(':'));
+      for (Component::Handle h : m_data)
+        if (h->entity() == entity)
+          std::cerr << " * " << h->id() << std::endl;
+    }
+#endif
     check (out != std::shared_ptr<T>(), "Cannot find " + key);
     return out;
   }
