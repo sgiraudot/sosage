@@ -31,6 +31,11 @@ std::string IO::read_init (const std::string& folder_name)
   std::string cursor = input["cursor"].string("sprites/", ".png");
   m_content.set<Component::Text> ("cursor:path", local_file_name(cursor));
   
+  std::string turnicon = input["turnicon"].string("sprites/", ".png");
+  Component::Image_handle turnicon_img
+    = m_content.set<Component::Image>("turnicon:image", local_file_name(turnicon), 0);
+  turnicon_img->on() = false;
+  
   std::string debug_font =input["debug_font"].string("fonts/", ".ttf");
   m_content.set<Component::Font> ("debug:font", local_file_name(debug_font), 15);
 

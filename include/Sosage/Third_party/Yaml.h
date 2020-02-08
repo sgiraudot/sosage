@@ -197,7 +197,7 @@ public:
     yaml_parser_delete(&parser);
     fclose(fh);
 
-    m_root->print();
+//    m_root->print();
   }
 
   const Node& operator[] (const std::string& key) const

@@ -280,7 +280,7 @@ SDL::~SDL ()
 
 void SDL::update_view()
 {
-  int window_width = config().world_width;
+  int window_width = config().world_width + config().interface_width;
   int window_height = config().world_height + config().interface_height;
 
   SDL_RenderSetLogicalSize(m_renderer, window_width, window_height);

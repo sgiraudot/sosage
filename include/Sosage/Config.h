@@ -20,6 +20,7 @@ struct Config
 
   const int displayed_inventory_size;
   
+  int interface_width;
   int interface_height;
   int window_width;
   int window_height;
@@ -40,6 +41,7 @@ struct Config
     , character_speed (34)
     , text_outline (10)
     , displayed_inventory_size(4)
+    , interface_width (0)
     , interface_height (200)
     , window_width (window_width)
     , window_height (window_width * 10 / 16)

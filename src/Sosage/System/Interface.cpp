@@ -82,6 +82,8 @@ void Interface::init()
     Component::Image_handle verb_img
       = m_content.set<Component::Image> ("verb_" + verb.first + ":image",
                                          interface_font, color_str, verb.second);
+    m_content.set<Component::Position> ("verb_" + verb.first + ":position",
+                                        Point(0,0));
     m_verbs.push_back (verb_img);
     verb_img->set_relative_origin(0.5, 0.5);
   }
@@ -105,51 +107,65 @@ void Interface::update_responsive()
 {
   int world_width = config().world_width;
   int world_height = config().world_height;
-  int window_width = world_width;
-  int window_height = int(config().window_height * world_width / double(config().window_width));
+  int window_width = config().window_width;
+  int window_height = config().window_height;
 
-  Component::Font_handle interface_font = m_content.get<Component::Font> ("interface:font");
-  
-  std::vector<Component::Image_handle> verbs;
-  verbs.reserve(8);
-  for (Component::Handle h : m_content)
-    if (Component::Image_handle img = Component::cast<Component::Image>(h))
-      verbs.push_back (img);
+  int aspect_ratio = int(100. * window_width / double(window_height));
 
-  int top_width = 0;
-
-  int height = window_height - world_height;
-  if (height < m_interface_min_height)
-    height = m_interface_min_height;
-
-  std::cerr << window_width << "*" << window_height << std::endl;
-  int interface_height;
-  int interface_width;
-  Point inventory_origin;
-
-  int interface_max_height = 350;
-
-  if (window_height < window_width)
+  if (aspect_ratio >= 200)
   {
-    m_action_height = std::max (int(0.15 * height), m_action_min_height);
-    interface_height = height - m_action_height;
-    if (interface_height > interface_max_height)
-      interface_height = interface_max_height;
-    interface_width = window_width / 2;
-    inventory_origin = Point (window_width / 2, world_height + m_action_height);
+    interface_widescreen();
+    vertical_layout();
   }
   else
   {
-    m_action_height = std::max (int(0.075 * height), m_action_min_height);
-    interface_height = (height - m_action_height) / 2;
-    if (interface_height > interface_max_height)
-      interface_height = interface_max_height;
-    interface_width = window_width;
-    inventory_origin = Point (0, world_height + m_action_height + interface_height);
+    if (aspect_ratio >= 115)
+      interface_standard();
+    else if (aspect_ratio >= 75)
+      interface_square();
+    else
+      interface_portrait();
+    horizontal_layout();
   }
 
-  std::cerr << "Action height = " << m_action_height << std::endl
-            << "Interface height = " << interface_height << std::endl;
+  update_pause_screen();
+}
+
+void Interface::interface_widescreen()
+{
+  int world_width = 1920;
+  int world_height = 1000;
+  m_action_height = 50;
+  int interface_height = 525;
+  int interface_width = 180;
+
+  m_content.set<Component::Image> ("interface_action:image", world_width, m_action_height, 0, 0, 0);
+  m_content.set<Component::Position> ("interface_action:position", Point(0, world_height));
+  
+  m_content.set<Component::Image> ("interface_verbs:image", interface_width, interface_height, 0, 0, 0);
+  m_content.set<Component::Position> ("interface_verbs:position", Point(world_width, 0));
+                                                                        
+  m_content.set<Component::Image> ("interface_inventory:image", interface_width, interface_height, 0, 0, 0);
+  m_content.set<Component::Position> ("interface_inventory:position",
+                                      Point(world_width, interface_height));
+  
+  m_content.set<Component::Position>("chosen_verb:position", Point(world_width / 2,
+                                                                   world_height + m_action_height / 2));
+
+  m_content.get<Component::Image> ("turnicon:image")->on() = false;
+  
+  
+  config().interface_width = interface_width;
+  config().interface_height = m_action_height;
+}
+
+void Interface::interface_standard()
+{
+  int world_width = 1920;
+  int world_height = 1000;
+  m_action_height = 50;
+  int interface_height = 150;
+  int interface_width = world_width / 2;
 
   m_content.set<Component::Image> ("interface_action:image", world_width, m_action_height, 0, 0, 0);
   m_content.set<Component::Position> ("interface_action:position", Point(0, world_height));
@@ -158,7 +174,156 @@ void Interface::update_responsive()
   m_content.set<Component::Position> ("interface_verbs:position", Point(0, m_action_height + world_height));
                                                                         
   m_content.set<Component::Image> ("interface_inventory:image", interface_width, interface_height, 0, 0, 0);
-  m_content.set<Component::Position> ("interface_inventory:position", inventory_origin);
+  m_content.set<Component::Position> ("interface_inventory:position",
+                                      Point(interface_width, m_action_height + world_height));
+  
+  m_content.set<Component::Position>("chosen_verb:position", Point(world_width / 2,
+                                                                   world_height + m_action_height / 2));
+
+  m_content.get<Component::Image> ("turnicon:image")->on() = false;
+
+  config().interface_width = 0;
+  config().interface_height = interface_height + m_action_height;
+}
+
+void Interface::interface_square()
+{
+  int world_width = 1920;
+  int world_height = 1000;
+  m_action_height = 50;
+  int interface_height = 300;
+  int interface_width = world_width;
+
+  m_content.set<Component::Image> ("interface_action:image", world_width, m_action_height, 0, 0, 0);
+  m_content.set<Component::Position> ("interface_action:position", Point(0, world_height));
+  
+  m_content.set<Component::Image> ("interface_verbs:image", interface_width, interface_height, 0, 0, 0);
+  m_content.set<Component::Position> ("interface_verbs:position", Point(0, m_action_height + world_height));
+                                                                        
+  m_content.set<Component::Image> ("interface_inventory:image", interface_width, interface_height, 0, 0, 0);
+  m_content.set<Component::Position> ("interface_inventory:position",
+                                      Point(0, m_action_height + world_height + interface_height));
+  
+  m_content.set<Component::Position>("chosen_verb:position", Point(world_width / 2,
+                                                                   world_height + m_action_height / 2));
+
+  m_content.get<Component::Image> ("turnicon:image")->on() = false;
+
+  config().interface_width = 0;
+  config().interface_height = 2 * interface_height + m_action_height;
+}
+
+void Interface::interface_portrait()
+{
+  int world_width = 1920;
+  int world_height = 1000;
+  m_action_height = 100;
+  int interface_height = 300;
+  int interface_width = world_width;
+
+  m_content.set<Component::Image> ("interface_action:image", world_width, m_action_height, 0, 0, 0);
+  m_content.set<Component::Position> ("interface_action:position", Point(0, world_height));
+  
+  m_content.set<Component::Image> ("interface_verbs:image", interface_width, interface_height, 0, 0, 0);
+  m_content.set<Component::Position> ("interface_verbs:position", Point(0, m_action_height + world_height));
+                                                                        
+  m_content.set<Component::Image> ("interface_inventory:image", interface_width, interface_height, 0, 0, 0);
+  m_content.set<Component::Position> ("interface_inventory:position",
+                                      Point(0, m_action_height + world_height + interface_height));
+  
+  m_content.set<Component::Position>("chosen_verb:position", Point(world_width / 2,
+                                                                   world_height + m_action_height / 2));
+
+  Component::Image_handle turnicon
+    = m_content.get<Component::Image> ("turnicon:image");
+
+  m_content.set<Component::Position>("turnicon:position",
+                                     Point(0, world_height + 2 * interface_height + m_action_height));
+
+  turnicon->on() = true;
+
+  config().interface_width = 0;
+  config().interface_height = 2 * interface_height + m_action_height + turnicon->height();
+}
+
+void Interface::vertical_layout()
+{
+  Component::Font_handle interface_font = m_content.get<Component::Font> ("interface:font");
+  
+  int top_width = 0;
+  Component::Image_handle interface_verbs
+    = m_content.get<Component::Image>("interface_verbs:image");
+  int interface_width = interface_verbs->width();
+  int interface_height = interface_verbs->height();
+
+  int min_w_spacing = 30;
+  int min_h_spacing = 15;
+  
+  int verbs_width = 0;
+  int verbs_height = 0;
+
+  for (std::size_t i = 0; i < m_verbs.size(); ++ i)
+    m_verbs[i]->set_scale(1);
+
+  for (std::size_t i = 0; i < m_verbs.size(); ++ i)
+  {
+    int w = m_verbs[i]->width();
+    int h = m_verbs[i]->height() + min_h_spacing;
+    verbs_width = (std::max)(verbs_width, w);
+    verbs_height += h;
+  }
+
+  int min_verbs_width = verbs_width + min_w_spacing * 2;
+  int min_verbs_height = verbs_height + min_h_spacing * 2;
+
+  double w_scaling = interface_width / double(min_verbs_width);
+  double h_scaling = interface_height / double(min_verbs_height);
+
+  std::cerr << "Scaling = " << w_scaling << "*" << h_scaling << std::endl;
+
+  double min_scaling = (std::min)(h_scaling, w_scaling);
+
+  int h_spacing = interface_height;
+  std::cerr << h_spacing << " ";
+  for (std::size_t i = 0; i < m_verbs.size(); ++ i)
+  {
+    int h = int(m_verbs[i]->height() * min_scaling);
+    h_spacing -= h;
+    m_verbs[i]->set_scale(min_scaling);
+  }
+
+  h_spacing /= 8;
+  std::cerr << h_spacing << " ";
+
+  int x = config().world_width + interface_width / 2;
+  int current_y= h_spacing / 2;
+
+  for (std::size_t i = 0; i < m_verbs.size(); ++ i)
+  {
+    Component::Image_handle img = m_verbs[i];
+
+    int y = current_y + 0.5 * img->height() * min_scaling;
+
+    m_content.set<Component::Position>(img->entity() + ":position", Point(x, y));
+
+    current_y += img->height() * min_scaling + h_spacing;
+  }
+
+  m_content.set<Component::Position>("chosen_verb:position", Point(config().world_width / 2,
+                                                                   config().world_height + m_action_height / 2));
+
+  m_verb_scale = min_scaling;
+}
+
+void Interface::horizontal_layout()
+{
+  Component::Font_handle interface_font = m_content.get<Component::Font> ("interface:font");
+  
+  int top_width = 0;
+  Component::Image_handle interface_verbs
+    = m_content.get<Component::Image>("interface_verbs:image");
+  int interface_width = interface_verbs->width();
+  int interface_height = interface_verbs->height();
 
   int min_w_spacing = 40;
   int min_h_spacing = 15;
@@ -167,6 +332,9 @@ void Interface::update_responsive()
   int bottom_verbs_width = 0;
   int top_verbs_height = 0;
   int bottom_verbs_height = 0;
+  for (std::size_t i = 0; i < m_verbs.size(); ++ i)
+    m_verbs[i]->set_scale(1);
+
   for (std::size_t i = 0; i < m_verbs.size(); ++ i)
   {
     int w = m_verbs[i]->width() + min_w_spacing;
@@ -213,12 +381,9 @@ void Interface::update_responsive()
 
   int current_xtop = w_spacing_top / 2;
   int current_xbottom = w_spacing_bottom / 2;
-  int current_ytop = world_height + m_action_height + (h_spacing / 2);
+  int current_ytop = config().world_height + m_action_height + (h_spacing / 2);
   int current_ybottom = current_ytop + int(min_scaling * top_verbs_height) + h_spacing;
 
-  std::cerr << "Scaling = " << min_scaling << std::endl
-            << "Spacing = " << w_spacing_top << " " << w_spacing_bottom << " " << h_spacing << std::endl;
-  
   for (std::size_t i = 0; i < m_verbs.size(); i += 2)
   {
     Component::Image_handle top = m_verbs[i];
@@ -237,12 +402,21 @@ void Interface::update_responsive()
     current_xbottom += bottom->width() * min_scaling + w_spacing_bottom;
   }
 
-  m_content.set<Component::Position>("chosen_verb:position", Point(world_width / 2,
-                                                                   world_height + m_action_height / 2));
-                                                                   
+  m_content.set<Component::Position>("chosen_verb:position", Point(config().world_width / 2,
+                                                                   config().world_height + m_action_height / 2));
+
+  m_verb_scale = min_scaling;
+}
+
+void Interface::update_pause_screen()
+{
+  Component::Font_handle interface_font = m_content.get<Component::Font> ("interface:font");
+
   Component::Image_handle pause_screen_img
     = Component::make_handle<Component::Image>
-    ("pause_screen:image", window_width, window_height,
+    ("pause_screen:image",
+     config().world_width + config().interface_width,
+     config().world_height + config().interface_height,
      0, 0, 0, 192);
   pause_screen_img->z() += 10;
       
@@ -263,11 +437,9 @@ void Interface::update_responsive()
     = m_content.set<Component::Conditional>("pause_text:conditional", paused,
                                             pause_text_img, Component::Handle());
     
-  m_content.set<Component::Position>("pause_text:position", Point(world_width / 2,
-                                                                  world_height / 2));
+  m_content.set<Component::Position>("pause_text:position", Point(config().world_width / 2,
+                                                                  config().world_height / 2));
 
-  m_verb_scale = min_scaling;
-  config().interface_height = height;
 }
 
 void Interface::detect_collision (Component::Position_handle mouse)

@@ -1,5 +1,6 @@
 version: 0.0.1
 cursor: "cursor"
+turnicon: "turnphone"
 debug_font: "DejaVuSansMono"
 interface_font: "TovariSans"
 interface_color: "B9CE73"
