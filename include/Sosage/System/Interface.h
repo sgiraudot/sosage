@@ -33,6 +33,16 @@ public:
 
 private:
   void update_responsive();
+  void interface_widescreen();
+  void interface_standard();
+  void interface_square();
+  void interface_portrait();
+
+  void vertical_layout();
+  void horizontal_layout();
+
+  void update_pause_screen();
+  
   void detect_collision (Component::Position_handle mouse);
   void update_action ();
   void update_inventory ();
