@@ -55,6 +55,27 @@ std::string IO::read_init (const std::string& folder_name)
   std::string interface_color = input["interface_color"].string();
   m_content.set<Component::Text> ("interface:color", interface_color);
   
+  for (std::size_t i = 0; i < input["default"].size(); ++ i)
+  {
+    const Core::IO::Node& idefault = input["default"][i];
+    std::string id = idefault["action"].string();
+
+    Component::Random_conditional_handle action
+      = m_content.set<Component::Random_conditional>("default:" + id);
+
+    for (std::size_t j = 0; j < idefault["effect"].size(); ++ j)
+    {
+      const Core::IO::Node& iaction = idefault["effect"][j];
+      Component::Action_handle rnd_action = Component::make_handle<Component::Action>
+        ("default:" + id + "_" + std::to_string(j));
+      rnd_action->add (iaction.string_array());
+
+      action->add (1.0, rnd_action);
+    }
+
+  }
+
+    
   return input["load_room"].string("resources/", ".yaml");
 }
 

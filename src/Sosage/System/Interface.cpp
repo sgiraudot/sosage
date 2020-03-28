@@ -59,12 +59,19 @@ void Interface::main()
         else
           m_content.set<Component::Variable>("cursor:target", m_collision);
       }
-      else
+      else 
       {
-        Component::Action_handle action
-          = m_content.request<Component::Action> (m_collision->entity() + ":" + verb);
-        if (action)
-          m_content.set<Component::Variable>("character:action", action);
+        if (m_content.request<Component::Text>(m_collision->entity() + ":name"))
+        {
+          Component::Action_handle action
+            = m_content.request<Component::Action> (m_collision->entity() + ":" + verb);
+          if (action)
+            m_content.set<Component::Variable>("character:action", action);
+          else
+            m_content.set<Component::Variable>
+              ("character:action",
+               m_content.get<Component::Action> ("default:" + verb));
+        }
 
         m_content.remove("cursor:clicked");
       }

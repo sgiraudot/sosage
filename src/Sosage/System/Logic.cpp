@@ -218,8 +218,8 @@ void Logic::action_comment (Component::Action::Step step)
       = m_content.set<Component::Position> (img->entity() + ":position", Point(x,y));
     y += img->height() * 1.1 * 0.75;
 
-    m_timed.push_back (std::make_pair (m_current_time + nb_seconds, img));
-    m_timed.push_back (std::make_pair (m_current_time + nb_seconds, pos));
+    m_timed.push_back (std::make_pair (m_current_time + std::max(1., nb_seconds), img));
+    m_timed.push_back (std::make_pair (m_current_time + std::max(1., nb_seconds), pos));
   }
 
   m_content.set<Component::Event>("character:start_talking");

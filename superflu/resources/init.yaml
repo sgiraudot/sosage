@@ -10,3 +10,63 @@ interface_color: "B9CE73"
 click_sound: "switch28"
 
 load_room: "example"
+
+default:
+
+  - action: "open"
+    effect:
+      - [ comment, "Non." ]
+      - [ comment, "Je ne peux pas ouvrir ça." ]
+      - [ comment, "Impossible." ]
+      - [ comment, "Ça ne s'ouvre pas." ]
+  
+  - action: "close"
+    effect:
+      - [ comment, "Non." ]
+      - [ comment, "Je ne peux pas fermer ça." ]
+      - [ comment, "Impossible." ]
+      - [ comment, "Ça ne se ferme pas." ]
+  
+  - action: "give"
+    effect:
+      - [ comment, "Non." ]
+      - [ comment, "Je ne vais pas lui donner ça." ]
+      - [ comment, "Je préfère garder ça pour moi." ]
+      - [ comment, "Je vais garder ça." ]
+  
+  - action: "take"
+    effect:
+      - [ comment, "Non." ]
+      - [ comment, "Je n'en veux pas." ]
+      - [ comment, "Je ne peux pas prendre ça." ]
+      - [ comment, "Pourquoi faire ?" ]
+  
+  - action: "look"
+    effect:
+      - [ comment, "Fascinant." ]
+      - [ comment, "Super." ]
+      - [ comment, "Je vois..." ]
+      - [ comment, "Rien d'intéressant." ]
+      - [ comment, "Mmh..." ]
+
+  - action: "talk"
+    effect:
+      - [ comment, "Non." ]
+      - [ comment, "Je ne parle pas aux choses." ]
+      - [ comment, "Je doute que ça me réponde." ]
+      - [ comment, "Vraiment ?" ]
+
+  - action: "use"
+    effect:
+      - [ comment, "Non." ]
+      - [ comment, "Je ne peux pas." ]
+      - [ comment, "Ça ne marchera pas." ]
+      - [ comment, "Ça ne sert à rien." ]
+
+  - action: "move"
+    effect:
+      - [ comment, "Non." ]
+      - [ comment, "Ça ne bouge pas." ]
+      - [ comment, "Impossible." ]
+      - [ comment, "Je ne veux pas bouger ça." ]
+      - [ comment, "Ça ne sert à rien." ]
