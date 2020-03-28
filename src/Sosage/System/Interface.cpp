@@ -10,6 +10,7 @@ namespace Sosage::System
 
 Interface::Interface (Content& content)
   : m_content (content)
+  , m_layout (INIT)
   , m_action_min_height(50)
   , m_interface_min_height(150)
 {
@@ -21,20 +22,21 @@ void Interface::main()
   if (m_content.request<Component::Event>("window:rescaled"))
     update_responsive();
 
-  Component::Position_handle mouse
-    = m_content.request<Component::Position>("mouse:position");
-  if (mouse)
-    detect_collision (mouse);
+  Component::Position_handle cursor
+    = m_content.request<Component::Position>("cursor:position");
+  if (cursor)
+    detect_collision (cursor);
 
   Component::Position_handle clicked
-    = m_content.request<Component::Position>("mouse:clicked");
+    = m_content.request<Component::Position>("cursor:clicked");
   if (clicked && m_collision)
   {
     if (m_collision->entity().find("verb_") == 0)
     {
       m_content.get<Component::Variable> ("chosen_verb:text")
         ->set(m_content.get<Component::Text>(m_collision->entity() + ":text"));
-      m_content.remove("mouse:clicked");
+      m_content.remove("cursor:clicked");
+      m_content.set<Component::Event>("game:verb_clicked");
     }
     else
     {
@@ -43,7 +45,20 @@ void Interface::main()
       verb = std::string (verb.begin() + 5, verb.end());
 
       if (verb == "goto")
-        m_content.set<Component::Variable>("mouse:target", m_collision);
+      {
+        Component::State_handle state
+          = m_content.request<Component::State>(m_collision->entity() + ":state");
+        if (state && (state->value() == "inventory"))
+        {
+          Component::Action_handle action
+            = m_content.request<Component::Action> (m_collision->entity() + ":look");
+         if (action)
+           m_content.set<Component::Variable>("character:action", action);
+         m_content.remove("cursor:clicked");
+        }
+        else
+          m_content.set<Component::Variable>("cursor:target", m_collision);
+      }
       else
       {
         Component::Action_handle action
@@ -51,7 +66,7 @@ void Interface::main()
         if (action)
           m_content.set<Component::Variable>("character:action", action);
 
-        m_content.remove("mouse:clicked");
+        m_content.remove("cursor:clicked");
       }
       
       m_content.get<Component::Variable> ("chosen_verb:text")
@@ -88,6 +103,8 @@ void Interface::init()
     verb_img->set_relative_origin(0.5, 0.5);
   }
 
+  // TODO: Inventory arrows
+
   Component::Text_handle
     verb_goto = m_content.set<Component::Text> ("verb_goto:text", "Aller vers");
   m_content.set<Component::Variable>("chosen_verb:text", verb_goto);
@@ -114,17 +131,40 @@ void Interface::update_responsive()
 
   if (aspect_ratio >= 200)
   {
+    if (m_layout == WIDESCREEN)
+      return;
+    m_layout = WIDESCREEN;
+    
     interface_widescreen();
     vertical_layout();
   }
   else
   {
     if (aspect_ratio >= 115)
+    {
+      if (m_layout == STANDARD)
+        return;
+      m_layout = STANDARD;
+      
       interface_standard();
+    }
     else if (aspect_ratio >= 75)
+    {
+      if (m_layout == SQUARE)
+        return;
+      m_layout = SQUARE;
+      
       interface_square();
+    }
     else
+    {
+      if (m_layout == PORTRAIT)
+        return;
+      m_layout = PORTRAIT;
+      
       interface_portrait();
+    }
+    
     horizontal_layout();
   }
 
@@ -427,7 +467,7 @@ void Interface::update_pause_screen()
   Component::Conditional_handle pause_screen
     = m_content.set<Component::Conditional>("pause_screen:conditional", paused,
                                             pause_screen_img, Component::Handle());
-  
+
   Component::Image_handle pause_text_img
     = Component::make_handle<Component::Image>("pause_text:image", interface_font, "FFFFFF", "PAUSE");
   pause_text_img->z() += 10;
@@ -442,7 +482,7 @@ void Interface::update_pause_screen()
 
 }
 
-void Interface::detect_collision (Component::Position_handle mouse)
+void Interface::detect_collision (Component::Position_handle cursor)
 {
   // Deactive previous collisions
   if (m_collision)
@@ -472,16 +512,16 @@ void Interface::detect_collision (Component::Position_handle mouse)
       int xmax = xmin + (img->core().scaling * (img->xmax() - img->xmin()));
       int ymax = ymin + (img->core().scaling * (img->ymax() - img->ymin()));
 
-      if (mouse->value().x() < xmin ||
-          mouse->value().x() > xmax ||
-          mouse->value().y() < ymin ||
-          mouse->value().y() > ymax)
+      if (cursor->value().x() < xmin ||
+          cursor->value().x() > xmax ||
+          cursor->value().y() < ymin ||
+          cursor->value().y() > ymax)
         continue;
 
       if (img->id() != "background:image" && img->id().find("verb_") != 0)
       {
-        int x_in_image = mouse->value().x() - xmin;
-        int y_in_image = mouse->value().y() - ymin;
+        int x_in_image = cursor->value().x() - xmin;
+        int y_in_image = cursor->value().y() - ymin;
         if (!img->is_target_inside (x_in_image, y_in_image))
           continue;
       }
@@ -504,26 +544,42 @@ void Interface::detect_collision (Component::Position_handle mouse)
 void Interface::update_action ()
 {
   std::string target_object = "";
+
+  Component::Text_handle verb = m_content.get<Component::Text> ("chosen_verb:text");
   
   if (m_collision)
   {
     if (m_collision->entity().find("verb_") == 0)
       m_collision->set_scale(1.2 * m_verb_scale);
     if (Component::Text_handle name = m_content.request<Component::Text>(m_collision->entity() + ":name"))
+    {
       target_object = name->value();
+      Component::State_handle state = m_content.request<Component::State>(m_collision->entity() + ":state");
+      if (state && state->value() == "inventory"
+          && verb->entity() == "verb_goto")
+      {
+        verb = m_content.get<Component::Text>("verb_look:text");
+      }
+    }
   }
 
-  Component::Image_handle text_img
-    = m_content.set<Component::Image>("chosen_verb:image",
-                                      m_content.get<Component::Font>("interface:font"), "FFFFFF",
-                                      m_content.get<Component::Text> ("chosen_verb:text")->value() + " " +
-                                      target_object);
-  text_img->set_relative_origin(0.5, 0.5);
-  text_img->set_scale(0.8 * m_action_height / text_img->height());
+  if (!m_content.request<Component::Action>("character:action")
+      || verb != m_content.get<Component::Text>("verb_goto:text"))
+  {  
+    Component::Image_handle text_img
+      = m_content.set<Component::Image>("chosen_verb:image",
+                                        m_content.get<Component::Font>("interface:font"), "FFFFFF",
+                                        verb->value() + " " +
+                                        target_object);
+    text_img->set_relative_origin(0.5, 0.5);
+    text_img->set_scale(0.8 * m_action_height / text_img->height());
+  }
 }
 
 void Interface::update_inventory ()
 {
+  Component::Image_handle background = m_content.get<Component::Image>("interface_inventory:image");
+  
   Component::Inventory_handle inventory = m_content.get<Component::Inventory>("game:inventory");
 
   Component::Position_handle inv_pos = m_content.get<Component::Position>("interface_inventory:position");
@@ -535,8 +591,39 @@ void Interface::update_inventory ()
     
     if (position <= i && i < position + config().displayed_inventory_size)
     {
+      std::size_t pos = i - position;
+      double relative_pos = (1 + pos) / double(config().displayed_inventory_size + 1);
+      
       img->on() = true;
-      m_content.set<Component::Position>(inventory->get(i) + ":position", inv_pos->value());
+
+      int x, y;
+
+      if (m_layout == WIDESCREEN)
+      {
+        int width = img->width();
+        int inv_width = background->width();
+        int target_width = int(0.8 * inv_width);
+
+        img->set_scale (target_width / double(width));
+
+        x = inv_pos->value().x() + background->width() / 2;
+        y = inv_pos->value().y() + int(relative_pos * background->height());
+      }
+      else
+      {
+        int height = img->height();
+        int inv_height = background->height();
+        int target_height = int(0.8 * inv_height);
+
+        img->set_scale (target_height / double(height));
+
+        x = inv_pos->value().x() + int(relative_pos * background->width());
+        y = inv_pos->value().y() + background->height() / 2;
+      }
+      
+      m_content.set<Component::Position>(inventory->get(i) + ":position", Point(x,y));
+
+
     }
     else
       img->on() = false;

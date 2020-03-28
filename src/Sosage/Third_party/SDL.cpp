@@ -261,6 +261,8 @@ SDL::SDL (const std::string& game_name)
   SDL_SetRenderDrawColor (m_renderer, 0, 0, 0, 255);
   SDL_RenderClear (m_renderer);
   SDL_RenderPresent (m_renderer);
+  SDL_ShowCursor(SDL_DISABLE);
+  
 }
 
 SDL::~SDL ()
@@ -284,18 +286,6 @@ void SDL::update_view()
   int window_height = config().world_height + config().interface_height;
 
   SDL_RenderSetLogicalSize(m_renderer, window_width, window_height);
-}
-
-void SDL::set_cursor (const std::string& file_name)
-{
-  m_cursor_surf = IMG_Load (file_name.c_str());
-  check (m_cursor_surf != nullptr, "Cannot create image from " + file_name);
-  
-  m_cursor = SDL_CreateColorCursor(m_cursor_surf,
-                                   m_cursor_surf->w / 2, m_cursor_surf->h / 2);
-  check (m_cursor != nullptr, "Cannot create cursor from " + file_name);
-  
-  SDL_SetCursor(m_cursor);
 }
 
 void SDL::begin ()
@@ -328,6 +318,18 @@ void SDL::draw (const Image& image,
 void SDL::draw_line (const int xa, const int ya, const int xb, const int yb)
 {
 //  lineRGBA (m_window, xa, ya, xb, yb, 0, 0, 255, 255);
+}
+
+void SDL::draw_square (const int x, const int y, const int size)
+{
+  SDL_Rect rect;
+  rect.x = x - size / 2;
+  rect.y = y - size / 2;
+  rect.w = size;
+  rect.h = size;
+
+  SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 255);
+  SDL_RenderFillRect(m_renderer, &rect);
 }
 
 void SDL::end ()

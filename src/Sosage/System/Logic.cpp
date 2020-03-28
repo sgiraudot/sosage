@@ -51,9 +51,9 @@ void Logic::main (const double& current_time)
       new_timed_handle.push_back(th);
   m_timed.swap(new_timed_handle);
   
-  Component::Image_handle collision = m_content.request<Component::Image> ("mouse:target");
+  Component::Image_handle collision = m_content.request<Component::Image> ("cursor:target");
   Component::Position_handle clicked
-    = m_content.request<Component::Position>("mouse:clicked");
+    = m_content.request<Component::Position>("cursor:clicked");
   if (clicked && collision)
   {
     std::cerr << "Collision with " << collision->id() << std::endl;
@@ -65,11 +65,13 @@ void Logic::main (const double& current_time)
     else
       compute_path_from_target(clicked);
     
-    m_content.remove("mouse:clicked");
-    m_content.remove("mouse:target");
+    m_content.remove("cursor:clicked");
+    m_content.remove("cursor:target");
 
     // Cancel current action
-    m_timed.clear();
+    clear_timed();
+    if (m_current_action != nullptr)
+      m_content.remove ("character:action");
     m_current_action = nullptr;
   }
   
@@ -79,7 +81,7 @@ void Logic::main (const double& current_time)
   {
     m_current_action = action;
     m_next_step = 0;
-    m_content.remove ("character:action");
+//    m_content.remove ("character:action");
   }
 
   if (m_current_action)
@@ -87,7 +89,10 @@ void Logic::main (const double& current_time)
     if (m_timed.empty())
     {
       if (m_next_step == m_current_action->size())
-        m_current_action = Component::Action_handle();
+      {
+        m_content.remove ("character:action");
+        m_current_action = nullptr;
+      }
       else
         while (m_next_step != m_current_action->size())
         {
@@ -127,6 +132,26 @@ bool Logic::exit()
 bool Logic::paused()
 {
   return m_content.get<Component::Boolean>("game:paused")->value();
+}
+
+void Logic::clear_timed()
+{
+  std::vector<Timed_handle> new_timed_handle;
+  
+  for (const Timed_handle& th : m_timed)
+    if (th.first == 0) // special case for Path
+      continue;
+    else if (th.second->id().find("comment_") == 0) // keep dialogs
+    {
+      new_timed_handle.push_back(th);
+      std::cerr << "Keep " << th.second->id();
+    }
+    else if (!Component::cast<Component::Event>(th.second))
+    {
+      std::cerr << "Remove " << th.second->id();
+      m_content.remove (th.second->id());
+    }
+  m_timed.swap(new_timed_handle);
 }
 
 void Logic::compute_path_from_target (Component::Position_handle target)
@@ -216,8 +241,9 @@ void Logic::action_goto (const std::string& target)
 
 void Logic::action_look (const std::string& target)
 {
-  m_content.set<Component::Position>("character:lookat",
-                                     m_content.get<Component::Position>(target + ":position")->value());
+  if (m_content.get<Component::State>(target + ":state")->value() != "inventory")
+    m_content.set<Component::Position>("character:lookat",
+                                       m_content.get<Component::Position>(target + ":position")->value());
 }
   
 void Logic::action_move (Component::Action::Step step)
@@ -250,7 +276,13 @@ void Logic::action_set_state (Component::Action::Step step)
   m_content.get<Component::State>(target + ":state")->set (state);
 
   if (state == "inventory")
+  {
     m_content.get<Component::Inventory>("game:inventory")->add(target);
+    Component::Image_handle img
+      = m_content.get<Component::Image>(target + ":conditional_image");
+    img->set_relative_origin(0.5, 0.5);
+    img->z() = config().interface_depth + 1;
+  }
 }
 
 void Logic::create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog)

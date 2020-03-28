@@ -1,4 +1,5 @@
 name: "Example"
+music: "sophie_mene_lenquete"
 background: "bureau"
 ground_map: "bureau_map"
 front_z: 3240
@@ -45,6 +46,14 @@ objects:
     states:
       - { id: "defaut", skin: "bouton" }
       
+  - id: "cendres"
+    name: "cendres"
+    coordinates: [ 0, 0, 0 ]
+    view: [ 0, 0 ]
+    states:
+      - { id: "none" }
+      - { id: "inventory", skin: "cendres" }
+      
   - id: "documents"
     name: "documents"
     coordinates: [ 536, 697, 2786 ]
@@ -73,7 +82,22 @@ objects:
     view: [ 302, 711 ]
     states:
       - { id: "defaut", skin: "tableau" }
+
+  - id: "telephone"
+    name: "téléphone"
+    coordinates: [ 0, 0, 0 ]
+    view: [ 0, 0 ]
+    states:
+      - { id: "inventory", skin: "telephone" }
       
+  - id: "tisonnier"
+    name: "tisonnier"
+    coordinates: [ 1655, 795, 1 ]
+    view: [ 1544, 795 ]
+    states:
+      - { id: "defaut", skin: "tisonnier" }
+      - { id: "inventory", skin: "tisonnier_inventaire" }
+
 actions:
 
   - id: "look"
@@ -88,16 +112,22 @@ actions:
     effect:
       - [ goto ]
       - [ sync ]
-      - [ lock ]
-      - [ look ]
       - [ pick_animation, 0.2 ]
+      - [ sync ]
       - [ set_state, "bouteille", "inventory" ]
-      - [ unlock ]
 
   - id: "take"
-    target: "bouteille"
-    state: "inventory"
+    target: "tisonnier"
+    state: "defaut"
     effect:
+      - [ goto ]
+      - [ sync ]
+      - [ look ]
+      - [ pick_animation, 0.2 ]
+      - [ sync ]
+      - [ set_state, "tisonnier", "inventory" ]
+      - [ set_state, "cendres", "inventory" ]
+      - [ comment, "Beurk, j'ai plein de cendre sur la main." ]
 
   - id: "look"
     target: "bouton"

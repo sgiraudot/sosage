@@ -33,6 +33,8 @@ public:
   bool paused();
 
 private:
+  void clear_timed();
+  
   void compute_path_from_target (Component::Position_handle target);
   void update_debug_info (Component::Debug_handle debug_info);
 

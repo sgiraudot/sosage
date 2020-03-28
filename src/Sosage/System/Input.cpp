@@ -26,8 +26,13 @@ void Input::main()
 
     Component::Boolean_handle paused
       = m_content.request<Component::Boolean>("game:paused");
+    
     if (paused && paused->value())
+    {
+      m_content.get<Component::Image>("cursor:image")->on() = false;
       continue;
+    }
+    m_content.get<Component::Image>("cursor:image")->on() = true;
 
     if (m_core.is_debug(ev))
       m_content.get<Component::Boolean>("game:debug")->toggle();
@@ -44,10 +49,12 @@ void Input::main()
       continue;
   
     if (m_core.is_mouse_motion(ev))
-      m_content.set<Component::Position>("mouse:position", Point(m_core.mouse_position(ev)));
+    {
+      m_content.set<Component::Position>("cursor:position", Point(m_core.mouse_position(ev)));
+    }
     
     if (m_core.is_left_click(ev))
-      m_content.set<Component::Position>("mouse:clicked", Point(m_core.mouse_position(ev)));
+      m_content.set<Component::Position>("cursor:clicked", Point(m_core.mouse_position(ev)));
 
   }
 }

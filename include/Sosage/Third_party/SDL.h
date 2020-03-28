@@ -66,7 +66,6 @@ public:
 
   void update_view();
   void get_window_size (int& w, int& h);
-  void set_cursor (const std::string& file_name);
   void begin();
   void draw (const Image& image,
              const int xsource, const int ysource,
@@ -74,6 +73,7 @@ public:
              const int xtarget, const int ytarget,
              const int wtarget, const int htarget);
   void draw_line (const int xa, const int ya, const int xb, const int yb);
+  void draw_square (const int x, const int b, const int size);
   void end();
 
 };
