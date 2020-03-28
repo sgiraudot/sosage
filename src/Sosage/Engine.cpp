@@ -1,5 +1,6 @@
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Debug.h>
+#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Position.h>
@@ -32,7 +33,8 @@ Engine::~Engine()
 void Engine::main()
 {
   std::size_t frame_id = m_clock.frame_id();
-  
+
+  m_content.set<Component::Event>("music:start");
   while (!m_logic.exit())
   {
     m_input.main();
@@ -44,8 +46,8 @@ void Engine::main()
       if (new_frame_id != frame_id)
         for (std::size_t i = frame_id; i < new_frame_id; ++ i)
           m_animation.main();
-      m_sound.main();
     }
+    m_sound.main();
     frame_id = new_frame_id;
     m_graphic.main();
     m_clock.wait(true);
@@ -65,10 +67,6 @@ int Engine::run (const std::string& folder_name)
     = m_content.set<Component::Inventory>("game:inventory");
 
   m_interface.init();
-
-#ifdef SOSAGE_ANDROID
-  m_graphic.set_cursor (m_content.get<Component::Text> ("cursor:path")->value());
-#endif
 
   while (room_name != std::string())
   {

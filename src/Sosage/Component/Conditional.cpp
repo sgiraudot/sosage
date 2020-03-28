@@ -64,7 +64,9 @@ Handle State_conditional::get() const
 {
   auto iter
     = m_handles.find(m_state->value());
-  check (iter != m_handles.end(), "Cannot find state " + m_state->value() + " in " + id());
+  if (iter == m_handles.end())
+    return Handle();
+//  check (iter != m_handles.end(), "Cannot find state " + m_state->value() + " in " + id());
   return iter->second;
 }
 

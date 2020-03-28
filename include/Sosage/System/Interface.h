@@ -12,7 +12,10 @@ namespace Sosage::System
 
 class Interface
 {
+  enum Layout { INIT, WIDESCREEN, STANDARD, SQUARE, PORTRAIT };
+
   Content& m_content;
+  Layout m_layout;
   Component::Image_handle m_collision;
   
   const int m_action_min_height;
@@ -43,7 +46,7 @@ private:
 
   void update_pause_screen();
   
-  void detect_collision (Component::Position_handle mouse);
+  void detect_collision (Component::Position_handle cursor);
   void update_action ();
   void update_inventory ();
 

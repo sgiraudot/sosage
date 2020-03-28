@@ -21,8 +21,6 @@ public:
 
   Graphic (Content& content, const std::string& name);
 
-  void set_cursor (const std::string& file_name);
-
   void main();
 
 private:

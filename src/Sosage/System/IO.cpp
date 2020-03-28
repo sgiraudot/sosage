@@ -3,7 +3,10 @@
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
+#include <Sosage/Component/Inventory.h>
+#include <Sosage/Component/Music.h>
 #include <Sosage/Component/Position.h>
+#include <Sosage/Component/Sound.h>
 #include <Sosage/Component/Text.h>
 #include <Sosage/System/IO.h>
 #include <Sosage/version.h>
@@ -29,12 +32,19 @@ std::string IO::read_init (const std::string& folder_name)
          "Error: room version " + v + " incompatible with Sosage " + Sosage::version());
 
   std::string cursor = input["cursor"].string("sprites/", ".png");
-  m_content.set<Component::Text> ("cursor:path", local_file_name(cursor));
+  Component::Image_handle cursor_img
+    = m_content.set<Component::Image> ("cursor:image", local_file_name(cursor),
+                                       config().interface_depth * 2);
+  cursor_img->set_relative_origin(0.5, 0.5);
+  m_content.set<Component::Position> ("cursor:position", Point(0,0));
   
   std::string turnicon = input["turnicon"].string("sprites/", ".png");
   Component::Image_handle turnicon_img
     = m_content.set<Component::Image>("turnicon:image", local_file_name(turnicon), 0);
   turnicon_img->on() = false;
+  
+  std::string click_sound = input["click_sound"].string("sounds/", ".wav");
+  m_content.set<Component::Sound>("click:sound", local_file_name(click_sound));
   
   std::string debug_font =input["debug_font"].string("fonts/", ".ttf");
   m_content.set<Component::Font> ("debug:font", local_file_name(debug_font), 15);
@@ -122,6 +132,9 @@ std::string IO::read_room (const std::string& file_name)
   Core::IO input (local_file_name(file_name));
 
   std::string name = input["name"].string();
+  std::string music = input["music"].string("musics/", ".ogg");
+  m_content.set<Component::Music>("game:music", local_file_name(music));
+  
   std::string background = input["background"].string("backgrounds/", ".png");
   std::string ground_map = input["ground_map"].string("backgrounds/", ".png");
   int front_z = input["front_z"].integer();
@@ -190,7 +203,6 @@ std::string IO::read_room (const std::string& file_name)
         const Core::IO::Node& istate = iobject["states"][j];
 
         std::string state = istate["id"].string();
-        std::string skin = istate["skin"].string("sprites/", ".png");
 
         // init with first state found
         bool init = false;
@@ -202,15 +214,30 @@ std::string IO::read_room (const std::string& file_name)
         }
         else
           conditional_handle = m_content.get<Component::State_conditional>(id + ":conditional_image");
-    
+
+        if (state == "none")
+          conditional_handle->add(state, nullptr);
+        else
+        {
+          std::string skin = istate["skin"].string("sprites/", ".png");
+          Component::Image_handle img
+            = Component::make_handle<Component::Image>(id + ":image", local_file_name(skin), 0);
+          img->set_relative_origin(0.5, 1.0);
+
+          img->z() = z;
+          debug("Object " + id + ":" + state + " at position " + std::to_string(img->z()));
+
+          conditional_handle->add(state, img);
+        }
+      }
+      
+      if (state_handle->value() == "inventory")
+      {
+        m_content.get<Component::Inventory>("game:inventory")->add(id);
         Component::Image_handle img
-          = Component::make_handle<Component::Image>(id + ":image", local_file_name(skin), 0);
-        img->set_relative_origin(0.5, 1.0);
-
-        img->z() = z;
-        debug("Object " + id + ":" + state + " at position " + std::to_string(img->z()));
-
-        conditional_handle->add(state, img);
+          = m_content.get<Component::Image>(id + ":conditional_image");
+        img->set_relative_origin(0.5, 0.5);
+        img->z() = config().interface_depth + 1;
       }
     }
   
