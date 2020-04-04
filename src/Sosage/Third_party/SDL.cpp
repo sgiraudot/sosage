@@ -242,20 +242,12 @@ SDL::SDL (const std::string& game_name)
 
   std::cerr << config().window_width << " * " << config().window_height << std::endl;
 
-#ifdef SOSAGE_ANDROID
-  m_window = SDL_CreateWindow (game_name.c_str(),
-                               SDL_WINDOWPOS_UNDEFINED,
-                               SDL_WINDOWPOS_UNDEFINED,
-                               config().window_width, config().window_height,
-                               SDL_WINDOW_OPENGL);
-#else
   m_window = SDL_CreateWindow (game_name.c_str(),
                                SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED,
                                config().window_width, config().window_height,
                                SDL_WINDOW_RESIZABLE |
                                (config().fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
-#endif
   check (m_window != nullptr, "Cannot create SDL Window");
   
   m_renderer = SDL_CreateRenderer (m_window, -1, 0);
