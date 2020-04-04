@@ -4,7 +4,6 @@
 #include <Sosage/Component/Condition.h>
 #include <Sosage/Component/State.h>
 #include <Sosage/Component/Handle.h>
-#include <Sosage/Utils/error.h>
 
 #include <unordered_map>
 #include <vector>

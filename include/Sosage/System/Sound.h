@@ -3,6 +3,7 @@
 
 #include <Sosage/Content.h>
 #include <Sosage/Core/Sound.h>
+#include <Sosage/platform.h>
 
 namespace Sosage::System
 {
@@ -16,7 +17,7 @@ public:
 
   Sound (Content& content);
 
-  void main();
+  void run();
 };
 
 } // namespace Sosage::System

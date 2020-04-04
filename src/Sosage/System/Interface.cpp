@@ -1,4 +1,5 @@
 #include <Sosage/Component/Action.h>
+#include <Sosage/Component/Console.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Position.h>
@@ -17,7 +18,7 @@ Interface::Interface (Content& content)
 
 }
 
-void Interface::main()
+void Interface::run()
 {
   if (m_content.request<Component::Event>("window:rescaled"))
     update_responsive();
@@ -27,8 +28,8 @@ void Interface::main()
   if (cursor)
     detect_collision (cursor);
 
-  Component::Position_handle clicked
-    = m_content.request<Component::Position>("cursor:clicked");
+  Component::Event_handle clicked
+    = m_content.request<Component::Event>("cursor:clicked");
   if (clicked && m_collision)
   {
     if (m_collision->entity().find("verb_") == 0)
@@ -326,12 +327,12 @@ void Interface::vertical_layout()
   double w_scaling = interface_width / double(min_verbs_width);
   double h_scaling = interface_height / double(min_verbs_height);
 
-  std::cerr << "Scaling = " << w_scaling << "*" << h_scaling << std::endl;
+  DBG_CERR << "Scaling = " << w_scaling << "*" << h_scaling << std::endl;
 
   double min_scaling = (std::min)(h_scaling, w_scaling);
 
   int h_spacing = interface_height;
-  std::cerr << h_spacing << " ";
+  DBG_CERR << h_spacing << " ";
   for (std::size_t i = 0; i < m_verbs.size(); ++ i)
   {
     int h = int(m_verbs[i]->height() * min_scaling);
@@ -340,7 +341,7 @@ void Interface::vertical_layout()
   }
 
   h_spacing /= 8;
-  std::cerr << h_spacing << " ";
+  DBG_CERR << h_spacing << " ";
 
   int x = config().world_width + interface_width / 2;
   int current_y= h_spacing / 2;
@@ -404,7 +405,7 @@ void Interface::horizontal_layout()
   double w_scaling = interface_width / double(min_verbs_width);
   double h_scaling = interface_height / double(min_verbs_height);
 
-  std::cerr << "Scaling = " << w_scaling << "*" << h_scaling << std::endl;
+  DBG_CERR << "Scaling = " << w_scaling << "*" << h_scaling << std::endl;
 
   double min_scaling = (std::min)(h_scaling, w_scaling);
 

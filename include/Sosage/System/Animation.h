@@ -18,7 +18,7 @@ public:
 
   Animation (Content& content);
 
-  void main();
+  void run();
   
   void generate_random_idle_animation (Component::Animation_handle image,
                                        Component::Animation_handle head,

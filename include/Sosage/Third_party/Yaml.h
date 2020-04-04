@@ -1,6 +1,10 @@
 #ifndef SOSAGE_THIRD_YAML_H
 #define SOSAGE_THIRD_YAML_H
 
+#include <Sosage/Utils/file.h>
+
+#include <SDL.h>
+
 #include <map>
 #include <stack>
 #include <string>
@@ -99,15 +103,27 @@ public:
 
   Yaml (const std::string& filename)
   {
-    FILE *fh = fopen(filename.c_str(), "r");
-    check (fh != nullptr, "Cannot open " + filename);
-    
+    File file = Sosage::open (filename.c_str());
+
+    unsigned char* buffer = new unsigned char[file.size + 1];
+    std::size_t nb_read_total = 0, nb_read = 1;
+    unsigned char* buf = buffer;
+    while (nb_read_total < file.size && nb_read != 0) {
+      nb_read = Sosage::read (file, buf, (file.size - nb_read_total));
+      nb_read_total += nb_read;
+      buf += nb_read;
+    }
+    Sosage::close (file);
+
+    check (nb_read_total == file.size, "Error while reading " + filename);
+    buffer[nb_read_total] = '\0';
+
     yaml_parser_t parser;
 
     bool parser_initialized = yaml_parser_initialize(&parser);
     check (parser_initialized, "Failed initializing Yaml parser");
 
-    yaml_parser_set_input_file(&parser, fh);
+    yaml_parser_set_input_string(&parser, buffer, file.size);
 
     Node* n;
     std::string key = "";
@@ -195,7 +211,6 @@ public:
     while(event.type != YAML_STREAM_END_EVENT);
     yaml_event_delete(&event);
     yaml_parser_delete(&parser);
-    fclose(fh);
 
 //    m_root->print();
   }

@@ -16,7 +16,7 @@ public:
 
   Input (Content& content);
 
-  void main ();
+  void run ();
   
 };
 

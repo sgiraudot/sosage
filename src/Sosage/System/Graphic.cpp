@@ -15,7 +15,7 @@ Graphic::Graphic (Content& content, const std::string& game_name)
 {
 }
 
-void Graphic::main()
+void Graphic::run()
 {
   if (m_content.request<Component::Event>("window:rescaled"))
   {
@@ -76,6 +76,10 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
                    img->core().scaling * (ymax - ymin));
     }
   }
+
+  // Component::Position_handle cursor
+  //   = m_content.request<Component::Position>("cursor:position");
+  // m_core.draw_square (cursor->value().x(), cursor->value().y(), 50);
 }
 
 } // namespace Sosage::System

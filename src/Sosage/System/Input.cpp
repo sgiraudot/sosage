@@ -1,4 +1,5 @@
 #include <Sosage/Component/Condition.h>
+#include <Sosage/Component/Console.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/System/Input.h>
@@ -12,7 +13,7 @@ Input::Input (Content& content)
 {
 }
 
-void Input::main()
+void Input::run()
 {
   Core::Input::Event ev;
 
@@ -26,16 +27,23 @@ void Input::main()
 
     Component::Boolean_handle paused
       = m_content.request<Component::Boolean>("game:paused");
-    
+
     if (paused && paused->value())
     {
+#ifndef SOSAGE_ANDROID
       m_content.get<Component::Image>("cursor:image")->on() = false;
+#endif
       continue;
     }
+#ifndef SOSAGE_ANDROID
     m_content.get<Component::Image>("cursor:image")->on() = true;
+#endif
 
     if (m_core.is_debug(ev))
       m_content.get<Component::Boolean>("game:debug")->toggle();
+    
+    if (m_core.is_console(ev))
+      m_content.get<Component::Boolean>("game:console")->toggle();
     
     if (m_core.is_window_resized(ev))
     {
@@ -49,13 +57,14 @@ void Input::main()
       continue;
   
     if (m_core.is_mouse_motion(ev))
-    {
       m_content.set<Component::Position>("cursor:position", Point(m_core.mouse_position(ev)));
-    }
     
     if (m_core.is_left_click(ev))
-      m_content.set<Component::Position>("cursor:clicked", Point(m_core.mouse_position(ev)));
-
+    {
+      m_content.set<Component::Position>("cursor:position", Point(m_core.mouse_position(ev)));
+      m_content.set<Component::Event>("cursor:clicked");
+      DBG_CERR << "Mouse clicked = " << Point(m_core.mouse_position(ev)) << std::endl;
+    }
   }
 }
 
