@@ -13,7 +13,8 @@ SRC_PATH := ../../../../
 
 LOCAL_CPPFLAGS := -DSUPERFLU_DATA_FOLDER=\"superflu/\" -std=c++17 \
   -frtti \
-  -DSOSAGE_LINKED_WITH_SDL_MIXER
+  -DSOSAGE_LINKED_WITH_SDL_MIXER \
+	-O3
 
 LOCAL_C_INCLUDES := \
   $(LOCAL_PATH)/$(SRC_PATH)/include \
