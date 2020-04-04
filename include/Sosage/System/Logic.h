@@ -2,6 +2,7 @@
 #define SOSAGE_SYSTEM_LOGIC_H
 
 #include <Sosage/Component/Action.h>
+#include <Sosage/Component/Console.h>
 #include <Sosage/Component/Debug.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
@@ -28,7 +29,7 @@ public:
 
   Logic (Content& content);
 
-  void main(const double& current_time);
+  void run(const double& current_time);
   bool exit();
   bool paused();
 
@@ -37,6 +38,7 @@ private:
   
   void compute_path_from_target (Component::Position_handle target);
   void update_debug_info (Component::Debug_handle debug_info);
+  void update_console (Component::Console_handle console);
 
   void action_comment (Component::Action::Step step);
   void action_goto (const std::string& target);

@@ -3,8 +3,13 @@
 
 #include <Sosage/Utils/error.h>
 #include <Sosage/Config.h>
+#include <Sosage/platform.h>
 
-#include <SDL2/SDL_timer.h>
+#ifdef SOSAGE_ANDROID
+#  include <SDL_timer.h>
+#else
+#  include <SDL2/SDL_timer.h>
+#endif
 
 namespace Sosage::Third_party
 {

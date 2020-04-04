@@ -1,4 +1,8 @@
 #include <Sosage/Third_party/SDL_events.h>
+#include <Sosage/platform.h>
+#include <Sosage/Config.h>
+
+#include <iostream>
 
 namespace Sosage::Third_party
 {
@@ -36,13 +40,21 @@ bool SDL_events::is_debug (const Event& ev)
   return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_d);
 }
 
+bool SDL_events::is_console (const Event& ev)
+{
+  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_c);
+}
+
 bool SDL_events::is_left_click (const Event& ev)
 {
-  return ((ev.type == SDL_MOUSEBUTTONUP &&
+#ifdef SOSAGE_ANDROID
+  return ev.type == SDL_FINGERUP;
+#else
+  return (ev.type == SDL_MOUSEBUTTONUP &&
           ev.button.type == SDL_MOUSEBUTTONUP &&
           ev.button.button == SDL_BUTTON_LEFT &&
-          ev.button.state == SDL_RELEASED) ||
-          (ev.type == SDL_FINGERUP));
+          ev.button.state == SDL_RELEASED);
+#endif     
 }
 
 bool SDL_events::is_window_resized (const Event& ev)
@@ -53,18 +65,24 @@ bool SDL_events::is_window_resized (const Event& ev)
 
 bool SDL_events::is_mouse_motion (const Event& ev)
 {
-  return ((ev.type == SDL_MOUSEMOTION) ||
-          (ev.type == SDL_FINGERMOTION));
+#ifdef SOSAGE_ANDROID
+  return (ev.type == SDL_FINGERMOTION);
+#else
+  return (ev.type == SDL_MOUSEMOTION);
+#endif
 }
 
 std::pair<int, int> SDL_events::mouse_position (const Event& ev)
 {
+#ifdef SOSAGE_ANDROID
+  return std::make_pair (ev.tfinger.x * (config().world_width +  config().interface_width),
+                         ev.tfinger.y * (config().world_height + config().interface_height));
+#else
   if (ev.type == SDL_MOUSEMOTION)
     return std::make_pair (ev.motion.x, ev.motion.y);
   else if (ev.type == SDL_MOUSEBUTTONUP)
     return std::make_pair (ev.button.x, ev.button.y);
-  // else if (ev.type == SDL_FINGERMOTION || ev.type == SDL_FINGERUP)
-  return std::make_pair (ev.tfinger.x, ev.tfinger.y);
+#endif
 }
 
 std::pair<int, int> SDL_events::window_size (const Event& ev)

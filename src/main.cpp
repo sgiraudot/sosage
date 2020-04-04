@@ -6,3 +6,4 @@ int main (int argc, char** argv)
 
   return sosage.run(SUPERFLU_DATA_FOLDER);
 }
+

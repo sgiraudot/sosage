@@ -1,4 +1,5 @@
 #include <Sosage/Component/Animation.h>
+#include <Sosage/Component/Console.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Path.h>
@@ -16,7 +17,7 @@ Animation::Animation (Content& content)
 
 }
 
-void Animation::main()
+void Animation::run()
 {
   Component::Path_handle path
     = m_content.request<Component::Path>("character:path");
@@ -258,7 +259,7 @@ void Animation::generate_random_idle_head_animation (Component::Animation_handle
   if (direction.x() < 0)
     row_index = 1;
 
-  std::cerr << "Row index = " << row_index << std::endl;
+  DBG_CERR << "Row index = " << row_index << std::endl;
   // Generate 10 poses with transitions
   int pose = 0;
   for (int i = 0; i < 10; ++ i)

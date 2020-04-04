@@ -1,9 +1,15 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_EVENTS_H
 #define SOSAGE_THIRD_PARTY_SDL_EVENTS_H
 
+#include <Sosage/platform.h>
+
 #include <utility>
 
+#ifdef SOSAGE_ANDROID
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
 
 namespace Sosage::Third_party
 {
@@ -27,6 +33,7 @@ public:
   bool is_exit (const Event& ev);
   bool is_pause (const Event& ev);
   bool is_debug (const Event& ev);
+  bool is_console (const Event& ev);
   bool is_left_click (const Event& ev);
   bool is_mouse_motion (const Event& ev);
   bool is_window_resized (const Event& ev);

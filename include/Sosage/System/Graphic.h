@@ -21,7 +21,7 @@ public:
 
   Graphic (Content& content, const std::string& name);
 
-  void main();
+  void run();
 
 private:
 

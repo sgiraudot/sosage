@@ -30,7 +30,7 @@ public:
 
   Interface (Content& content);
 
-  void main();
+  void run();
 
   void init();
 

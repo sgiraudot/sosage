@@ -2,6 +2,7 @@
 #include <Sosage/Component/Music.h>
 #include <Sosage/Component/Sound.h>
 #include <Sosage/System/Sound.h>
+#include <Sosage/platform.h>
 
 namespace Sosage::System
 {
@@ -12,7 +13,7 @@ Sound::Sound (Content& content)
 
 }
 
-void Sound::main()
+void Sound::run()
 {
   Component::Music_handle music = m_content.request<Component::Music>("game:music");
 

@@ -9,6 +9,7 @@
 #include <Sosage/Component/Sound.h>
 #include <Sosage/Component/Text.h>
 #include <Sosage/System/IO.h>
+#include <Sosage/platform.h>
 #include <Sosage/version.h>
 #include <Sosage/Utils/profiling.h>
 
@@ -31,11 +32,14 @@ std::string IO::read_init (const std::string& folder_name)
   check (version(v) == SOSAGE_VERSION,
          "Error: room version " + v + " incompatible with Sosage " + Sosage::version());
 
+#ifndef SOSAGE_ANDROID
   std::string cursor = input["cursor"].string("sprites/", ".png");
   Component::Image_handle cursor_img
     = m_content.set<Component::Image> ("cursor:image", local_file_name(cursor),
                                        config().interface_depth * 2);
   cursor_img->set_relative_origin(0.5, 0.5);
+#endif
+  
   m_content.set<Component::Position> ("cursor:position", Point(0,0));
   
   std::string turnicon = input["turnicon"].string("sprites/", ".png");
@@ -47,7 +51,7 @@ std::string IO::read_init (const std::string& folder_name)
   m_content.set<Component::Sound>("click:sound", local_file_name(click_sound));
   
   std::string debug_font =input["debug_font"].string("fonts/", ".ttf");
-  m_content.set<Component::Font> ("debug:font", local_file_name(debug_font), 15);
+  m_content.set<Component::Font> ("debug:font", local_file_name(debug_font), 40);
 
   std::string interface_font = input["interface_font"].string("fonts/", ".ttf");
   m_content.set<Component::Font> ("interface:font", local_file_name(interface_font), 80);

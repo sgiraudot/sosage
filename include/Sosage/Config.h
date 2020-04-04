@@ -55,7 +55,7 @@ struct Config
 };
 
 #ifdef SOSAGE_ANDROID
-inline Config& config (int window_width = 1200, bool fullscreen = true)
+inline Config& config (int window_width = 1200, bool fullscreen = false)
 #else
 inline Config& config (int window_width = 1200, bool fullscreen = false)
 #endif

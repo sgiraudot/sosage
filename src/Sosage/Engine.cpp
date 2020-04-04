@@ -1,4 +1,5 @@
 #include <Sosage/Component/Animation.h>
+#include <Sosage/Component/Console.h>
 #include <Sosage/Component/Debug.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Image.h>
@@ -8,6 +9,7 @@
 #include <Sosage/Engine.h>
 #include <Sosage/platform.h>
 #include <Sosage/Utils/profiling.h>
+#include <Sosage/Utils/file.h>
 
 namespace Sosage
 {
@@ -30,32 +32,36 @@ Engine::~Engine()
   m_content.clear();
 }
 
-void Engine::main()
+void Engine::run()
 {
   std::size_t frame_id = m_clock.frame_id();
 
   m_content.set<Component::Event>("music:start");
+  m_content.set<Component::Event>("window:rescaled");
+
   while (!m_logic.exit())
   {
-    m_input.main();
+    m_input.run();
     std::size_t new_frame_id = m_clock.frame_id();
     if (!m_logic.paused())
     {
-      m_logic.main(m_clock.frame_time());
-      m_interface.main();
+      m_logic.run(m_clock.frame_time());
+      m_interface.run();
       if (new_frame_id != frame_id)
         for (std::size_t i = frame_id; i < new_frame_id; ++ i)
-          m_animation.main();
+          m_animation.run();
     }
-    m_sound.main();
+    m_sound.run();
     frame_id = new_frame_id;
-    m_graphic.main();
+    m_graphic.run();
     m_clock.wait(true);
   }
 }
 
 int Engine::run (const std::string& folder_name)
 {
+  m_content.set<Component::Console>("game:console");
+
   std::string room_name = m_io.read_init (folder_name);
 
   // Create debug info
@@ -68,6 +74,7 @@ int Engine::run (const std::string& folder_name)
 
   m_interface.init();
 
+  debug("3");
   while (room_name != std::string())
   {
     room_name = m_io.read_room (room_name);
@@ -77,7 +84,7 @@ int Engine::run (const std::string& folder_name)
        m_content.get<Component::Animation>("character_mouth:image"),
        Vector(1,0));
     
-    main();
+    run();
   }
   
   return EXIT_SUCCESS;
