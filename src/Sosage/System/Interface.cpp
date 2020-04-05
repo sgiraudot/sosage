@@ -39,6 +39,15 @@ void Interface::run()
       m_content.remove("cursor:clicked");
       m_content.set<Component::Event>("game:verb_clicked");
     }
+    else if (m_collision->entity().find("inventory_arrow") == 0)
+    {
+      if (m_collision->entity().find("_0") != std::string::npos ||
+          m_collision->entity().find("_1") != std::string::npos)
+        m_content.get<Component::Inventory>("game:inventory")->prev();
+      else
+        m_content.get<Component::Inventory>("game:inventory")->next();
+      m_content.remove("cursor:clicked");
+    }
     else
     {
       std::string verb
@@ -361,6 +370,56 @@ void Interface::vertical_layout()
                                                                    config().world_height + m_action_height / 2));
 
   m_verb_scale = min_scaling;
+
+  m_content.get<Component::Image> ("inventory_arrow_1:image")->on() = false;
+  m_content.get<Component::Image> ("inventory_arrow_background_1:image")->on() = false;
+  m_content.get<Component::Image> ("inventory_arrow_3:image")->on() = false;
+  m_content.get<Component::Image> ("inventory_arrow_background_3:image")->on() = false;
+
+  Component::Position_handle inventory_position
+    = m_content.get<Component::Position> ("interface_inventory:position");
+  Component::Inventory_handle inventory = m_content.get<Component::Inventory>("game:inventory");
+  bool left_on = (inventory->position() > 0);
+  bool right_on =  (inventory->size() - inventory->position() > config().displayed_inventory_size);
+  
+  Component::Image_handle arrow_img 
+    = m_content.get<Component::Image> ("inventory_arrow_0:image");
+  arrow_img->on() = left_on;
+  arrow_img->set_scale (interface_width / double(arrow_img->width()));
+  
+  Component::Image_handle arrow_background_img 
+    = m_content.get<Component::Image> ("inventory_arrow_background_0:image");
+  arrow_background_img->on() = left_on;
+  arrow_background_img->set_scale (interface_width / double(arrow_img->width()));
+  
+  m_content.set<Component::Position> ("inventory_arrow_0:position",
+                                      inventory_position->value()
+                                      + Vector(interface_width / 2,
+                                               interface_height * 0.05));
+  m_content.set<Component::Position> ("inventory_arrow_background_0:position",
+                                      inventory_position->value()
+                                      + Vector(interface_width / 2,
+                                               interface_height * 0.05));
+  
+
+  arrow_img 
+    = m_content.get<Component::Image> ("inventory_arrow_2:image");
+  arrow_img->on() = right_on;
+  arrow_img->set_scale (interface_width / double(arrow_img->width()));
+
+  arrow_background_img
+    = m_content.get<Component::Image> ("inventory_arrow_background_2:image");
+  arrow_background_img->on() = right_on;
+  arrow_background_img->set_scale (interface_width / double(arrow_img->width()));
+  
+  m_content.set<Component::Position> ("inventory_arrow_2:position", 
+                                      inventory_position->value()
+                                      + Vector(interface_width / 2,
+                                               interface_height * 0.95));
+  m_content.set<Component::Position> ("inventory_arrow_background_2:position",
+                                      inventory_position->value()
+                                      + Vector(interface_width / 2,
+                                               interface_height * 0.95));
 }
 
 void Interface::horizontal_layout()
@@ -454,6 +513,56 @@ void Interface::horizontal_layout()
                                                                    config().world_height + m_action_height / 2));
 
   m_verb_scale = min_scaling;
+  
+  m_content.get<Component::Image> ("inventory_arrow_0:image")->on() = false;
+  m_content.get<Component::Image> ("inventory_arrow_background_0:image")->on() = false;
+  m_content.get<Component::Image> ("inventory_arrow_2:image")->on() = false;
+  m_content.get<Component::Image> ("inventory_arrow_background_2:image")->on() = false;
+
+  Component::Position_handle inventory_position
+    = m_content.get<Component::Position> ("interface_inventory:position");
+  Component::Inventory_handle inventory = m_content.get<Component::Inventory>("game:inventory");
+  bool left_on = (inventory->position() > 0);
+  bool right_on =  (inventory->size() - inventory->position() > config().displayed_inventory_size);
+  
+  Component::Image_handle arrow_img 
+    = m_content.get<Component::Image> ("inventory_arrow_1:image");
+  arrow_img->on() = left_on;
+  arrow_img->set_scale (interface_height / double(arrow_img->height()));
+  
+  Component::Image_handle arrow_background_img 
+    = m_content.get<Component::Image> ("inventory_arrow_background_1:image");
+  arrow_background_img->on() = left_on;
+  arrow_background_img->set_scale (interface_height / double(arrow_img->height()));
+  
+  m_content.set<Component::Position> ("inventory_arrow_1:position",
+                                      inventory_position->value()
+                                      + Vector(interface_width * 0.05,
+                                               interface_height / 2));
+  m_content.set<Component::Position> ("inventory_arrow_background_1:position",
+                                      inventory_position->value()
+                                      + Vector(interface_width * 0.05,
+                                               interface_height / 2));
+  
+
+  arrow_img 
+    = m_content.get<Component::Image> ("inventory_arrow_3:image");
+  arrow_img->on() = right_on;
+  arrow_img->set_scale (interface_height / double(arrow_img->height()));
+
+  arrow_background_img
+    = m_content.get<Component::Image> ("inventory_arrow_background_3:image");
+  arrow_background_img->on() = right_on;
+  arrow_background_img->set_scale (interface_height / double(arrow_img->height()));
+  
+  m_content.set<Component::Position> ("inventory_arrow_3:position", 
+                                      inventory_position->value()
+                                      + Vector(interface_width * 0.95,
+                                               interface_height / 2));
+  m_content.set<Component::Position> ("inventory_arrow_background_3:position",
+                                      inventory_position->value()
+                                      + Vector(interface_width * 0.95,
+                                               interface_height / 2));
 }
 
 void Interface::update_pause_screen()
@@ -601,7 +710,6 @@ void Interface::update_inventory ()
     {
       std::size_t pos = i - position;
       double relative_pos = (1 + pos) / double(config().displayed_inventory_size + 1);
-      
       img->on() = true;
 
       int x, y;
@@ -636,6 +744,32 @@ void Interface::update_inventory ()
     else
       img->on() = false;
   }
+
+  bool left_on = (inventory->position() > 0);
+  bool right_on =  (inventory->size() - inventory->position() > config().displayed_inventory_size);
+
+  if (m_layout == WIDESCREEN)
+  {
+    m_content.get<Component::Image> ("inventory_arrow_0:image")->on() = left_on;
+    m_content.get<Component::Image> ("inventory_arrow_background_0:image")->on() = left_on;
+    m_content.get<Component::Image> ("inventory_arrow_1:image")->on() = false;
+    m_content.get<Component::Image> ("inventory_arrow_background_1:image")->on() = false;
+    m_content.get<Component::Image> ("inventory_arrow_2:image")->on() = right_on;
+    m_content.get<Component::Image> ("inventory_arrow_background_2:image")->on() = right_on;
+    m_content.get<Component::Image> ("inventory_arrow_3:image")->on() = false;
+    m_content.get<Component::Image> ("inventory_arrow_background_3:image")->on() = false;
+  }  
+  else
+  {
+    m_content.get<Component::Image> ("inventory_arrow_0:image")->on() = false;
+    m_content.get<Component::Image> ("inventory_arrow_background_0:image")->on() = false;
+    m_content.get<Component::Image> ("inventory_arrow_1:image")->on() = left_on;
+    m_content.get<Component::Image> ("inventory_arrow_background_1:image")->on() = left_on;
+    m_content.get<Component::Image> ("inventory_arrow_2:image")->on() = false;
+    m_content.get<Component::Image> ("inventory_arrow_background_2:image")->on() = false;
+    m_content.get<Component::Image> ("inventory_arrow_3:image")->on() = right_on;
+    m_content.get<Component::Image> ("inventory_arrow_background_3:image")->on() = right_on;
+  }  
 }
 
 

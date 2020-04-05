@@ -15,7 +15,6 @@
 #endif
 
 #include <array>
-#include <sstream>
 
 namespace Sosage::Third_party
 {

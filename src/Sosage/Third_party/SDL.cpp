@@ -1,4 +1,5 @@
 #include <Sosage/Third_party/SDL.h>
+#include <Sosage/Utils/color.h>
 #include <Sosage/Utils/error.h>
 #include <Sosage/platform.h>
 
@@ -77,11 +78,13 @@ SDL_Color SDL::color (const std::string& color_str)
   std::stringstream ss(color_str);
   int num;
   ss >> std::hex >> num;
-    
+
+  std::array<unsigned char, 3> color
+    = color_from_string (color_str);
   SDL_Color out;
-  out.r = num / 0x10000;
-  out.g = (num / 0x100) % 0x100;
-  out.b = num % 0x100;
+  out.r = color[0];
+  out.g = color[1];
+  out.b = color[2];
   return out;
 }
   
@@ -264,7 +267,6 @@ SDL::SDL (const std::string& game_name)
   SDL_RenderClear (m_renderer);
   SDL_RenderPresent (m_renderer);
   SDL_ShowCursor(SDL_DISABLE);
-  
 }
 
 SDL::~SDL ()

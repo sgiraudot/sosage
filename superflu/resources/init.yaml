@@ -7,6 +7,8 @@ debug_font: "DejaVuSansMono"
 interface_font: "TovariSans"
 interface_color: "B9CE73"
 
+inventory_arrows: [ "haut", "gauche", "bas", "droite" ]
+
 click_sound: "switch28"
 
 load_room: "example"
