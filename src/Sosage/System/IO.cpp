@@ -11,6 +11,7 @@
 #include <Sosage/System/IO.h>
 #include <Sosage/platform.h>
 #include <Sosage/version.h>
+#include <Sosage/Utils/color.h>
 #include <Sosage/Utils/profiling.h>
 
 namespace Sosage::System
@@ -46,7 +47,7 @@ std::string IO::read_init (const std::string& folder_name)
   Component::Image_handle turnicon_img
     = m_content.set<Component::Image>("turnicon:image", local_file_name(turnicon), 0);
   turnicon_img->on() = false;
-  
+
   std::string click_sound = input["click_sound"].string("sounds/", ".wav");
   m_content.set<Component::Sound>("click:sound", local_file_name(click_sound));
   
@@ -58,7 +59,25 @@ std::string IO::read_init (const std::string& folder_name)
   
   std::string interface_color = input["interface_color"].string();
   m_content.set<Component::Text> ("interface:color", interface_color);
-  
+
+  std::array<unsigned char, 3> color = color_from_string (interface_color);
+
+  for (std::size_t i = 0; i < input["inventory_arrows"].size(); ++ i)
+  {
+    std::string id = input["inventory_arrows" ][i].string("sprites/", ".png");
+    Component::Image_handle arrow
+      = m_content.set<Component::Image> ("inventory_arrow_" + std::to_string(i) + ":image",
+                                         local_file_name(id),
+                                         config().interface_depth + 2);
+    arrow->set_relative_origin(0.5, 0.5);
+    Component::Image_handle arrow_background
+      = m_content.set<Component::Image> ("inventory_arrow_background_" + std::to_string(i) + ":image",
+                                         arrow->width(), arrow->height(),
+                                         color[0], color[1], color[2]);
+    arrow_background->set_relative_origin(0.5, 0.5);
+    arrow_background->z() = config().interface_depth + 1;
+  }
+
   for (std::size_t i = 0; i < input["default"].size(); ++ i)
   {
     const Core::IO::Node& idefault = input["default"][i];

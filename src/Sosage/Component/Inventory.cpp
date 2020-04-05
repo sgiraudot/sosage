@@ -1,6 +1,8 @@
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Config.h>
 
+#include <iostream>
+
 namespace Sosage::Component
 {
 
