@@ -36,7 +36,7 @@ public:
 private:
   void clear_timed();
   
-  void compute_path_from_target (Component::Position_handle target);
+  bool compute_path_from_target (Component::Position_handle target);
   void update_debug_info (Component::Debug_handle debug_info);
   void update_console (Component::Console_handle console);
 
@@ -46,6 +46,7 @@ private:
   void action_move (Component::Action::Step step);
   void action_pick_animation (Component::Action::Step step);
   void action_set_state (Component::Action::Step step);
+  void action_show (Component::Action::Step step);
 
   void create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog);
 };

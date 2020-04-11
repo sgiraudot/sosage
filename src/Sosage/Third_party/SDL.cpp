@@ -58,7 +58,7 @@ SDL::Font SDL::load_font (const std::string& file_name, int size)
   check (out != nullptr, "Cannot load font " + file_name);
   TTF_Font* out2 = TTF_OpenFont (file_name.c_str(), size);
   check (out2 != nullptr, "Cannot load font " + file_name);
-  TTF_SetFontOutline(out2, config().text_outline);
+  TTF_SetFontOutline(out2, Sosage::text_outline);
   
   return std::make_pair(out, out2);
 }
@@ -114,7 +114,7 @@ SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& 
     = TTF_RenderUTF8_Blended (font.second, text.c_str(), black());
   check (back != nullptr, "Cannot create text \"" + text + "\"");
   
-  SDL_Rect rect = {config().text_outline, config().text_outline, surf->w, surf->h};
+  SDL_Rect rect = {Sosage::text_outline, Sosage::text_outline, surf->w, surf->h};
   SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_BLEND); 
   SDL_BlitSurface(surf, NULL, back, &rect);
 
@@ -286,8 +286,8 @@ SDL::~SDL ()
 
 void SDL::update_view()
 {
-  int window_width = config().world_width + config().interface_width;
-  int window_height = config().world_height + config().interface_height;
+  int window_width = Sosage::world_width + config().interface_width;
+  int window_height = Sosage::world_height + config().interface_height;
 
   SDL_RenderSetLogicalSize(m_renderer, window_width, window_height);
 }

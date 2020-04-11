@@ -137,7 +137,7 @@ void Animation::compute_movement_from_path (Component::Path_handle path)
 
   Point pos = pbody->value();
 
-  double to_walk = config().character_speed * ground_map->z_at_point (pos) / config().world_depth;
+  double to_walk = Sosage::character_speed * ground_map->z_at_point (pos) / Sosage::world_depth;
       
   Vector direction (pos, (*path)[path->current()]);
   direction.normalize();

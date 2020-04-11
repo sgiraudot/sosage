@@ -16,6 +16,7 @@ private:
   Point m_origin;
   int m_z;
   bool m_on;
+  bool m_box_collision;
   
 public:
 
@@ -31,6 +32,8 @@ public:
   Point& origin() { return m_origin; }
   const bool& on() const { return m_on; }
   bool& on() { return m_on; }
+  const bool& box_collision() const { return m_box_collision; }
+  bool& box_collision() { return m_box_collision; }
   virtual int xmin() const { return 0; }
   virtual int xmax() const { return Core::Graphic::width(m_core); }
   virtual int ymin() const { return 0; }

@@ -76,6 +76,10 @@ public:
   {
     return Point (a * b.m_x, a * b.m_y, WORLD);
   }
+  friend bool operator== (const Point& a, const Point& b)
+  {
+    return ((a.m_x == b.m_x) && (a.m_y == b.m_y));
+  }
 };
 
 class Vector : public Point

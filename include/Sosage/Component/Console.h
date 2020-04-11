@@ -6,7 +6,7 @@
 
 #include <sstream>
 
-//#define SOSAGE_USE_STDCERR
+#define SOSAGE_USE_STDCERR
 #if defined(SOSAGE_USE_STDCERR)
 #  define DBG_CERR std::cerr
 #else

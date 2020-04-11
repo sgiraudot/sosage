@@ -24,10 +24,14 @@ bool SDL_events::next_event (SDL_events::Event& ev)
 
 bool SDL_events::is_exit (const Event& ev)
 {
+#ifdef SOSAGE_ANDROID
+  return (ev.type == SDL_KEYUP && (ev.key.keysym.sym == SDLK_AC_BACK));
+#else
   // Quit on: interface X-cross / Escape key / Q key
   return (ev.type == SDL_QUIT ||
           (ev.type == SDL_KEYUP && (ev.key.keysym.sym == SDLK_ESCAPE
                                     || ev.key.keysym.sym == SDLK_q)));
+#endif
 }
 
 bool SDL_events::is_pause (const Event& ev)

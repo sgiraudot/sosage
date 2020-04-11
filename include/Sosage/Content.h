@@ -22,7 +22,7 @@ public:
   std::size_t size() const { return m_data.size(); }
   Component::Handle_set::const_iterator begin() const { return m_data.begin(); }
   Component::Handle_set::const_iterator end() const { return m_data.end(); }
-  void remove (const std::string& key);
+  void remove (const std::string& key, bool optional = false);
 
   template <typename T>
   void set (const std::shared_ptr<T>& t)

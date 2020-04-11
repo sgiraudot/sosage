@@ -31,9 +31,9 @@ class Clock
 public:
 
   Clock()
-    : m_gui_refresh_time (1000. / double(config().gui_fps))
-    , m_animation_refresh_time (1000. / double(config().animation_fps))
-    , m_mean(0), m_active(0), m_nb(0), m_fps(config().gui_fps), m_cpu(0)
+    : m_gui_refresh_time (1000. / double(Sosage::gui_fps))
+    , m_animation_refresh_time (1000. / double(Sosage::animation_fps))
+    , m_mean(0), m_active(0), m_nb(0), m_fps(Sosage::gui_fps), m_cpu(0)
     , m_frame_id(0)
   {
     m_start = Time::now();
@@ -72,7 +72,7 @@ public:
   double cpu() const { return m_cpu; }
 
   std::size_t frame_id() const { return m_frame_id; }
-  double frame_time() const { return m_frame_id / double(config().animation_fps); }
+  double frame_time() const { return m_frame_id / double(Sosage::animation_fps); }
 
 };
 

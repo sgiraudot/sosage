@@ -3,8 +3,8 @@
 namespace Sosage::Component
 {
 
-State::State (const std::string& id)
-  : Base(id)
+State::State (const std::string& id, const std::string& value)
+  : Base(id), m_value (value)
 { }
 
 State::~State()
