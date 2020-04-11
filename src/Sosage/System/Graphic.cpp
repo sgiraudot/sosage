@@ -50,15 +50,14 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
                return (a->z() < b->z());
              });
 
-  bool locked = m_content.get<Component::Boolean>("game:locked")->value();
+  bool locked = (m_content.get<Component::State>("game:status")->value() == "locked");
   
   for (const auto& img : images)
   {
     if (img->on())
     {
       if (locked &&
-          (img->entity().find("verb_") == 0 ||
-           img->entity() == "chosen_verb"))
+           img->entity() == "cursor")
         continue;
       
       Component::Position_handle p = m_content.get<Component::Position>(img->entity() + ":position");

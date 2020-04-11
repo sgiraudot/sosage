@@ -25,7 +25,7 @@ IO::IO (Content& content)
 std::string IO::read_init (const std::string& folder_name)
 {
   m_folder_name = folder_name;
-  std::string file_name = folder_name + "resources/init.yaml";
+  std::string file_name = folder_name + "resources" + Sosage::folder_separator + "init.yaml";
 
   Core::IO input (file_name);
 
@@ -34,27 +34,27 @@ std::string IO::read_init (const std::string& folder_name)
          "Error: room version " + v + " incompatible with Sosage " + Sosage::version());
 
 #ifndef SOSAGE_ANDROID
-  std::string cursor = input["cursor"].string("sprites/", ".png");
+  std::string cursor = input["cursor"].string("sprites", "png");
   Component::Image_handle cursor_img
     = m_content.set<Component::Image> ("cursor:image", local_file_name(cursor),
-                                       config().interface_depth * 2);
+                                       Sosage::cursor_depth);
   cursor_img->set_relative_origin(0.5, 0.5);
 #endif
   
   m_content.set<Component::Position> ("cursor:position", Point(0,0));
   
-  std::string turnicon = input["turnicon"].string("sprites/", ".png");
+  std::string turnicon = input["turnicon"].string("sprites", "png");
   Component::Image_handle turnicon_img
     = m_content.set<Component::Image>("turnicon:image", local_file_name(turnicon), 0);
   turnicon_img->on() = false;
 
-  std::string click_sound = input["click_sound"].string("sounds/", ".wav");
+  std::string click_sound = input["click_sound"].string("sounds", "wav");
   m_content.set<Component::Sound>("click:sound", local_file_name(click_sound));
   
-  std::string debug_font =input["debug_font"].string("fonts/", ".ttf");
+  std::string debug_font = input["debug_font"].string("fonts", "ttf");
   m_content.set<Component::Font> ("debug:font", local_file_name(debug_font), 40);
 
-  std::string interface_font = input["interface_font"].string("fonts/", ".ttf");
+  std::string interface_font = input["interface_font"].string("fonts", "ttf");
   m_content.set<Component::Font> ("interface:font", local_file_name(interface_font), 80);
   
   std::string interface_color = input["interface_color"].string();
@@ -64,18 +64,18 @@ std::string IO::read_init (const std::string& folder_name)
 
   for (std::size_t i = 0; i < input["inventory_arrows"].size(); ++ i)
   {
-    std::string id = input["inventory_arrows" ][i].string("sprites/", ".png");
+    std::string id = input["inventory_arrows" ][i].string("sprites", "png");
     Component::Image_handle arrow
       = m_content.set<Component::Image> ("inventory_arrow_" + std::to_string(i) + ":image",
                                          local_file_name(id),
-                                         config().interface_depth + 2);
+                                         Sosage::inventory_front_depth);
     arrow->set_relative_origin(0.5, 0.5);
     Component::Image_handle arrow_background
       = m_content.set<Component::Image> ("inventory_arrow_background_" + std::to_string(i) + ":image",
                                          arrow->width(), arrow->height(),
                                          color[0], color[1], color[2]);
     arrow_background->set_relative_origin(0.5, 0.5);
-    arrow_background->z() = config().interface_depth + 1;
+    arrow_background->z() = Sosage::inventory_back_depth;
   }
 
   for (std::size_t i = 0; i < input["default"].size(); ++ i)
@@ -91,6 +91,7 @@ std::string IO::read_init (const std::string& folder_name)
       const Core::IO::Node& iaction = idefault["effect"][j];
       Component::Action_handle rnd_action = Component::make_handle<Component::Action>
         ("default:" + id + "_" + std::to_string(j));
+      rnd_action->add ({ "look" });
       rnd_action->add (iaction.string_array());
 
       action->add (1.0, rnd_action);
@@ -99,7 +100,7 @@ std::string IO::read_init (const std::string& folder_name)
   }
 
     
-  return input["load_room"].string("resources/", ".yaml");
+  return input["load_room"].string("resources", "yaml");
 }
 
 void IO::read_character (const std::string& file_name, int x, int y)
@@ -108,17 +109,17 @@ void IO::read_character (const std::string& file_name, int x, int y)
 
   std::string name = input["name"].string();
 
-  std::string mouth = input["mouth"]["skin"].string("sprites/", ".png");
+  std::string mouth = input["mouth"]["skin"].string("sprites", "png");
   int mdx_right = input["mouth"]["dx_right"].integer();
   int mdx_left = input["mouth"]["dx_left"].integer();
   int mdy = input["mouth"]["dy"].integer();
   
-  std::string head = input["head"]["skin"].string("sprites/", ".png");
+  std::string head = input["head"]["skin"].string("sprites", "png");
   int hdx_right = input["head"]["dx_right"].integer();
   int hdx_left = input["head"]["dx_left"].integer();
   int hdy = input["head"]["dy"].integer();
   
-  std::string body = input["body"]["skin"].string("sprites/", ".png");
+  std::string body = input["body"]["skin"].string("sprites", "png");
   
   Component::Animation_handle abody
     = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
@@ -176,20 +177,23 @@ std::string IO::read_room (const std::string& file_name)
   Core::IO input (local_file_name(file_name));
 
   std::string name = input["name"].string();
-  std::string music = input["music"].string("musics/", ".ogg");
+  std::string music = input["music"].string("musics", "ogg");
   m_content.set<Component::Music>("game:music", local_file_name(music));
   
-  std::string background = input["background"].string("backgrounds/", ".png");
-  std::string ground_map = input["ground_map"].string("backgrounds/", ".png");
+  std::string background = input["background"].string("backgrounds", "png");
+  std::string ground_map = input["ground_map"].string("backgrounds", "png");
   int front_z = input["front_z"].integer();
   int back_z = input["back_z"].integer();
+
+  Component::Image_handle background_img
+    = m_content.set<Component::Image>("background:image", local_file_name(background), 0);
+  background_img->box_collision() = true;
   
-  m_content.set<Component::Image>("background:image", local_file_name(background), 0);
   m_content.set<Component::Position>("background:position", Point(0, 0));
   m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map),
                                        front_z, back_z);
 
-  std::string character = input["character"].string("resources/", ".yaml");
+  std::string character = input["character"].string("resources", "yaml");
   int x = input["coordinates"][0].integer();
   int y = input["coordinates"][1].integer();
   read_character (character, x, y);
@@ -208,7 +212,7 @@ std::string IO::read_room (const std::string& file_name)
       int x = iscenery["coordinates"][0].integer();
       int y = iscenery["coordinates"][1].integer();
       int z = iscenery["coordinates"][2].integer();
-      std::string skin = iscenery["skin"].string("sprites/", ".png");
+      std::string skin = iscenery["skin"].string("sprites", "png");
       
       Component::Position_handle pos
         = m_content.set<Component::Position>(id + ":position", Point(x,y));
@@ -232,6 +236,7 @@ std::string IO::read_room (const std::string& file_name)
       int z = iobject["coordinates"][2].integer();
       int vx = iobject["view"][0].integer();
       int vy = iobject["view"][1].integer();
+      bool box_collision = iobject["box_collision"].boolean();
       
       m_content.set<Component::Text>(id + ":name", name);
       Component::State_handle state_handle
@@ -263,10 +268,11 @@ std::string IO::read_room (const std::string& file_name)
           conditional_handle->add(state, nullptr);
         else
         {
-          std::string skin = istate["skin"].string("sprites/", ".png");
+          std::string skin = istate["skin"].string("sprites", "png");
           Component::Image_handle img
             = Component::make_handle<Component::Image>(id + ":image", local_file_name(skin), 0);
           img->set_relative_origin(0.5, 1.0);
+          img->box_collision() = box_collision;
 
           img->z() = z;
           debug("Object " + id + ":" + state + " at position " + std::to_string(img->z()));
@@ -281,7 +287,7 @@ std::string IO::read_room (const std::string& file_name)
         Component::Image_handle img
           = m_content.get<Component::Image>(id + ":conditional_image");
         img->set_relative_origin(0.5, 0.5);
-        img->z() = config().interface_depth + 1;
+        img->z() = Sosage::inventory_back_depth;
       }
     }
   
@@ -292,6 +298,12 @@ std::string IO::read_room (const std::string& file_name)
 
       std::string id = iaction["id"].string();
       std::string target = iaction["target"].string();
+
+      if (iaction.has("source"))
+      {
+        id = id + "_" + iaction["source"].string();
+        std::cerr << target << ":" << id << std::endl;
+      }
 
       Component::Action_handle action;
               
@@ -320,6 +332,25 @@ std::string IO::read_room (const std::string& file_name)
         action->add (iaction["effect"][j].string_array());
     }
 
+  if (input.has("windows"))
+    for (std::size_t i = 0; i < input["windows"].size(); ++ i)
+    {
+      const Core::IO::Node& iwindow = input["windows"][i];
+
+      std::string id = iwindow["id"].string();
+      std::string skin = iwindow["skin"].string("sprites", "png");
+      
+      Component::Image_handle img
+        = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
+      img->set_relative_origin(0.5, 0.5);
+      img->z() = Sosage::inventory_front_depth;
+      img->on() = false;
+      
+      m_content.set<Component::Position>(id + ":position",
+                                         Point(Sosage::world_width / 2,
+                                               Sosage::world_height / 2));
+    }
+  
   t.stop();
   return std::string();
 }

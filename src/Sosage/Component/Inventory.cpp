@@ -28,7 +28,7 @@ void Inventory::remove (const std::string& entity)
 
 void Inventory::next()
 {
-  if (m_position < m_data.size() - config().displayed_inventory_size)
+  if (m_position < m_data.size() - Sosage::displayed_inventory_size)
     ++ m_position;
 }
 

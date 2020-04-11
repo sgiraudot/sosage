@@ -3,8 +3,10 @@
 
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
+#include <Sosage/Component/Text.h>
 #include <Sosage/Content.h>
 
+#include <string>
 #include <vector>
 
 namespace Sosage::System
@@ -43,6 +45,12 @@ private:
 
   void vertical_layout();
   void horizontal_layout();
+
+  void window_clicked();
+  void verb_clicked();
+  void arrow_clicked();
+  void default_action_clicked();
+  void action_clicked(const std::string& verb);
 
   void update_pause_screen();
   

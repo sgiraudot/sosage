@@ -12,7 +12,7 @@ class State : public Base
   
 public:
 
-  State (const std::string& id);
+  State (const std::string& id, const std::string& value = std::string());
   virtual ~State();
   virtual std::string str() const;
   const std::string& value() const { return m_value; }

@@ -53,7 +53,7 @@ void Input::run()
     }
 
     // If paused, ignore mouse events
-    if (m_content.get<Component::Boolean>("game:locked")->value())
+    if (m_content.get<Component::State>("game:status")->value() == "locked")
       continue;
   
     if (m_core.is_mouse_motion(ev))

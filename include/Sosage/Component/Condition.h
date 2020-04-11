@@ -2,6 +2,7 @@
 #define SOSAGE_COMPONENT_CONDITION_H
 
 #include <Sosage/Component/Handle.h>
+#include <Sosage/Component/State.h>
 
 namespace Sosage::Component
 {
@@ -31,14 +32,29 @@ public:
 
 typedef std::shared_ptr<Boolean> Boolean_handle;
 
+class State_boolean : public Condition
+{
+  State_handle m_state;
+  std::string m_value;
+  
+public:
+
+  State_boolean (const std::string& id, State_handle state, const std::string& value)
+    : Condition(id), m_state (state), m_value(value) { }
+
+  virtual bool value() const { return (m_state->value() == m_value); }
+};
+
+typedef std::shared_ptr<State_boolean> State_boolean_handle;
+
 class And : public Condition
 {
-  std::pair<Boolean_handle, Boolean_handle> m_values;
+  std::pair<Condition_handle, Condition_handle> m_values;
   
 public:
 
   And (const std::string& id,
-       Boolean_handle first, Boolean_handle second)
+       Condition_handle first, Condition_handle second)
     : Condition(id), m_values(first, second) { }
   virtual bool value() const { return (m_values.first->value() && m_values.second->value()); }
 };
@@ -47,17 +63,17 @@ typedef std::shared_ptr<And> And_handle;
 
 class Or : public Condition
 {
-  std::pair<Boolean_handle, Boolean_handle> m_values;
+  std::pair<Condition_handle, Condition_handle> m_values;
   
 public:
 
   Or (const std::string& id,
-      Boolean_handle first, Boolean_handle second)
+      Condition_handle first, Condition_handle second)
     : Condition(id), m_values(first, second) { }
   virtual bool value() const { return (m_values.first->value() || m_values.second->value()); }
 };
 
-typedef std::shared_ptr<And> And_handle;
+typedef std::shared_ptr<Or> Or_handle;
 
 
 } // namespace Sosage::Component

@@ -54,14 +54,24 @@ public:
 
     std::size_t size() const { return vec.size(); }
 
-    std::string string (const std::string& prefix = "", const std::string& suffix = "") const
+    std::string string () const
     {
-      return prefix + value + suffix;
+      return value;
+    }
+    
+    std::string string (const std::string& folder, const std::string& extension) const
+    {
+      return folder + Sosage::folder_separator + value + '.' + extension;
     }
 
     int integer () const
     {
       return std::atoi(value.c_str());
+    }
+
+    bool boolean() const
+    {
+      return (value == "true");
     }
 
     std::vector<std::string> string_array() const

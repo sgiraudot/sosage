@@ -17,8 +17,9 @@
  - [x] Action set_state
  - [x] Pause
  - [x] Interface responsive
- - [ ] Inventaire
- - [ ] Son
+ - [x] Inventaire
+ - [x] Son
+ - [ ] Menus
  - [ ] Sauvegarde / chargement
  - [ ] Changement de pièce
  - [ ] Scrolling horizontal
@@ -34,17 +35,23 @@
  - SDL2_Mixer
  - libyaml
 
-## Installation (GNU/Linux)
+## Compilation (GNU/Linux)
 
-`# apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev libyaml-dev
+1. `# apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev libyaml-dev`
+2. `$ mkdir build && cd build`
+3. `$ cmake .. -DCMAKE_BUILD_TYPE=Release`
+4. `$ make`
 
-`$ mkdir build && cd build`
+## Compilation (Android)
 
-`$ cmake .. -DCMAKE_BUILD_TYPE=Release`
+1. Télécharger SDK+NDK Android
+2. `$ cd android`
+3. `$ ln -s [sdl_source_path] app/jni/SDL/`
+4. `$ ln -s [sdl_image_source_path] app/jni/SDL_image/`
+5. `$ ln -s [sdl_mixer_source_path] app/jni/SDL_mixer/`
+6. `$ ln -s [sdl_ttf_source_path] app/jni/SDL_ttf/`
+7. `$ ln -s [libyaml_source_path] app/jni/yaml/libyaml`
+8. `$ ./gradlew assemble`
 
-`$ make`
-
-## Installation (Android)
-
-## Installation (Navigateur)
+## Compilation (Navigateur)
 
