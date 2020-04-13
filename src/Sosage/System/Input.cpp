@@ -25,8 +25,7 @@ void Input::run()
     if (m_core.is_pause(ev))
       m_content.get<Component::Boolean>("game:paused")->toggle();
 
-    Component::Boolean_handle paused
-      = m_content.request<Component::Boolean>("game:paused");
+    auto paused = m_content.request<Component::Boolean>("game:paused");
 
     if (paused && paused->value())
     {

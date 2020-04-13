@@ -36,16 +36,15 @@ std::string IO::read_init (const std::string& folder_name)
 
 #ifndef SOSAGE_ANDROID
   std::string cursor = input["cursor"].string("sprites", "png");
-  Component::Image_handle cursor_img
-    = m_content.set<Component::Image> ("cursor:image", local_file_name(cursor),
-                                       Sosage::cursor_depth);
+  auto cursor_img = m_content.set<Component::Image> ("cursor:image", local_file_name(cursor),
+                                                     Sosage::cursor_depth);
   cursor_img->set_relative_origin(0.5, 0.5);
 #endif
   
   m_content.set<Component::Position> ("cursor:position", Point(0,0));
   
   std::string turnicon = input["turnicon"].string("sprites", "png");
-  Component::Image_handle turnicon_img
+  auto turnicon_img
     = m_content.set<Component::Image>("turnicon:image", local_file_name(turnicon), 0);
   turnicon_img->on() = false;
 
@@ -66,13 +65,14 @@ std::string IO::read_init (const std::string& folder_name)
   for (std::size_t i = 0; i < input["inventory_arrows"].size(); ++ i)
   {
     std::string id = input["inventory_arrows" ][i].string("sprites", "png");
-    Component::Image_handle arrow
+    auto arrow
       = m_content.set<Component::Image> ("inventory_arrow_" + std::to_string(i) + ":image",
                                          local_file_name(id),
                                          Sosage::inventory_front_depth);
     arrow->set_relative_origin(0.5, 0.5);
-    Component::Image_handle arrow_background
-      = m_content.set<Component::Image> ("inventory_arrow_background_" + std::to_string(i) + ":image",
+    auto arrow_background
+      = m_content.set<Component::Image> ("inventory_arrow_background_" + std::to_string(i)
+                                         + ":image",
                                          arrow->width(), arrow->height(),
                                          color[0], color[1], color[2]);
     arrow_background->set_relative_origin(0.5, 0.5);
@@ -84,13 +84,12 @@ std::string IO::read_init (const std::string& folder_name)
     const Core::IO::Node& idefault = input["default"][i];
     std::string id = idefault["action"].string();
 
-    Component::Random_conditional_handle action
-      = m_content.set<Component::Random_conditional>("default:" + id);
+    auto action = m_content.set<Component::Random_conditional>("default:" + id);
 
     for (std::size_t j = 0; j < idefault["effect"].size(); ++ j)
     {
       const Core::IO::Node& iaction = idefault["effect"][j];
-      Component::Action_handle rnd_action = Component::make_handle<Component::Action>
+      auto rnd_action = Component::make_handle<Component::Action>
         ("default:" + id + "_" + std::to_string(j));
       rnd_action->add ({ "look" });
       rnd_action->add (iaction.string_array());
@@ -122,23 +121,21 @@ void IO::read_character (const std::string& file_name, int x, int y)
   
   std::string body = input["body"]["skin"].string("sprites", "png");
   
-  Component::Animation_handle abody
-    = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
+  auto abody = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
                                           0, 8, 6);
   abody->set_relative_origin(0.5, 0.95);
   
-  Component::Animation_handle ahead
+  auto ahead
     = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
                                           0, 7, 2);
   ahead->set_relative_origin(0.5, 1.0);
   
-  Component::Animation_handle amouth
+  auto amouth
     = m_content.set<Component::Animation>("character_mouth:image", local_file_name(mouth),
                                           0, 11, 2);
   amouth->set_relative_origin(0.5, 1.0);
   
-  Component::Position_handle pbody
-    = m_content.set<Component::Position>("character_body:position", Point(x, y));
+  auto pbody = m_content.set<Component::Position>("character_body:position", Point(x, y));
 
   m_content.set<Component::Position>("character_head:gap_right", Point(hdx_right,hdy));
   m_content.set<Component::Position>("character_head:gap_left", Point(hdx_left,hdy));
@@ -146,15 +143,14 @@ void IO::read_character (const std::string& file_name, int x, int y)
   m_content.set<Component::Position>("character_mouth:gap_right", Point(mdx_right,mdy));
   m_content.set<Component::Position>("character_mouth:gap_left", Point(mdx_left,mdy));
   
-  Component::Position_handle phead
+  auto phead
     = m_content.set<Component::Position>("character_head:position", Point(x - hdx_right, y - hdy));
 
-  Component::Position_handle pmouth
+  auto pmouth
     = m_content.set<Component::Position>("character_mouth:position", Point(x - hdx_right - mdx_right,
                                                                            y - hdy - mdy));
 
-  Component::Ground_map_handle ground_map
-    = m_content.get<Component::Ground_map>("background:ground_map");
+  auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
   
   Point pos_body = pbody->value();
 
@@ -186,7 +182,7 @@ std::string IO::read_room (const std::string& file_name)
   int front_z = input["front_z"].integer();
   int back_z = input["back_z"].integer();
 
-  Component::Image_handle background_img
+  auto background_img
     = m_content.set<Component::Image>("background:image", local_file_name(background), 0);
   background_img->box_collision() = true;
   
@@ -215,10 +211,8 @@ std::string IO::read_room (const std::string& file_name)
       int z = iscenery["coordinates"][2].integer();
       std::string skin = iscenery["skin"].string("sprites", "png");
       
-      Component::Position_handle pos
-        = m_content.set<Component::Position>(id + ":position", Point(x,y));
-      Component::Image_handle img
-        = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
+      auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y));
+      auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
       img->set_relative_origin(0.5, 1.0);
       img->z() = z;
       debug("Scenery " + id + " at position " + std::to_string(img->z()));
@@ -240,10 +234,8 @@ std::string IO::read_room (const std::string& file_name)
       bool box_collision = iobject["box_collision"].boolean();
       
       m_content.set<Component::Text>(id + ":name", name);
-      Component::State_handle state_handle
-        = m_content.set<Component::State>(id + ":state");
-      Component::Position_handle pos
-        = m_content.set<Component::Position>(id + ":position", Point(x,y));
+      auto state_handle = m_content.set<Component::State>(id + ":state");
+      auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y));
       m_content.set<Component::Position>(id + ":view", Point(vx,vy));
 
       Component::State_conditional_handle conditional_handle;
@@ -270,7 +262,7 @@ std::string IO::read_room (const std::string& file_name)
         else
         {
           std::string skin = istate["skin"].string("sprites", "png");
-          Component::Image_handle img
+          auto img
             = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin), 0);
           img->set_relative_origin(0.5, 1.0);
           img->box_collision() = box_collision;
@@ -285,7 +277,7 @@ std::string IO::read_room (const std::string& file_name)
       if (state_handle->value() == "inventory")
       {
         m_content.get<Component::Inventory>("game:inventory")->add(id);
-        Component::Image_handle img
+        auto img
           = m_content.get<Component::Image>(id + ":image");
         img->set_relative_origin(0.5, 0.5);
         img->z() = Sosage::inventory_back_depth;
@@ -311,12 +303,12 @@ std::string IO::read_room (const std::string& file_name)
       if (iaction.has("state"))
       {
         std::string state = iaction["state"].string();
-        Component::State_conditional_handle conditional_handle
+        auto conditional_handle
           = m_content.request<Component::State_conditional>(target + ":" + id);
 
         if (!conditional_handle)
         {
-          Component::State_handle state_handle
+          auto state_handle
             = m_content.get<Component::State>(target + ":state");
           conditional_handle
             = m_content.set<Component::State_conditional>(target + ":" + id, state_handle);
@@ -341,8 +333,7 @@ std::string IO::read_room (const std::string& file_name)
       std::string id = iwindow["id"].string();
       std::string skin = iwindow["skin"].string("sprites", "png");
       
-      Component::Image_handle img
-        = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
+      auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
       img->set_relative_origin(0.5, 0.5);
       img->z() = Sosage::inventory_front_depth;
       img->on() = false;
@@ -362,11 +353,9 @@ std::string IO::read_room (const std::string& file_name)
       std::string success_sound = icode["success_sound"].string("sounds", "wav");
       std::string failure_sound = icode["failure_sound"].string("sounds", "wav");
 
-      Component::Code_handle code
-        = m_content.set<Component::Code>(id + ":code");
+      auto code = m_content.set<Component::Code>(id + ":code");
       
-      Component::State_handle state_handle
-        = m_content.set<Component::State>(id + ":state");
+      auto state_handle = m_content.set<Component::State>(id + ":state");
       Component::State_conditional_handle conditional_handle_off;
       Component::State_conditional_handle conditional_handle_on;
 
@@ -394,7 +383,7 @@ std::string IO::read_room (const std::string& file_name)
         }
 
         std::string skin_off = istate["skin"][0].string("sprites", "png");
-        Component::Image_handle img_off
+        auto img_off
           = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin_off), 0);
         img_off->set_relative_origin(0.5, 0.5);
         img_off->z() = Sosage::inventory_back_depth;
@@ -405,7 +394,7 @@ std::string IO::read_room (const std::string& file_name)
                                                  Sosage::world_height / 2));
 
         std::string skin_on = istate["skin"][0].string("sprites", "png");
-        Component::Image_handle img_on
+        auto img_on
           = Component::make_handle<Component::Image>(id + "_button:conditional_image", local_file_name(skin_off), 0);
         img_on->set_relative_origin(0.5, 0.5);
         img_on->z() = Sosage::inventory_front_depth;
@@ -436,8 +425,7 @@ std::string IO::read_room (const std::string& file_name)
       for (std::size_t j = 0; j < icode["answer"].size(); ++ j)
         code->add_answer_item (icode["answer"][j].string());
       
-      Component::Action_handle action
-        = m_content.set<Component::Action> (id + ":action");
+      auto action = m_content.set<Component::Action> (id + ":action");
       for (std::size_t j = 0; j < icode["on_success"].size(); ++ j)
         action->add (icode["on_success"][j].string_array());
     }
