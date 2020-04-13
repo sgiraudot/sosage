@@ -15,9 +15,9 @@ Sound::Sound (Content& content)
 
 void Sound::run()
 {
-  Component::Music_handle music = m_content.request<Component::Music>("game:music");
+  auto music = m_content.request<Component::Music>("game:music");
 
-  Component::Event_handle start = m_content.request<Component::Event>("music:start");
+  auto start = m_content.request<Component::Event>("music:start");
   if (start)
   {
     m_core.start_music (music->core());
@@ -38,17 +38,17 @@ void Sound::run()
   }
 
   
-  if (Component::Event_handle clicked = m_content.request<Component::Event>("game:verb_clicked"))
+  if (auto clicked = m_content.request<Component::Event>("game:verb_clicked"))
   {
     m_core.play_sound (m_content.get<Component::Sound>("click:sound")->core());
     m_content.remove ("game:verb_clicked");
   }
   
-  if (Component::Event_handle button = m_content.request<Component::Event>("code:button_clicked"))
+  if (auto button = m_content.request<Component::Event>("code:button_clicked"))
     m_content.remove ("code:button_clicked");
-  if (Component::Event_handle failure = m_content.request<Component::Event>("code:failure"))
+  if (auto failure = m_content.request<Component::Event>("code:failure"))
     m_content.remove ("code:failure");
-  if (Component::Event_handle success = m_content.request<Component::Event>("code:success"))
+  if (auto success = m_content.request<Component::Event>("code:success"))
   {
 // m_content.remove ("code:success");
   }

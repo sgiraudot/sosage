@@ -35,10 +35,8 @@ void Logic::run (const double& current_time)
   for (const Timed_handle& th : m_timed)
     if (th.first == 0) // special case for Path
     {
-      Component::Path_handle saved_path
-        = Component::cast<Component::Path>(th.second);
-      Component::Path_handle current_path
-        = m_content.request<Component::Path>("character:path");
+      auto saved_path = Component::cast<Component::Path>(th.second);
+      auto current_path = m_content.request<Component::Path>("character:path");
       if (saved_path == current_path)
         new_timed_handle.push_back(th);
     }
@@ -53,13 +51,12 @@ void Logic::run (const double& current_time)
       new_timed_handle.push_back(th);
   m_timed.swap(new_timed_handle);
   
-  Component::Image_handle collision = m_content.request<Component::Image> ("cursor:target");
-  Component::Event_handle clicked
-    = m_content.request<Component::Event>("cursor:clicked");
+  auto collision = m_content.request<Component::Image> ("cursor:target");
+  auto clicked = m_content.request<Component::Event>("cursor:clicked");
   if (clicked && collision)
   {
     DBG_CERR << "Collision with " << collision->id() << std::endl;
-    if (Component::Text_handle name = m_content.request<Component::Text>(collision->entity() + ":name"))
+    if (auto name = m_content.request<Component::Text>(collision->entity() + ":name"))
     {
       if (m_content.get<Component::Text> ("chosen_verb:text")->entity() == "verb_goto")
         compute_path_from_target(m_content.get<Component::Position>(collision->entity() + ":view"));
@@ -77,7 +74,7 @@ void Logic::run (const double& current_time)
     m_current_action = nullptr;
   }
 
-  if (Component::Event_handle code_success = m_content.request<Component::Event>("code:success"))
+  if (auto code_success = m_content.request<Component::Event>("code:success"))
   {
     m_current_action = m_content.get<Component::Action>
       (m_content.get<Component::Code>("game:code")->entity() + ":action");
@@ -85,8 +82,7 @@ void Logic::run (const double& current_time)
     m_content.remove ("code:success");
   }
    
-  Component::Action_handle action
-    = m_content.request<Component::Action>("character:action");
+  auto action = m_content.request<Component::Action>("character:action");
   if (action && action != m_current_action)
   {
     m_current_action = action;
@@ -168,11 +164,9 @@ void Logic::clear_timed()
 
 bool Logic::compute_path_from_target (Component::Position_handle target)
 {
-  Component::Ground_map_handle ground_map
-    = m_content.get<Component::Ground_map>("background:ground_map");
+  auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
 
-  Component::Position_handle position
-    = m_content.get<Component::Position>("character_body:position");
+  auto position = m_content.get<Component::Position>("character_body:position");
       
   Point origin = position->value();
 
@@ -191,18 +185,15 @@ void Logic::update_debug_info (Component::Debug_handle debug_info)
 {
   if (debug_info->value())
   {
-    Component::Font_handle debug_font
-      = m_content.get<Component::Font> ("debug:font");
-    Component::Image_handle dbg_img
-      = m_content.set<Component::Image> ("debug:image",
-                                         debug_font, "FF0000",
-                                         debug_info->debug_str());
-    Component::Position_handle dbg_pos
-      = m_content.set<Component::Position>("debug:position", Point(0,0));
+    auto debug_font = m_content.get<Component::Font> ("debug:font");
+    auto dbg_img = m_content.set<Component::Image> ("debug:image",
+                                                    debug_font, "FF0000",
+                                                    debug_info->debug_str());
+    auto dbg_pos = m_content.set<Component::Position>("debug:position", Point(0,0));
   }
   else
   {
-    Component::Image_handle dbg_img = m_content.request<Component::Image> ("debug:image");
+    auto dbg_img = m_content.request<Component::Image> ("debug:image");
     if (dbg_img)
       dbg_img->on() = false;
     
@@ -214,18 +205,15 @@ void Logic::update_console (Component::Console_handle console)
 {
   if (console->value())
   {
-    Component::Font_handle debug_font
-      = m_content.get<Component::Font> ("debug:font");
-    Component::Image_handle console_img
-      = m_content.set<Component::Image> ("console:image",
-                                         debug_font, "FF0000",
-                                         console->console_str());
-    Component::Position_handle console_pos
-      = m_content.set<Component::Position>("console:position", Point(0,0));
+    auto debug_font = m_content.get<Component::Font> ("debug:font");
+    auto console_img = m_content.set<Component::Image> ("console:image",
+                                                        debug_font, "FF0000",
+                                                        console->console_str());
+    auto console_pos = m_content.set<Component::Position>("console:position", Point(0,0));
   }
   else
   {
-    Component::Image_handle console_img = m_content.request<Component::Image> ("console:image");
+    auto console_img = m_content.request<Component::Image> ("console:image");
     if (console_img)
       console_img->on() = false;
   }
@@ -245,17 +233,16 @@ void Logic::action_comment (Component::Action::Step step)
   int y = 100;
   int x = m_content.get<Component::Position>("character_body:position")->value().x();
 
-  for (Component::Image_handle img : dialog)
+  for (auto img : dialog)
     if (x + 0.75 * img->width() / 2 > int(0.95 * Sosage::world_width))
       x = int(0.95 * Sosage::world_width) - 0.75 * img->width() / 2;
     else if (x - 0.75 * img->width() / 2 < int(0.1 * Sosage::world_width))
       x = int(0.1 * Sosage::world_width) + 0.75 * img->width() / 2;
 
     
-  for (Component::Image_handle img : dialog)
+  for (auto img : dialog)
   {
-    Component::Position_handle pos
-      = m_content.set<Component::Position> (img->entity() + ":position", Point(x,y));
+    auto pos = m_content.set<Component::Position> (img->entity() + ":position", Point(x,y));
     y += img->height() * 1.1 * 0.75;
 
     m_timed.push_back (std::make_pair (m_current_time + std::max(1., nb_seconds), img));
@@ -272,8 +259,7 @@ void Logic::action_comment (Component::Action::Step step)
 
 void Logic::action_goto (const std::string& target)
 {
-  Component::Position_handle position
-    = m_content.request<Component::Position>(target + ":view");
+  auto position = m_content.request<Component::Position>(target + ":view");
   if (compute_path_from_target(position))
     m_timed.push_back (std::make_pair (0, m_content.get<Component::Path>("character:path")));
 }
@@ -315,8 +301,7 @@ void Logic::action_set_state (Component::Action::Step step)
   std::string target = step.get(1);
   std::string state = step.get(2);
 
-  Component::State_handle current_state
-    = m_content.get<Component::State>(target + ":state");
+  auto current_state = m_content.get<Component::State>(target + ":state");
 
   if (current_state->value() == "inventory")
     m_content.get<Component::Inventory>("game:inventory")->remove(target);
@@ -325,7 +310,7 @@ void Logic::action_set_state (Component::Action::Step step)
   if (state == "inventory")
   {
     m_content.get<Component::Inventory>("game:inventory")->add(target);
-    Component::Image_handle img
+    auto img
       = m_content.get<Component::Image>(target + ":image");
     img->set_relative_origin(0.5, 0.5);
     img->z() = Sosage::inventory_back_depth;
@@ -336,14 +321,12 @@ void Logic::action_show (Component::Action::Step step)
 {
   std::string target = step.get(1);
 
-  Component::Image_handle image
-    = m_content.get<Component::Image>(target + ":image");
+  auto image = m_content.get<Component::Image>(target + ":image");
   image->on() = true;
 
   m_content.set<Component::Variable>("game:window", image);
 
-  Component::Code_handle code
-    = m_content.request<Component::Code>(target + ":code");
+  auto code = m_content.request<Component::Code>(target + ":code");
   if (code)
   {
     m_content.get<Component::State>("game:status")->set ("code");
@@ -358,7 +341,7 @@ void Logic::create_dialog (const std::string& text, std::vector<Component::Image
   static const double scale = 0.75;
   static const int width_max = int(0.95 * Sosage::world_width);
   
-  Component::Image_handle img
+  auto img
     = m_content.set<Component::Image> ("comment:image",
                                        m_content.get<Component::Font> ("interface:font"),
                                        m_content.get<Component::Text> ("interface:color")->value(),
@@ -407,7 +390,7 @@ void Logic::create_dialog (const std::string& text, std::vector<Component::Image
 
     for (int i = 0; i < nb_imgs; ++ i)
     {
-      Component::Image_handle img
+      auto img
         = m_content.set<Component::Image> ("comment_" + std::to_string(i) + ":image",
                                            m_content.get<Component::Font> ("interface:font"),
                                            m_content.get<Component::Text> ("interface:color")->value(),

@@ -24,12 +24,11 @@ void Interface::run()
   if (m_content.request<Component::Event>("window:rescaled"))
     update_responsive();
 
-  Component::Position_handle cursor
-    = m_content.request<Component::Position>("cursor:position");
+  auto cursor = m_content.request<Component::Position>("cursor:position");
   if (cursor)
     detect_collision (cursor);
 
-  Component::Event_handle clicked
+  auto clicked
     = m_content.request<Component::Event>("cursor:clicked");
   if (clicked && m_collision)
   {
@@ -65,7 +64,7 @@ void Interface::run()
 
 void Interface::init()
 {
-  Component::Font_handle interface_font = m_content.get<Component::Font> ("interface:font");
+  auto interface_font = m_content.get<Component::Font> ("interface:font");
   std::string color_str = m_content.get<Component::Text> ("interface:color")->value();
 
   for (const auto& verb : { std::make_pair (std::string("open"), std::string("Ouvrir")),
@@ -78,7 +77,7 @@ void Interface::init()
         std::make_pair (std::string("move"), std::string("Déplacer")) })
   {
     m_content.set<Component::Text> ("verb_" + verb.first + ":text", verb.second);
-    Component::Image_handle verb_img
+    auto verb_img
       = m_content.set<Component::Image> ("verb_" + verb.first + ":image",
                                          interface_font, color_str, verb.second);
     m_content.set<Component::Position> ("verb_" + verb.first + ":position",
@@ -87,8 +86,7 @@ void Interface::init()
     verb_img->set_relative_origin(0.5, 0.5);
   }
 
-  Component::Text_handle
-    verb_goto = m_content.set<Component::Text> ("verb_goto:text", "Aller vers");
+  auto verb_goto = m_content.set<Component::Text> ("verb_goto:text", "Aller vers");
   m_content.set<Component::Variable>("chosen_verb:text", verb_goto);
 
   // Create pause screen
@@ -97,7 +95,7 @@ void Interface::init()
   // Create status variable
   m_content.set<Component::State>("game:status", "idle");
 
-  Component::Position_handle pause_screen_pos
+  auto pause_screen_pos
     = m_content.set<Component::Position>("pause_screen:position", Point(0, 0));
   m_content.set<Component::Variable>("window_overlay:position", pause_screen_pos);
 
@@ -258,7 +256,7 @@ void Interface::interface_portrait()
   m_content.set<Component::Position>("chosen_verb:position", Point(world_width / 2,
                                                                    world_height + m_action_height / 2));
 
-  Component::Image_handle turnicon
+  auto turnicon
     = m_content.get<Component::Image> ("turnicon:image");
 
   m_content.set<Component::Position>("turnicon:position",
@@ -272,11 +270,10 @@ void Interface::interface_portrait()
 
 void Interface::vertical_layout()
 {
-  Component::Font_handle interface_font = m_content.get<Component::Font> ("interface:font");
+  auto interface_font = m_content.get<Component::Font> ("interface:font");
   
   int top_width = 0;
-  Component::Image_handle interface_verbs
-    = m_content.get<Component::Image>("interface_verbs:image");
+  auto interface_verbs = m_content.get<Component::Image>("interface_verbs:image");
   int interface_width = interface_verbs->width();
   int interface_height = interface_verbs->height();
 
@@ -324,7 +321,7 @@ void Interface::vertical_layout()
 
   for (std::size_t i = 0; i < m_verbs.size(); ++ i)
   {
-    Component::Image_handle img = m_verbs[i];
+    auto img = m_verbs[i];
 
     int y = current_y + 0.5 * img->height() * min_scaling;
 
@@ -343,18 +340,17 @@ void Interface::vertical_layout()
   m_content.get<Component::Image> ("inventory_arrow_3:image")->on() = false;
   m_content.get<Component::Image> ("inventory_arrow_background_3:image")->on() = false;
 
-  Component::Position_handle inventory_position
+  auto inventory_position
     = m_content.get<Component::Position> ("interface_inventory:position");
-  Component::Inventory_handle inventory = m_content.get<Component::Inventory>("game:inventory");
+  auto inventory = m_content.get<Component::Inventory>("game:inventory");
   bool left_on = (inventory->position() > 0);
   bool right_on =  (inventory->size() - inventory->position() > Sosage::displayed_inventory_size);
   
-  Component::Image_handle arrow_img 
-    = m_content.get<Component::Image> ("inventory_arrow_0:image");
+  auto arrow_img = m_content.get<Component::Image> ("inventory_arrow_0:image");
   arrow_img->on() = left_on;
   arrow_img->set_scale (interface_width / double(arrow_img->width()));
   
-  Component::Image_handle arrow_background_img 
+  auto arrow_background_img 
     = m_content.get<Component::Image> ("inventory_arrow_background_0:image");
   arrow_background_img->on() = left_on;
   arrow_background_img->set_scale (interface_width / double(arrow_img->width()));
@@ -391,11 +387,10 @@ void Interface::vertical_layout()
 
 void Interface::horizontal_layout()
 {
-  Component::Font_handle interface_font = m_content.get<Component::Font> ("interface:font");
+  auto interface_font = m_content.get<Component::Font> ("interface:font");
   
   int top_width = 0;
-  Component::Image_handle interface_verbs
-    = m_content.get<Component::Image>("interface_verbs:image");
+  auto interface_verbs = m_content.get<Component::Image>("interface_verbs:image");
   int interface_width = interface_verbs->width();
   int interface_height = interface_verbs->height();
 
@@ -460,8 +455,8 @@ void Interface::horizontal_layout()
 
   for (std::size_t i = 0; i < m_verbs.size(); i += 2)
   {
-    Component::Image_handle top = m_verbs[i];
-    Component::Image_handle bottom = m_verbs[i+1];
+    auto top = m_verbs[i];
+    auto bottom = m_verbs[i+1];
 
     int xtop = current_xtop + 0.5 * top->width() * min_scaling;
     int xbottom = current_xbottom + 0.5 * bottom->width() * min_scaling;
@@ -486,18 +481,18 @@ void Interface::horizontal_layout()
   m_content.get<Component::Image> ("inventory_arrow_2:image")->on() = false;
   m_content.get<Component::Image> ("inventory_arrow_background_2:image")->on() = false;
 
-  Component::Position_handle inventory_position
+  auto inventory_position
     = m_content.get<Component::Position> ("interface_inventory:position");
-  Component::Inventory_handle inventory = m_content.get<Component::Inventory>("game:inventory");
+  auto inventory = m_content.get<Component::Inventory>("game:inventory");
   bool left_on = (inventory->position() > 0);
   bool right_on =  (inventory->size() - inventory->position() > Sosage::displayed_inventory_size);
   
-  Component::Image_handle arrow_img 
+  auto arrow_img 
     = m_content.get<Component::Image> ("inventory_arrow_1:image");
   arrow_img->on() = left_on;
   arrow_img->set_scale (interface_height / double(arrow_img->height()));
   
-  Component::Image_handle arrow_background_img 
+  auto arrow_background_img 
     = m_content.get<Component::Image> ("inventory_arrow_background_1:image");
   arrow_background_img->on() = left_on;
   arrow_background_img->set_scale (interface_height / double(arrow_img->height()));
@@ -534,7 +529,7 @@ void Interface::horizontal_layout()
 
 void Interface::window_clicked()
 {
-  Component::Image_handle window = m_content.get<Component::Image>("game:window");
+  auto window = m_content.get<Component::Image>("game:window");
   if (m_collision != window)
   {
     window->on() = false;
@@ -545,8 +540,8 @@ void Interface::window_clicked()
 
 void Interface::code_clicked (Component::Position_handle cursor)
 {
-  Component::Code_handle code = m_content.get<Component::Code>("game:code");
-  Component::Image_handle window = m_content.get<Component::Image>("game:window");
+  auto code = m_content.get<Component::Code>("game:code");
+  auto window = m_content.get<Component::Image>("game:window");
   if (m_collision != window)
   {
     window->on() = false;
@@ -555,7 +550,7 @@ void Interface::code_clicked (Component::Position_handle cursor)
   }
   else
   {
-    Component::Position_handle position
+    auto position
       = m_content.get<Component::Position>(window->entity() + ":position");
     
     Point p = cursor->value() - Vector(position->value()) + Vector (0.5  * window->width(),
@@ -608,11 +603,10 @@ void Interface::arrow_clicked()
 
 void Interface::default_action_clicked()
 {
-  Component::State_handle state
-    = m_content.request<Component::State>(m_collision->entity() + ":state");
+  auto state = m_content.request<Component::State>(m_collision->entity() + ":state");
   if (state && (state->value() == "inventory"))
   {
-    Component::Action_handle action
+    auto action
       = m_content.request<Component::Action> (m_collision->entity() + ":look");
     if (action)
       m_content.set<Component::Variable>("character:action", action);
@@ -631,7 +625,7 @@ void Interface::action_clicked(const std::string& verb)
   
   if (m_content.request<Component::Text>(m_collision->entity() + ":name"))
   {
-    Component::Action_handle action
+    auto action
       = m_content.request<Component::Action> (m_collision->entity() + ":" + verb);
     if (action)
     {
@@ -642,9 +636,9 @@ void Interface::action_clicked(const std::string& verb)
     {
       if (verb == "use")
       {
-        if (Component::Text_handle source = m_content.request<Component::Text>("action:source"))
+        if (auto source = m_content.request<Component::Text>("action:source"))
         {
-          Component::Action_handle action
+          auto action
             = m_content.request<Component::Action> (m_collision->entity() + ":use_"
                                                     + source->value());
           if (action)
@@ -655,7 +649,7 @@ void Interface::action_clicked(const std::string& verb)
         }
         else
         {
-          Component::State_handle state
+          auto state
             = m_content.request<Component::State>(m_collision->entity() + ":state");
           if (state && (state->value() == "inventory"))
           {
@@ -684,9 +678,9 @@ void Interface::action_clicked(const std::string& verb)
 
 void Interface::update_pause_screen()
 {
-  Component::Font_handle interface_font = m_content.get<Component::Font> ("interface:font");
+  auto interface_font = m_content.get<Component::Font> ("interface:font");
 
-  Component::Image_handle pause_screen_img
+  auto pause_screen_img
     = Component::make_handle<Component::Image>
     ("pause_screen:image",
      Sosage::world_width + config().interface_width,
@@ -695,19 +689,19 @@ void Interface::update_pause_screen()
   pause_screen_img->z() += 10;
       
   // Create pause screen
-  Component::Boolean_handle paused
+  auto paused
     = m_content.get<Component::Boolean>("game:paused");
   
-  Component::Conditional_handle pause_screen
+  auto pause_screen
     = m_content.set<Component::Conditional>("pause_screen:conditional", paused,
                                             pause_screen_img, Component::Handle());
 
-  Component::Image_handle pause_text_img
+  auto pause_text_img
     = Component::make_handle<Component::Image>("pause_text:image", interface_font, "FFFFFF", "PAUSE");
   pause_text_img->z() += 10;
   pause_text_img->set_relative_origin(0.5, 0.5);
 
-  Component::Image_handle window_overlay_img
+  auto window_overlay_img
     = m_content.set<Component::Image>("window_overlay:image",
                                       Sosage::world_width + config().interface_width,
                                       Sosage::world_height + config().interface_height,
@@ -715,7 +709,7 @@ void Interface::update_pause_screen()
   window_overlay_img->z() = Sosage::interface_depth;
   window_overlay_img->on() = false;
 
-  Component::Conditional_handle pause_text
+  auto pause_text
     = m_content.set<Component::Conditional>("pause_text:conditional", paused,
                                             pause_text_img, Component::Handle());
     
@@ -736,8 +730,7 @@ void Interface::detect_collision (Component::Position_handle cursor)
   m_collision = Component::Image_handle();
   
   for (const auto& e : m_content)
-    if (Component::Image_handle img
-        = Component::cast<Component::Image>(e))
+    if (auto img = Component::cast<Component::Image>(e))
     {
       if (!img->on() ||
           img->id().find("character") == 0 ||
@@ -746,7 +739,7 @@ void Interface::detect_collision (Component::Position_handle cursor)
           img->id().find("interface_") == 0)
         continue;
       
-      Component::Position_handle p = m_content.get<Component::Position>(img->entity() + ":position");
+      auto p = m_content.get<Component::Position>(img->entity() + ":position");
 
       Point screen_position = p->value() - img->core().scaling * Vector(img->origin());
       int xmin = screen_position.x();
@@ -785,17 +778,17 @@ void Interface::detect_collision (Component::Position_handle cursor)
 
 void Interface::update_action ()
 {
-  Component::Text_handle verb = m_content.get<Component::Text> ("chosen_verb:text");
+  auto verb = m_content.get<Component::Text> ("chosen_verb:text");
   std::string target_object = "";
   
   if (m_collision)
   {
     if (m_collision->entity().find("verb_") == 0)
       m_collision->set_scale(1.1 * m_verb_scale);
-    if (Component::Text_handle name = m_content.request<Component::Text>(m_collision->entity() + ":name"))
+    if (auto name = m_content.request<Component::Text>(m_collision->entity() + ":name"))
     {
       target_object = name->value();
-      Component::State_handle state = m_content.request<Component::State>(m_collision->entity() + ":state");
+      auto state = m_content.request<Component::State>(m_collision->entity() + ":state");
       if (state && state->value() == "inventory")
       {
         if (verb->entity() == "verb_goto")
@@ -808,15 +801,15 @@ void Interface::update_action ()
       || verb != m_content.get<Component::Text>("verb_goto:text"))
   {
     std::string text = verb->value() + " " + target_object;
-    Component::Text_handle source = m_content.request<Component::Text>("action:source");
+    auto source = m_content.request<Component::Text>("action:source");
     if (source)
     {
-      if (Component::Text_handle name
+      if (auto name
           = m_content.request<Component::Text>(source->value() + ":name"))
         text = verb->value() + " " + name->value() + " avec " + target_object;
     }
     
-    Component::Image_handle text_img
+    auto text_img
       = m_content.set<Component::Image>("chosen_verb:image",
                                         m_content.get<Component::Font>("interface:font"), "FFFFFF",
                                         text);
@@ -846,16 +839,16 @@ void Interface::update_inventory ()
     m_content.get<Component::Image> ("window_overlay:image")->on() = false;
   }
 
-  Component::Image_handle background = m_content.get<Component::Image>("interface_inventory:image");
+  auto background = m_content.get<Component::Image>("interface_inventory:image");
   
-  Component::Inventory_handle inventory = m_content.get<Component::Inventory>("game:inventory");
+  auto inventory = m_content.get<Component::Inventory>("game:inventory");
 
-  Component::Position_handle inv_pos = m_content.get<Component::Position>("interface_inventory:position");
+  auto inv_pos = m_content.get<Component::Position>("interface_inventory:position");
 
   std::size_t position = inventory->position();
   for (std::size_t i = 0; i < inventory->size(); ++ i)
   {
-    Component::Image_handle img = m_content.get<Component::Image>(inventory->get(i) + ":image");
+    auto img = m_content.get<Component::Image>(inventory->get(i) + ":image");
     double factor = 1.;
 
     if (img == m_collision)

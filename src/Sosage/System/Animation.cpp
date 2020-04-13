@@ -19,29 +19,18 @@ Animation::Animation (Content& content)
 
 void Animation::run()
 {
-  Component::Path_handle path
-    = m_content.request<Component::Path>("character:path");
+  auto path = m_content.request<Component::Path>("character:path");
   if (path)
     compute_movement_from_path(path);
   
-  Component::Position_handle lookat
-    = m_content.request<Component::Position>("character:lookat");
+  auto lookat = m_content.request<Component::Position>("character:lookat");
   if (lookat)
   {
-    Component::Animation_handle abody
-      = m_content.get<Component::Animation>("character_body:image");
-
-    Component::Animation_handle ahead
-      = m_content.get<Component::Animation>("character_head:image");
-
-    Component::Position_handle pbody
-      = m_content.get<Component::Position>("character_body:position");
-  
-    Component::Position_handle phead
-      = m_content.get<Component::Position>("character_head:position");
-
-    Component::Position_handle pmouth
-      = m_content.get<Component::Position>("character_mouth:position");
+    auto abody = m_content.get<Component::Animation>("character_body:image");
+    auto ahead = m_content.get<Component::Animation>("character_head:image");
+    auto pbody = m_content.get<Component::Position>("character_body:position");
+    auto phead = m_content.get<Component::Position>("character_head:position");
+    auto pmouth = m_content.get<Component::Position>("character_mouth:position");
 
     Vector direction (phead->value(), lookat->value());
     
@@ -104,8 +93,7 @@ void Animation::run()
   std::vector<Component::Animation_handle> animations;
 
   for (const auto& e : m_content)
-    if (Component::Animation_handle anim
-        = Component::cast<Component::Animation>(e))
+    if (auto anim = Component::cast<Component::Animation>(e))
       animations.push_back(anim);
 
   for (const auto& animation : animations)
@@ -114,26 +102,13 @@ void Animation::run()
 
 void Animation::compute_movement_from_path (Component::Path_handle path)
 {
-  Component::Animation_handle abody
-    = m_content.get<Component::Animation>("character_body:image");
-
-  Component::Animation_handle ahead
-    = m_content.get<Component::Animation>("character_head:image");
-
-  Component::Animation_handle amouth
-    = m_content.get<Component::Animation>("character_mouth:image");
-
-  Component::Position_handle pbody
-    = m_content.get<Component::Position>("character_body:position");
-  
-  Component::Position_handle phead
-    = m_content.get<Component::Position>("character_head:position");
-
-  Component::Position_handle pmouth
-    = m_content.get<Component::Position>("character_mouth:position");
-
-  Component::Ground_map_handle ground_map
-    = m_content.get<Component::Ground_map>("background:ground_map");
+  auto abody = m_content.get<Component::Animation>("character_body:image");
+  auto ahead = m_content.get<Component::Animation>("character_head:image");
+  auto amouth = m_content.get<Component::Animation>("character_mouth:image");
+  auto pbody = m_content.get<Component::Position>("character_body:position");
+  auto phead = m_content.get<Component::Position>("character_head:position");
+  auto pmouth = m_content.get<Component::Position>("character_mouth:position");
+  auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
 
   Point pos = pbody->value();
 

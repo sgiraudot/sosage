@@ -65,12 +65,10 @@ int Engine::run (const std::string& folder_name)
   std::string room_name = m_io.read_init (folder_name);
 
   // Create debug info
-  Component::Debug_handle debug_info
-    = m_content.set<Component::Debug>("game:debug", m_content, m_clock);
+  auto debug_info = m_content.set<Component::Debug>("game:debug", m_content, m_clock);
 
   // Create inventory
-  Component::Inventory_handle inventory
-    = m_content.set<Component::Inventory>("game:inventory");
+  auto inventory = m_content.set<Component::Inventory>("game:inventory");
 
   m_interface.init();
 

@@ -37,8 +37,7 @@ void Graphic::run()
 void Graphic::get_images (std::vector<Component::Image_handle>& images)
 {
   for (const auto& e : m_content)
-    if (Component::Image_handle img
-        = Component::cast<Component::Image>(e))
+    if (auto img = Component::cast<Component::Image>(e))
       images.push_back(img);
 }
 
@@ -60,7 +59,7 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
            img->entity() == "cursor")
         continue;
       
-      Component::Position_handle p = m_content.get<Component::Position>(img->entity() + ":position");
+      auto p = m_content.get<Component::Position>(img->entity() + ":position");
 
       int xmin = img->xmin();
       int ymin = img->ymin();
