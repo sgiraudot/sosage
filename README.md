@@ -10,7 +10,7 @@
  - [x] Action look
  - [x] Action goto
  - [x] Action look
- - [ ] Action show / fenêtres
+ - [x] Action show / fenêtres
  - [x] Action sync / lock / unlock
  - [x] Action comment
  - [x] Action move
@@ -46,11 +46,12 @@
 
 1. Télécharger SDK+NDK Android
 2. `$ cd android`
-3. `$ ln -s [sdl_source_path] app/jni/SDL/`
-4. `$ ln -s [sdl_image_source_path] app/jni/SDL_image/`
-5. `$ ln -s [sdl_mixer_source_path] app/jni/SDL_mixer/`
-6. `$ ln -s [sdl_ttf_source_path] app/jni/SDL_ttf/`
+3. `$ ln -s [sdl_source_path] app/jni/SDL`
+4. `$ ln -s [sdl_image_source_path] app/jni/SDL_image`
+5. `$ ln -s [sdl_mixer_source_path] app/jni/SDL_mixer`
+6. `$ ln -s [sdl_ttf_source_path] app/jni/SDL_ttf`
 7. `$ ln -s [libyaml_source_path] app/jni/yaml/libyaml`
+8. `$ ln -s ../superflu app/src/main/assets/`
 8. `$ ./gradlew assemble`
 
 ## Compilation (Navigateur)

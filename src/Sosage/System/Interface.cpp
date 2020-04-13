@@ -1,4 +1,5 @@
 #include <Sosage/Component/Action.h>
+#include <Sosage/Component/Code.h>
 #include <Sosage/Component/Console.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Inventory.h>
@@ -32,8 +33,11 @@ void Interface::run()
     = m_content.request<Component::Event>("cursor:clicked");
   if (clicked && m_collision)
   {
-    if (m_content.get<Component::State>("game:status")->value() == "window")
+    std::string status = m_content.get<Component::State>("game:status")->value();
+    if (status == "window")
       window_clicked();
+    else if (status == "code")
+      code_clicked(cursor);
     else
     {
       if (m_collision->entity().find("verb_") == 0)
@@ -539,6 +543,51 @@ void Interface::window_clicked()
   m_content.remove("cursor:clicked");
 }
 
+void Interface::code_clicked (Component::Position_handle cursor)
+{
+  Component::Code_handle code = m_content.get<Component::Code>("game:code");
+  Component::Image_handle window = m_content.get<Component::Image>("game:window");
+  if (m_collision != window)
+  {
+    window->on() = false;
+    code->reset();
+    m_content.get<Component::State>("game:status")->set ("idle");
+  }
+  else
+  {
+    Component::Position_handle position
+      = m_content.get<Component::Position>(window->entity() + ":position");
+    
+    Point p = cursor->value() - Vector(position->value()) + Vector (0.5  * window->width(),
+                                                                    0.5 * window->height());
+    if (code->click(p.x(), p.y()))
+    {
+      if (code->failure())
+      {
+        std::cerr << "Failure" << std::endl;
+        code->reset();
+        m_content.set<Component::Event>("code:failure");
+      }
+      else if (code->success())
+      {
+        std::cerr << "Success" << std::endl;
+        code->reset();
+        m_content.set<Component::Event>("code:success");
+        window->on() = false;
+        code->reset();
+        m_content.get<Component::State>("game:status")->set ("idle");
+      }
+      else
+      {
+        std::cerr << "Button" << std::endl;
+        m_content.set<Component::Event>("code:button_clicked");
+      }
+    }
+  }
+  
+  m_content.remove("cursor:clicked");
+}
+
 void Interface::verb_clicked()
 {
   m_content.get<Component::Variable> ("chosen_verb:text")
@@ -806,7 +855,7 @@ void Interface::update_inventory ()
   std::size_t position = inventory->position();
   for (std::size_t i = 0; i < inventory->size(); ++ i)
   {
-    Component::Image_handle img = m_content.get<Component::Image>(inventory->get(i) + ":conditional_image");
+    Component::Image_handle img = m_content.get<Component::Image>(inventory->get(i) + ":image");
     double factor = 1.;
 
     if (img == m_collision)
