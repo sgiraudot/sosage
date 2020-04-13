@@ -55,7 +55,7 @@ objects:
 
   - id: "clef_usb"
     name: "clef USB"
-    coordinates: [ 122, 423, 2 ]
+    coordinates: [ 122, 425, 2 ]
     view: [ 302, 711 ]
     box_collision: true
     states:
@@ -134,6 +134,15 @@ actions:
     effect:
       - [ look ]
       - [ comment, "Pas moyen de lui faire utiliser une gourde... Harpagon adore son plastique jetable !" ]
+
+  - id: "look"
+    target: "coffre_fort"
+    effect:
+      - [ goto ]
+      - [ sync ]
+      - [ look ]
+      - [ sync ]
+      - [ show, "code_coffre_fort" ]
 
   - id: "look"
     target: "documents"
@@ -241,6 +250,16 @@ actions:
       - [ pick_animation, 0.2 ]
       - [ sync ]
       - [ set_state, "bouteille", "inventory" ]
+
+  - id: "take"
+    target: "clef_usb"
+    state: "defaut"
+    effect:
+      - [ goto ]
+      - [ sync ]
+      - [ pick_animation, 0.2 ]
+      - [ sync ]
+      - [ set_state, "clef_usb", "inventory" ]
 
   - id: "take"
     target: "tisonnier"
@@ -354,26 +373,27 @@ codes:
 
   - id: "code_coffre_fort"
     states:
-      - { id: "defaut", skin: [ "code_coffre_fort_off", "code_coffre_fort_on" ] }
-      - { id: "cendre", skin: [ "code_coffre_fort_cendre_off", "code_coffre_fort_cendre_on" ] }
+      - { id: "defaut", skin: [ "coffre_fort_off", "coffre_fort_on" ] }
+      - { id: "cendre", skin: [ "coffre_fort_cendre_off", "coffre_fort_cendre_on" ] }
     button_sound: "bip"
     success_sound: "code_bon"
     failure_sound: "code_faux"
     buttons:
-      - { value: 0, coordinates: [ 260, 872, 225, 200 ] }
-      - { value: 1, coordinates: [ 25, 665, 225, 200 ] }
-      - { value: 2, coordinates: [ 260, 665, 225, 200 ] }
-      - { value: 3, coordinates: [ 500, 665, 225, 200 ] }
-      - { value: 4, coordinates: [ 25, 450, 225, 200 ] }
-      - { value: 5, coordinates: [ 260, 450, 225, 200 ] }
-      - { value: 6, coordinates: [ 500, 450, 225, 200 ] }
-      - { value: 7, coordinates: [ 25, 230, 225, 200 ] }
-      - { value: 8, coordinates: [ 260, 230, 225, 200 ] }
-      - { value: 9, coordinates: [ 500, 230, 225, 200 ] }
+      - { value: 0, coordinates: [ 260, 672, 225, 200 ] }
+      - { value: 1, coordinates: [ 25, 475, 225, 200 ] }
+      - { value: 2, coordinates: [ 260, 475, 225, 200 ] }
+      - { value: 3, coordinates: [ 500, 475, 225, 200 ] }
+      - { value: 4, coordinates: [ 25, 250, 225, 200 ] }
+      - { value: 5, coordinates: [ 260, 250, 225, 200 ] }
+      - { value: 6, coordinates: [ 500, 250, 225, 200 ] }
+      - { value: 7, coordinates: [ 25, 30, 225, 200 ] }
+      - { value: 8, coordinates: [ 260, 30, 225, 200 ] }
+      - { value: 9, coordinates: [ 500, 30, 225, 200 ] }
     answer: [ 1, 9, 8, 9 ]
     on_success:
       - [ comment, "1989, son année de naissance, bien sûr... hyper-sécurisé !" ]
       - [ set_state, "coffre_fort", "ouvert" ]
+      - [ set_state, "clef_usb", "defaut" ]
 
   - id: "code_porte"
     states:

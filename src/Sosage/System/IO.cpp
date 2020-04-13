@@ -1,5 +1,6 @@
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Animation.h>
+#include <Sosage/Component/Code.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
@@ -258,11 +259,11 @@ std::string IO::read_room (const std::string& file_name)
         if (state_handle->value() == "")
         {
           state_handle->set(state);
-          conditional_handle = m_content.set<Component::State_conditional>(id + ":conditional_image", state_handle);
+          conditional_handle = m_content.set<Component::State_conditional>(id + ":image", state_handle);
           init = true;
         }
         else
-          conditional_handle = m_content.get<Component::State_conditional>(id + ":conditional_image");
+          conditional_handle = m_content.get<Component::State_conditional>(id + ":image");
 
         if (state == "none")
           conditional_handle->add(state, nullptr);
@@ -270,7 +271,7 @@ std::string IO::read_room (const std::string& file_name)
         {
           std::string skin = istate["skin"].string("sprites", "png");
           Component::Image_handle img
-            = Component::make_handle<Component::Image>(id + ":image", local_file_name(skin), 0);
+            = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin), 0);
           img->set_relative_origin(0.5, 1.0);
           img->box_collision() = box_collision;
 
@@ -285,7 +286,7 @@ std::string IO::read_room (const std::string& file_name)
       {
         m_content.get<Component::Inventory>("game:inventory")->add(id);
         Component::Image_handle img
-          = m_content.get<Component::Image>(id + ":conditional_image");
+          = m_content.get<Component::Image>(id + ":image");
         img->set_relative_origin(0.5, 0.5);
         img->z() = Sosage::inventory_back_depth;
       }
@@ -349,6 +350,96 @@ std::string IO::read_room (const std::string& file_name)
       m_content.set<Component::Position>(id + ":position",
                                          Point(Sosage::world_width / 2,
                                                Sosage::world_height / 2));
+    }
+  
+  if (input.has("codes"))
+    for (std::size_t i = 0; i < input["codes"].size(); ++ i)
+    {
+      const Core::IO::Node& icode = input["codes"][i];
+
+      std::string id = icode["id"].string();
+      std::string button_sound = icode["button_sound"].string("sounds", "wav");
+      std::string success_sound = icode["success_sound"].string("sounds", "wav");
+      std::string failure_sound = icode["failure_sound"].string("sounds", "wav");
+
+      Component::Code_handle code
+        = m_content.set<Component::Code>(id + ":code");
+      
+      Component::State_handle state_handle
+        = m_content.set<Component::State>(id + ":state");
+      Component::State_conditional_handle conditional_handle_off;
+      Component::State_conditional_handle conditional_handle_on;
+
+      for (std::size_t j = 0; j < icode["states"].size(); ++ j)
+      {
+        const Core::IO::Node& istate = icode["states"][j];
+
+        std::string state = istate["id"].string();
+
+        // init with first state found
+        bool init = false;
+        if (state_handle->value() == "")
+        {
+          state_handle->set(state);
+          conditional_handle_off
+            = m_content.set<Component::State_conditional>(id + ":image", state_handle);
+          conditional_handle_on
+            = m_content.set<Component::State_conditional>(id + "_button:image", state_handle);
+          init = true;
+        }
+        else
+        {
+          conditional_handle_off = m_content.get<Component::State_conditional>(id + ":image");
+          conditional_handle_on = m_content.get<Component::State_conditional>(id + "_button:image");
+        }
+
+        std::string skin_off = istate["skin"][0].string("sprites", "png");
+        Component::Image_handle img_off
+          = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin_off), 0);
+        img_off->set_relative_origin(0.5, 0.5);
+        img_off->z() = Sosage::inventory_back_depth;
+        img_off->on() = false;
+        
+        m_content.set<Component::Position>(id + ":position",
+                                           Point(Sosage::world_width / 2,
+                                                 Sosage::world_height / 2));
+
+        std::string skin_on = istate["skin"][0].string("sprites", "png");
+        Component::Image_handle img_on
+          = Component::make_handle<Component::Image>(id + "_button:conditional_image", local_file_name(skin_off), 0);
+        img_on->set_relative_origin(0.5, 0.5);
+        img_on->z() = Sosage::inventory_front_depth;
+        img_on->on() = false;
+
+        m_content.set<Component::Position>(id + "_button:position",
+                                           Point(Sosage::world_width / 2,
+                                                 Sosage::world_height / 2));
+
+        conditional_handle_off->add(state, img_off);
+        conditional_handle_on->add(state, img_on);
+      }
+      
+      for (std::size_t j = 0; j < icode["buttons"].size(); ++ j)
+      {
+        const Core::IO::Node& ibutton = icode["buttons"][j];
+
+        std::string value = ibutton["value"].string();
+
+        const Core::IO::Node& coordinates = ibutton["coordinates"];
+        code->add_button (value,
+                          coordinates[0].integer(),
+                          coordinates[1].integer(),
+                          coordinates[2].integer(),
+                          coordinates[3].integer());
+      }
+      
+      for (std::size_t j = 0; j < icode["answer"].size(); ++ j)
+        code->add_answer_item (icode["answer"][j].string());
+      
+      Component::Action_handle action
+        = m_content.set<Component::Action> (id + ":action");
+      for (std::size_t j = 0; j < icode["on_success"].size(); ++ j)
+        action->add (icode["on_success"][j].string_array());
     }
   
   t.stop();

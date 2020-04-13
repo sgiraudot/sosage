@@ -47,6 +47,7 @@ private:
   void horizontal_layout();
 
   void window_clicked();
+  void code_clicked (Component::Position_handle cursor);
   void verb_clicked();
   void arrow_clicked();
   void default_action_clicked();

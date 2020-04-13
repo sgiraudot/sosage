@@ -37,12 +37,22 @@ void Sound::run()
     music->on() = true;
   }
 
-  Component::Event_handle clicked = m_content.request<Component::Event>("game:verb_clicked");
-  if (clicked)
+  
+  if (Component::Event_handle clicked = m_content.request<Component::Event>("game:verb_clicked"))
   {
     m_core.play_sound (m_content.get<Component::Sound>("click:sound")->core());
     m_content.remove ("game:verb_clicked");
   }
+  
+  if (Component::Event_handle button = m_content.request<Component::Event>("code:button_clicked"))
+    m_content.remove ("code:button_clicked");
+  if (Component::Event_handle failure = m_content.request<Component::Event>("code:failure"))
+    m_content.remove ("code:failure");
+  if (Component::Event_handle success = m_content.request<Component::Event>("code:success"))
+  {
+// m_content.remove ("code:success");
+  }
+
 }
 
 } // namespace Sosage::System

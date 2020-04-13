@@ -1,5 +1,6 @@
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Animation.h>
+#include <Sosage/Component/Code.h>
 #include <Sosage/Component/Condition.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Ground_map.h>
@@ -75,14 +76,21 @@ void Logic::run (const double& current_time)
       m_content.remove ("character:action");
     m_current_action = nullptr;
   }
-  
+
+  if (Component::Event_handle code_success = m_content.request<Component::Event>("code:success"))
+  {
+    m_current_action = m_content.get<Component::Action>
+      (m_content.get<Component::Code>("game:code")->entity() + ":action");
+    m_next_step = 0;
+    m_content.remove ("code:success");
+  }
+   
   Component::Action_handle action
     = m_content.request<Component::Action>("character:action");
   if (action && action != m_current_action)
   {
     m_current_action = action;
     m_next_step = 0;
-//    m_content.remove ("character:action");
   }
 
   if (m_current_action)
@@ -91,7 +99,7 @@ void Logic::run (const double& current_time)
     {
       if (m_next_step == m_current_action->size())
       {
-        m_content.remove ("character:action");
+        m_content.remove ("character:action", true);
         m_current_action = nullptr;
       }
       else
@@ -288,7 +296,7 @@ void Logic::action_move (Component::Action::Step step)
   int z = step.get_int(4);
 
   m_content.set<Component::Position>(target + ":position", Point(x, y));
-  m_content.get<Component::Image>(target + ":conditional_image")->z() = z;
+  m_content.get<Component::Image>(target + ":image")->z() = z;
 }
 
 void Logic::action_pick_animation (Component::Action::Step step)
@@ -307,13 +315,18 @@ void Logic::action_set_state (Component::Action::Step step)
   std::string target = step.get(1);
   std::string state = step.get(2);
 
-  m_content.get<Component::State>(target + ":state")->set (state);
+  Component::State_handle current_state
+    = m_content.get<Component::State>(target + ":state");
 
+  if (current_state->value() == "inventory")
+    m_content.get<Component::Inventory>("game:inventory")->remove(target);
+  
+  current_state->set (state);
   if (state == "inventory")
   {
     m_content.get<Component::Inventory>("game:inventory")->add(target);
     Component::Image_handle img
-      = m_content.get<Component::Image>(target + ":conditional_image");
+      = m_content.get<Component::Image>(target + ":image");
     img->set_relative_origin(0.5, 0.5);
     img->z() = Sosage::inventory_back_depth;
   }
@@ -328,8 +341,16 @@ void Logic::action_show (Component::Action::Step step)
   image->on() = true;
 
   m_content.set<Component::Variable>("game:window", image);
-  m_content.get<Component::State>("game:status")->set ("window");
 
+  Component::Code_handle code
+    = m_content.request<Component::Code>(target + ":code");
+  if (code)
+  {
+    m_content.get<Component::State>("game:status")->set ("code");
+    m_content.set<Component::Variable>("game:code", code);
+  }
+  else
+    m_content.get<Component::State>("game:status")->set ("window");
 }
 
 void Logic::create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog)
