@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Superflu
+Comment="Les aventures inutiles d'un superhéros qui ne sert à rien"
+Exec=superflu_pnc
+Icon=superflu_pnc
+Terminal=false
+Type=Application
+Categories=Game;AdventureGame;
+StartupNotify=false

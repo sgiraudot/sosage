@@ -52,7 +52,8 @@ add_executable(superflu_pnc ${SUPERFLU_PNC_SRC})
 
 ## Set up data folder
 
-target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_DATA_FOLDER="${CMAKE_CURRENT_LIST_DIR}/data/")
+target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_DATA_FOLDER="${CMAKE_CURRENT_LIST_DIR}/share/superflu_pnc/")
+target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_INSTALL_DATA_FOLDER="../share/superflu_pnc/")
 
 ## Compilation dependencies
 
@@ -81,3 +82,5 @@ if (SDL2_MIXER_FOUND)
   target_compile_definitions(superflu_pnc PUBLIC "-DSOSAGE_LINKED_WITH_SDL_MIXER")
 endif()
 
+install(TARGETS superflu_pnc DESTINATION bin)
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/share/ DESTINATION share)
