@@ -1,4 +1,4 @@
-name: "Example"
+name: "Bureau"
 music: "sophie_mene_lenquete"
 background: "bureau"
 ground_map: "bureau_map"
@@ -34,7 +34,7 @@ objects:
     box_collision: true
     states:
       - { id: "defaut", skin: "bouteille" }
-      - { id: "inventory", skin: "bouteille_inventaire" }
+      - { id: "inventory", skin: "bouteille" }
 
   - id: "digicode"
     name: "digicode"
@@ -61,7 +61,7 @@ objects:
     states:
       - { id: "none" }
       - { id: "defaut", skin: "clef_usb" }
-      - { id: "inventory", skin: "clef_usb_inventaire" }
+      - { id: "inventory", skin: "clef_usb" }
 
   - id: "coffre_fort"
     name: "coffre-fort"
@@ -125,7 +125,7 @@ objects:
     box_collision: true
     states:
       - { id: "defaut", skin: "tisonnier" }
-      - { id: "inventory", skin: "tisonnier_inventaire" }
+      - { id: "inventory", skin: "tisonnier" }
 
 actions:
 

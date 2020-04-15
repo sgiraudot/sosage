@@ -11,7 +11,7 @@ inventory_arrows: [ "haut", "gauche", "bas", "droite" ]
 
 click_sound: "switch28"
 
-load_room: "example"
+load_room: "bureau"
 
 default:
 
