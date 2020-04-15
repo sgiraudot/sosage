@@ -51,7 +51,7 @@
 5. `$ ln -s [sdl_mixer_source_path] app/jni/SDL_mixer`
 6. `$ ln -s [sdl_ttf_source_path] app/jni/SDL_ttf`
 7. `$ ln -s [libyaml_source_path] app/jni/yaml/libyaml`
-8. `$ ln -s ../superflu app/src/main/assets/`
+8. `$ ln -s ../share/superflu_pnc app/src/main/assets/superflu_pnc`
 8. `$ ./gradlew assemble`
 
 ## Compilation (Navigateur)
