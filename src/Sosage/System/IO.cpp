@@ -26,7 +26,7 @@ IO::IO (Content& content)
 std::string IO::read_init (const std::string& folder_name)
 {
   m_folder_name = folder_name;
-  std::string file_name = folder_name + "resources" + Sosage::folder_separator + "init.yaml";
+  std::string file_name = folder_name + "data" + Sosage::folder_separator + "init.yaml";
 
   Core::IO input (file_name);
 
@@ -35,7 +35,7 @@ std::string IO::read_init (const std::string& folder_name)
          "Error: room version " + v + " incompatible with Sosage " + Sosage::version());
 
 #ifndef SOSAGE_ANDROID
-  std::string cursor = input["cursor"].string("sprites", "png");
+  std::string cursor = input["cursor"].string("images", "interface", "png");
   auto cursor_img = m_content.set<Component::Image> ("cursor:image", local_file_name(cursor),
                                                      Sosage::cursor_depth);
   cursor_img->set_relative_origin(0.5, 0.5);
@@ -43,12 +43,12 @@ std::string IO::read_init (const std::string& folder_name)
   
   m_content.set<Component::Position> ("cursor:position", Point(0,0));
   
-  std::string turnicon = input["turnicon"].string("sprites", "png");
+  std::string turnicon = input["turnicon"].string("images", "interface", "png");
   auto turnicon_img
     = m_content.set<Component::Image>("turnicon:image", local_file_name(turnicon), 0);
   turnicon_img->on() = false;
 
-  std::string click_sound = input["click_sound"].string("sounds", "wav");
+  std::string click_sound = input["click_sound"].string("sounds", "effects", "wav");
   m_content.set<Component::Sound>("click:sound", local_file_name(click_sound));
   
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
@@ -64,7 +64,7 @@ std::string IO::read_init (const std::string& folder_name)
 
   for (std::size_t i = 0; i < input["inventory_arrows"].size(); ++ i)
   {
-    std::string id = input["inventory_arrows" ][i].string("sprites", "png");
+    std::string id = input["inventory_arrows" ][i].string("images", "interface", "png");
     auto arrow
       = m_content.set<Component::Image> ("inventory_arrow_" + std::to_string(i) + ":image",
                                          local_file_name(id),
@@ -98,9 +98,8 @@ std::string IO::read_init (const std::string& folder_name)
     }
 
   }
-
     
-  return input["load_room"].string("resources", "yaml");
+  return input["load_room"].string("data", "rooms", "yaml");
 }
 
 void IO::read_character (const std::string& file_name, int x, int y)
@@ -109,17 +108,17 @@ void IO::read_character (const std::string& file_name, int x, int y)
 
   std::string name = input["name"].string();
 
-  std::string mouth = input["mouth"]["skin"].string("sprites", "png");
+  std::string mouth = input["mouth"]["skin"].string("images", "characters", "png");
   int mdx_right = input["mouth"]["dx_right"].integer();
   int mdx_left = input["mouth"]["dx_left"].integer();
   int mdy = input["mouth"]["dy"].integer();
   
-  std::string head = input["head"]["skin"].string("sprites", "png");
+  std::string head = input["head"]["skin"].string("images", "characters", "png");
   int hdx_right = input["head"]["dx_right"].integer();
   int hdx_left = input["head"]["dx_left"].integer();
   int hdy = input["head"]["dy"].integer();
   
-  std::string body = input["body"]["skin"].string("sprites", "png");
+  std::string body = input["body"]["skin"].string("images", "characters", "png");
   
   auto abody = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
                                           0, 8, 6);
@@ -174,11 +173,11 @@ std::string IO::read_room (const std::string& file_name)
   Core::IO input (local_file_name(file_name));
 
   std::string name = input["name"].string();
-  std::string music = input["music"].string("musics", "ogg");
+  std::string music = input["music"].string("sounds", "musics", "ogg");
   m_content.set<Component::Music>("game:music", local_file_name(music));
   
-  std::string background = input["background"].string("backgrounds", "png");
-  std::string ground_map = input["ground_map"].string("backgrounds", "png");
+  std::string background = input["background"].string("images", "backgrounds", "png");
+  std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
   int front_z = input["front_z"].integer();
   int back_z = input["back_z"].integer();
 
@@ -190,7 +189,7 @@ std::string IO::read_room (const std::string& file_name)
   m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map),
                                        front_z, back_z);
 
-  std::string character = input["character"].string("resources", "yaml");
+  std::string character = input["character"].string("data", "characters", "yaml");
   int x = input["coordinates"][0].integer();
   int y = input["coordinates"][1].integer();
   read_character (character, x, y);
@@ -209,7 +208,7 @@ std::string IO::read_room (const std::string& file_name)
       int x = iscenery["coordinates"][0].integer();
       int y = iscenery["coordinates"][1].integer();
       int z = iscenery["coordinates"][2].integer();
-      std::string skin = iscenery["skin"].string("sprites", "png");
+      std::string skin = iscenery["skin"].string("images", "scenery", "png");
       
       auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y));
       auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
@@ -261,7 +260,12 @@ std::string IO::read_room (const std::string& file_name)
           conditional_handle->add(state, nullptr);
         else
         {
-          std::string skin = istate["skin"].string("sprites", "png");
+          std::string skin;
+          if (state == "inventory")
+            skin = istate["skin"].string("images", "inventory", "png");
+          else
+            skin = istate["skin"].string("images", "objects", "png");
+          
           auto img
             = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin), 0);
           img->set_relative_origin(0.5, 1.0);
@@ -331,7 +335,7 @@ std::string IO::read_room (const std::string& file_name)
       const Core::IO::Node& iwindow = input["windows"][i];
 
       std::string id = iwindow["id"].string();
-      std::string skin = iwindow["skin"].string("sprites", "png");
+      std::string skin = iwindow["skin"].string("images", "windows", "png");
       
       auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
       img->set_relative_origin(0.5, 0.5);
@@ -349,9 +353,9 @@ std::string IO::read_room (const std::string& file_name)
       const Core::IO::Node& icode = input["codes"][i];
 
       std::string id = icode["id"].string();
-      std::string button_sound = icode["button_sound"].string("sounds", "wav");
-      std::string success_sound = icode["success_sound"].string("sounds", "wav");
-      std::string failure_sound = icode["failure_sound"].string("sounds", "wav");
+      std::string button_sound = icode["button_sound"].string("sounds", "effects", "wav");
+      std::string success_sound = icode["success_sound"].string("sounds", "effects", "wav");
+      std::string failure_sound = icode["failure_sound"].string("sounds", "effects", "wav");
 
       auto code = m_content.set<Component::Code>(id + ":code");
       
@@ -382,7 +386,7 @@ std::string IO::read_room (const std::string& file_name)
           conditional_handle_on = m_content.get<Component::State_conditional>(id + "_button:image");
         }
 
-        std::string skin_off = istate["skin"][0].string("sprites", "png");
+        std::string skin_off = istate["skin"][0].string("images", "windows", "png");
         auto img_off
           = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin_off), 0);
         img_off->set_relative_origin(0.5, 0.5);
@@ -393,7 +397,7 @@ std::string IO::read_room (const std::string& file_name)
                                            Point(Sosage::world_width / 2,
                                                  Sosage::world_height / 2));
 
-        std::string skin_on = istate["skin"][0].string("sprites", "png");
+        std::string skin_on = istate["skin"][0].string("images", "windows", "png");
         auto img_on
           = Component::make_handle<Component::Image>(id + "_button:conditional_image", local_file_name(skin_off), 0);
         img_on->set_relative_origin(0.5, 0.5);

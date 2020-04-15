@@ -52,7 +52,7 @@ add_executable(superflu_pnc ${SUPERFLU_PNC_SRC})
 
 ## Set up data folder
 
-target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_DATA_FOLDER="${CMAKE_CURRENT_LIST_DIR}/superflu/")
+target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_DATA_FOLDER="${CMAKE_CURRENT_LIST_DIR}/data/")
 
 ## Compilation dependencies
 
@@ -73,11 +73,6 @@ target_link_libraries(superflu_pnc PUBLIC
   ${SDL2_LIBRARY}
   ${SDL2_IMAGE_LIBRARIES}
   ${SDL2_TTF_LIBRARIES})
-
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Android")
-  message(STATUS "Linking with atomic for Android")
-  target_link_libraries(superflu_pnc PUBLIC atomic)
-endif()
 
 ## Optional sound
 if (SDL2_MIXER_FOUND)

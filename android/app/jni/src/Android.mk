@@ -11,7 +11,7 @@ SDL_TTF_PATH := ../SDL_ttf
 YAML_PATH := ../yaml
 SRC_PATH := ../../../../
 
-LOCAL_CPPFLAGS := -DSUPERFLU_DATA_FOLDER=\"superflu/\" -std=c++17 \
+LOCAL_CPPFLAGS := -DSUPERFLU_DATA_FOLDER=\"data/\" -std=c++17 \
   -frtti \
   -DSOSAGE_LINKED_WITH_SDL_MIXER \
 	-O3

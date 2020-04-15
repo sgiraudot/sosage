@@ -79,8 +79,8 @@ bool SDL_events::is_mouse_motion (const Event& ev)
 std::pair<int, int> SDL_events::mouse_position (const Event& ev)
 {
 #ifdef SOSAGE_ANDROID
-  return std::make_pair (ev.tfinger.x * (config().world_width +  config().interface_width),
-                         ev.tfinger.y * (config().world_height + config().interface_height));
+  return std::make_pair (ev.tfinger.x * (Sosage::world_width +  config().interface_width),
+                         ev.tfinger.y * (Sosage::world_height + config().interface_height));
 #else
   if (ev.type == SDL_MOUSEMOTION)
     return std::make_pair (ev.motion.x, ev.motion.y);
