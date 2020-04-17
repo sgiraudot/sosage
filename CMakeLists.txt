@@ -52,8 +52,7 @@ add_executable(superflu_pnc ${SUPERFLU_PNC_SRC})
 
 ## Set up data folder
 
-target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_DATA_FOLDER="${CMAKE_CURRENT_LIST_DIR}/share/superflu_pnc/")
-target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_INSTALL_DATA_FOLDER="../share/superflu_pnc/")
+target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_DATA_FOLDER="${CMAKE_CURRENT_LIST_DIR}/data/")
 
 ## Compilation dependencies
 
@@ -82,5 +81,17 @@ if (SDL2_MIXER_FOUND)
   target_compile_definitions(superflu_pnc PUBLIC "-DSOSAGE_LINKED_WITH_SDL_MIXER")
 endif()
 
-install(TARGETS superflu_pnc DESTINATION bin)
-install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/share/ DESTINATION share)
+## Platform-specific instructions
+if (CMAKE_SYSTEM_NAME STREQUAL Linux)
+  target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_INSTALL_DATA_FOLDER="../share/games/superflu_pnc/")
+  install(TARGETS superflu_pnc DESTINATION games)
+  install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/data/ DESTINATION share/games/superflu_pnc)
+  install(FILES ${CMAKE_CURRENT_LIST_DIR}/resources/icon.svg DESTINATION share/icons/hicolor/scalable/apps/ RENAME superflu_pnc.svg)
+  install(FILES ${CMAKE_CURRENT_LIST_DIR}/resources/superflu_pnc.desktop DESTINATION share/applications/)
+elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
+  target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_INSTALL_DATA_FOLDER="data/")
+  install(TARGETS superflu_pnc DESTINATION Superflu\ PnC)
+  install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/data/ DESTINATION Superflu\ PnC/data)
+elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
+  
+endif()
