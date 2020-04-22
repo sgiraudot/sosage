@@ -1,15 +1,9 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_EVENTS_H
 #define SOSAGE_THIRD_PARTY_SDL_EVENTS_H
 
-#include <Sosage/platform.h>
-
 #include <utility>
 
-#ifdef SOSAGE_ANDROID
 #include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
 
 namespace Sosage::Third_party
 {

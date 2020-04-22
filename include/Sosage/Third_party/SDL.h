@@ -2,17 +2,10 @@
 #define SOSAGE_THIRD_PARTY_SDL_H
 
 #include <Sosage/Config.h>
-#include <Sosage/platform.h>
 
-#ifdef SOSAGE_ANDROID
-#  include <SDL.h>
-#  include <SDL_image.h>
-#  include <SDL_ttf.h>
-#else
-#  include <SDL2/SDL.h>
-#  include <SDL2/SDL_image.h>
-#  include <SDL2/SDL_ttf.h>
-#endif
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
 
 #include <array>
 
