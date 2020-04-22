@@ -2,13 +2,8 @@
 #define SOSAGE_THIRD_PARTY_SDL_FILE_H
 
 #include <Sosage/Config.h>
-#include <Sosage/platform.h>
 
-#ifdef SOSAGE_ANDROID
-#  include <SDL.h>
-#else
-#  include <SDL2/SDL.h>
-#endif
+#include <SDL.h>
 
 namespace Sosage::Third_party::SDL_file
 {

@@ -3,13 +3,7 @@
 
 #ifdef SOSAGE_LINKED_WITH_SDL_MIXER
 
-#include <Sosage/platform.h>
-
-#ifdef SOSAGE_ANDROID
-#  include <SDL_mixer.h>
-#else
-#  include <SDL2/SDL_mixer.h>
-#endif
+#include <SDL_mixer.h>
 
 #include <string>
 
