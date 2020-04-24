@@ -62,6 +62,8 @@ inline void output (const std::string& str)
   std::cerr << str << std::endl;
 }
 
+struct Invalid_data_folder : public std::exception { };
+
 } // namespace Sosage
 
 #endif // SOSAGE_UTILS_ERROR_H

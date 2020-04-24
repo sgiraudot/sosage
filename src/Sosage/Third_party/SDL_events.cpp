@@ -49,15 +49,40 @@ bool SDL_events::is_console (const Event& ev)
   return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_c);
 }
 
+bool SDL_events::is_f1 (const Event& ev)
+{
+  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_F1);
+}
+
+bool SDL_events::is_f2 (const Event& ev)
+{
+  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_F2);
+}
+
+bool SDL_events::is_f3 (const Event& ev)
+{
+  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_F3);
+}
+
+bool SDL_events::is_f4 (const Event& ev)
+{
+  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_F4);
+}
+
+bool SDL_events::is_f5 (const Event& ev)
+{
+  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_F5);
+}
+
 bool SDL_events::is_left_click (const Event& ev)
 {
 #ifdef SOSAGE_ANDROID
   return ev.type == SDL_FINGERUP;
 #else
-  return (ev.type == SDL_MOUSEBUTTONUP &&
-          ev.button.type == SDL_MOUSEBUTTONUP &&
+  return (ev.type == SDL_MOUSEBUTTONDOWN &&
+          ev.button.type == SDL_MOUSEBUTTONDOWN &&
           ev.button.button == SDL_BUTTON_LEFT &&
-          ev.button.state == SDL_RELEASED);
+          ev.button.state == SDL_PRESSED);
 #endif     
 }
 
@@ -84,7 +109,7 @@ std::pair<int, int> SDL_events::mouse_position (const Event& ev)
 #else
   if (ev.type == SDL_MOUSEMOTION)
     return std::make_pair (ev.motion.x, ev.motion.y);
-  else if (ev.type == SDL_MOUSEBUTTONUP)
+  else if (ev.type == SDL_MOUSEBUTTONDOWN)
     return std::make_pair (ev.button.x, ev.button.y);
 #endif
 }

@@ -28,6 +28,11 @@ public:
   bool is_pause (const Event& ev);
   bool is_debug (const Event& ev);
   bool is_console (const Event& ev);
+  bool is_f1 (const Event& ev);
+  bool is_f2 (const Event& ev);
+  bool is_f3 (const Event& ev);
+  bool is_f4 (const Event& ev);
+  bool is_f5 (const Event& ev);
   bool is_left_click (const Event& ev);
   bool is_mouse_motion (const Event& ev);
   bool is_window_resized (const Event& ev);

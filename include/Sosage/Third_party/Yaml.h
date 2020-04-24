@@ -151,7 +151,8 @@ public:
     do
     {
       bool event_parsed = yaml_parser_parse(&parser, &event);
-      check (event_parsed, "Failed parsing Yaml event");
+      check (event_parsed, "Failed parsing Yaml file (" + filename + ":" +
+             std::to_string(parser.mark.line) + ")");
 
       switch(event.type)
       {

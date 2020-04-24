@@ -43,6 +43,17 @@ void Input::run()
     
     if (m_core.is_console(ev))
       m_content.get<Component::Boolean>("game:console")->toggle();
+
+    if (m_core.is_f1(ev))
+      m_content.set<Component::Event>("window:set_auto");
+    else if (m_core.is_f2(ev))
+      m_content.set<Component::Event>("window:set_widescreen");
+    else if (m_core.is_f3(ev))
+      m_content.set<Component::Event>("window:set_standard");
+    else if (m_core.is_f4(ev))
+      m_content.set<Component::Event>("window:set_square");
+    else if (m_core.is_f5(ev))
+      m_content.set<Component::Event>("window:set_portrait");
     
     if (m_core.is_window_resized(ev))
     {

@@ -94,10 +94,12 @@ void Animation::run()
 
   for (const auto& e : m_content)
     if (auto anim = Component::cast<Component::Animation>(e))
-      animations.push_back(anim);
+      if (anim->on())
+        animations.push_back(anim);
 
   for (const auto& animation : animations)
-    animation->next_frame();
+    if (!animation->next_frame())
+      animation->on() = false;
 }
 
 void Animation::compute_movement_from_path (Component::Path_handle path)

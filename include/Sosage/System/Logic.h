@@ -9,6 +9,8 @@
 #include <Sosage/Component/Text.h>
 #include <Sosage/Content.h>
 
+#include <set>
+
 namespace Sosage::System
 {
 
@@ -17,7 +19,7 @@ class Logic
 private:
 
   typedef std::pair<double, Component::Handle> Timed_handle;
-  std::vector<Timed_handle> m_timed;
+  std::set<Timed_handle> m_timed;
 
   Content& m_content;
   double m_current_time;
@@ -34,7 +36,7 @@ public:
   bool paused();
 
 private:
-  void clear_timed();
+  void clear_timed(bool action_goto);
   
   bool compute_path_from_target (Component::Position_handle target);
   void update_debug_info (Component::Debug_handle debug_info);
@@ -44,6 +46,7 @@ private:
   void action_goto (const std::string& target);
   void action_look (const std::string& target);
   void action_move (Component::Action::Step step);
+  void action_play (Component::Action::Step step);
   void action_pick_animation (Component::Action::Step step);
   void action_set_state (Component::Action::Step step);
   void action_show (Component::Action::Step step);

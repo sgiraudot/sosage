@@ -1,3 +1,4 @@
+#include <Sosage/Component/Code.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Music.h>
 #include <Sosage/Component/Sound.h>
@@ -44,13 +45,26 @@ void Sound::run()
     m_content.remove ("game:verb_clicked");
   }
   
-  if (auto button = m_content.request<Component::Event>("code:button_clicked"))
-    m_content.remove ("code:button_clicked");
-  if (auto failure = m_content.request<Component::Event>("code:failure"))
-    m_content.remove ("code:failure");
-  if (auto success = m_content.request<Component::Event>("code:success"))
+  if (auto failure = m_content.request<Component::Event>("code:play_failure"))
   {
-// m_content.remove ("code:success");
+    m_core.play_sound
+      (m_content.get<Component::Sound>
+       (m_content.get<Component::Code>("game:code")->entity() +"_button:sound")->core());
+    m_content.remove ("code:play_failure");
+  }
+  else if (auto success = m_content.request<Component::Event>("code:play_success"))
+  {
+    m_core.play_sound
+      (m_content.get<Component::Sound>
+       (m_content.get<Component::Code>("game:code")->entity() +"_success:sound")->core());
+    m_content.remove ("code:play_success");
+  }
+  else if (auto button = m_content.request<Component::Event>("code:play_click"))
+  {
+    m_core.play_sound
+      (m_content.get<Component::Sound>
+       (m_content.get<Component::Code>("game:code")->entity() +"_failure:sound")->core());
+    m_content.remove ("code:play_click");
   }
 
 }

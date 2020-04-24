@@ -52,7 +52,7 @@ State_conditional::~State_conditional()
 std::string State_conditional::str() const
 {
   return this->id() + " -> " + m_state->id() + " ? "
-    + get()->id();
+    + (get() ? get()->id() : "NULL");
 }
 
 void State_conditional::add (const std::string& state, Handle h)
