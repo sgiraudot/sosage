@@ -1,6 +1,7 @@
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Code.h>
+#include <Sosage/Component/Cropped.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
@@ -121,17 +122,17 @@ void IO::read_character (const std::string& file_name, int x, int y)
   std::string body = input["body"]["skin"].string("images", "characters", "png");
   
   auto abody = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
-                                          0, 8, 6);
+                                                   0, 8, 6, true);
   abody->set_relative_origin(0.5, 0.95);
   
   auto ahead
     = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
-                                          0, 7, 2);
+                                          0, 7, 2, true);
   ahead->set_relative_origin(0.5, 1.0);
   
   auto amouth
     = m_content.set<Component::Animation>("character_mouth:image", local_file_name(mouth),
-                                          0, 11, 2);
+                                          0, 11, 2, true);
   amouth->set_relative_origin(0.5, 1.0);
   
   auto pbody = m_content.set<Component::Position>("character_body:position", Point(x, y));
@@ -200,6 +201,25 @@ std::string IO::read_room (const std::string& file_name)
 
     }
 
+  if (input.has("animations"))
+    for (std::size_t i = 0; i < input["animations"].size(); ++ i)
+    {
+      const Core::IO::Node& ianimation = input["animations"][i];
+      std::string id = ianimation["id"].string();
+      int x = ianimation["coordinates"][0].integer();
+      int y = ianimation["coordinates"][1].integer();
+      int z = ianimation["coordinates"][2].integer();
+      std::string skin = ianimation["skin"].string("images", "animations", "png");
+      int length = ianimation["length"].integer();
+      
+      auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y));
+      auto img = m_content.set<Component::Animation>(id + ":image", local_file_name(skin), z,
+                                                     length, 1, false);
+      img->on() = false;
+      img->set_relative_origin(0.5, 1.0);
+      debug("Animation " + id + " at position " + std::to_string(img->z()));
+    }
+  
   if (input.has("scenery"))
     for (std::size_t i = 0; i < input["scenery"].size(); ++ i)
     {
@@ -211,9 +231,8 @@ std::string IO::read_room (const std::string& file_name)
       std::string skin = iscenery["skin"].string("images", "scenery", "png");
       
       auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y));
-      auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
+      auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), z);
       img->set_relative_origin(0.5, 1.0);
-      img->z() = z;
       debug("Scenery " + id + " at position " + std::to_string(img->z()));
 
     }
@@ -267,11 +286,10 @@ std::string IO::read_room (const std::string& file_name)
             skin = istate["skin"].string("images", "objects", "png");
           
           auto img
-            = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin), 0);
+            = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin), z);
           img->set_relative_origin(0.5, 1.0);
           img->box_collision() = box_collision;
 
-          img->z() = z;
           debug("Object " + id + ":" + state + " at position " + std::to_string(img->z()));
 
           conditional_handle->add(state, img);
@@ -337,9 +355,9 @@ std::string IO::read_room (const std::string& file_name)
       std::string id = iwindow["id"].string();
       std::string skin = iwindow["skin"].string("images", "windows", "png");
       
-      auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), 0);
+      auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin),
+                                                 Sosage::inventory_front_depth);
       img->set_relative_origin(0.5, 0.5);
-      img->z() = Sosage::inventory_front_depth;
       img->on() = false;
       
       m_content.set<Component::Position>(id + ":position",
@@ -354,8 +372,11 @@ std::string IO::read_room (const std::string& file_name)
 
       std::string id = icode["id"].string();
       std::string button_sound = icode["button_sound"].string("sounds", "effects", "wav");
+      m_content.set<Component::Sound>(id + "_button:sound", local_file_name(button_sound));
       std::string success_sound = icode["success_sound"].string("sounds", "effects", "wav");
+      m_content.set<Component::Sound>(id + "_success:sound", local_file_name(success_sound));
       std::string failure_sound = icode["failure_sound"].string("sounds", "effects", "wav");
+      m_content.set<Component::Sound>(id + "_failure:sound", local_file_name(failure_sound));
 
       auto code = m_content.set<Component::Code>(id + ":code");
       
@@ -388,20 +409,21 @@ std::string IO::read_room (const std::string& file_name)
 
         std::string skin_off = istate["skin"][0].string("images", "windows", "png");
         auto img_off
-          = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin_off), 0);
+          = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin_off),
+                                                     Sosage::inventory_back_depth);
         img_off->set_relative_origin(0.5, 0.5);
-        img_off->z() = Sosage::inventory_back_depth;
         img_off->on() = false;
         
         m_content.set<Component::Position>(id + ":position",
                                            Point(Sosage::world_width / 2,
                                                  Sosage::world_height / 2));
 
-        std::string skin_on = istate["skin"][0].string("images", "windows", "png");
+        std::string skin_on = istate["skin"][1].string("images", "windows", "png");
         auto img_on
-          = Component::make_handle<Component::Image>(id + "_button:conditional_image", local_file_name(skin_off), 0);
+          = Component::make_handle<Component::Cropped>(id + "_button:conditional_image",
+                                                       local_file_name(skin_on),
+                                                       Sosage::inventory_front_depth);
         img_on->set_relative_origin(0.5, 0.5);
-        img_on->z() = Sosage::inventory_front_depth;
         img_on->on() = false;
 
         m_content.set<Component::Position>(id + "_button:position",

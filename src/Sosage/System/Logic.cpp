@@ -2,6 +2,7 @@
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Condition.h>
+#include <Sosage/Component/Cropped.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Font.h>
@@ -30,7 +31,7 @@ void Logic::run (const double& current_time)
 {
   m_current_time = current_time;
 
-  std::vector<Timed_handle> new_timed_handle;
+  std::set<Timed_handle> new_timed_handle;
   
   for (const Timed_handle& th : m_timed)
     if (th.first == 0) // special case for Path
@@ -38,7 +39,7 @@ void Logic::run (const double& current_time)
       auto saved_path = Component::cast<Component::Path>(th.second);
       auto current_path = m_content.request<Component::Path>("character:path");
       if (saved_path == current_path)
-        new_timed_handle.push_back(th);
+        new_timed_handle.insert(th);
     }
     else if (th.first <= m_current_time)
     {
@@ -48,7 +49,7 @@ void Logic::run (const double& current_time)
         m_content.remove (th.second->id());
     }
     else
-      new_timed_handle.push_back(th);
+      new_timed_handle.insert(th);
   m_timed.swap(new_timed_handle);
   
   auto collision = m_content.request<Component::Image> ("cursor:target");
@@ -68,25 +69,81 @@ void Logic::run (const double& current_time)
     m_content.remove("cursor:target");
 
     // Cancel current action
-    clear_timed();
-    if (m_current_action != nullptr)
-      m_content.remove ("character:action");
+    clear_timed(true);
     m_current_action = nullptr;
   }
 
-  if (auto code_success = m_content.request<Component::Event>("code:success"))
+  if (auto code_clicked = m_content.request<Component::Event>("code:button_clicked"))
   {
+    auto code = m_content.get<Component::Code>("game:code");
+    auto window = m_content.get<Component::Image>("game:window");
+    auto cropped
+      = m_content.get<Component::Cropped>(window->entity() + "_button:image");
+
+    cropped->crop (code->xmin(), code->xmax(), code->ymin(), code->ymax());
+    m_content.set<Component::Position>
+      (window->entity() + "_button:position",
+       m_content.get<Component::Position>(window->entity() + ":position")->value()
+       + Vector(code->xmin(), code->ymin()));
+      
+    cropped->on() = true;
+
+    m_timed.insert (std::make_pair (m_current_time + Sosage::button_click_duration,
+                                    Component::make_handle<Component::Event>
+                                    ("code:stop_flashing")));
+
+    if (code->failure())
+    {
+      std::cerr << "Failure" << std::endl;
+      code->reset();
+      m_content.set<Component::Event>("code:play_failure");
+    }
+    else if (code->success())
+    {
+      std::cerr << "Success" << std::endl;
+      code->reset();
+      m_content.set<Component::Event>("code:play_success");
+      m_timed.insert (std::make_pair (m_current_time + Sosage::button_click_duration,
+                                      Component::make_handle<Component::Event>
+                                      ("code:quit")));
+    }
+    else
+      m_content.set<Component::Event>("code:play_click");
+    
+    m_content.remove("code:button_clicked");
+  }
+  
+  if (auto stop_flashing = m_content.request<Component::Event>("code:stop_flashing"))
+  {
+    auto window = m_content.get<Component::Image>("game:window");
+    auto cropped
+      = m_content.get<Component::Cropped>(window->entity() + "_button:image");
+    cropped->on() = false;
+    m_content.remove("code:stop_flashing");
+  }
+  
+  if (auto code_quit = m_content.request<Component::Event>("code:quit"))
+  {
+    auto code = m_content.get<Component::Code>("game:code");
+    auto window = m_content.get<Component::Image>("game:window");
+    window->on() = false;
+    code->reset();
+    m_content.get<Component::State>("game:status")->set ("idle");
+      
     m_current_action = m_content.get<Component::Action>
       (m_content.get<Component::Code>("game:code")->entity() + ":action");
     m_next_step = 0;
-    m_content.remove ("code:success");
+      
+    m_content.remove("code:quit");
   }
-   
+  
   auto action = m_content.request<Component::Action>("character:action");
   if (action && action != m_current_action)
   {
+    clear_timed(false);
     m_current_action = action;
     m_next_step = 0;
+    m_content.remove ("character:action", true);
   }
 
   if (m_current_action)
@@ -95,7 +152,6 @@ void Logic::run (const double& current_time)
     {
       if (m_next_step == m_current_action->size())
       {
-        m_content.remove ("character:action", true);
         m_current_action = nullptr;
       }
       else
@@ -112,6 +168,8 @@ void Logic::run (const double& current_time)
             action_look (m_current_action->entity());
           else if (s.get(0) == "move")
             action_move (s);
+          else if (s.get(0) == "play")
+            action_play (s);
           else if (s.get(0) == "pick_animation")
             action_pick_animation (s);
           else if (s.get(0) == "set_state")
@@ -142,24 +200,29 @@ bool Logic::paused()
   return m_content.get<Component::Boolean>("game:paused")->value();
 }
 
-void Logic::clear_timed()
+void Logic::clear_timed(bool action_goto)
 {
-  std::vector<Timed_handle> new_timed_handle;
+  if (action_goto)
+    std::cerr << "GOTO" << std::endl;
+  
+  std::set<Timed_handle> new_timed_handle;
   
   for (const Timed_handle& th : m_timed)
     if (th.first == 0) // special case for Path
       continue;
-    else if (th.second->id().find("comment_") == 0) // keep dialogs
+    else if (action_goto && th.second->id().find("comment_") == 0) // keep dialogs when moving
     {
-      new_timed_handle.push_back(th);
-      DBG_CERR << "Keep " << th.second->id();
+      new_timed_handle.insert(th);
     }
-    else if (!Component::cast<Component::Event>(th.second))
+    else
     {
-      DBG_CERR << "Remove " << th.second->id();
-      m_content.remove (th.second->id());
+      if (Component::cast<Component::Event>(th.second))
+        m_content.set (th.second);
+      else
+        m_content.remove (th.second->id());
     }
   m_timed.swap(new_timed_handle);
+  std::cerr << m_timed.size() << std::endl;
 }
 
 bool Logic::compute_path_from_target (Component::Position_handle target)
@@ -245,23 +308,23 @@ void Logic::action_comment (Component::Action::Step step)
     auto pos = m_content.set<Component::Position> (img->entity() + ":position", Point(x,y));
     y += img->height() * 1.1 * 0.75;
 
-    m_timed.push_back (std::make_pair (m_current_time + std::max(1., nb_seconds), img));
-    m_timed.push_back (std::make_pair (m_current_time + std::max(1., nb_seconds), pos));
+    m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds), img));
+    m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds), pos));
   }
 
   m_content.set<Component::Event>("character:start_talking");
 
   DBG_CERR << nb_seconds << std::endl;
-  m_timed.push_back (std::make_pair (m_current_time + nb_seconds,
-                                     Component::make_handle<Component::Event>
-                                     ("character:stop_talking")));
+  m_timed.insert (std::make_pair (m_current_time + nb_seconds,
+                                  Component::make_handle<Component::Event>
+                                  ("character:stop_talking")));
 }
 
 void Logic::action_goto (const std::string& target)
 {
   auto position = m_content.request<Component::Position>(target + ":view");
   if (compute_path_from_target(position))
-    m_timed.push_back (std::make_pair (0, m_content.get<Component::Path>("character:path")));
+    m_timed.insert (std::make_pair (0, m_content.get<Component::Path>("character:path")));
 }
 
 void Logic::action_look (const std::string& target)
@@ -285,14 +348,23 @@ void Logic::action_move (Component::Action::Step step)
   m_content.get<Component::Image>(target + ":image")->z() = z;
 }
 
+void Logic::action_play (Component::Action::Step step)
+{
+  std::string target = step.get(1);
+
+  auto animation = m_content.get<Component::Animation>(target + ":image");
+  animation->reset (true);
+  animation->on() = true;
+}
+
 void Logic::action_pick_animation (Component::Action::Step step)
 {
   double duration = step.get_double(1);
   m_content.set<Component::Event>("character:start_pick_animation");
 
-  m_timed.push_back (std::make_pair (m_current_time + duration,
-                                     Component::make_handle<Component::Event>
-                                     ("character:stop_pick_animation")));
+  m_timed.insert (std::make_pair (m_current_time + duration,
+                                  Component::make_handle<Component::Event>
+                                  ("character:stop_pick_animation")));
 
 }
 

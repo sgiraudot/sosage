@@ -9,6 +9,7 @@
 #include <Sosage/System/Interface.h>
 #include <Sosage/System/IO.h>
 #include <Sosage/System/Logic.h>
+#include <Sosage/Utils/error.h>
 #include <Sosage/Utils/time.h>
 
 namespace Sosage

@@ -17,6 +17,7 @@ class Interface
   enum Layout { INIT, WIDESCREEN, STANDARD, SQUARE, PORTRAIT };
 
   Content& m_content;
+  bool m_auto_layout;
   Layout m_layout;
   Component::Image_handle m_collision;
   
@@ -50,7 +51,6 @@ private:
   void code_clicked (Component::Position_handle cursor);
   void verb_clicked();
   void arrow_clicked();
-  void default_action_clicked();
   void action_clicked(const std::string& verb);
 
   void update_pause_screen();

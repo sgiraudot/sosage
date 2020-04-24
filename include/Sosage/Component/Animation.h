@@ -30,19 +30,20 @@ private:
   const int m_height_subdiv;
   std::vector<Frame> m_frames;
   std::size_t m_current;
+  bool m_loop;
 
 public:
 
   Animation (const std::string& id, const std::string& file_name, int z,
-             int width_subdiv, int height_subdiv);
+             int width_subdiv, int height_subdiv, bool loop);
   const std::vector<Frame>& frames() const { return m_frames; }
   std::vector<Frame>& frames() { return m_frames; }
-  void reset();
+  int reset(bool all_frames = false);
   virtual int xmin() const;
   virtual int xmax() const;
   virtual int ymin() const;
   virtual int ymax() const;
-  void next_frame();
+  bool next_frame();
 };
 
 typedef std::shared_ptr<Animation> Animation_handle;

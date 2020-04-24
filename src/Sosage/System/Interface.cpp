@@ -12,6 +12,7 @@ namespace Sosage::System
 
 Interface::Interface (Content& content)
   : m_content (content)
+  , m_auto_layout (true)
   , m_layout (INIT)
   , m_action_min_height(50)
   , m_interface_min_height(150)
@@ -21,9 +22,44 @@ Interface::Interface (Content& content)
 
 void Interface::run()
 {
+  if (m_content.request<Component::Event>("window:set_auto"))
+  {
+    m_auto_layout = true;
+    m_content.remove("window:set_auto");
+    m_content.set<Component::Event>("window:rescaled");
+  }
+  else if (m_content.request<Component::Event>("window:set_widescreen"))
+  {
+    m_auto_layout = false;
+    m_layout = WIDESCREEN;
+    m_content.remove("window:set_widescreen");
+    m_content.set<Component::Event>("window:rescaled");
+  }
+  else if (m_content.request<Component::Event>("window:set_standard"))
+  {
+    m_auto_layout = false;
+    m_layout = STANDARD;
+    m_content.remove("window:set_standard");
+    m_content.set<Component::Event>("window:rescaled");
+  }
+  else if (m_content.request<Component::Event>("window:set_square"))
+  {
+    m_auto_layout = false;
+    m_layout = SQUARE;
+    m_content.remove("window:set_square");
+    m_content.set<Component::Event>("window:rescaled");
+  }
+  else if (m_content.request<Component::Event>("window:set_portrait"))
+  {
+    m_auto_layout = false;
+    m_layout = PORTRAIT;
+    m_content.remove("window:set_portrait");
+    m_content.set<Component::Event>("window:rescaled");
+  }
+  
   if (m_content.request<Component::Event>("window:rescaled"))
     update_responsive();
-
+  
   auto cursor = m_content.request<Component::Position>("cursor:position");
   if (cursor)
     detect_collision (cursor);
@@ -49,10 +85,7 @@ void Interface::run()
           = m_content.get<Component::Text> ("chosen_verb:text")->entity();
         verb = std::string (verb.begin() + 5, verb.end());
 
-        if (verb == "goto")
-          default_action_clicked();
-        else
-          action_clicked(verb);
+        action_clicked(verb);
       }
     }
   }
@@ -111,39 +144,35 @@ void Interface::update_responsive()
 
   int aspect_ratio = int(100. * window_width / double(window_height));
 
-  if (aspect_ratio >= 200)
+  if ((m_auto_layout && aspect_ratio >= 200) ||
+      (!m_auto_layout && m_layout == WIDESCREEN))
   {
-    if (m_layout == WIDESCREEN)
-      return;
-    m_layout = WIDESCREEN;
+    if (m_auto_layout)
+      m_layout = WIDESCREEN;
     
     interface_widescreen();
     vertical_layout();
   }
   else
   {
-    if (aspect_ratio >= 115)
+    if ((m_auto_layout && aspect_ratio >= 115) ||
+        (!m_auto_layout && m_layout == STANDARD))
     {
-      if (m_layout == STANDARD)
-        return;
-      m_layout = STANDARD;
-      
+      if (m_auto_layout)
+        m_layout = STANDARD;
       interface_standard();
     }
-    else if (aspect_ratio >= 75)
+    else if ((m_auto_layout && aspect_ratio >= 75) ||
+             (!m_auto_layout && m_layout == SQUARE))
     {
-      if (m_layout == SQUARE)
-        return;
-      m_layout = SQUARE;
-      
+      if (m_auto_layout)
+        m_layout = SQUARE;
       interface_square();
     }
     else
     {
-      if (m_layout == PORTRAIT)
-        return;
-      m_layout = PORTRAIT;
-      
+      if (m_auto_layout)
+        m_layout = PORTRAIT;
       interface_portrait();
     }
     
@@ -557,26 +586,8 @@ void Interface::code_clicked (Component::Position_handle cursor)
                                                                     0.5 * window->height());
     if (code->click(p.x(), p.y()))
     {
-      if (code->failure())
-      {
-        std::cerr << "Failure" << std::endl;
-        code->reset();
-        m_content.set<Component::Event>("code:failure");
-      }
-      else if (code->success())
-      {
-        std::cerr << "Success" << std::endl;
-        code->reset();
-        m_content.set<Component::Event>("code:success");
-        window->on() = false;
-        code->reset();
-        m_content.get<Component::State>("game:status")->set ("idle");
-      }
-      else
-      {
-        std::cerr << "Button" << std::endl;
-        m_content.set<Component::Event>("code:button_clicked");
-      }
+      m_content.set<Component::Event>("code:button_clicked");
+      std::cerr << "Clicked!" << std::endl;
     }
   }
   
@@ -599,24 +610,6 @@ void Interface::arrow_clicked()
   else
     m_content.get<Component::Inventory>("game:inventory")->next();
   m_content.remove("cursor:clicked");
-}
-
-void Interface::default_action_clicked()
-{
-  auto state = m_content.request<Component::State>(m_collision->entity() + ":state");
-  if (state && (state->value() == "inventory"))
-  {
-    auto action
-      = m_content.request<Component::Action> (m_collision->entity() + ":look");
-    if (action)
-      m_content.set<Component::Variable>("character:action", action);
-    m_content.remove("cursor:clicked");
-  }
-  else
-    m_content.set<Component::Variable>("cursor:target", m_collision);
-
-  m_content.get<Component::Variable> ("chosen_verb:text")
-    ->set(m_content.get<Component::Text>("verb_goto:text"));
 }
 
 void Interface::action_clicked(const std::string& verb)
@@ -664,9 +657,34 @@ void Interface::action_clicked(const std::string& verb)
     }
 
     if (!action_found)
-      m_content.set<Component::Variable>
-        ("character:action",
-         m_content.get<Component::Action> ("default:" + verb));
+    {
+      if (verb == "goto")
+      {
+        m_content.set<Component::Variable>("cursor:target", m_collision);
+        return;
+      }
+      else
+        m_content.set<Component::Variable>
+          ("character:action",
+           m_content.get<Component::Action> ("default:" + verb));
+    }
+  }
+  else if (verb == "goto")
+  {
+    auto state = m_content.request<Component::State>(m_collision->entity() + ":state");
+    if (state && (state->value() == "inventory"))
+    {
+      auto action
+        = m_content.request<Component::Action> (m_collision->entity() + ":look");
+      if (action)
+        m_content.set<Component::Variable>("character:action", action);
+      m_content.remove("cursor:clicked");
+    }
+    else
+    {
+      m_content.set<Component::Variable>("cursor:target", m_collision);
+      return;
+    }
   }
 
   m_content.get<Component::Variable> ("chosen_verb:text")

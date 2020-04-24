@@ -7,6 +7,13 @@ back_z: 2330
 character: "sophie"
 coordinates: [ 800, 950 ]
 
+animations:
+
+  - id: "ouverture_passage_secret"
+    skin: "passage_secret"
+    length: 11
+    coordinates: [ 1163, 713, 2 ]
+      
 scenery:
 
   - id: "bureau"
@@ -43,6 +50,7 @@ objects:
     box_collision: false
     states:
       - { id: "defaut", skin: "digicode" }
+      - { id: "fait", skin: "digicode" }
 
   - id: "cendres"
     name: "cendres"
@@ -84,13 +92,22 @@ objects:
   - id: "ordinateur"
     name: "ordinateur"
     coordinates: [ 201, 722, 2786 ]
-    view: [ 180, 728 ]
+    view: [ 180, 775 ]
     box_collision: false
     states:
       - { id: "defaut", skin: "ordinateur" }
       - { id: "defaut_2", skin: "ordinateur" }
       - { id: "defaut_3", skin: "ordinateur" }
       - { id: "usb", skin: "ordinateur" }
+
+  - id: "passage_secret"
+    name: "passage secret"
+    coordinates: [ 1163, 713, 1 ]
+    view: [ 1163, 713 ]
+    box_collision: false
+    states:
+      - { id: "none" }
+      - { id: "defaut", skin: "passage_secret" }
 
   - id: "plante"
     name: "plante verte"
@@ -129,6 +146,13 @@ objects:
 
 actions:
 
+  - id: "goto"
+    target: "passage_secret"
+    effect:
+      - [ goto ]
+      - [ sync ]
+      - [ comment, "Voilà, c'est déjà fini, maintenant faut que Simon fasse la suite !" ]
+      
   - id: "look"
     target: "bouteille"
     effect:
@@ -143,6 +167,22 @@ actions:
       - [ look ]
       - [ sync ]
       - [ show, "code_coffre_fort" ]
+
+  - id: "look"
+    target: "digicode"
+    state: "defaut"
+    effect:
+      - [ goto ]
+      - [ sync ]
+      - [ look ]
+      - [ sync ]
+      - [ show, "code_porte" ]
+
+  - id: "look"
+    target: "digicode"
+    state: "fait"
+    effect:
+      - [ comment, "C'est déverrouillé." ]
 
   - id: "look"
     target: "documents"
@@ -297,11 +337,13 @@ actions:
       - [ pick_animation, 0.2 ]
       - [ sync ]
       - [ set_state, "code_coffre_fort", "cendre" ]
+      - [ set_state, "cendres", "none" ]
       - [ comment, "La cendre accroche aux touches !" ]
       
   - id: "use"
     source: "cendres"
     target: "digicode"
+    state: "defaut"
     effect:
       - [ goto ]
       - [ sync ]
@@ -309,6 +351,14 @@ actions:
       - [ pick_animation, 0.2 ]
       - [ sync ]
       - [ comment, "C'était une bonne idée, mais le digicode est tout neuf, la cendre n'accroche pas." ]
+      
+  - id: "use"
+    source: "cendres"
+    target: "digicode"
+    state: "fait"
+    effect:
+      - [ look ]
+      - [ comment, "C'est déjà déverrouillé." ]
       
   - id: "use"
     source: "clef_usb"
@@ -375,9 +425,9 @@ codes:
     states:
       - { id: "defaut", skin: [ "coffre_fort_off", "coffre_fort_on" ] }
       - { id: "cendre", skin: [ "coffre_fort_cendre_off", "coffre_fort_cendre_on" ] }
-    button_sound: "bip"
-    success_sound: "code_bon"
-    failure_sound: "code_faux"
+    button_sound: "beep"
+    success_sound: "beep_success"
+    failure_sound: "beep_failure"
     buttons:
       - { value: 0, coordinates: [ 260, 672, 225, 200 ] }
       - { value: 1, coordinates: [ 25, 475, 225, 200 ] }
@@ -398,22 +448,29 @@ codes:
   - id: "code_porte"
     states:
       - { id: "defaut", skin: [ "code_porte_off", "code_porte_on" ] }
-    button_sound: "bip"
-    success_sound: "code_bon"
-    failure_sound: "code_faux"
+    button_sound: "beep"
+    success_sound: "beep_success"
+    failure_sound: "beep_failure"
     buttons:
-      - { value: "4C", coordinates: [ 0, 0, 0, 0 ] }
-      - { value: "45", coordinates: [ 0, 0, 0, 0 ] }
-      - { value: "46", coordinates: [ 0, 0, 0, 0 ] }
-      - { value: "47", coordinates: [ 0, 0, 0, 0 ] }
-      - { value: "5C", coordinates: [ 0, 0, 0, 0 ] }
-      - { value: "55", coordinates: [ 0, 0, 0, 0 ] }
-      - { value: "56", coordinates: [ 0, 0, 0, 0 ] }
-      - { value: "57", coordinates: [ 0, 0, 0, 0 ] }
-      - { value: "6C", coordinates: [ 0, 0, 0, 0 ] }
-      - { value: "65", coordinates: [ 0, 0, 0, 0 ] }
-      - { value: "66", coordinates: [ 0, 0, 0, 0 ] }
-      - { value: "67", coordinates: [ 0, 0, 0, 0 ] }
+      - { value: "4C", coordinates: [ 115, 46, 240, 250 ] }
+      - { value: "45", coordinates: [ 348, 46, 240, 250 ] }
+      - { value: "46", coordinates: [ 586, 46, 240, 250 ] }
+      - { value: "47", coordinates: [ 829, 46, 240, 250 ] }
+      - { value: "5C", coordinates: [ 115, 281, 240, 250 ] }
+      - { value: "55", coordinates: [ 348, 281, 240, 250 ] }
+      - { value: "56", coordinates: [ 586, 281, 240, 250 ] }
+      - { value: "57", coordinates: [ 829, 281, 240, 250 ] }
+      - { value: "6C", coordinates: [ 115, 540, 240, 250 ] }
+      - { value: "65", coordinates: [ 348, 540, 240, 250 ] }
+      - { value: "66", coordinates: [ 586, 540, 240, 250 ] }
+      - { value: "67", coordinates: [ 829, 540, 240, 250 ] }
     answer: [ "46", "4C", "55", "47" ]
     on_success:
-      - [ set_state, "coffre_fort", "ouvert" ]
+      - [ lock ]
+      - [ set_state, "digicode", "fait" ]
+      - [ play, "ouverture_passage_secret" ]
+      - [ set_state, "passage_secret", "defaut" ]
+      - [ look, "passage_secret" ]
+      - [ sync ]
+      - [ unlock ]
+      

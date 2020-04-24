@@ -25,13 +25,15 @@ constexpr int cursor_depth = inventory_over_depth + 1;
 
 constexpr int ground_map_width = 300;
 
-constexpr int gui_fps = 30;
+constexpr int gui_fps = 60;
 constexpr int animation_fps = 12;
 
 constexpr int character_speed = 34;
 
 constexpr int text_outline = 10;
 constexpr int displayed_inventory_size = 4;
+
+constexpr double button_click_duration = 0.1;
 
 
 struct Config

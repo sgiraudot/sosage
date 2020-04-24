@@ -2,6 +2,7 @@
 #define SOSAGE_THIRD_PARTY_SDL_FILE_H
 
 #include <Sosage/Config.h>
+#include <Sosage/Utils/error.h>
 
 #include <SDL.h>
 
@@ -18,7 +19,8 @@ inline File open (const std::string& filename)
 {
   File out;
   out.buffer = SDL_RWFromFile(filename.c_str(), "r");
-  check (out.buffer != nullptr, "Cannot open " + filename);
+  if (out.buffer == nullptr)
+    throw Sosage::Invalid_data_folder();
   out.size = std::size_t(SDL_RWsize (out.buffer));
   return out;
 }
