@@ -1,7 +1,10 @@
 #include <Sosage/Engine.h>
+#include <Sosage/version.h>
 
 int main (int argc, char** argv)
 {
+  std::cerr << "Running Sosage " << Sosage::version::str() << std::endl;
+  
   Sosage::Engine sosage ("Superflu et le Mystère du Voleur de Pommes");
 
 #ifdef SUPERFLU_INSTALL_DATA_FOLDER
