@@ -32,8 +32,8 @@ std::string IO::read_init (const std::string& folder_name)
   Core::IO input (file_name);
 
   std::string v = input["version"].string();
-  check (version(v) == SOSAGE_VERSION,
-         "Error: room version " + v + " incompatible with Sosage " + Sosage::version());
+  check (version::parse(v) <= version::get(),
+         "Error: room version " + v + " incompatible with Sosage " + version::str());
 
 #ifndef SOSAGE_ANDROID
   std::string cursor = input["cursor"].string("images", "interface", "png");
