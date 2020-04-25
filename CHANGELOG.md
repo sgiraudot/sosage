@@ -6,7 +6,8 @@ History of versions and modifications of the SOSAGE engine.
 
 ### Release Management
 
-- Nothing
+- Basic script for generating AppImage
+- Fix install path using relative resolution with `SDL_GetBasePath()`
 
 ### Interface and Menus
 
