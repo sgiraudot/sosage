@@ -10,12 +10,14 @@ namespace version
 constexpr unsigned int major = 0;
 constexpr unsigned int minor = 1;
 constexpr unsigned int patch = 0;
+constexpr const char* name = "alpha1";
 
 inline std::string str()
 {
   return std::to_string(major) + "."
     + std::to_string(minor) + "."
-    + std::to_string(patch);
+    + std::to_string(patch) + "-"
+    + name;
 }
 
 inline unsigned int get()
