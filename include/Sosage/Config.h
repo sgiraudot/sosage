@@ -23,7 +23,7 @@ constexpr int inventory_front_depth = inventory_back_depth + 1;
 constexpr int inventory_over_depth = inventory_front_depth + 1;
 constexpr int cursor_depth = inventory_over_depth + 1;
 
-constexpr int ground_map_width = 300;
+constexpr int ground_map_width = 100;
 
 constexpr int gui_fps = 60;
 constexpr int animation_fps = 12;

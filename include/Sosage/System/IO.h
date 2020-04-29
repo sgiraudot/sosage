@@ -26,6 +26,12 @@ public:
 private:
   
   std::string local_file_name (const std::string& file_name) const;
+
+  void read_animation (const Core::IO::Node& node, const std::string& id);
+  void read_code (const Core::IO::Node& node, const std::string& id);
+  void read_object (const Core::IO::Node& node, const std::string& id);
+  void read_scenery (const Core::IO::Node& node, const std::string& id);
+  void read_window (const Core::IO::Node& node, const std::string& id);
   
 };
 

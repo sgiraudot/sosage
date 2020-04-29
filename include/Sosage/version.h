@@ -8,9 +8,9 @@ namespace version
 {
 
 constexpr unsigned int major = 0;
-constexpr unsigned int minor = 1;
+constexpr unsigned int minor = 2;
 constexpr unsigned int patch = 0;
-constexpr const char* name = "alpha1";
+constexpr const char* name = "alpha2";
 
 inline std::string str()
 {
