@@ -1,5 +1,7 @@
 #include <Sosage/Component/Event.h>
+#include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
+#include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/System/Graphic.h>
 
@@ -75,9 +77,40 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
     }
   }
 
-  // Component::Position_handle cursor
-  //   = m_content.request<Component::Position>("cursor:position");
-  // m_core.draw_square (cursor->value().x(), cursor->value().y(), 50);
+  if (m_content.get<Component::Boolean>("game:debug")->value())
+  {
+    auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
+
+    ground_map->for_each_vertex
+      ([&](const Point& point)
+       {
+         m_core.draw_square (point.x(), point.y(), 10);
+       });
+      
+    ground_map->for_each_edge
+      ([&](const Point& source, const Point& target)
+       {
+         m_core.draw_line (source.x(), source.y(),
+                           target.x(), target.y());
+       });
+
+    auto path = m_content.request<Component::Path>("character:path");
+    if (path)
+    {
+      Point current = m_content.get<Component::Position>("character_body:position")->value();
+      m_core.draw_square (current.x(), current.y(), 10, 0, 255, 0);
+
+      for (std::size_t p = path->current(); p < path->size(); ++ p)
+      {
+        Point next = (*path)[p];
+        m_core.draw_square (next.x(), next.y(), 10, 0, 255, 0);
+        m_core.draw_line (current.x(), current.y(),
+                          next.x(), next.y(), 0, 255, 0);
+        current = next;
+      }
+
+    }
+  }
 }
 
 } // namespace Sosage::System

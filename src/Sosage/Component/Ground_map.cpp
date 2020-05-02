@@ -1,5 +1,4 @@
 #include <Sosage/Component/Ground_map.h>
-#include <Sosage/Core/Graphic.h>
 #include <Sosage/Utils/profiling.h>
 
 #include <algorithm>
@@ -14,341 +13,370 @@ namespace Sosage::Component
 Ground_map::Ground_map (const std::string& id,
                         const std::string& file_name,
                         int front_z, int back_z)
-  : Base(id)
+  : Base(id), m_front_z (front_z), m_back_z (back_z)
 {
-  Core::Graphic::Surface source = Core::Graphic::load_surface (file_name);
+  m_image = Core::Graphic::load_surface (file_name);
 
-  Point size (Core::Graphic::width(source), Core::Graphic::height(source),
-              WORLD);
+  int width = Core::Graphic::width(m_image);
+  int height = Core::Graphic::height(m_image);
 
-  m_data = vector_2<Node> (size.x(GROUND),
-                           size.y(GROUND));
+  // Build border of ground area
+  
+  std::map<Point, GVertex> map_p2v;
 
-  for (std::size_t x = 0; x < m_data.width(); ++ x)
-    for (std::size_t y = 0; y < m_data.height(); ++ y)
+  for (std::size_t x = 0; x < width - 1; ++ x)
+    for (std::size_t y = 0; y < height - 1; ++ y)
     {
-      Point point(x,y, GROUND);
-      int xx = point.x(WORLD);
-      int yy = point.y(WORLD);
+      std::array<unsigned char, 3> c
+        = Core::Graphic::get_color (m_image, x, y);
+      std::array<unsigned char, 3> c_right
+        = Core::Graphic::get_color (m_image, x+1, y);
+      std::array<unsigned char, 3> c_down
+        = Core::Graphic::get_color (m_image, x, y+1);
 
-      std::array<unsigned char, 3> color
-        = Core::Graphic::get_color (source, xx, yy);
+      bool g = (c[0] == c[1] && c[0] == c[2]);
+      bool g_right = (c_right[0] == c_right[1] && c_right[0] == c_right[2]);
+      bool g_down = (c_down[0] == c_down[1] && c_down[0] == c_down[2]);
 
-      if (color[0] == color[1] && color[0] == color[2])
+      if (g != g_right)
       {
-        m_data(x,y).z = back_z + (front_z - back_z) * (1. - (color[0] / 255.));
-        m_data(x,y).target_x = -1;
-        m_data(x,y).target_y = -1;
+        unsigned char red = (g ? c[0] : c_right[0]);
+        
+        GVertex source = add_vertex (map_p2v, Point (x + 0.5, y - 0.5), red);
+        GVertex target = add_vertex (map_p2v, Point (x + 0.5, y + 0.5), red);
+
+        m_graph.add_edge (source, target);
       }
-      else
+      if (g != g_down)
       {
-        m_data(x,y).z = -1;
-        m_data(x,y).target_x = -2;
-        m_data(x,y).target_y = -2;
+        unsigned char red = (g ? c[0] : c_down[0]);
+        
+        GVertex source = add_vertex (map_p2v, Point (x - 0.5, y + 0.5), red);
+        GVertex target = add_vertex (map_p2v, Point (x + 0.5, y + 0.5), red);
+
+        m_graph.add_edge (source, target);
       }
     }
 
-  std::vector<std::pair<int, int> > border;
-  for (std::size_t x = 0; x < m_data.width(); ++ x)
-    for (std::size_t y = 0; y < m_data.height(); ++ y)
-      if (m_data(x,y).target_x == -1)
-      {
-        bool is_border = false;
-        if (x > 0 && m_data(x-1,y).z == -1)
-          is_border = true;
-        else if (x < m_data.width() - 1 && m_data(x+1,y).z == -1)
-          is_border = true;
-        if (y > 0 && m_data(x,y-1).z == -1)
-          is_border = true;
-        else if (y < m_data.height() - 1 && m_data(x,y+1).z == -1)
-          is_border = true;
+  // Simplify border
 
-        if (is_border)
-          border.push_back (std::make_pair(x,y));
-      }
-
-  struct Todo
+  std::set<GVertex, std::function<bool(const GVertex&, const GVertex&)> >
+    todo ([&] (const GVertex& a, const GVertex& b) -> bool
+          {
+            double da = deviation(a);
+            double db = deviation(b);
+            if (da == db)
+              return a < b;
+            return da < db;
+          });
+  
+  for (GVertex v : m_graph.vertices())
   {
-    int xorig, yorig;
-    int x, y;
-    double distance;
-    Todo (int xorig, int yorig, int x, int y, double distance)
-      : xorig(xorig), yorig(yorig), x(x), y(y), distance(distance)
-    { }
-  };
-  std::priority_queue<Todo, std::vector<Todo>, std::function<bool(Todo,Todo)> > todo
-    ([](const Todo& a, const Todo& b) -> bool { return a.distance > b.distance; });
-  for (const std::pair<int, int>& b : border)
-    todo.push (Todo(b.first, b.second, b.first, b.second, 0.));
+    if (deviation(v) < Sosage::boundary_precision)
+      todo.insert (v);
+  }
 
   while (!todo.empty())
   {
-    Todo current = todo.top();
-    todo.pop();
+    GVertex v = *todo.begin();
+    todo.erase(todo.begin());
 
-    for (int dx = -1; dx <= 1; ++ dx)
-    {
-      int xx = current.x + dx;
-      if (xx < 0 || xx >= m_data.width())
-        continue;
+    GVertex n0 = m_graph.incident_vertex(v, 0);
+    GVertex n1 = m_graph.incident_vertex(v, 1);
 
-      for (int dy = -1; dy <= 1; ++ dy)
-      {
-        int yy = current.y + dy;
-        if (yy < 0 || yy >= m_data.height())
-          continue;
-        if (dx == 0 && dy == 0)
-          continue;
-        if (m_data(xx,yy).target_x == -2)
-        {
-          m_data(xx,yy).target_x = current.xorig;
-          m_data(xx,yy).target_y = current.yorig;
-          todo.push(Todo(current.xorig, current.yorig, xx, yy,
-                         Sosage::distance(xx,yy, current.xorig, current.yorig)));
-        }
-      }
-    }
+    auto it = todo.find(n0);
+    if (it != todo.end())
+      todo.erase (it);
+    it = todo.find(n1);
+    if (it != todo.end())
+      todo.erase (it);
+
+    m_graph.delete_edge(m_graph.incident_edge(v, 0));
+    m_graph.delete_edge(m_graph.incident_edge(v, 1));
+
+    m_graph.add_edge (n0, n1);
+
+    if (deviation(n0) < Sosage::boundary_precision)
+      todo.insert (n0);
+    if (deviation(n1) < Sosage::boundary_precision)
+      todo.insert (n1);
   }
 
-#if 0
-  {
-    std::ofstream dbg ("dbg.ppm");
-    dbg << "P3" << std::endl << m_data.width() << " " << m_data.height()
-        << std::endl << "255" << std::endl;
-
-    std::size_t nb = 0;
-    for (std::size_t y = 0; y < m_data.height(); ++ y)
-      for (std::size_t x = 0; x < m_data.width(); ++ x)
-      {
-        int r, g, b;
-        if (m_data(x,y).target_x == -1)
-        {
-          bool is_border = false;
-          if (x > 0 && m_data(x-1,y).target_x != -1)
-            is_border = true;
-          else if (x < m_data.width() - 1 && m_data(x+1,y).target_x != -1)
-            is_border = true;
-          if (y > 0 && m_data(x,y-1).target_x != -1)
-            is_border = true;
-          else if (y < m_data.height() - 1 && m_data(x,y+1).target_x != -1)
-            is_border = true;
-
-          if (is_border)
-          {
-            srand(x + m_data.width() * y);
-            r = 64 + rand() % 128;
-            g = 64 + rand() % 128;
-            b = 64 + rand() % 128;
-          }
-          else
-          {
-            r = 255;
-            g = 255;
-            b = 255;
-          }
-        }
-        else
-        {
-          int xx = m_data(x,y).target_x;
-          int yy = m_data(x,y).target_y;
-          srand(xx + m_data.width() * yy);
-          r = 64 + rand() % 128;
-          g = 64 + rand() % 128;
-          b = 64 + rand() % 128;
-        }
-        dbg << r << " " << g << " " << b << " ";
-        if (nb ++ == 4)
-        {
-          dbg << std::endl;
-          nb = 0;
-        }
-      }
-  }
-#endif
+  m_graph.validity();
+  m_graph.clean();
+  m_graph.validity();
+  
+  m_latest_graph = m_graph;
 }
 
-void Ground_map::find_path (const Point& origin,
-                            const Point& target,
+void Ground_map::find_path (Point origin,
+                            Point target,
                             std::vector<Point>& out)
 {
   static Timer t ("Path finder");
   t.start();
+
+  m_latest_graph = m_graph;
+
+  GVertex vorigin = Graph::null_vertex();
+  GVertex vtarget = Graph::null_vertex();
+  GEdge eorigin = Graph::null_edge();
+  GEdge etarget = Graph::null_edge();
+  std::set<std::pair<GVertex, GVertex>, Compare_ordered_pair> to_add;
   
-  //  correct target position to reach true ground
-  int x = target.x(GROUND);
-  int y = target.y(GROUND);
-
-  if (x >= m_data.width())
-    x = m_data.width() - 1;
-  if (y >= m_data.height())
-    y = m_data.height() - 1;
-
-  if (m_data(x,y).target_x != -1)
+  if (!is_ground_point(origin))
   {
-    int xx = m_data(x,y).target_x;
-    int yy = m_data(x,y).target_y;
-    x = xx;
-    y = yy;
+    Neighbor_query query = closest_simplex(origin);
+    origin = query.point;
+    if (query.edge == Graph::null_edge())
+      vorigin = query.vertex;
+    else
+      eorigin = query.edge;
+  }
+  if (!is_ground_point(target))
+  {
+    Neighbor_query query = closest_simplex(target);
+    target = query.point;
+    if (query.edge == Graph::null_edge())
+      vtarget = query.vertex;
+    else
+      etarget = query.edge;
   }
 
-  int xorig = origin.x(GROUND);
-  int yorig = origin.y(GROUND);
-  
-  if (m_data(xorig,yorig).target_x != -1)
+  if (eorigin != Graph::null_edge() && eorigin == etarget) // moving along the same line
   {
-    int xx = m_data(xorig,yorig).target_x;
-    int yy = m_data(xorig,yorig).target_y;
-    xorig = xx;
-    yorig = yy;
+    out.push_back (target);
+    return;
   }
 
-  Point origin_corrected (xorig, yorig, GROUND);
-  Point target_corrected (x, y, GROUND);
-  
-  // std::cerr << "Finding path from " << origin_corrected << " (corrected from "
-  //           << origin << ") to " << target_corrected
-  //           << " (corrected from " << target << ")" << std::endl;
-
-  // Dijkstra
-
-  Sort_by_distance sorter (m_data);
-  std::set<std::pair<int, int>, Sort_by_distance> todo (sorter);
-  
-  std::size_t nb_nodes = 0;
-  for (std::size_t x = 0; x < m_data.width(); ++ x)
-    for (std::size_t y = 0; y < m_data.height(); ++ y)
-      if (m_data(x,y).target_x == -1)
-      {
-        m_data(x,y).distance = std::numeric_limits<double>::max();
-        m_data(x,y).prev_x = -1;
-        m_data(x,y).prev_y = -1;
-        if (x == xorig && y == yorig)
-          m_data(x,y).distance = 0.;
-        todo.insert (std::make_pair(x,y));
-        ++ nb_nodes;
-      }
-  check (nb_nodes == todo.size(), "Node set wrongly formed");
-
-  while (!todo.empty())
+  if (eorigin != Graph::null_edge())
   {
-    int current_x = todo.begin()->first;
-    int current_y = todo.begin()->second;
-    todo.erase (todo.begin());
+    vorigin = m_latest_graph.add_vertex(origin);
+    GVertex v0 = m_latest_graph.source(eorigin);
+    GVertex v1 = m_latest_graph.target(eorigin);
+    m_latest_graph.delete_edge(eorigin);
+    to_add.insert (std::make_pair (vorigin, v0));
+    to_add.insert (std::make_pair (vorigin, v1));
+  }
+  else if (vorigin == Graph::null_vertex())
+    vorigin = m_latest_graph.add_vertex(origin);
+    
+  if (etarget != Graph::null_edge())
+  {
+    vtarget = m_latest_graph.add_vertex(target);
+    GVertex v0 = m_latest_graph.source(etarget);
+    GVertex v1 = m_latest_graph.target(etarget);
+    m_latest_graph.delete_edge(etarget);
+    to_add.insert (std::make_pair (vtarget, v0));
+    to_add.insert (std::make_pair (vtarget, v1));
+  }
+  else if (vtarget == Graph::null_vertex())
+    vtarget = m_latest_graph.add_vertex(target);
 
-    for (int x = -1; x <= 1; ++ x)
+  Segment segment (origin, target);
+  bool intersection = false;
+  for (GEdge e : m_latest_graph.edges())
+  {
+    if (m_latest_graph.edge_has_vertex(e, vorigin)
+        || m_latest_graph.edge_has_vertex(e, vtarget))
+      continue;
+    Segment eseg (m_latest_graph[m_latest_graph.source(e)].point,
+                  m_latest_graph[m_latest_graph.target(e)].point);
+    if (intersect(segment, eseg))
     {
-      int xx = current_x + x;
-      if (!(0 <= xx && xx < m_data.width()))
+      intersection = true;
+      break;
+    }
+  }
+
+  if (!intersection) // Nothing intersected, straight line is fine
+  {
+    // Additional check if we join 2 borders through a hole
+    Point mid = midpoint (origin, target);
+    if (is_ground_point(mid))
+    {
+      out.push_back (target);
+      m_latest_graph = m_graph;
+      t.stop();
+      return;
+    }
+  }
+
+  // Insert new edges
+  for (GVertex v : m_latest_graph.vertices())
+  {
+    if (v == vorigin || v == vtarget)
+      continue;
+
+    for (GVertex n : { vorigin, vtarget })
+    {
+      Point mid = midpoint (m_latest_graph[v].point, m_latest_graph[n].point);
+      if (!is_ground_point(mid))
+        continue;
+        
+      Segment seg (m_latest_graph[v].point, m_latest_graph[n].point);
+      bool intersection = false;
+      for (GEdge e : m_latest_graph.edges())
+      {
+        if (e == eorigin || e == etarget)
+          continue;
+        if (m_latest_graph.edge_has_vertex(e, v))
+          continue;
+        Segment eseg (m_latest_graph[m_latest_graph.source(e)].point,
+                      m_latest_graph[m_latest_graph.target(e)].point);
+        if (intersect(seg, eseg))
+        {
+          intersection = true;
+          break;
+        }
+      }
+      if (intersection)
         continue;
 
-      for (int y = -1; y <= 1; ++ y)
-      {
-        if (x == 0 && y == 0)
-          continue;
-        
-        int yy = current_y + y;
-        if (!(0 <= yy && yy < m_data.height()))
-          continue;
-
-        auto iter = todo.find(std::make_pair(xx,yy));
-        if (iter == todo.end())
-          continue;
-
-        double dist = m_data(current_x,current_y).distance
-          + distance(current_x, current_y, xx, yy);
-        if (dist < m_data(xx, yy).distance)
-        {
-          todo.erase(iter);
-          m_data(xx,yy).distance = dist;
-          m_data(xx,yy).prev_x = current_x;
-          m_data(xx,yy).prev_y = current_y;
-          todo.insert (std::make_pair (xx, yy));
-        }
-      }
+      to_add.insert (std::make_pair(v, n));
     }
   }
+
+  for (const auto& p : to_add)
+    m_latest_graph.add_edge(p.first, p.second);
+
+  m_latest_graph.clean();
   
-  std::vector<Point> path;
-  while (!(x == xorig && y == yorig))
-  {
-    check (x != -1 && y != -1, "Node has no parent");
-    path.push_back (Point (x, y, GROUND));
-    int next_x = m_data(x,y).prev_x;
-    int next_y = m_data(x,y).prev_y;
-    x = next_x;
-    y = next_y;
-  }
-  path.push_back (Point (x, y, GROUND));
-
-  std::reverse(path.begin(), path.end());
-  
-  // Filter
-  {
-    std::vector<bool> insert (path.size(), false);
-    insert.back() = true;
-    std::queue<std::pair<std::size_t, std::size_t> > todo;
-    todo.push(std::make_pair (0, path.size()));
-    while (!todo.empty())
-    {
-      std::size_t first = todo.front().first;
-      std::size_t last = todo.front().second;
-      todo.pop();
-
-      Vector v (path[first], path[last-1]);
-      v.normalize();
-
-      double dist_max = 0;
-      std::size_t farthest;
-      for (std::size_t i = first+1; i < last; ++ i)
-      {
-        Vector vh (path[first], path[i]);
-        double hypo = vh.length();
-        vh.normalize();
-        double angle = std::acos(v * vh);
-        double sin = std::sin(angle);
-        double dist = hypo * sin;
-        if (dist > dist_max)
-        {
-          dist_max = dist;
-          farthest = i;
-        }
-      }
-
-      if (dist_max > config().ground_map_scaling)
-      {
-        insert[farthest] = true;
-        todo.push(std::make_pair(first, farthest));
-        todo.push(std::make_pair(farthest, last));
-      }
-    }
-
-    for (std::size_t i = 0; i < path.size(); ++ i)
-      if (insert[i])
-        out.push_back (path[i]);
-  }
+  // Dijkstra
+  m_latest_graph.validity();
+  shortest_path(vorigin, vtarget, out);
 
   t.stop();
 }
 
 double Ground_map::z_at_point (const Point& p) const
 {
-  const Node& n = m_data(p.x(GROUND), p.y(GROUND));
-  if (n.target_x != -1)
-    return m_data(n.target_x, n.target_y).z;
-  // else
-  return n.z;
+  std::array<unsigned char, 3> c = Core::Graphic::get_color (m_image, p.x(), p.y());
+
+  unsigned char red = 0;
+  if (c[0] == c[1] && c[0] == c[2])
+    red = c[0];
+  else
+  {
+    Neighbor_query query = closest_simplex (p);
+
+    if (query.edge == Graph::null_edge()) // point case
+      red = m_graph[query.vertex].red;
+    else // segment case
+    {
+      double dsource = distance (query.point, m_graph[m_graph.source(query.edge)].point);
+      double dtarget = distance (query.point, m_graph[m_graph.target(query.edge)].point);
+
+      red = (m_graph[m_graph.source(query.edge)].red * dtarget
+             + m_graph[m_graph.target(query.edge)].red * dsource)
+        / (dsource + dtarget);
+    }
+  }
+  
+  return m_back_z + (m_front_z - m_back_z) * (1. - (red / 255.));
 }
 
-double Ground_map::distance (int xa, int ya, int xb, int yb) const
+bool Ground_map::is_ground_point (const Point& p) const
 {
-  Point pa (xa, ya, GROUND);
-  Point pb (xb, yb, GROUND);
-  double za = m_data(xa,ya).z;
-  double zb = m_data(xb,yb).z;
-
-  return std::sqrt (square(pa.x() - pb.x())
-                    + square(pa.y() - pb.y())
-                    + square(za - zb));
+  std::array<unsigned char, 3> c = Core::Graphic::get_color (m_image, p.x(), p.y());
+  return (c[0] == c[1] && c[0] == c[2]);
 }
+
+Ground_map::Neighbor_query Ground_map::closest_simplex (const Point& p) const
+{
+  double min_dist = std::numeric_limits<double>::max();
+  GVertex vertex = Graph::null_vertex();
+  GEdge edge = Graph::null_edge();
+  Point point = p;
+  
+  for (GVertex v : m_graph.vertices())
+  {
+    double dist = distance (p, m_graph[v].point);
+    if (dist < min_dist)
+    {
+      point = m_graph[v].point;
+      min_dist = dist;
+      vertex = v;
+    }
+  }
+
+  for (GEdge e : m_graph.edges())
+  {
+    GVertex vsource = m_graph.source(e);
+    GVertex vtarget = m_graph.target(e);
+    const Point& psource = m_graph[vsource].point;
+    const Point& ptarget = m_graph[vtarget].point;
+    Segment seg (psource, ptarget);
+      
+    Point proj;
+    bool does_project;
+    std::tie (proj, does_project) = seg.projection (p);
+    if (does_project)
+    {
+      double dist = distance (p, proj);
+      if (dist < min_dist)
+      {
+        point = proj;
+        min_dist = dist;
+        vertex = Graph::null_vertex();
+        edge = e;
+      }
+    }
+  }
+  
+  return Neighbor_query (vertex, edge, min_dist, point);
+}
+
+void Ground_map::shortest_path (GVertex vorigin, GVertex vtarget,
+                                std::vector<Point>& out)
+{
+  // Djikstra
+  std::priority_queue<std::pair<double, GVertex> > todo;
+
+  std::vector<GVertex> parent (m_latest_graph.vertices().size(), Graph::null_vertex());
+  
+  for (GVertex v : m_latest_graph.vertices())
+  {
+    double dist = std::numeric_limits<double>::max();
+    if (v == vorigin)
+      dist = 0;
+    m_latest_graph[v].dist = dist;
+    todo.push (std::make_pair(-dist, v));
+  }
+
+  while (!todo.empty())
+  {
+    double current_dist = -todo.top().first;
+    GVertex current = todo.top().second;
+    todo.pop();
+
+    if (m_latest_graph[current].dist < current_dist) // outdated item
+      continue;
+    
+    for (std::size_t i = 0; i < m_latest_graph.incident_edges(current).size(); ++ i)
+    {
+      GVertex next = m_latest_graph.incident_vertex(current,i);
+      double dist = current_dist + distance (m_latest_graph[current].point,
+                                             m_latest_graph[next].point);
+      if (dist < m_latest_graph[next].dist)
+      {
+        m_latest_graph[next].dist = dist;
+        parent[std::size_t(next)] = current;
+        todo.push (std::make_pair (-dist, next));
+      }
+    }
+  }
+  
+  std::vector<Point> path;
+  while (vtarget != vorigin)
+  {
+    check (parent[vtarget] != Graph::null_vertex(), "Node has no parent");
+    path.push_back (m_latest_graph[vtarget].point);
+    vtarget = parent[std::size_t(vtarget)];
+  }
+  std::copy (path.rbegin(), path.rend(),
+             std::back_inserter (out));
+}
+
 
 } // namespace Sosage::Component

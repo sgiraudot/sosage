@@ -70,8 +70,10 @@ public:
              const int wsource, const int hsource,
              const int xtarget, const int ytarget,
              const int wtarget, const int htarget);
-  void draw_line (const int xa, const int ya, const int xb, const int yb);
-  void draw_square (const int x, const int b, const int size);
+  void draw_line (const int xa, const int ya, const int xb, const int yb,
+                  unsigned int red = 255, unsigned green = 0, unsigned blue = 0);
+  void draw_square (const int x, const int b, const int size,
+                    unsigned int red = 255, unsigned green = 0, unsigned blue = 0);
   void end();
 
 };

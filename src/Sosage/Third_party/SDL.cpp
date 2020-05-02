@@ -319,12 +319,15 @@ void SDL::draw (const Image& image,
   SDL_RenderCopy(m_renderer, image.texture, &source, &target);
 }
 
-void SDL::draw_line (const int xa, const int ya, const int xb, const int yb)
+void SDL::draw_line (const int xa, const int ya, const int xb, const int yb,
+                     unsigned int red, unsigned green, unsigned blue)
 {
-//  lineRGBA (m_window, xa, ya, xb, yb, 0, 0, 255, 255);
+  SDL_SetRenderDrawColor(m_renderer, red, green, blue, 255);
+  SDL_RenderDrawLine (m_renderer, xa, ya, xb, yb);
 }
 
-void SDL::draw_square (const int x, const int y, const int size)
+void SDL::draw_square (const int x, const int y, const int size,
+                     unsigned int red, unsigned green, unsigned blue)
 {
   SDL_Rect rect;
   rect.x = x - size / 2;
@@ -332,7 +335,7 @@ void SDL::draw_square (const int x, const int y, const int size)
   rect.w = size;
   rect.h = size;
 
-  SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 255);
+  SDL_SetRenderDrawColor(m_renderer, red, green, blue, 255);
   SDL_RenderFillRect(m_renderer, &rect);
 }
 

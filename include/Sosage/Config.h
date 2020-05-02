@@ -23,7 +23,7 @@ constexpr int inventory_front_depth = inventory_back_depth + 1;
 constexpr int inventory_over_depth = inventory_front_depth + 1;
 constexpr int cursor_depth = inventory_over_depth + 1;
 
-constexpr int ground_map_width = 100;
+constexpr double boundary_precision = 2.0;
 
 constexpr int gui_fps = 60;
 constexpr int animation_fps = 12;
@@ -45,8 +45,6 @@ struct Config
 
   int characters_per_second;
 
-  double ground_map_scaling;
-
   bool fullscreen;
 
   Config (int window_width = 1200, bool fullscreen = false)
@@ -55,16 +53,15 @@ struct Config
     , window_width (window_width)
     , window_height (window_width * 10 / 16)
     , characters_per_second (12)
-    , ground_map_scaling (world_width / double(ground_map_width))
     , fullscreen (fullscreen)
   { }
 
 };
 
 #ifdef SOSAGE_ANDROID
-inline Config& config (int window_width = 1200, bool fullscreen = true)
+inline Config& config (int window_width = 1600, bool fullscreen = true)
 #else
-inline Config& config (int window_width = 1200, bool fullscreen = false)
+inline Config& config (int window_width = 1600, bool fullscreen = false)
 #endif
 {
   static std::unique_ptr<Config> c;

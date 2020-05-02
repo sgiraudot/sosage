@@ -119,7 +119,7 @@ void Animation::compute_movement_from_path (Component::Path_handle path)
   Vector direction (pos, (*path)[path->current()]);
   direction.normalize();
   direction = to_walk * direction;
-  direction = Vector (direction.x(), direction.y() / 3, WORLD);
+  direction = Vector (direction.x(), direction.y() / 3);
   to_walk = direction.length();
 
   while (true)
