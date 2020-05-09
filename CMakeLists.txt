@@ -47,8 +47,8 @@ endif()
 
 ## Fetch sources and create executable
 
-file(GLOB_RECURSE SUPERFLU_PNC_SRC "src/*.cpp")
-add_executable(superflu_pnc ${SUPERFLU_PNC_SRC})
+file(GLOB_RECURSE SUPERFLU_PNC_SRC "src/Sosage/*.cpp")
+add_executable(superflu_pnc "src/main.cpp" ${SUPERFLU_PNC_SRC})
 
 ## Set up data folder
 
@@ -93,5 +93,39 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
   install(TARGETS superflu_pnc DESTINATION Superflu\ PnC)
   install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/data/ DESTINATION Superflu\ PnC/data)
 elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
+  
+endif()
+
+# Activate concurrency?
+option(SOSAGE_COMPILE_TESTS "Compile Sosage tests" OFF)
+
+if(SOSAGE_COMPILE_TESTS)
+
+  enable_testing()
+  
+  set (SOSAGE_TEST_TARGETS "unit_component_action")
+
+  foreach(target ${SOSAGE_TEST_TARGETS})
+    add_executable("test_${target}" "test/${target}.cpp" ${SUPERFLU_PNC_SRC})
+    target_include_directories ("test_${target}" PUBLIC
+      "include"
+      ${YAML_INCLUDE_DIR}
+      ${SDL2_INCLUDE_DIR}
+      ${SDL2_IMAGE_INCLUDE_DIR}
+      ${SDL2_TTF_INCLUDE_DIR})
+    target_link_libraries("test_${target}" PUBLIC
+      ${YAML_LIBRARIES}
+      ${SDL2_LIBRARY}
+      ${SDL2_IMAGE_LIBRARIES}
+      ${SDL2_TTF_LIBRARIES})
+    
+    if (SDL2_MIXER_FOUND)
+      target_include_directories ("test_${target}" PUBLIC ${SDL2_MIXER_INCLUDE_DIR})
+      target_link_libraries("test_${target}" PUBLIC ${SDL2_MIXER_LIBRARIES})
+      target_compile_definitions("test_${target}" PUBLIC "-DSOSAGE_LINKED_WITH_SDL_MIXER")
+    endif()
+
+    add_test(${target} "test_${target}" "")
+  endforeach()
   
 endif()

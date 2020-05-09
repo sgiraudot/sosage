@@ -46,8 +46,6 @@ namespace Sosage
 #define dbg_check(test, msg) if (!(test)) check_impl (__FILE__, __LINE__, msg)
 #endif
 
-#define SOSAGE_ASSERTIONS_AS_EXCEPTIONS
-
 #if defined(SOSAGE_ANDROID)
 inline void check_impl (const char* file, int line, const std::string& str)
 {

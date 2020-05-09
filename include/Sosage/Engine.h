@@ -27,6 +27,7 @@
 #ifndef SOSAGE_ENGINE_H
 #define SOSAGE_ENGINE_H
 
+#define SOSAGE_ASSERTIONS_AS_EXCEPTIONS
 #include <Sosage/Content.h>
 #include <Sosage/System/Animation.h>
 #include <Sosage/System/Graphic.h>
