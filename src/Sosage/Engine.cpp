@@ -1,3 +1,29 @@
+/*
+  [src/Sosage/Engine.cpp]
+  Inits all systems, holds content and runs main loop.
+
+  =====================================================================
+
+  This file is part of SOSAGE.
+
+  SOSAGE is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  SOSAGE is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with SOSAGE.  If not, see <https://www.gnu.org/licenses/>.
+
+  =====================================================================
+
+  Author(s): Simon Giraudot <sosage@ptilouk.net>
+*/
+
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Console.h>
 #include <Sosage/Component/Debug.h>
@@ -20,7 +46,7 @@ Engine::Engine (const std::string& game_name)
   , m_sound (m_content)
   , m_input (m_content)
   , m_interface (m_content)
-  , m_io (m_content)
+  , m_file_io (m_content)
   , m_logic (m_content)
 {
   srand(time(nullptr));
@@ -62,7 +88,7 @@ int Engine::run (const std::string& folder_name)
 {
   m_content.set<Component::Console>("game:console");
 
-  std::string room_name = m_io.read_init (folder_name);
+  std::string room_name = m_file_io.read_init (folder_name);
 
   // Create debug info
   auto debug_info = m_content.set<Component::Debug>("game:debug", m_content, m_clock);
@@ -75,7 +101,7 @@ int Engine::run (const std::string& folder_name)
   debug("3");
   while (room_name != std::string())
   {
-    room_name = m_io.read_room (room_name);
+    room_name = m_file_io.read_room (room_name);
     m_animation.generate_random_idle_animation
       (m_content.get<Component::Animation>("character_body:image"),
        m_content.get<Component::Animation>("character_head:image"),

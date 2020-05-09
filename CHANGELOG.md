@@ -15,7 +15,7 @@ History of versions and modifications of the SOSAGE engine.
 
 ### Game Engine
 
-- Nothing
+- Much better path finder: 30x faster (0.5ms instead of 15ms)
   
 ### Content
 

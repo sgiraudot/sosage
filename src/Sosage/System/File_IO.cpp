@@ -1,3 +1,29 @@
+/*
+  [src/Sosage/System/File_IO.cpp]
+  Reads levels/savegames/configs, writes savegames/config.
+
+  =====================================================================
+
+  This file is part of SOSAGE.
+
+  SOSAGE is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  SOSAGE is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with SOSAGE.  If not, see <https://www.gnu.org/licenses/>.
+
+  =====================================================================
+
+  Author(s): Simon Giraudot <sosage@ptilouk.net>
+*/
+
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Code.h>
@@ -10,7 +36,7 @@
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Sound.h>
 #include <Sosage/Component/Text.h>
-#include <Sosage/System/IO.h>
+#include <Sosage/System/File_IO.h>
 #include <Sosage/platform.h>
 #include <Sosage/version.h>
 #include <Sosage/Utils/color.h>
@@ -19,17 +45,17 @@
 namespace Sosage::System
 {
 
-IO::IO (Content& content)
+File_IO::File_IO (Content& content)
   : m_content (content)
 {
 }
 
-std::string IO::read_init (const std::string& folder_name)
+std::string File_IO::read_init (const std::string& folder_name)
 {
   m_folder_name = folder_name;
   std::string file_name = folder_name + "data" + Sosage::folder_separator + "init.yaml";
 
-  Core::IO input (file_name);
+  Core::File_IO input (file_name);
 
   std::string v = input["version"].string();
   check (version::parse(v) <= version::get(),
@@ -80,16 +106,16 @@ std::string IO::read_init (const std::string& folder_name)
     arrow_background->z() = Sosage::inventory_back_depth;
   }
 
-  for (std::size_t i = 0; i < input["default"].size(); ++ i)
+  for (std::size_t i = 0; i < input["actions"].size(); ++ i)
   {
-    const Core::IO::Node& idefault = input["default"][i];
-    std::string id = idefault["action"].string();
+    const Core::File_IO::Node& idefault = input["actions"][i];
+    std::string id = idefault["id"].string();
 
     auto action = m_content.set<Component::Random_conditional>("default:" + id);
 
     for (std::size_t j = 0; j < idefault["effect"].size(); ++ j)
     {
-      const Core::IO::Node& iaction = idefault["effect"][j];
+      const Core::File_IO::Node& iaction = idefault["effect"][j];
       auto rnd_action = Component::make_handle<Component::Action>
         ("default:" + id + "_" + std::to_string(j));
       rnd_action->add ({ "look" });
@@ -103,9 +129,9 @@ std::string IO::read_init (const std::string& folder_name)
   return input["load_room"].string("data", "rooms", "yaml");
 }
 
-void IO::read_character (const std::string& file_name, int x, int y)
+void File_IO::read_character (const std::string& file_name, int x, int y)
 {
-  Core::IO input (local_file_name(file_name));
+  Core::File_IO input (local_file_name(file_name));
 
   std::string name = input["name"].string();
 
@@ -167,11 +193,11 @@ void IO::read_character (const std::string& file_name, int x, int y)
 
 }
 
-std::string IO::read_room (const std::string& file_name)
+std::string File_IO::read_room (const std::string& file_name)
 {
   Timer t ("Room reading");
   t.start();
-  Core::IO input (local_file_name(file_name));
+  Core::File_IO input (local_file_name(file_name));
 
   std::string name = input["name"].string();
   std::string music = input["music"].string("sounds", "musics", "ogg");
@@ -197,7 +223,7 @@ std::string IO::read_room (const std::string& file_name)
 
   for (std::size_t i = 0; i < input["content"].size(); ++ i)
   {
-    const Core::IO::Node& node = input["content"][i];
+    const Core::File_IO::Node& node = input["content"][i];
     std::string id = node["id"].string();
     std::string type = node["type"].string();
 
@@ -219,13 +245,13 @@ std::string IO::read_room (const std::string& file_name)
   return std::string();
 }
 
-std::string IO::local_file_name (const std::string& file_name) const
+std::string File_IO::local_file_name (const std::string& file_name) const
 {
   return m_folder_name + file_name;
 }
 
 
-void IO::read_animation (const Core::IO::Node& node, const std::string& id)
+void File_IO::read_animation (const Core::File_IO::Node& node, const std::string& id)
 {
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
@@ -241,7 +267,7 @@ void IO::read_animation (const Core::IO::Node& node, const std::string& id)
   debug("Animation " + id + " at position " + std::to_string(img->z()));
 }
 
-void IO::read_code (const Core::IO::Node& node, const std::string& id)
+void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
 {
   std::string button_sound = node["button_sound"].string("sounds", "effects", "wav");
   m_content.set<Component::Sound>(id + "_button:sound", local_file_name(button_sound));
@@ -258,7 +284,7 @@ void IO::read_code (const Core::IO::Node& node, const std::string& id)
 
   for (std::size_t j = 0; j < node["states"].size(); ++ j)
   {
-    const Core::IO::Node& istate = node["states"][j];
+    const Core::File_IO::Node& istate = node["states"][j];
 
     std::string state = istate["id"].string();
 
@@ -308,11 +334,11 @@ void IO::read_code (const Core::IO::Node& node, const std::string& id)
       
   for (std::size_t j = 0; j < node["buttons"].size(); ++ j)
   {
-    const Core::IO::Node& ibutton = node["buttons"][j];
+    const Core::File_IO::Node& ibutton = node["buttons"][j];
 
     std::string value = ibutton["value"].string();
 
-    const Core::IO::Node& coordinates = ibutton["coordinates"];
+    const Core::File_IO::Node& coordinates = ibutton["coordinates"];
     code->add_button (value,
                       coordinates[0].integer(),
                       coordinates[1].integer(),
@@ -328,7 +354,7 @@ void IO::read_code (const Core::IO::Node& node, const std::string& id)
     action->add (node["on_success"][j].string_array());
 }
 
-void IO::read_object (const Core::IO::Node& node, const std::string& id)
+void File_IO::read_object (const Core::File_IO::Node& node, const std::string& id)
 {
   std::string name = node["name"].string();
   int x = node["coordinates"][0].integer();
@@ -347,7 +373,7 @@ void IO::read_object (const Core::IO::Node& node, const std::string& id)
 
   for (std::size_t j = 0; j < node["states"].size(); ++ j)
   {
-    const Core::IO::Node& istate = node["states"][j];
+    const Core::File_IO::Node& istate = node["states"][j];
 
     std::string state = istate["id"].string();
 
@@ -394,7 +420,7 @@ void IO::read_object (const Core::IO::Node& node, const std::string& id)
 
   for (std::size_t i = 0; i < node["actions"].size(); ++ i)
   {
-    const Core::IO::Node& iaction = node["actions"][i];
+    const Core::File_IO::Node& iaction = node["actions"][i];
 
     std::size_t nb_actions = iaction["id"].size();
     std::size_t j = 0;
@@ -441,7 +467,7 @@ void IO::read_object (const Core::IO::Node& node, const std::string& id)
   }
 }
 
-void IO::read_scenery (const Core::IO::Node& node, const std::string& id)
+void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& id)
 {
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
@@ -454,7 +480,7 @@ void IO::read_scenery (const Core::IO::Node& node, const std::string& id)
   debug("Scenery " + id + " at position " + std::to_string(img->z()));
 }
 
-void IO::read_window (const Core::IO::Node& node, const std::string& id)
+void File_IO::read_window (const Core::File_IO::Node& node, const std::string& id)
 {
   std::string skin = node["skin"].string("images", "windows", "png");
       

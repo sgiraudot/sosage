@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/Component/Font.h]
-  Font container for text generation.
+  [include/Sosage/Core/File_IO.h]
+  Abstraction file for third party library handling file IO.
 
   =====================================================================
 
@@ -24,30 +24,15 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_COMPONENT_FONT_H
-#define SOSAGE_COMPONENT_FONT_H
+#ifndef SOSAGE_CORE_FILE_IO_H
+#define SOSAGE_CORE_FILE_IO_H
 
-#include <Sosage/Component/Handle.h>
-#include <Sosage/Core/Graphic.h>
-#include <Sosage/Utils/geometry.h>
+#include <Sosage/Third_party/Yaml.h>
 
-namespace Sosage::Component
+namespace Sosage::Core
 {
+typedef Third_party::Yaml File_IO;
+}
 
-class Font : public Base
-{
-private:
-  Core::Graphic::Font m_core;
-  
-public:
+#endif
 
-  Font (const std::string& id, const std::string& file_name, int size);
-  virtual ~Font();
-  const Core::Graphic::Font& core() const { return m_core; }
-};
-
-typedef std::shared_ptr<Font> Font_handle;
-
-} // namespace Sosage::Component
-
-#endif // SOSAGE_COMPONENT_FONT_H

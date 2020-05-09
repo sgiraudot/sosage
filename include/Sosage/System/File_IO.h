@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/System/Graphic.h]
-  Renders the content of the game at each frame.
+  [include/Sosage/System/File_IO.h]
+  Reads levels/savegames/configs, writes savegames/config.
 
   =====================================================================
 
@@ -24,38 +24,43 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_SYSTEM_GRAPHIC_H
-#define SOSAGE_SYSTEM_GRAPHIC_H
+#ifndef SOSAGE_SYSTEM_FILE_IO_H
+#define SOSAGE_SYSTEM_FILE_IO_H
 
-#include <Sosage/Component/Image.h>
-#include <Sosage/Core/Graphic.h>
 #include <Sosage/Content.h>
-
-#include <vector>
+#include <Sosage/Core/File_IO.h>
 
 namespace Sosage::System
 {
 
-class Graphic
+class File_IO
 {
 private:
 
   Content& m_content;
-  Core::Graphic m_core;
+
+  std::string m_folder_name;
 
 public:
 
-  Graphic (Content& content, const std::string& name);
+  File_IO (Content& content);
 
-  void run();
+  std::string read_init (const std::string& folder_name);
+  void read_character (const std::string& file_name, int x, int y);
+  std::string read_room (const std::string& file_name);
 
 private:
+  
+  std::string local_file_name (const std::string& file_name) const;
 
-  void get_images (std::vector<Component::Image_handle>& images);
-
-  void display_images (std::vector<Component::Image_handle>& images);
+  void read_animation (const Core::File_IO::Node& node, const std::string& id);
+  void read_code (const Core::File_IO::Node& node, const std::string& id);
+  void read_object (const Core::File_IO::Node& node, const std::string& id);
+  void read_scenery (const Core::File_IO::Node& node, const std::string& id);
+  void read_window (const Core::File_IO::Node& node, const std::string& id);
+  
 };
 
 } // namespace Sosage::System
 
-#endif // SOSAGE_SYSTEM_GRAPHIC_H
+#endif // SOSAGE_SYSTEM_FILE_IO_H

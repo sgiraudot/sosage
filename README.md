@@ -1,32 +1,5 @@
 # Superflu PnC
 
-## TODO
-
- - [x] Interface souris
- - [x] Ground map + path finder
- - [x] Animation marche, idle
- - [x] Objets, scène, états
- - [x] Interface verbes
- - [x] Action look
- - [x] Action goto
- - [x] Action look
- - [x] Action show / fenêtres
- - [x] Action sync / lock / unlock
- - [x] Action comment
- - [x] Action move
- - [x] Action set_state
- - [x] Pause
- - [x] Interface responsive
- - [x] Inventaire
- - [x] Son
- - [ ] Menus
- - [ ] Sauvegarde / chargement
- - [ ] Changement de pièce
- - [ ] Scrolling horizontal
- - [ ] Persos multiples
- - [ ] Dialogues
- 
-
 ## Dépendances
 
  - SDL2

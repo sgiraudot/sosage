@@ -1,3 +1,29 @@
+/*
+  [include/Sosage/Engine.h]
+  Inits all systems, holds content and runs main loop.
+
+  =====================================================================
+
+  This file is part of SOSAGE.
+
+  SOSAGE is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  SOSAGE is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with SOSAGE.  If not, see <https://www.gnu.org/licenses/>.
+
+  =====================================================================
+
+  Author(s): Simon Giraudot <sosage@ptilouk.net>
+*/
+
 #ifndef SOSAGE_ENGINE_H
 #define SOSAGE_ENGINE_H
 
@@ -7,7 +33,7 @@
 #include <Sosage/System/Sound.h>
 #include <Sosage/System/Input.h>
 #include <Sosage/System/Interface.h>
-#include <Sosage/System/IO.h>
+#include <Sosage/System/File_IO.h>
 #include <Sosage/System/Logic.h>
 #include <Sosage/Utils/error.h>
 #include <Sosage/Utils/time.h>
@@ -23,7 +49,7 @@ class Engine
   System::Sound m_sound;
   System::Input m_input;
   System::Interface m_interface;
-  System::IO m_io;
+  System::File_IO m_file_io;
   System::Logic m_logic;
   Clock m_clock;
 

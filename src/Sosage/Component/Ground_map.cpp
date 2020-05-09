@@ -1,3 +1,29 @@
+/*
+  [src/Sosage/Component/Ground_map.cpp]
+  Ground limits, local depth and path finding.
+
+  =====================================================================
+
+  This file is part of SOSAGE.
+
+  SOSAGE is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  SOSAGE is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with SOSAGE.  If not, see <https://www.gnu.org/licenses/>.
+
+  =====================================================================
+
+  Author(s): Simon Giraudot <sosage@ptilouk.net>
+*/
+
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Utils/profiling.h>
 
@@ -15,6 +41,8 @@ Ground_map::Ground_map (const std::string& id,
                         int front_z, int back_z)
   : Base(id), m_front_z (front_z), m_back_z (back_z)
 {
+  static Timer t ("Ground map init");
+  t.start();
   m_image = Core::Graphic::load_surface (file_name);
 
   int width = Core::Graphic::width(m_image);
@@ -107,6 +135,7 @@ Ground_map::Ground_map (const std::string& id,
   m_graph.validity();
   
   m_latest_graph = m_graph;
+  t.stop();
 }
 
 void Ground_map::find_path (Point origin,
