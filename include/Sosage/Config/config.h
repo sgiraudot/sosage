@@ -36,11 +36,7 @@ namespace Sosage
 namespace Config
 {
 
-#ifdef SOSAGE_WINDOWS
-constexpr char folder_separator = '\\';
-#else
-constexpr char folder_separator = '/';
-#endif
+constexpr char folder_separator = (windows ? '\\' : '/');
 
 constexpr int world_width = 1920;
 constexpr int world_height = 1000;

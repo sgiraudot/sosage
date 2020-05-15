@@ -27,14 +27,44 @@
 #ifndef SOSAGE_CONFIG_PLATFORM_H
 #define SOSAGE_CONFIG_PLATFORM_H
 
+namespace Sosage
+{
+
+namespace Config
+{
+
 #if defined(__ANDROID__)
-#  define SOSAGE_ANDROID
+#define SOSAGE_ANDROID
+constexpr bool android = true;
+constexpr bool mac = false;
+constexpr bool windows = false;
+constexpr bool gnunux = false;
+
 #elif defined(__APPLE__)
-#  define SOSAGE_MAC
+#define SOSAGE_MAC
+constexpr bool android = false;
+constexpr bool mac = true;
+constexpr bool windows = false;
+constexpr bool gnunux = false;
+
 #elif defined(_WIN32)
-#  define SOSAGE_WINDOWS
+#define SOSAGE_WINDOWS
+constexpr bool android = false;
+constexpr bool mac = false;
+constexpr bool windows = true;
+constexpr bool gnunux = false;
+
 #elif defined(__linux__)
-#  define SOSAGE_LINUX
+#define SOSAGE_GNUNUX
+constexpr bool android = false;
+constexpr bool mac = false;
+constexpr bool windows = false;
+constexpr bool gnunux = true;
+
 #endif
+
+}
+
+}
 
 #endif // SOSAGE_CONFIG_PLATFORM_H

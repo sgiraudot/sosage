@@ -42,11 +42,7 @@ namespace Sosage
 
 Engine::Engine (const std::string& game_name)
   : m_animation (m_content)
-#ifdef SOSAGE_ANDROID
-  , m_graphic (m_content, game_name, 1600, 1600 * 10 / 16, true)
-#else
-  , m_graphic (m_content, game_name, 1600, 1600 * 10 / 16, false)
-#endif
+  , m_graphic (m_content, game_name, 1600, 1600 * 10 / 16, Config::android)
   , m_sound (m_content)
   , m_input (m_content)
   , m_interface (m_content)

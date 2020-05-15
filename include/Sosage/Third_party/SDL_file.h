@@ -46,12 +46,18 @@ inline File open (const std::string& filename)
 {
   File out;
   out.buffer = SDL_RWFromFile(filename.c_str(), "r");
-#ifdef SOSAGE_ANDROID
-  check (out.buffer != nullptr, "Cannot read " + filename);
-#else
-  if (out.buffer == nullptr)
-    throw Sosage::Invalid_data_folder();
+  if constexpr (Config::android)
+  {
+    check (out.buffer != nullptr, "Cannot read " + filename);
+  }
+#ifndef SOSAGE_ANDROID // Stupid Android does not get if constexpr
+  else
+  {
+    if (out.buffer == nullptr)
+      throw Sosage::Invalid_data_folder();
+  }
 #endif
+  
   out.size = std::size_t(SDL_RWsize (out.buffer));
   return out;
 }

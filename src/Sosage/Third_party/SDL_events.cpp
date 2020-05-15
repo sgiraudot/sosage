@@ -50,14 +50,13 @@ bool SDL_events::next_event (SDL_events::Event& ev)
 
 bool SDL_events::is_exit (const Event& ev)
 {
-#ifdef SOSAGE_ANDROID
-  return (ev.type == SDL_KEYUP && (ev.key.keysym.sym == SDLK_AC_BACK));
-#else
+  if constexpr (Config::android)
+    return (ev.type == SDL_KEYUP && (ev.key.keysym.sym == SDLK_AC_BACK));
+
   // Quit on: interface X-cross / Escape key / Q key
   return (ev.type == SDL_QUIT ||
           (ev.type == SDL_KEYUP && (ev.key.keysym.sym == SDLK_ESCAPE
                                     || ev.key.keysym.sym == SDLK_q)));
-#endif
 }
 
 bool SDL_events::is_pause (const Event& ev)
@@ -102,14 +101,13 @@ bool SDL_events::is_f5 (const Event& ev)
 
 bool SDL_events::is_left_click (const Event& ev)
 {
-#ifdef SOSAGE_ANDROID
-  return ev.type == SDL_FINGERUP;
-#else
+  if constexpr (Config::android)
+    return ev.type == SDL_FINGERUP;
+
   return (ev.type == SDL_MOUSEBUTTONDOWN &&
           ev.button.type == SDL_MOUSEBUTTONDOWN &&
           ev.button.button == SDL_BUTTON_LEFT &&
           ev.button.state == SDL_PRESSED);
-#endif     
 }
 
 bool SDL_events::is_window_resized (const Event& ev)
@@ -120,26 +118,22 @@ bool SDL_events::is_window_resized (const Event& ev)
 
 bool SDL_events::is_mouse_motion (const Event& ev)
 {
-#ifdef SOSAGE_ANDROID
-  return (ev.type == SDL_FINGERMOTION);
-#else
+  if constexpr (Config::android)
+    return (ev.type == SDL_FINGERMOTION);
   return (ev.type == SDL_MOUSEMOTION);
-#endif
 }
 
 std::pair<int, int> SDL_events::mouse_position (const Event& ev,
                                                 int interface_width,
                                                 int interface_height)
 {
-#ifdef SOSAGE_ANDROID
-  return std::make_pair (ev.tfinger.x * (Config::world_width + interface_width),
-                         ev.tfinger.y * (Config::world_height + interface_height));
-#else
+  if constexpr (Config::android)
+    return std::make_pair (ev.tfinger.x * (Config::world_width + interface_width),
+                           ev.tfinger.y * (Config::world_height + interface_height));
   if (ev.type == SDL_MOUSEMOTION)
     return std::make_pair (ev.motion.x, ev.motion.y);
   //  else
   return std::make_pair (ev.button.x, ev.button.y);
-#endif
 }
 
 std::pair<int, int> SDL_events::window_size (const Event& ev)

@@ -259,7 +259,7 @@ public:
     yaml_event_delete(&event);
     yaml_parser_delete(&parser);
 
-    delete buffer;
+    delete[] buffer;
 //    m_root->print();
   }
 
