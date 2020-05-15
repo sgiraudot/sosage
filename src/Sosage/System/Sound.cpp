@@ -28,8 +28,8 @@
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Music.h>
 #include <Sosage/Component/Sound.h>
+#include <Sosage/Config/platform.h>
 #include <Sosage/System/Sound.h>
-#include <Sosage/platform.h>
 
 namespace Sosage::System
 {

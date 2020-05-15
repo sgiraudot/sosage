@@ -1,9 +1,9 @@
+#include <Sosage/Config/version.h>
 #include <Sosage/Engine.h>
-#include <Sosage/version.h>
 
 int main (int argc, char** argv)
 {
-  std::cerr << "Running Sosage " << Sosage::version::str() << std::endl;
+  std::cerr << "Running Sosage " << Sosage::Version::str() << std::endl;
   
   Sosage::Engine sosage ("Superflu et le Mystère du Voleur de Pommes");
 

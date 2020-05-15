@@ -29,7 +29,6 @@
 
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
-#include <Sosage/Component/Text.h>
 #include <Sosage/Content.h>
 
 #include <string>

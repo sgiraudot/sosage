@@ -27,9 +27,9 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_FILE_H
 #define SOSAGE_THIRD_PARTY_SDL_FILE_H
 
-#include <Sosage/Config.h>
+#include <Sosage/Config/config.h>
+#include <Sosage/Config/platform.h>
 #include <Sosage/Utils/error.h>
-#include <Sosage/platform.h>
 
 #include <SDL.h>
 

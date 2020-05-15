@@ -25,7 +25,7 @@
 */
 
 #include <Sosage/Component/Music.h>
-#include <Sosage/Config.h>
+#include <Sosage/Config/config.h>
 
 namespace Sosage::Component
 {

@@ -27,7 +27,7 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_H
 #define SOSAGE_THIRD_PARTY_SDL_H
 
-#include <Sosage/Config.h>
+#include <Sosage/Config/config.h>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -86,10 +86,10 @@ public:
   static int width (Image image);
   static int height (Image image);
 
-  SDL (const std::string& game_name);
+  SDL (const std::string& game_name, int window_width, int window_height, bool fullscreen);
   ~SDL ();
 
-  void update_view();
+  void update_view(int interface_width, int interface_height);
   void get_window_size (int& w, int& h);
   void begin();
   void draw (const Image& image,

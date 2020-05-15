@@ -24,9 +24,9 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
+#include <Sosage/Config/config.h>
+#include <Sosage/Config/platform.h>
 #include <Sosage/Third_party/SDL_events.h>
-#include <Sosage/platform.h>
-#include <Sosage/Config.h>
 
 #include <iostream>
 
@@ -127,11 +127,13 @@ bool SDL_events::is_mouse_motion (const Event& ev)
 #endif
 }
 
-std::pair<int, int> SDL_events::mouse_position (const Event& ev)
+std::pair<int, int> SDL_events::mouse_position (const Event& ev,
+                                                int interface_width,
+                                                int interface_height)
 {
 #ifdef SOSAGE_ANDROID
-  return std::make_pair (ev.tfinger.x * (Sosage::world_width +  config().interface_width),
-                         ev.tfinger.y * (Sosage::world_height + config().interface_height));
+  return std::make_pair (ev.tfinger.x * (Config::world_width + interface_width),
+                         ev.tfinger.y * (Config::world_height + interface_height));
 #else
   if (ev.type == SDL_MOUSEMOTION)
     return std::make_pair (ev.motion.x, ev.motion.y);

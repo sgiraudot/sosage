@@ -37,9 +37,10 @@
 namespace Sosage::System
 {
 
-Graphic::Graphic (Content& content, const std::string& game_name)
+Graphic::Graphic (Content& content, const std::string& game_name,
+                  int window_width, int window_height, bool fullscreen)
   : m_content (content)
-  , m_core (game_name)
+  , m_core (game_name, window_width, window_height, fullscreen)
 {
 }
 
@@ -47,7 +48,8 @@ void Graphic::run()
 {
   if (m_content.request<Component::Event>("window:rescaled"))
   {
-    m_core.update_view();
+    m_core.update_view (m_content.get<Component::Int>("interface:width")->value(),
+                        m_content.get<Component::Int>("interface:height")->value());
     m_content.remove ("window:rescaled");
   }
   
@@ -77,7 +79,7 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
                return (a->z() < b->z());
              });
 
-  bool locked = (m_content.get<Component::State>("game:status")->value() == "locked");
+  bool locked = (m_content.get<Component::String>("game:status")->value() == "locked");
   
   for (const auto& img : images)
   {

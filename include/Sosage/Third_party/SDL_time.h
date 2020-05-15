@@ -28,7 +28,7 @@
 #define SOSAGE_THIRD_PARTY_SDL_TIME_H
 
 #include <Sosage/Utils/error.h>
-#include <Sosage/Config.h>
+#include <Sosage/Config/config.h>
 
 #include <SDL_timer.h>
 

@@ -34,11 +34,11 @@
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Music.h>
 #include <Sosage/Component/Position.h>
+#include <Sosage/Component/Simple.h>
 #include <Sosage/Component/Sound.h>
-#include <Sosage/Component/Text.h>
+#include <Sosage/Config/platform.h>
+#include <Sosage/Config/version.h>
 #include <Sosage/System/File_IO.h>
-#include <Sosage/platform.h>
-#include <Sosage/version.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/profiling.h>
 
@@ -53,18 +53,18 @@ File_IO::File_IO (Content& content)
 std::string File_IO::read_init (const std::string& folder_name)
 {
   m_folder_name = folder_name;
-  std::string file_name = folder_name + "data" + Sosage::folder_separator + "init.yaml";
+  std::string file_name = folder_name + "data" + Config::folder_separator + "init.yaml";
 
   Core::File_IO input (file_name);
 
   std::string v = input["version"].string();
-  check (version::parse(v) <= version::get(),
-         "Error: room version " + v + " incompatible with Sosage " + version::str());
+  check (Version::parse(v) <= Version::get(),
+         "Error: room version " + v + " incompatible with Sosage " + Version::str());
 
 #ifndef SOSAGE_ANDROID
   std::string cursor = input["cursor"].string("images", "interface", "png");
   auto cursor_img = m_content.set<Component::Image> ("cursor:image", local_file_name(cursor),
-                                                     Sosage::cursor_depth);
+                                                     Config::cursor_depth);
   cursor_img->set_relative_origin(0.5, 0.5);
 #endif
   
@@ -85,7 +85,7 @@ std::string File_IO::read_init (const std::string& folder_name)
   m_content.set<Component::Font> ("interface:font", local_file_name(interface_font), 80);
   
   std::string interface_color = input["interface_color"].string();
-  m_content.set<Component::Text> ("interface:color", interface_color);
+  m_content.set<Component::String> ("interface:color", interface_color);
 
   std::array<unsigned char, 3> color = color_from_string (interface_color);
 
@@ -95,7 +95,7 @@ std::string File_IO::read_init (const std::string& folder_name)
     auto arrow
       = m_content.set<Component::Image> ("inventory_arrow_" + std::to_string(i) + ":image",
                                          local_file_name(id),
-                                         Sosage::inventory_front_depth);
+                                         Config::inventory_front_depth);
     arrow->set_relative_origin(0.5, 0.5);
     auto arrow_background
       = m_content.set<Component::Image> ("inventory_arrow_background_" + std::to_string(i)
@@ -103,7 +103,7 @@ std::string File_IO::read_init (const std::string& folder_name)
                                          arrow->width(), arrow->height(),
                                          color[0], color[1], color[2]);
     arrow_background->set_relative_origin(0.5, 0.5);
-    arrow_background->z() = Sosage::inventory_back_depth;
+    arrow_background->z() = Config::inventory_back_depth;
   }
 
   for (std::size_t i = 0; i < input["actions"].size(); ++ i)
@@ -278,7 +278,7 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
 
   auto code = m_content.set<Component::Code>(id + ":code");
       
-  auto state_handle = m_content.set<Component::State>(id + ":state");
+  auto state_handle = m_content.set<Component::String>(id + ":state");
   Component::State_conditional_handle conditional_handle_off;
   Component::State_conditional_handle conditional_handle_on;
 
@@ -308,25 +308,25 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
     std::string skin_off = istate["skin"][0].string("images", "windows", "png");
     auto img_off
       = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin_off),
-                                                 Sosage::inventory_back_depth);
+                                                 Config::inventory_back_depth);
     img_off->set_relative_origin(0.5, 0.5);
     img_off->on() = false;
         
     m_content.set<Component::Position>(id + ":position",
-                                       Point(Sosage::world_width / 2,
-                                             Sosage::world_height / 2));
+                                       Point(Config::world_width / 2,
+                                             Config::world_height / 2));
 
     std::string skin_on = istate["skin"][1].string("images", "windows", "png");
     auto img_on
       = Component::make_handle<Component::Cropped>(id + "_button:conditional_image",
                                                    local_file_name(skin_on),
-                                                   Sosage::inventory_front_depth);
+                                                   Config::inventory_front_depth);
     img_on->set_relative_origin(0.5, 0.5);
     img_on->on() = false;
 
     m_content.set<Component::Position>(id + "_button:position",
-                                       Point(Sosage::world_width / 2,
-                                             Sosage::world_height / 2));
+                                       Point(Config::world_width / 2,
+                                             Config::world_height / 2));
 
     conditional_handle_off->add(state, img_off);
     conditional_handle_on->add(state, img_on);
@@ -364,8 +364,8 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
   int vy = node["view"][1].integer();
   bool box_collision = node["box_collision"].boolean();
       
-  m_content.set<Component::Text>(id + ":name", name);
-  auto state_handle = m_content.set<Component::State>(id + ":state");
+  m_content.set<Component::String>(id + ":name", name);
+  auto state_handle = m_content.set<Component::String>(id + ":state");
   auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y));
   m_content.set<Component::Position>(id + ":view", Point(vx,vy));
 
@@ -415,7 +415,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
     auto img
       = m_content.get<Component::Image>(id + ":image");
     img->set_relative_origin(0.5, 0.5);
-    img->z() = Sosage::inventory_back_depth;
+    img->z() = Config::inventory_back_depth;
   }
 
   for (std::size_t i = 0; i < node["actions"].size(); ++ i)
@@ -445,7 +445,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
         if (!conditional_handle)
         {
           auto state_handle
-            = m_content.get<Component::State>(id + ":state");
+            = m_content.get<Component::String>(id + ":state");
           conditional_handle
             = m_content.set<Component::State_conditional>(id + ":" + a_id, state_handle);
         }
@@ -485,13 +485,13 @@ void File_IO::read_window (const Core::File_IO::Node& node, const std::string& i
   std::string skin = node["skin"].string("images", "windows", "png");
       
   auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin),
-                                             Sosage::inventory_front_depth);
+                                             Config::inventory_front_depth);
   img->set_relative_origin(0.5, 0.5);
   img->on() = false;
       
   m_content.set<Component::Position>(id + ":position",
-                                     Point(Sosage::world_width / 2,
-                                           Sosage::world_height / 2));
+                                     Point(Config::world_width / 2,
+                                           Config::world_height / 2));
 }
 
 } // namespace Sosage::System

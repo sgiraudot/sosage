@@ -83,23 +83,34 @@ void Input::run()
     
     if (m_core.is_window_resized(ev))
     {
-      std::tie (config().window_width, config().window_height)
+      std::pair<int, int> window_size
         = m_core.window_size(ev);
+      m_content.get<Component::Int>("window:width")->set(window_size.first);
+      m_content.get<Component::Int>("window:height")->set(window_size.second);
       m_content.set<Component::Event>("window:rescaled");
     }
 
     // If paused, ignore mouse events
-    if (m_content.get<Component::State>("game:status")->value() == "locked")
+    if (m_content.get<Component::String>("game:status")->value() == "locked")
       continue;
   
     if (m_core.is_mouse_motion(ev))
-      m_content.set<Component::Position>("cursor:position", Point(m_core.mouse_position(ev)));
+      m_content.set<Component::Position>
+        ("cursor:position",
+         Point(m_core.mouse_position
+               (ev,
+                m_content.get<Component::Int>("interface:width")->value(),
+                m_content.get<Component::Int>("interface:height")->value())));
     
     if (m_core.is_left_click(ev))
     {
-      m_content.set<Component::Position>("cursor:position", Point(m_core.mouse_position(ev)));
+      m_content.set<Component::Position>
+        ("cursor:position",
+         Point(m_core.mouse_position
+               (ev,
+                m_content.get<Component::Int>("interface:width")->value(),
+                m_content.get<Component::Int>("interface:height")->value())));
       m_content.set<Component::Event>("cursor:clicked");
-      DBG_CERR << "Mouse clicked = " << Point(m_core.mouse_position(ev)) << std::endl;
     }
   }
 }

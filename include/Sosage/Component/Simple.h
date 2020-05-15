@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/Utils/platform.h]
-  Internal defines for platform handling.
+  [include/Sosage/Component/Simple.h]
+  Components holding one unique type of object.
 
   =====================================================================
 
@@ -24,17 +24,39 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_PLATFORM_H
-#define SOSAGE_PLATFORM_H
+#ifndef SOSAGE_COMPONENT_SIMPLE_H
+#define SOSAGE_COMPONENT_SIMPLE_H
 
-#if defined(__ANDROID__)
-#  define SOSAGE_ANDROID
-#elif defined(__APPLE__)
-#  define SOSAGE_MAC
-#elif defined(_WIN32)
-#  define SOSAGE_WINDOWS
-#elif defined(__linux__)
-#  define SOSAGE_LINUX
-#endif
+#include <string>
 
-#endif // SOSAGE_PLATFORM_H
+namespace Sosage::Component
+{
+
+template <typename T>
+class Simple : public Base
+{
+  T m_value;
+  
+public:
+
+  Simple (const std::string& id, const T& value = T())
+    : Base(id), m_value(value) { }
+  virtual ~Simple() { }
+  const T& value() const { return m_value; }
+  void set (const T& value) { m_value = value; }
+};
+
+typedef Simple<int> Int;
+typedef std::shared_ptr<Int> Int_handle;
+
+typedef Simple<double> Double;
+typedef std::shared_ptr<Double> Double_handle;
+
+typedef Simple<std::string> String;
+typedef std::shared_ptr<String> String_handle;
+
+} // namespace Sosage::Component
+
+
+#endif // SOSAGE_COMPONENT_SIMPLE_H
+

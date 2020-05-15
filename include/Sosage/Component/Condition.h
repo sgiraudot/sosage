@@ -28,7 +28,7 @@
 #define SOSAGE_COMPONENT_CONDITION_H
 
 #include <Sosage/Component/Handle.h>
-#include <Sosage/Component/State.h>
+#include <Sosage/Component/Simple.h>
 
 namespace Sosage::Component
 {
@@ -60,12 +60,12 @@ typedef std::shared_ptr<Boolean> Boolean_handle;
 
 class State_boolean : public Condition
 {
-  State_handle m_state;
+  String_handle m_state;
   std::string m_value;
   
 public:
 
-  State_boolean (const std::string& id, State_handle state, const std::string& value)
+  State_boolean (const std::string& id, String_handle state, const std::string& value)
     : Condition(id), m_state (state), m_value(value) { }
 
   virtual bool value() const { return (m_state->value() == m_value); }

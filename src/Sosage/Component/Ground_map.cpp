@@ -100,7 +100,7 @@ Ground_map::Ground_map (const std::string& id,
   
   for (GVertex v : m_graph.vertices())
   {
-    if (deviation(v) < Sosage::boundary_precision)
+    if (deviation(v) < Config::boundary_precision)
       todo.insert (v);
   }
 
@@ -124,9 +124,9 @@ Ground_map::Ground_map (const std::string& id,
 
     m_graph.add_edge (n0, n1);
 
-    if (deviation(n0) < Sosage::boundary_precision)
+    if (deviation(n0) < Config::boundary_precision)
       todo.insert (n0);
-    if (deviation(n1) < Sosage::boundary_precision)
+    if (deviation(n1) < Config::boundary_precision)
       todo.insert (n1);
   }
 

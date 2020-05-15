@@ -25,7 +25,7 @@
 */
 
 #include <Sosage/Component/Inventory.h>
-#include <Sosage/Config.h>
+#include <Sosage/Config/config.h>
 
 #include <iostream>
 
@@ -54,7 +54,7 @@ void Inventory::remove (const std::string& entity)
 
 void Inventory::next()
 {
-  if (m_position < m_data.size() - Sosage::displayed_inventory_size)
+  if (m_position < m_data.size() - Config::displayed_inventory_size)
     ++ m_position;
 }
 

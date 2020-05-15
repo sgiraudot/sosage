@@ -27,7 +27,7 @@
 #ifndef SOSAGE_UTILS_GRAPH_H
 #define SOSAGE_UTILS_GRAPH_H
 
-#include <Sosage/Config.h>
+#include <Sosage/Config/config.h>
 
 #include <map>
 #include <vector>

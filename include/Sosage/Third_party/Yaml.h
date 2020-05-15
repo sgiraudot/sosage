@@ -90,13 +90,13 @@ public:
     std::string string (const std::string& folder,
                         const std::string& extension) const
     {
-      return folder + Sosage::folder_separator + value + '.' + extension;
+      return folder + Config::folder_separator + value + '.' + extension;
     }
 
     std::string string (const std::string& folder, const std::string& subfolder,
                         const std::string& extension) const
     {
-      return folder + Sosage::folder_separator + subfolder + Sosage::folder_separator
+      return folder + Config::folder_separator + subfolder + Config::folder_separator
         + value + '.' + extension;
     }
 

@@ -26,7 +26,7 @@
 
 #include <Sosage/Component/Cropped.h>
 #include <Sosage/Core/Graphic.h>
-#include <Sosage/Config.h>
+#include <Sosage/Config/config.h>
 
 namespace Sosage::Component
 {

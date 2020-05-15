@@ -36,7 +36,7 @@
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
-#include <Sosage/Component/Text.h>
+#include <Sosage/Component/Simple.h>
 #include <Sosage/System/Logic.h>
 #include <Sosage/Utils/error.h>
 #include <Sosage/Utils/geometry.h>
@@ -83,9 +83,9 @@ void Logic::run (const double& current_time)
   if (clicked && collision)
   {
     DBG_CERR << "Collision with " << collision->id() << std::endl;
-    if (auto name = m_content.request<Component::Text>(collision->entity() + ":name"))
+    if (auto name = m_content.request<Component::String>(collision->entity() + ":name"))
     {
-      if (m_content.get<Component::Text> ("chosen_verb:text")->entity() == "verb_goto")
+      if (m_content.get<Component::String> ("chosen_verb:text")->entity() == "verb_goto")
         compute_path_from_target(m_content.get<Component::Position>(collision->entity() + ":view"));
     }
     else
@@ -114,7 +114,7 @@ void Logic::run (const double& current_time)
       
     cropped->on() = true;
 
-    m_timed.insert (std::make_pair (m_current_time + Sosage::button_click_duration,
+    m_timed.insert (std::make_pair (m_current_time + Config::button_click_duration,
                                     Component::make_handle<Component::Event>
                                     ("code:stop_flashing")));
 
@@ -129,7 +129,7 @@ void Logic::run (const double& current_time)
       std::cerr << "Success" << std::endl;
       code->reset();
       m_content.set<Component::Event>("code:play_success");
-      m_timed.insert (std::make_pair (m_current_time + Sosage::button_click_duration,
+      m_timed.insert (std::make_pair (m_current_time + Config::button_click_duration,
                                       Component::make_handle<Component::Event>
                                       ("code:quit")));
     }
@@ -154,7 +154,7 @@ void Logic::run (const double& current_time)
     auto window = m_content.get<Component::Image>("game:window");
     window->on() = false;
     code->reset();
-    m_content.get<Component::State>("game:status")->set ("idle");
+    m_content.get<Component::String>("game:status")->set ("idle");
       
     m_current_action = m_content.get<Component::Action>
       (m_content.get<Component::Code>("game:code")->entity() + ":action");
@@ -201,9 +201,9 @@ void Logic::run (const double& current_time)
           else if (s.get(0) == "set_state")
             action_set_state (s);
           else if (s.get(0) == "lock")
-            m_content.get<Component::State>("game:status")->set("locked");
+            m_content.get<Component::String>("game:status")->set("locked");
           else if (s.get(0) == "unlock")
-            m_content.get<Component::State>("game:status")->set("idle");
+            m_content.get<Component::String>("game:status")->set("idle");
           else if (s.get(0) == "show")
             action_show (s);
           else if (s.get(0) == "sync")
@@ -317,16 +317,16 @@ void Logic::action_comment (Component::Action::Step step)
   create_dialog (text, dialog);
   
   int nb_char = int(text.size());
-  double nb_seconds = nb_char / double(config().characters_per_second);
+  double nb_seconds = nb_char / m_content.get<Component::Double>("text:char_per_second")->value();
 
   int y = 100;
   int x = m_content.get<Component::Position>("character_body:position")->value().x();
 
   for (auto img : dialog)
-    if (x + 0.75 * img->width() / 2 > int(0.95 * Sosage::world_width))
-      x = int(0.95 * Sosage::world_width) - 0.75 * img->width() / 2;
-    else if (x - 0.75 * img->width() / 2 < int(0.1 * Sosage::world_width))
-      x = int(0.1 * Sosage::world_width) + 0.75 * img->width() / 2;
+    if (x + 0.75 * img->width() / 2 > int(0.95 * Config::world_width))
+      x = int(0.95 * Config::world_width) - 0.75 * img->width() / 2;
+    else if (x - 0.75 * img->width() / 2 < int(0.1 * Config::world_width))
+      x = int(0.1 * Config::world_width) + 0.75 * img->width() / 2;
 
     
   for (auto img : dialog)
@@ -358,7 +358,7 @@ void Logic::action_look (const std::string& target)
   if (target == "default")
     m_content.set<Component::Position>("character:lookat",
                                        m_content.get<Component::Position>("cursor:position")->value());
-  else if (m_content.get<Component::State>(target + ":state")->value() != "inventory")
+  else if (m_content.get<Component::String>(target + ":state")->value() != "inventory")
     m_content.set<Component::Position>("character:lookat",
                                        m_content.get<Component::Position>(target + ":position")->value());
 }
@@ -399,7 +399,7 @@ void Logic::action_set_state (Component::Action::Step step)
   std::string target = step.get(1);
   std::string state = step.get(2);
 
-  auto current_state = m_content.get<Component::State>(target + ":state");
+  auto current_state = m_content.get<Component::String>(target + ":state");
 
   if (current_state->value() == "inventory")
     m_content.get<Component::Inventory>("game:inventory")->remove(target);
@@ -411,7 +411,7 @@ void Logic::action_set_state (Component::Action::Step step)
     auto img
       = m_content.get<Component::Image>(target + ":image");
     img->set_relative_origin(0.5, 0.5);
-    img->z() = Sosage::inventory_back_depth;
+    img->z() = Config::inventory_back_depth;
   }
 }
 
@@ -427,22 +427,22 @@ void Logic::action_show (Component::Action::Step step)
   auto code = m_content.request<Component::Code>(target + ":code");
   if (code)
   {
-    m_content.get<Component::State>("game:status")->set ("code");
+    m_content.get<Component::String>("game:status")->set ("code");
     m_content.set<Component::Variable>("game:code", code);
   }
   else
-    m_content.get<Component::State>("game:status")->set ("window");
+    m_content.get<Component::String>("game:status")->set ("window");
 }
 
 void Logic::create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog)
 {
   static const double scale = 0.75;
-  static const int width_max = int(0.95 * Sosage::world_width);
+  static const int width_max = int(0.95 * Config::world_width);
   
   auto img
     = m_content.set<Component::Image> ("comment:image",
                                        m_content.get<Component::Font> ("interface:font"),
-                                       m_content.get<Component::Text> ("interface:color")->value(),
+                                       m_content.get<Component::String> ("interface:color")->value(),
                                        text, true);
   img->set_scale(0.75);
   img->set_relative_origin(0.5, 0.5);
@@ -491,10 +491,10 @@ void Logic::create_dialog (const std::string& text, std::vector<Component::Image
       auto img
         = m_content.set<Component::Image> ("comment_" + std::to_string(i) + ":image",
                                            m_content.get<Component::Font> ("interface:font"),
-                                           m_content.get<Component::Text> ("interface:color")->value(),
+                                           m_content.get<Component::String> ("interface:color")->value(),
                                            std::string(text.begin() + cuts[i],
                                                        text.begin() + cuts[i+1]), true);
-      img->z() = Sosage::inventory_over_depth;
+      img->z() = Config::inventory_over_depth;
       img->set_scale(0.75);
       img->set_relative_origin(0.5, 0.5);
       dialog.push_back (img);

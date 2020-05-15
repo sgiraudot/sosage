@@ -25,13 +25,13 @@
 */
 
 #include <Sosage/Component/Image.h>
-#include <Sosage/Config.h>
+#include <Sosage/Config/config.h>
 
 namespace Sosage::Component
 {
 
 Image::Image (const std::string& id, int w, int h, int r, int g, int b, int a)
-  : Base(id), m_origin(0,0), m_z(Sosage::interface_depth), m_on(true),
+  : Base(id), m_origin(0,0), m_z(Config::interface_depth), m_on(true),
     m_box_collision (false)
 {
   m_core = Core::Graphic::create_rectangle (w, h, r, g, b, a);
@@ -46,7 +46,7 @@ Image::Image (const std::string& id, const std::string& file_name, int z)
 
 Image::Image (const std::string& id, Font_handle font, const std::string& color_str,
               const std::string& text, bool outlined)
-  : Base(id), m_origin(0,0), m_z(Sosage::inventory_back_depth), m_on(true),
+  : Base(id), m_origin(0,0), m_z(Config::inventory_back_depth), m_on(true),
     m_box_collision (true)
 {
   if (outlined)
@@ -76,7 +76,7 @@ void Image::set_relative_origin (double ratio_x, double ratio_y)
 void Image::rescale (int z)
 {
   m_z = z;
-  double scaling = z / double(Sosage::world_depth);
+  double scaling = z / double(Config::world_depth);
   Core::Graphic::rescale (m_core, scaling);
 }
 

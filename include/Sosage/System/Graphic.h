@@ -45,7 +45,8 @@ private:
 
 public:
 
-  Graphic (Content& content, const std::string& name);
+  Graphic (Content& content, const std::string& name,
+           int window_width, int window_height, bool fullscreen);
 
   void run();
 

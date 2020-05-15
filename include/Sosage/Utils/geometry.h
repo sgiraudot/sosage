@@ -27,7 +27,7 @@
 #ifndef SOSAGE_UTILS_GEOMETRY_H
 #define SOSAGE_UTILS_GEOMETRY_H
 
-#include <Sosage/Config.h>
+#include <Sosage/Config/config.h>
 #include <Sosage/Utils/error.h>
 
 #include <cmath>

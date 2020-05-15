@@ -30,8 +30,8 @@
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
+#include <Sosage/Config/config.h>
 #include <Sosage/System/Animation.h>
-#include <Sosage/Config.h>
 #include <Sosage/Utils/random.h>
 
 namespace Sosage::System
@@ -140,7 +140,7 @@ void Animation::compute_movement_from_path (Component::Path_handle path)
 
   Point pos = pbody->value();
 
-  double to_walk = Sosage::character_speed * ground_map->z_at_point (pos) / Sosage::world_depth;
+  double to_walk = Config::character_speed * ground_map->z_at_point (pos) / Config::world_depth;
       
   Vector direction (pos, (*path)[path->current()]);
   direction.normalize();

@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/Config.h]
-  Constant and variable configuration values (world size, FPS, etc.).
+  [include/Sosage/Config/config.h]
+  Constant configuration values (world size, FPS, etc.).
 
   =====================================================================
 
@@ -24,13 +24,16 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_CONFIG_H
-#define SOSAGE_CONFIG_H
+#ifndef SOSAGE_CONFIG_CONFIG_H
+#define SOSAGE_CONFIG_CONFIG_H
 
-#include <Sosage/platform.h>
+#include <Sosage/Config/platform.h>
 #include <memory>
 
 namespace Sosage
+{
+
+namespace Config
 {
 
 #ifdef SOSAGE_WINDOWS
@@ -61,41 +64,8 @@ constexpr int displayed_inventory_size = 4;
 
 constexpr double button_click_duration = 0.1;
 
-
-struct Config
-{
-  int interface_width;
-  int interface_height;
-  int window_width;
-  int window_height;
-
-  int characters_per_second;
-
-  bool fullscreen;
-
-  Config (int window_width = 1200, bool fullscreen = false)
-    : interface_width (0)
-    , interface_height (200)
-    , window_width (window_width)
-    , window_height (window_width * 10 / 16)
-    , characters_per_second (12)
-    , fullscreen (fullscreen)
-  { }
-
-};
-
-#ifdef SOSAGE_ANDROID
-inline Config& config (int window_width = 1600, bool fullscreen = true)
-#else
-inline Config& config (int window_width = 1600, bool fullscreen = false)
-#endif
-{
-  static std::unique_ptr<Config> c;
-  if (c == std::unique_ptr<Config>())
-    c = std::unique_ptr<Config>(new Config(window_width, fullscreen));
-  return *c;
-}
+} // namespace Config
 
 } // namespace Sosage
 
-#endif // SOSAGE_CONFIG_H
+#endif // SOSAGE_CONFIG_CONFIG_H

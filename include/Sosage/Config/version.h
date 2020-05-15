@@ -1,5 +1,5 @@
 /*
-  [include/Sosage/Utils/version.h]
+  [include/Sosage/Config/version.h]
   Version of SOSAGE.
 
   =====================================================================
@@ -24,13 +24,15 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_VERSION_H
-#define SOSAGE_VERSION_H
+#ifndef SOSAGE_CONFIG_VERSION_H
+#define SOSAGE_CONFIG_VERSION_H
+
+#include <string>
 
 namespace Sosage
 {
 
-namespace version
+namespace Version
 {
 
 constexpr unsigned int major = 0;
@@ -67,4 +69,4 @@ inline unsigned int parse (const std::string& vstring)
 
 }
 
-#endif // SOSAGE_VERSION_H
+#endif // SOSAGE_CONFIG_VERSION_H

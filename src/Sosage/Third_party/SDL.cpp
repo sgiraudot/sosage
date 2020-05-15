@@ -24,10 +24,10 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
+#include <Sosage/Config/platform.h>
 #include <Sosage/Third_party/SDL.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/error.h>
-#include <Sosage/platform.h>
 
 namespace Sosage::Third_party
 {
@@ -84,7 +84,7 @@ SDL::Font SDL::load_font (const std::string& file_name, int size)
   check (out != nullptr, "Cannot load font " + file_name);
   TTF_Font* out2 = TTF_OpenFont (file_name.c_str(), size);
   check (out2 != nullptr, "Cannot load font " + file_name);
-  TTF_SetFontOutline(out2, Sosage::text_outline);
+  TTF_SetFontOutline(out2, Config::text_outline);
   
   return std::make_pair(out, out2);
 }
@@ -140,7 +140,7 @@ SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& 
     = TTF_RenderUTF8_Blended (font.second, text.c_str(), black());
   check (back != nullptr, "Cannot create text \"" + text + "\"");
   
-  SDL_Rect rect = {Sosage::text_outline, Sosage::text_outline, surf->w, surf->h};
+  SDL_Rect rect = {Config::text_outline, Config::text_outline, surf->w, surf->h};
   SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_BLEND); 
   SDL_BlitSurface(surf, NULL, back, &rect);
 
@@ -262,7 +262,7 @@ int SDL::height (SDL::Image image)
   return out;
 }
 
-SDL::SDL (const std::string& game_name)
+SDL::SDL (const std::string& game_name, int window_width, int window_height, bool fullscreen)
   : m_cursor_surf (nullptr)
 {
   int init = SDL_Init(SDL_INIT_VIDEO);
@@ -274,14 +274,12 @@ SDL::SDL (const std::string& game_name)
   init = TTF_Init();
   check (init != -1, "Cannot initialize SDL TTF");
 
-  std::cerr << config().window_width << " * " << config().window_height << std::endl;
-
   m_window = SDL_CreateWindow (game_name.c_str(),
                                SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED,
-                               config().window_width, config().window_height,
+                               window_width, window_height,
                                SDL_WINDOW_RESIZABLE |
-                               (config().fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
+                               (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
   check (m_window != nullptr, "Cannot create SDL Window");
   
   m_renderer = SDL_CreateRenderer (m_window, -1, 0);
@@ -289,10 +287,6 @@ SDL::SDL (const std::string& game_name)
 
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
   
-  SDL_GetWindowSize (m_window, &(config().window_width), &(config().window_height));
-
-  update_view();
-
   // Render black screen while the rest is loading
   SDL_SetRenderDrawColor (m_renderer, 0, 0, 0, 255);
   SDL_RenderClear (m_renderer);
@@ -315,10 +309,10 @@ SDL::~SDL ()
   SDL_Quit ();
 }
 
-void SDL::update_view()
+void SDL::update_view(int interface_width, int interface_height)
 {
-  int window_width = Sosage::world_width + config().interface_width;
-  int window_height = Sosage::world_height + config().interface_height;
+  int window_width = Config::world_width + interface_width;
+  int window_height = Config::world_height + interface_height;
 
   SDL_RenderSetLogicalSize(m_renderer, window_width, window_height);
 }

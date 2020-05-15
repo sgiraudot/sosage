@@ -27,7 +27,7 @@
 #ifndef SOSAGE_UTILS_ERROR_H
 #define SOSAGE_UTILS_ERROR_H
 
-#include <Sosage/platform.h>
+#include <Sosage/Config/platform.h>
 
 #ifdef SOSAGE_ANDROID
 #include <android/log.h>
