@@ -156,6 +156,11 @@ void SDL::rescale (SDL::Image& source, double scaling)
   source.scaling = scaling;
 }
 
+void SDL::delete_surface (const SDL::Surface& source)
+{
+  SDL_FreeSurface (source);
+}
+
 void SDL::delete_image (const SDL::Image& source)
 {
   SDL_FreeSurface (source.surface);

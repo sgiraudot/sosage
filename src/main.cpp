@@ -10,6 +10,7 @@ int main (int argc, char** argv)
 #ifdef SUPERFLU_INSTALL_DATA_FOLDER
   try
   {
+    // TODO: fix memory leak of SDL_GetBasePath
     return sosage.run(std::string(SDL_GetBasePath()) + SUPERFLU_INSTALL_DATA_FOLDER);
   }
   catch(Sosage::Invalid_data_folder&)

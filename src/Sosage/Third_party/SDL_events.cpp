@@ -135,8 +135,8 @@ std::pair<int, int> SDL_events::mouse_position (const Event& ev)
 #else
   if (ev.type == SDL_MOUSEMOTION)
     return std::make_pair (ev.motion.x, ev.motion.y);
-  else if (ev.type == SDL_MOUSEBUTTONDOWN)
-    return std::make_pair (ev.button.x, ev.button.y);
+  //  else
+  return std::make_pair (ev.button.x, ev.button.y);
 #endif
 }
 

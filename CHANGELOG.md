@@ -8,6 +8,7 @@ History of versions and modifications of the SOSAGE engine.
 
 - Basic script for generating AppImage
 - Fix install path using relative resolution with `SDL_GetBasePath()`
+- Introduction of testing using CTest
 
 ### Interface and Menus
 
@@ -21,7 +22,7 @@ History of versions and modifications of the SOSAGE engine.
 
 - Nothing
 
-## `0.1.0-alpha1` - 2020-04-25
+## `v0.1.0 (alpha1)` - 2020-04-25
 
 ### Release Management
 

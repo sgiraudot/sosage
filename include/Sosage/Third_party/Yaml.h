@@ -49,9 +49,11 @@ public:
   class Node
   {
   public:
+    typedef std::shared_ptr<Node> Ptr;
+    
     bool sequence;
-    std::map<std::string, Node*> map;
-    std::vector<Node*> vec;
+    std::map<std::string, Ptr> map;
+    std::vector<Ptr> vec;
     std::string value;
 
     Node() : sequence(false) { }
@@ -112,7 +114,7 @@ public:
     {
       std::vector<std::string> out;
       out.reserve(vec.size());
-      for (Node* n : vec)
+      for (Ptr n : vec)
         out.push_back (n->value);
       return out;
     }
@@ -141,7 +143,7 @@ public:
 
 private:
   
-  Node* m_root;
+  Node::Ptr m_root;
 
 public:
 
@@ -169,9 +171,9 @@ public:
 
     yaml_parser_set_input_string(&parser, buffer, file.size);
 
-    Node* n;
+    Node::Ptr n;
     std::string key = "";
-    std::stack<Node*> nodes;
+    std::stack<Node::Ptr> nodes;
 
     yaml_event_t event;
     do
@@ -191,7 +193,7 @@ public:
         case YAML_ALIAS_EVENT: break;
 
         case YAML_SEQUENCE_START_EVENT:
-          n = new Node;
+          n = std::make_shared<Node>();
           n->sequence = true;
           if (!nodes.empty())
           {
@@ -211,14 +213,14 @@ public:
         case YAML_MAPPING_START_EVENT:
           if (key == "")
           {
-            n = new Node;
+            n = std::make_shared<Node>();
             if (!nodes.empty())
               nodes.top()->vec.push_back (n);
             nodes.push(n);
           }
           else
           {
-            n = new Node;
+            n = std::make_shared<Node>();
             if (!nodes.empty())
               nodes.top()->map.insert (std::make_pair (key, n));
             key = "";
@@ -235,7 +237,7 @@ public:
           std::string v = std::string(reinterpret_cast<const char*>(event.data.scalar.value));
           if (nodes.top()->sequence)
           {
-            Node* n = new Node;
+            Node::Ptr n = std::make_shared<Node>();
             n->value = v;
             nodes.top()->vec.push_back(n);
           }
@@ -243,7 +245,7 @@ public:
             key = v;
           else
           {
-            Node* n = new Node;
+            Node::Ptr n = std::make_shared<Node>();
             n->value = v;
             nodes.top()->map.insert (std::make_pair(key, n));
             key = "";
@@ -257,6 +259,7 @@ public:
     yaml_event_delete(&event);
     yaml_parser_delete(&parser);
 
+    delete buffer;
 //    m_root->print();
   }
 

@@ -120,6 +120,8 @@ public:
 
   Ground_map (const std::string& id, const std::string& file_name, int front_z, int back_z);
 
+  ~Ground_map ();
+
   template <typename Functor>
   void for_each_vertex (const Functor& functor) const
   {

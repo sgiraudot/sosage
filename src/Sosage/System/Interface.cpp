@@ -626,6 +626,7 @@ void Interface::verb_clicked()
     ->set(m_content.get<Component::Text>(m_collision->entity() + ":text"));
   m_content.set<Component::Event>("game:verb_clicked");
   m_content.remove("cursor:clicked");
+  m_content.remove ("action:source", true);
 }
 
 void Interface::arrow_clicked()
@@ -650,6 +651,7 @@ void Interface::action_clicked(const std::string& verb)
     {
       m_content.set<Component::Variable>("character:action", action);
       action_found = true;
+      m_content.remove ("action:source", true);
     }
     else
     {
@@ -657,6 +659,12 @@ void Interface::action_clicked(const std::string& verb)
       {
         if (auto source = m_content.request<Component::Text>("action:source"))
         {
+          if (source->value() == m_collision->entity())
+          {
+            m_content.remove("cursor:clicked");
+            return;
+          }
+
           auto action
             = m_content.request<Component::Action> (m_collision->entity() + ":use_"
                                                     + source->value());
@@ -695,21 +703,25 @@ void Interface::action_clicked(const std::string& verb)
            m_content.get<Component::Action> ("default:" + verb));
     }
   }
-  else if (verb == "goto")
+  else
   {
-    auto state = m_content.request<Component::State>(m_collision->entity() + ":state");
-    if (state && (state->value() == "inventory"))
+    m_content.remove ("action:source", true);
+    if (verb == "goto")
     {
-      auto action
-        = m_content.request<Component::Action> (m_collision->entity() + ":look");
-      if (action)
-        m_content.set<Component::Variable>("character:action", action);
-      m_content.remove("cursor:clicked");
-    }
-    else
-    {
-      m_content.set<Component::Variable>("cursor:target", m_collision);
-      return;
+      auto state = m_content.request<Component::State>(m_collision->entity() + ":state");
+      if (state && (state->value() == "inventory"))
+      {
+        auto action
+          = m_content.request<Component::Action> (m_collision->entity() + ":look");
+        if (action)
+          m_content.set<Component::Variable>("character:action", action);
+        m_content.remove("cursor:clicked");
+      }
+      else
+      {
+        m_content.set<Component::Variable>("cursor:target", m_collision);
+        return;
+      }
     }
   }
 
@@ -850,7 +862,11 @@ void Interface::update_action ()
     {
       if (auto name
           = m_content.request<Component::Text>(source->value() + ":name"))
+      {
+        if (name->value() == target_object)
+          target_object = "";
         text = verb->value() + " " + name->value() + " avec " + target_object;
+      }
     }
     
     auto text_img

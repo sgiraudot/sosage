@@ -76,6 +76,7 @@ public:
   static Image create_outlined_text (const Font& font, const std::string& color_str,
                                      const std::string& text);
   static void rescale (Image& source, double scaling);
+  static void delete_surface (const Surface& source);
   static void delete_image (const Image& source);
   static void delete_font (const Font& font);
   static std::array<unsigned char, 3> get_color (Surface image, int x, int y);
