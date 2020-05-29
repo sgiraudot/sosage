@@ -311,6 +311,17 @@ std::string File_IO::read_room (const std::string& file_name)
   int y = input["coordinates"][1].integer();
   read_character (character, x, y);
 
+  // First instantiate all states
+  for (std::size_t i = 0; i < input["content"].size(); ++ i)
+  {
+    const Core::File_IO::Node& node = input["content"][i];
+    if (input["content"][i].has("states"))
+    {
+      std::string id = node["id"].string();
+      m_content.set<Component::String>(id + ":state");
+    }
+  }
+  
   for (std::size_t i = 0; i < input["content"].size(); ++ i)
   {
     const Core::File_IO::Node& node = input["content"][i];
@@ -368,7 +379,7 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
 
   auto code = m_content.set<Component::Code>(id + ":code");
       
-  auto state_handle = m_content.set<Component::String>(id + ":state");
+  auto state_handle = m_content.get<Component::String>(id + ":state");
   Component::State_conditional_handle conditional_handle_off;
   Component::State_conditional_handle conditional_handle_on;
 
@@ -455,7 +466,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
   bool box_collision = node["box_collision"].boolean();
       
   m_content.set<Component::String>(id + ":name", name);
-  auto state_handle = m_content.set<Component::String>(id + ":state");
+  auto state_handle = m_content.get<Component::String>(id + ":state");
   auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y));
   m_content.set<Component::Position>(id + ":view", Point(vx,vy));
 
@@ -517,11 +528,12 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
     do
     {
       std::string a_id = (nb_actions == 0 ? iaction["id"].string() : iaction["id"][j].string());
+      std::string corrected_id = id;
       
       if (iaction.has("target"))
       {
-        a_id = a_id + "_" + iaction["target"].string();
-        std::cerr << id << ":" << a_id << std::endl;
+        a_id = a_id + "_" + id;
+        corrected_id = iaction["target"].string();
       }
 
       Component::Action_handle action;
@@ -530,21 +542,21 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
       {
         std::string state = iaction["state"].string();
         auto conditional_handle
-          = m_content.request<Component::State_conditional>(id + ":" + a_id);
+          = m_content.request<Component::State_conditional>(corrected_id + ":" + a_id);
 
         if (!conditional_handle)
         {
           auto state_handle
-            = m_content.get<Component::String>(id + ":state");
+            = m_content.get<Component::String>(corrected_id + ":state");
           conditional_handle
-            = m_content.set<Component::State_conditional>(id + ":" + a_id, state_handle);
+            = m_content.set<Component::State_conditional>(corrected_id + ":" + a_id, state_handle);
         }
 
-        action = Component::make_handle<Component::Action>(id + ":" + a_id + ":" + state);
+        action = Component::make_handle<Component::Action>(corrected_id + ":" + a_id + ":" + state);
         conditional_handle->add (state, action);
       }
       else
-        action = m_content.set<Component::Action>(id + ":" + a_id);
+        action = m_content.set<Component::Action>(corrected_id + ":" + a_id);
 
 
       for (std::size_t k = 0; k < iaction["effect"].size(); ++ k)

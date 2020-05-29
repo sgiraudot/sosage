@@ -607,59 +607,60 @@ void Interface::action_clicked(const std::string& verb)
   // If clicked target is an object
   if (m_content.request<Component::String>(m_collision->entity() + ":name"))
   {
-    // First try to get unary action
-    auto action
-      = m_content.request<Component::Action> (m_collision->entity() + ":" + verb);
-    if (action)
+    // First try binary action
+    if (verb == "use" || verb == "give")
     {
-      m_content.set<Component::Variable>("character:action", action);
-      action_found = true;
-      m_content.remove ("action:source", true);
-    }
-    else
-    {
-      // Else try binary action
-      if (verb == "use" || verb == "give")
+      // If source was already cicked
+      if (auto source = m_content.request<Component::String>("action:source"))
       {
-        // If source was already cicked
-        if (auto source = m_content.request<Component::String>("action:source"))
+        // Don't use source on source
+        if (source->value() == m_collision->entity())
         {
-          // Don't use source on source
-          if (source->value() == m_collision->entity())
-          {
-            m_content.remove("cursor:clicked");
-            return;
-          }
-
-          // Find binary action
-          auto action
-            = m_content.request<Component::Action> (m_collision->entity() + ":use_"
-                                                    + source->value());
-          if (action)
-          {
-            m_content.set<Component::Variable>("character:action", action);
-            action_found = true;
-          }
+          m_content.remove("cursor:clicked");
+          return;
         }
-        // Else check if object can be source
-        else
+
+        // Find binary action
+        auto action
+          = m_content.request<Component::Action> (m_collision->entity() + ":use_"
+                                                  + source->value());
+        if (action)
         {
-          auto state
-            = m_content.request<Component::String>(m_collision->entity() + ":state");
-          if (state && (state->value() == "inventory"))
-          {
-            m_content.set<Component::String>("action:source", m_collision->entity());
-            m_content.remove("cursor:clicked");
-            return;
-          }
+          m_content.set<Component::Variable>("character:action", action);
+          action_found = true;
         }
       }
+      // Else check if object can be source
+      else
+      {
+        auto state
+          = m_content.request<Component::String>(m_collision->entity() + ":state");
+        if (state && (state->value() == "inventory"))
+        {
+          m_content.set<Component::String>("action:source", m_collision->entity());
+          m_content.remove("cursor:clicked");
+          return;
+        }
+      }
+    }
 
-      m_content.remove ("action:source", true);
+    m_content.remove ("action:source", true);
+
+    if (!action_found)
+    {
+      // Then try to get unary action
+      auto action
+        = m_content.request<Component::Action> (m_collision->entity() + ":" + verb);
+      if (action)
+      {
+        m_content.set<Component::Variable>("character:action", action);
+        action_found = true;
+      }
     }
 
     if (!action_found)
     {
+      // Finally fallback to default action
       if (verb == "goto")
       {
         // If default action on inventory,  look
