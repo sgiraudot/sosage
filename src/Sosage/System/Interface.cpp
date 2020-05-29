@@ -112,12 +112,6 @@ void Interface::init()
   auto verb_goto = m_content.set<Component::String> ("verb_goto:text", "Aller vers");
   m_content.set<Component::Variable>("chosen_verb:text", verb_goto);
 
-  // Create pause screen
-  m_content.set<Component::Boolean>("game:paused", false);
-  
-  // Create status variable
-  m_content.set<Component::String>("game:status", "idle");
-
   auto pause_screen_pos
     = m_content.set<Component::Position>("pause_screen:position", Point(0, 0));
   m_content.set<Component::Variable>("window_overlay:position", pause_screen_pos);

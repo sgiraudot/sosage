@@ -149,12 +149,18 @@ std::string File_IO::read_init (const std::string& folder_name)
   check (Version::parse(v) <= Version::get(),
          "Error: room version " + v + " incompatible with Sosage " + Version::str());
 
-#ifndef SOSAGE_ANDROID
+  
   std::string cursor = input["cursor"].string("images", "interface", "png");
-  auto cursor_img = m_content.set<Component::Image> ("cursor:image", local_file_name(cursor),
-                                                     Config::cursor_depth);
+  auto cursor_img = Component::make_handle<Component::Image> ("cursor:image", local_file_name(cursor),
+                                                              Config::cursor_depth);
+  auto virtual_cursor = m_content.get<Component::Boolean>("interface:virtual_cursor");
+  auto paused = m_content.get<Component::Boolean>("game:paused");
+  auto orcond = Component::make_handle<Component::Or>("cursor:orcond", virtual_cursor, paused);
+  auto notcond = Component::make_handle<Component::Not>("cursor:notcond", orcond);
+  auto virtual_cond = m_content.set<Component::Conditional>("cursor:virtual_cond", notcond,
+                                                            cursor_img, Component::Handle()); 
+ 
   cursor_img->set_relative_origin(0.5, 0.5);
-#endif
   
   m_content.set<Component::Position> ("cursor:position", Point(0,0));
   

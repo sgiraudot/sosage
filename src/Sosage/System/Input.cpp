@@ -55,15 +55,7 @@ void Input::run()
     auto paused = m_content.request<Component::Boolean>("game:paused");
 
     if (paused && paused->value())
-    {
-#ifndef SOSAGE_ANDROID
-      m_content.get<Component::Image>("cursor:image")->on() = false;
-#endif
       continue;
-    }
-#ifndef SOSAGE_ANDROID
-    m_content.get<Component::Image>("cursor:image")->on() = true;
-#endif
 
     if (m_core.is_debug(ev))
       m_content.get<Component::Boolean>("game:debug")->toggle();

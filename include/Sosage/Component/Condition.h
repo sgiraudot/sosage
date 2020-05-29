@@ -101,6 +101,19 @@ public:
 
 typedef std::shared_ptr<Or> Or_handle;
 
+class Not : public Condition
+{
+  Condition_handle m_value;
+  
+public:
+
+  Not (const std::string& id, Condition_handle value)
+    : Condition(id), m_value(value) { }
+  virtual bool value() const { return !(m_value->value()); }
+};
+
+typedef std::shared_ptr<And> And_handle;
+
 
 } // namespace Sosage::Component
 
