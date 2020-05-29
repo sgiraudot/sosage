@@ -278,6 +278,7 @@ void Ground_map::find_path (Point origin,
   
   // Dijkstra
   m_latest_graph.validity();
+
   shortest_path(vorigin, vtarget, out);
 
   t.stop();

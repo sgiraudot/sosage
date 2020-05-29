@@ -105,6 +105,11 @@ public:
       return std::atoi(value.c_str());
     }
 
+    double floating () const
+    {
+      return std::atof(value.c_str());
+    }
+
     bool boolean() const
     {
       return (value == "true");
@@ -142,26 +147,36 @@ public:
   };
 
 private:
-  
+
+  std::string m_filename;
+  File m_file;
   Node::Ptr m_root;
 
 public:
 
-  Yaml (const std::string& filename)
+  Yaml (const std::string& filename, bool write = false)
+    : m_filename (filename)
   {
-    File file = Sosage::open (filename.c_str());
+    m_file = Sosage::open (m_filename.c_str(), write);
+  }
 
-    unsigned char* buffer = new unsigned char[file.size + 1];
+  ~Yaml()
+  {
+    Sosage::close (m_file);
+  }
+
+  void parse()
+  {
+    unsigned char* buffer = new unsigned char[m_file.size + 1];
     std::size_t nb_read_total = 0, nb_read = 1;
     unsigned char* buf = buffer;
-    while (nb_read_total < file.size && nb_read != 0) {
-      nb_read = Sosage::read (file, buf, (file.size - nb_read_total));
+    while (nb_read_total < m_file.size && nb_read != 0) {
+      nb_read = Sosage::read (m_file, buf, (m_file.size - nb_read_total));
       nb_read_total += nb_read;
       buf += nb_read;
     }
-    Sosage::close (file);
 
-    check (nb_read_total == file.size, "Error while reading " + filename);
+    check (nb_read_total == m_file.size, "Error while reading " + m_filename);
     buffer[nb_read_total] = '\0';
 
     yaml_parser_t parser;
@@ -169,7 +184,7 @@ public:
     bool parser_initialized = yaml_parser_initialize(&parser);
     check (parser_initialized, "Failed initializing Yaml parser");
 
-    yaml_parser_set_input_string(&parser, buffer, file.size);
+    yaml_parser_set_input_string(&parser, buffer, m_file.size);
 
     Node::Ptr n;
     std::string key = "";
@@ -179,7 +194,7 @@ public:
     do
     {
       bool event_parsed = yaml_parser_parse(&parser, &event);
-      check (event_parsed, "Failed parsing Yaml file (" + filename + ":" +
+      check (event_parsed, "Failed parsing Yaml file (" + m_filename + ":" +
              std::to_string(parser.mark.line) + ")");
 
       switch(event.type)
@@ -281,6 +296,24 @@ public:
   bool has (const std::string& key) const
   {
     return m_root->has(key);
+  }
+
+  template <typename T>
+  void write (const std::string& key, const T& value)
+  {
+    Sosage::write (m_file, key + ": " + std::to_string(value) + "\n");
+  }
+  void write (const std::string& key, const bool& value)
+  {
+    Sosage::write (m_file, key + ": " + (value ? "true" : "false") + "\n");
+  }
+  void write (const std::string& key, const std::string& value)
+  {
+    Sosage::write (m_file, key + ": " + value + "\n");
+  }
+  void write (const std::string& key, const int& v0, const int& v1)
+  {
+    Sosage::write (m_file, key + ": [" + std::to_string(v0) + ", " + std::to_string(v1) + "]\n");
   }
 
 };

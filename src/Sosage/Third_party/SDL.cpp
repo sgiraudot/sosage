@@ -262,18 +262,29 @@ int SDL::height (SDL::Image image)
   return out;
 }
 
-SDL::SDL (const std::string& game_name, int window_width, int window_height, bool fullscreen)
-  : m_cursor_surf (nullptr)
+SDL::SDL ()
 {
-  int init = SDL_Init(SDL_INIT_VIDEO);
-  check (init != -1, "Cannot initialize SDL");
 
-  init = IMG_Init(IMG_INIT_PNG);
-  check (init != -1, "Cannot initialize SDL Image");
+}
 
-  init = TTF_Init();
-  check (init != -1, "Cannot initialize SDL TTF");
+void SDL::init (const std::string& game_name, int& window_width, int& window_height, bool fullscreen)
+{
+  int okay = SDL_Init(SDL_INIT_VIDEO);
+  check (okay != -1, "Cannot initialize SDL");
 
+  okay = IMG_Init(IMG_INIT_PNG);
+  check (okay != -1, "Cannot initialize SDL Image");
+
+  okay = TTF_Init();
+  check (okay != -1, "Cannot initialize SDL TTF");
+
+  if (window_width == -1 || window_height == -1)
+  {
+    SDL_DisplayMode DM;
+    SDL_GetCurrentDisplayMode(0, &DM);
+    window_width = int(0.8 * DM.w);
+    window_height = int(0.8 * DM.h);
+  }
   m_window = SDL_CreateWindow (game_name.c_str(),
                                SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED,
@@ -301,11 +312,6 @@ SDL::~SDL ()
   
   SDL_DestroyRenderer (m_renderer);
   SDL_DestroyWindow (m_window);
-  if (m_cursor_surf != nullptr)
-  {
-    SDL_FreeSurface (m_cursor_surf);
-    SDL_FreeCursor (m_cursor);
-  }
   SDL_Quit ();
 }
 
@@ -315,6 +321,11 @@ void SDL::update_view(int interface_width, int interface_height)
   int window_height = Config::world_height + interface_height;
 
   SDL_RenderSetLogicalSize(m_renderer, window_width, window_height);
+}
+
+void SDL::toggle_fullscreen (bool fullscreen)
+{
+  SDL_SetWindowFullscreen (m_window, (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
 }
 
 void SDL::begin ()

@@ -99,6 +99,21 @@ bool SDL_events::is_f5 (const Event& ev)
   return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_F5);
 }
 
+bool SDL_events::is_alt_on (const Event& ev)
+{
+  return (ev.type == SDL_KEYDOWN && ev.key.keysym.sym == SDLK_LALT);
+}
+
+bool SDL_events::is_alt_off (const Event& ev)
+{
+  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_LALT);
+}
+
+bool SDL_events::is_enter (const Event& ev)
+{
+  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_RETURN);
+}
+
 bool SDL_events::is_left_click (const Event& ev)
 {
   if constexpr (Config::android)

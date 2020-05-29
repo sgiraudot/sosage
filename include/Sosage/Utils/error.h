@@ -86,7 +86,7 @@ inline void output (const std::string& str)
   std::cerr << str << std::endl;
 }
 
-struct Invalid_data_folder : public std::exception { };
+struct No_such_file : public std::exception { };
 
 } // namespace Sosage
 

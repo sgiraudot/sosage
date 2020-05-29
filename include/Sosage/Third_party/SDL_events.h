@@ -59,6 +59,9 @@ public:
   bool is_f3 (const Event& ev);
   bool is_f4 (const Event& ev);
   bool is_f5 (const Event& ev);
+  bool is_alt_on (const Event& ev);
+  bool is_alt_off (const Event& ev);
+  bool is_enter (const Event& ev);
   bool is_left_click (const Event& ev);
   bool is_mouse_motion (const Event& ev);
   bool is_window_resized (const Event& ev);

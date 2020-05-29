@@ -41,6 +41,7 @@
 #include <Sosage/System/File_IO.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/profiling.h>
+#include <Sosage/Utils/file.h>
 
 namespace Sosage::System
 {
@@ -50,12 +51,99 @@ File_IO::File_IO (Content& content)
 {
 }
 
+void File_IO::read_config()
+{
+  std::string file_name = Sosage::pref_path() + "config.yaml";
+
+  // Default config values
+  bool fullscreen = Config::android;
+  int layout = int(Config::AUTO);
+  bool virtual_cursor = Config::android;
+  
+  double char_per_second = 12.0;
+  double dialog_size = 0.75;
+
+  int music_volume = 64;
+  int sounds_volume = 128;
+
+  bool autosave = true;
+  
+  int interface_width = 0;
+  int interface_height = 200;
+  int window_width = -1;
+  int window_height = -1;
+  
+  try
+  {
+    Core::File_IO input (file_name);
+    input.parse();
+    fullscreen = input["fullscreen"].boolean();
+    layout = input["layout"].integer();
+    virtual_cursor = input["virtual_cursor"].boolean();
+    char_per_second = input["char_per_second"].floating();
+    dialog_size = input["dialog_size"].floating();
+    music_volume = input["music_volume"].integer();
+    sounds_volume = input["sounds_volume"].integer();
+    autosave = input["autosave"].boolean();
+    window_width = input["window"][0].integer();
+    window_height = input["window"][1].integer();
+    interface_width = input["interface"][0].integer();
+    interface_height = input["interface"][1].integer();
+  }
+  catch (Sosage::No_such_file&)
+  {
+    
+  }
+  
+  m_content.set<Component::Boolean>("window:fullscreen", fullscreen);
+  m_content.set<Component::Int>("interface:layout", layout);
+  m_content.set<Component::Boolean>("interface:virtual_cursor", virtual_cursor);
+  
+  m_content.set<Component::Double>("text:char_per_second", char_per_second);
+  m_content.set<Component::Double>("text:dialog_size", dialog_size);
+  
+  m_content.set<Component::Int>("music:volume", music_volume);
+  m_content.set<Component::Int>("sounds:volume", sounds_volume);
+  
+  m_content.set<Component::Boolean>("game:autosave", autosave);
+  
+  m_content.set<Component::Int>("interface:width", interface_width);
+  m_content.set<Component::Int>("interface:height", interface_height);
+  m_content.set<Component::Int>("window:width", window_width);
+  m_content.set<Component::Int>("window:height", window_height);
+}
+
+void File_IO::write_config()
+{
+  Core::File_IO output (Sosage::pref_path() + "config.yaml", true);
+
+  output.write ("fullscreen", m_content.get<Component::Boolean>("window:fullscreen")->value());
+  output.write ("layout", m_content.get<Component::Int>("interface:layout")->value());
+  output.write ("virtual_cursor", m_content.get<Component::Boolean>("interface:virtual_cursor")->value());
+
+  output.write ("char_per_second", m_content.get<Component::Double>("text:char_per_second")->value());
+  output.write ("dialog_size", m_content.get<Component::Double>("text:dialog_size")->value());
+  
+  output.write ("music_volume", m_content.get<Component::Int>("music:volume")->value());
+  output.write ("sounds_volume", m_content.get<Component::Int>("sounds:volume")->value());
+
+  output.write ("autosave", m_content.get<Component::Boolean>("game:autosave")->value());
+  
+  output.write ("window",
+                m_content.get<Component::Int>("window:width")->value(),
+                m_content.get<Component::Int>("window:height")->value());
+  output.write ("interface",
+                m_content.get<Component::Int>("interface:width")->value(),
+                m_content.get<Component::Int>("interface:height")->value());
+}
+
 std::string File_IO::read_init (const std::string& folder_name)
 {
   m_folder_name = folder_name;
   std::string file_name = folder_name + "data" + Config::folder_separator + "init.yaml";
 
   Core::File_IO input (file_name);
+  input.parse();
 
   std::string v = input["version"].string();
   check (Version::parse(v) <= Version::get(),
@@ -132,6 +220,7 @@ std::string File_IO::read_init (const std::string& folder_name)
 void File_IO::read_character (const std::string& file_name, int x, int y)
 {
   Core::File_IO input (local_file_name(file_name));
+  input.parse();
 
   std::string name = input["name"].string();
 
@@ -198,6 +287,7 @@ std::string File_IO::read_room (const std::string& file_name)
   Timer t ("Room reading");
   t.start();
   Core::File_IO input (local_file_name(file_name));
+  input.parse();
 
   std::string name = input["name"].string();
   std::string music = input["music"].string("sounds", "musics", "ogg");

@@ -59,10 +59,6 @@ public:
   static SDL_Window* m_window;
   static SDL_Renderer* m_renderer;
 
-  SDL_Surface* m_cursor_surf;
-  SDL_Cursor* m_cursor;
-
-  
 public:
 
   static Image create_rectangle (int w, int h, int r, int g, int b, int a);
@@ -86,10 +82,13 @@ public:
   static int width (Image image);
   static int height (Image image);
 
-  SDL (const std::string& game_name, int window_width, int window_height, bool fullscreen);
+  SDL ();
   ~SDL ();
 
+  void init (const std::string& game_name, int& window_width, int& window_height, bool fullscreen);
+
   void update_view(int interface_width, int interface_height);
+  void toggle_fullscreen(bool fullscreen);
   void get_window_size (int& w, int& h);
   void begin();
   void draw (const Image& image,

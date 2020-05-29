@@ -48,6 +48,8 @@ constexpr int inventory_front_depth = inventory_back_depth + 1;
 constexpr int inventory_over_depth = inventory_front_depth + 1;
 constexpr int cursor_depth = inventory_over_depth + 1;
 
+enum Layout { AUTO, WIDESCREEN, STANDARD, SQUARE, PORTRAIT };
+
 constexpr double boundary_precision = 2.0;
 
 constexpr int gui_fps = 60;

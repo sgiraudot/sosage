@@ -37,11 +37,21 @@
 namespace Sosage::System
 {
 
-Graphic::Graphic (Content& content, const std::string& game_name,
-                  int window_width, int window_height, bool fullscreen)
+Graphic::Graphic (Content& content)
   : m_content (content)
-  , m_core (game_name, window_width, window_height, fullscreen)
+{ }
+
+void Graphic::init()
 {
+  auto iw = m_content.get<Component::Int>("window:width");
+  auto ih = m_content.get<Component::Int>("window:height");
+  int w = iw->value();
+  int h = ih->value();
+  m_core.init (m_content.get<Component::String>("game:name")->value(),
+               w, h,
+               m_content.get<Component::Boolean>("window:fullscreen")->value());
+  iw->set(w);
+  ih->set(h);
 }
 
 void Graphic::run()
@@ -52,6 +62,12 @@ void Graphic::run()
                         m_content.get<Component::Int>("interface:height")->value());
     m_content.remove ("window:rescaled");
   }
+  if (m_content.request<Component::Event>("window:toggle_fullscreen"))
+  {
+    m_core.toggle_fullscreen (m_content.get<Component::Boolean>("window:fullscreen")->value());
+    m_content.remove ("window:toggle_fullscreen");
+  }
+
   
   std::vector<Component::Image_handle> images;
 

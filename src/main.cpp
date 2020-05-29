@@ -1,4 +1,5 @@
 #include <Sosage/Config/version.h>
+#include <Sosage/Utils/file.h>
 #include <Sosage/Engine.h>
 
 int main (int argc, char** argv)
@@ -10,10 +11,9 @@ int main (int argc, char** argv)
 #ifdef SUPERFLU_INSTALL_DATA_FOLDER
   try
   {
-    // TODO: fix memory leak of SDL_GetBasePath
-    return sosage.run(std::string(SDL_GetBasePath()) + SUPERFLU_INSTALL_DATA_FOLDER);
+    return sosage.run(Sosage::base_path() + SUPERFLU_INSTALL_DATA_FOLDER);
   }
-  catch(Sosage::Invalid_data_folder&)
+  catch(Sosage::No_such_file&)
   {
     return sosage.run(SUPERFLU_DATA_FOLDER);
   }

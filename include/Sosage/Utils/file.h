@@ -34,9 +34,9 @@ namespace Sosage
 
 typedef Third_party::SDL_file::File File;
 
-inline File open (const std::string& filename)
+inline File open (const std::string& filename, bool write = false)
 {
-  return Third_party::SDL_file::open (filename);
+  return Third_party::SDL_file::open (filename, write);
 }
 
 inline std::size_t read (File file, void* ptr, std::size_t max_num)
@@ -44,9 +44,24 @@ inline std::size_t read (File file, void* ptr, std::size_t max_num)
   return Third_party::SDL_file::read (file, ptr, max_num);
 }
 
+inline void write (File file, const std::string& str)
+{
+  Third_party::SDL_file::write (file, str.c_str());
+}
+
 inline void close (File file)
 {
   return Third_party::SDL_file::close (file);
+}
+
+inline std::string base_path()
+{
+  return Third_party::SDL_file::base_path();
+}
+
+inline std::string pref_path()
+{
+  return Third_party::SDL_file::pref_path();
 }
 
 } // namespace Sosage

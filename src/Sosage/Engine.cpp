@@ -42,13 +42,19 @@ namespace Sosage
 
 Engine::Engine (const std::string& game_name)
   : m_animation (m_content)
-  , m_graphic (m_content, game_name, 1600, 1600 * 10 / 16, Config::android)
+  , m_graphic (m_content)
   , m_sound (m_content)
   , m_input (m_content)
   , m_interface (m_content)
   , m_file_io (m_content)
   , m_logic (m_content)
 {
+  m_content.set<Component::String>("game:name", game_name);
+  m_content.set<Component::Console>("game:console");
+  
+  m_file_io.read_config();  
+  m_graphic.init();
+  
   srand(time(nullptr));
 }
 
@@ -86,13 +92,6 @@ void Engine::run()
 
 int Engine::run (const std::string& folder_name)
 {
-  m_content.set<Component::Console>("game:console");
-  m_content.set<Component::Int>("interface:width", 0);
-  m_content.set<Component::Int>("interface:height", 200);
-  m_content.set<Component::Int>("window:width", 1600);
-  m_content.set<Component::Int>("window:height", 1600 * 10 / 16);
-  m_content.set<Component::Int>("text:char_per_second", 12);
-
   std::string room_name = m_file_io.read_init (folder_name);
 
   // Create debug info
@@ -103,7 +102,6 @@ int Engine::run (const std::string& folder_name)
 
   m_interface.init();
 
-  debug("3");
   while (room_name != std::string())
   {
     room_name = m_file_io.read_room (room_name);
@@ -116,6 +114,7 @@ int Engine::run (const std::string& folder_name)
     run();
   }
   
+  m_file_io.write_config();
   return EXIT_SUCCESS;
 }
 

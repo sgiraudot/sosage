@@ -38,6 +38,8 @@ class Input
   Content& m_content;
   Core::Input m_core;
 
+  bool m_alt;
+
 public:
 
   Input (Content& content);

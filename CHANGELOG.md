@@ -13,6 +13,7 @@ History of versions and modifications of the SOSAGE engine.
 ### Interface and Menus
 
 - Nothing
+- Handling configuration file
 
 ### Game Engine
 

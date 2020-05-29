@@ -38,8 +38,7 @@ namespace Sosage::System
 
 Interface::Interface (Content& content)
   : m_content (content)
-  , m_auto_layout (true)
-  , m_layout (INIT)
+  , m_layout (Config::AUTO)
   , m_action_min_height(50)
   , m_interface_min_height(150)
 {
@@ -48,41 +47,6 @@ Interface::Interface (Content& content)
 
 void Interface::run()
 {
-  if (m_content.request<Component::Event>("window:set_auto"))
-  {
-    m_auto_layout = true;
-    m_content.remove("window:set_auto");
-    m_content.set<Component::Event>("window:rescaled");
-  }
-  else if (m_content.request<Component::Event>("window:set_widescreen"))
-  {
-    m_auto_layout = false;
-    m_layout = WIDESCREEN;
-    m_content.remove("window:set_widescreen");
-    m_content.set<Component::Event>("window:rescaled");
-  }
-  else if (m_content.request<Component::Event>("window:set_standard"))
-  {
-    m_auto_layout = false;
-    m_layout = STANDARD;
-    m_content.remove("window:set_standard");
-    m_content.set<Component::Event>("window:rescaled");
-  }
-  else if (m_content.request<Component::Event>("window:set_square"))
-  {
-    m_auto_layout = false;
-    m_layout = SQUARE;
-    m_content.remove("window:set_square");
-    m_content.set<Component::Event>("window:rescaled");
-  }
-  else if (m_content.request<Component::Event>("window:set_portrait"))
-  {
-    m_auto_layout = false;
-    m_layout = PORTRAIT;
-    m_content.remove("window:set_portrait");
-    m_content.set<Component::Event>("window:rescaled");
-  }
-  
   if (m_content.request<Component::Event>("window:rescaled"))
     update_responsive();
   
@@ -170,35 +134,31 @@ void Interface::update_responsive()
 
   int aspect_ratio = int(100. * window_width / double(window_height));
 
-  if ((m_auto_layout && aspect_ratio >= 200) ||
-      (!m_auto_layout && m_layout == WIDESCREEN))
+  Config::Layout layout = Config::Layout(m_content.get<Component::Int>("interface:layout")->value());
+  if ((layout == Config::AUTO && aspect_ratio >= 200) ||
+      (layout == Config::WIDESCREEN))
   {
-    if (m_auto_layout)
-      m_layout = WIDESCREEN;
-    
+    m_layout = Config::WIDESCREEN;
     interface_widescreen();
     vertical_layout();
   }
   else
   {
-    if ((m_auto_layout && aspect_ratio >= 115) ||
-        (!m_auto_layout && m_layout == STANDARD))
+    if ((layout == Config::AUTO && aspect_ratio >= 115) ||
+        (layout == Config::STANDARD))
     {
-      if (m_auto_layout)
-        m_layout = STANDARD;
+      m_layout = Config::STANDARD;
       interface_standard();
     }
-    else if ((m_auto_layout && aspect_ratio >= 75) ||
-             (!m_auto_layout && m_layout == SQUARE))
+    else if ((layout == Config::AUTO && aspect_ratio >= 75) ||
+             (layout == Config::SQUARE))
     {
-      if (m_auto_layout)
-        m_layout = SQUARE;
+      m_layout = Config::SQUARE;
       interface_square();
     }
     else
     {
-      if (m_auto_layout)
-        m_layout = PORTRAIT;
+      m_layout = Config::PORTRAIT;
       interface_portrait();
     }
     
@@ -643,9 +603,11 @@ void Interface::arrow_clicked()
 void Interface::action_clicked(const std::string& verb)
 {
   bool action_found = false;
-  
+
+  // If clicked target is an object
   if (m_content.request<Component::String>(m_collision->entity() + ":name"))
   {
+    // First try to get unary action
     auto action
       = m_content.request<Component::Action> (m_collision->entity() + ":" + verb);
     if (action)
@@ -656,16 +618,20 @@ void Interface::action_clicked(const std::string& verb)
     }
     else
     {
-      if (verb == "use")
+      // Else try binary action
+      if (verb == "use" || verb == "give")
       {
+        // If source was already cicked
         if (auto source = m_content.request<Component::String>("action:source"))
         {
+          // Don't use source on source
           if (source->value() == m_collision->entity())
           {
             m_content.remove("cursor:clicked");
             return;
           }
 
+          // Find binary action
           auto action
             = m_content.request<Component::Action> (m_collision->entity() + ":use_"
                                                     + source->value());
@@ -675,6 +641,7 @@ void Interface::action_clicked(const std::string& verb)
             action_found = true;
           }
         }
+        // Else check if object can be source
         else
         {
           auto state
@@ -695,9 +662,22 @@ void Interface::action_clicked(const std::string& verb)
     {
       if (verb == "goto")
       {
-        m_content.set<Component::Variable>("cursor:target", m_collision);
+        // If default action on inventory,  look
+        auto state = m_content.request<Component::String>(m_collision->entity() + ":state");
+        if (state && (state->value() == "inventory"))
+        {
+          auto action
+            = m_content.request<Component::Action> (m_collision->entity() + ":look");
+          if (action)
+            m_content.set<Component::Variable>("character:action", action);
+          m_content.remove("cursor:clicked");
+        }
+        // Else, goto
+        else
+          m_content.set<Component::Variable>("cursor:target", m_collision);
         return;
       }
+      // If no action found, use default
       else
         m_content.set<Component::Variable>
           ("character:action",
@@ -925,7 +905,7 @@ void Interface::update_inventory ()
 
       int x, y;
 
-      if (m_layout == WIDESCREEN)
+      if (m_layout == Config::WIDESCREEN)
       {
         int width = img->width();
         int inv_width = background->width();
@@ -959,7 +939,7 @@ void Interface::update_inventory ()
   bool left_on = (inventory->position() > 0);
   bool right_on =  (inventory->size() - inventory->position() > Config::displayed_inventory_size);
 
-  if (m_layout == WIDESCREEN)
+  if (m_layout == Config::WIDESCREEN)
   {
     m_content.get<Component::Image> ("inventory_arrow_0:image")->on() = left_on;
     m_content.get<Component::Image> ("inventory_arrow_background_0:image")->on() = left_on;

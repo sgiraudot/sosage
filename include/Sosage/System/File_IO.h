@@ -45,6 +45,9 @@ public:
 
   File_IO (Content& content);
 
+  void read_config();
+  void write_config();
+  
   std::string read_init (const std::string& folder_name);
   void read_character (const std::string& file_name, int x, int y);
   std::string read_room (const std::string& file_name);

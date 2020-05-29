@@ -36,6 +36,7 @@ namespace Sosage::System
 Input::Input (Content& content)
   : m_content (content)
   , m_core()
+  , m_alt(false)
 {
 }
 
@@ -71,15 +72,40 @@ void Input::run()
       m_content.get<Component::Boolean>("game:console")->toggle();
 
     if (m_core.is_f1(ev))
-      m_content.set<Component::Event>("window:set_auto");
+    {
+      m_content.get<Component::Int>("interface:layout")->set(Config::AUTO);
+      m_content.set<Component::Event>("window:rescaled");
+    }
     else if (m_core.is_f2(ev))
-      m_content.set<Component::Event>("window:set_widescreen");
+    {
+      m_content.get<Component::Int>("interface:layout")->set(Config::WIDESCREEN);
+      m_content.set<Component::Event>("window:rescaled");
+    }
     else if (m_core.is_f3(ev))
-      m_content.set<Component::Event>("window:set_standard");
+    {
+      m_content.get<Component::Int>("interface:layout")->set(Config::STANDARD);
+      m_content.set<Component::Event>("window:rescaled");
+    }
     else if (m_core.is_f4(ev))
-      m_content.set<Component::Event>("window:set_square");
+    {
+      m_content.get<Component::Int>("interface:layout")->set(Config::SQUARE);
+      m_content.set<Component::Event>("window:rescaled");
+    }
     else if (m_core.is_f5(ev))
-      m_content.set<Component::Event>("window:set_portrait");
+    {
+      m_content.get<Component::Int>("interface:layout")->set(Config::PORTRAIT);
+      m_content.set<Component::Event>("window:rescaled");
+    }
+    else if (m_core.is_alt_on(ev))
+      m_alt = true;
+    else if (m_core.is_alt_off(ev))
+      m_alt = false;
+    else if (m_core.is_enter(ev))
+    {
+      m_content.get<Component::Boolean>("window:fullscreen")->toggle();
+      m_content.set<Component::Event>("window:toggle_fullscreen");
+    }
+
     
     if (m_core.is_window_resized(ev))
     {

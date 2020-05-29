@@ -42,10 +42,10 @@ struct File
   std::size_t size;
 };
 
-inline File open (const std::string& filename)
+inline File open (const std::string& filename, bool write = false)
 {
   File out;
-  out.buffer = SDL_RWFromFile(filename.c_str(), "r");
+  out.buffer = SDL_RWFromFile(filename.c_str(), write ? "w" : "r");
   if constexpr (Config::android)
   {
     check (out.buffer != nullptr, "Cannot read " + filename);
@@ -54,7 +54,7 @@ inline File open (const std::string& filename)
   else
   {
     if (out.buffer == nullptr)
-      throw Sosage::Invalid_data_folder();
+      throw Sosage::No_such_file();
   }
 #endif
   
@@ -67,11 +67,31 @@ inline std::size_t read (File file, void* ptr, std::size_t max_num)
   return std::size_t(SDL_RWread(file.buffer, ptr, 1, max_num));
 }
 
+inline void write (File file, const char* str)
+{
+  SDL_RWwrite (file.buffer, str, 1, SDL_strlen(str));
+}
+
 inline void close (File file)
 {
   SDL_RWclose (file.buffer);
 }
 
+inline std::string base_path()
+{
+  char* bp = SDL_GetBasePath();
+  std::string out = bp;
+  delete bp;
+  return out;
+}
+
+inline std::string pref_path()
+{
+  char* pp = SDL_GetPrefPath("ptilouk", "superflu");
+  std::string out = pp;
+  delete pp;
+  return out;
+}
 
 } // namespace Sosage::Third_party::SDL_file
 
