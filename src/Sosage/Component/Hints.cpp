@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/Component/Debug.h]
-  Debug information on screen (FPS, etc.).
+  [src/Sosage/Component/Hints.cpp]
+  System for storing and selecting hints.
 
   =====================================================================
 
@@ -24,32 +24,24 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_COMPONENT_DEBUG_H
-#define SOSAGE_COMPONENT_DEBUG_H
-
-#include <Sosage/Component/Condition.h>
-#include <Sosage/Content.h>
-#include <Sosage/Utils/time.h>
+#include <Sosage/Component/cast.h>
+#include <Sosage/Component/Hints.h>
 
 namespace Sosage::Component
 {
 
-class Debug : public Boolean
+Hints::Hints (const std::string& id)
+  : Base (id)
+{ }
+
+std::string Hints::next() const
 {
-private:
+  // Return first hint that hits a fullfilled condition
+  for (const Conditional_base_handle& condition : m_values)
+    if (auto str = cast<Component::String>(condition))
+      return str->value();
+  return "";
+}
 
-  Content& m_content;
-  const Clock& m_clock;
-  
-public:
-
-  Debug (const std::string& id, Content& content, const Clock& clock);
-  virtual ~Debug();
-  std::string debug_str();
-};
-
-typedef std::shared_ptr<Debug> Debug_handle;
 
 } // namespace Sosage::Component
-
-#endif // SOSAGE_COMPONENT_DEBUG_H

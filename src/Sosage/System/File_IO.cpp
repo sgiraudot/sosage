@@ -30,6 +30,7 @@
 #include <Sosage/Component/Cropped.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
+#include <Sosage/Component/Hints.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Music.h>
@@ -67,6 +68,7 @@ void File_IO::read_config()
   int sounds_volume = 128;
 
   bool autosave = true;
+  bool hints = true;
   
   int interface_width = 0;
   int interface_height = 200;
@@ -85,6 +87,7 @@ void File_IO::read_config()
     music_volume = input["music_volume"].integer();
     sounds_volume = input["sounds_volume"].integer();
     autosave = input["autosave"].boolean();
+    hints = input["hints"].boolean();
     window_width = input["window"][0].integer();
     window_height = input["window"][1].integer();
     interface_width = input["interface"][0].integer();
@@ -106,6 +109,7 @@ void File_IO::read_config()
   m_content.set<Component::Int>("sounds:volume", sounds_volume);
   
   m_content.set<Component::Boolean>("game:autosave", autosave);
+  m_content.set<Component::Boolean>("game:hints_on", hints);
   
   m_content.set<Component::Int>("interface:width", interface_width);
   m_content.set<Component::Int>("interface:height", interface_height);
@@ -128,6 +132,7 @@ void File_IO::write_config()
   output.write ("sounds_volume", m_content.get<Component::Int>("sounds:volume")->value());
 
   output.write ("autosave", m_content.get<Component::Boolean>("game:autosave")->value());
+  output.write ("hints", m_content.get<Component::Boolean>("game:hints_on")->value());
   
   output.write ("window",
                 m_content.get<Component::Int>("window:width")->value(),
@@ -347,6 +352,22 @@ std::string File_IO::read_room (const std::string& file_name)
     else
       check (false, "Unknown content type " + type);
   }
+
+  auto hints = m_content.set<Component::Hints>("game:hints");
+
+  if (input.has("hints"))
+    for (std::size_t i = 0; i < input["hints"].size(); ++ i)
+    {
+      const Core::File_IO::Node& node = input["hints"][i];
+      std::string id = node["id"].string();
+      std::string state = node["state"].string();
+      std::string text = node["text"].string();
+
+      auto condition = Component::make_handle<Component::State_conditional>
+        ("hint:condition", m_content.get<Component::String>(id + ":state"));
+      condition->add(state, Component::make_handle<Component::String>("hint:text", text));
+      hints->add (condition);
+    }
   
   t.stop();
   return std::string();

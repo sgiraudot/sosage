@@ -38,7 +38,6 @@ class File_IO
 private:
 
   Content& m_content;
-
   std::string m_folder_name;
 
 public:

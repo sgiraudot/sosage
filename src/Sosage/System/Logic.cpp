@@ -272,7 +272,6 @@ bool Logic::compute_path_from_target (Component::Position_handle target)
 
 void Logic::update_debug_info (Component::Debug_handle debug_info)
 {
-  return;
   if (debug_info->value())
   {
     auto debug_font = m_content.get<Component::Font> ("debug:font");

@@ -25,6 +25,7 @@
 */
 
 #include <Sosage/Component/Debug.h>
+#include <Sosage/Component/Hints.h>
 
 #include <algorithm>
 #include <vector>
@@ -32,20 +33,21 @@
 namespace Sosage::Component
 {
 
-Debug::Debug (const std::string& id, const Content& content, const Clock& clock)
+Debug::Debug (const std::string& id, Content& content, const Clock& clock)
   : Boolean(id, false), m_content (content), m_clock (clock)
 { }
 
 Debug::~Debug()
 { }
 
-std::string Debug::debug_str() const
+std::string Debug::debug_str()
 {
   std::string out = "[Debug info]\n";
   out += "FPS = " + std::to_string(m_clock.fps()) + "\n";
   out += "CPU = " + std::to_string(m_clock.cpu()) + "%\n\n";
 
-  out += std::to_string(m_content.size()) + " components in memory:";
+  out += std::to_string(m_content.size()) + " components in memory\n";
+  out += "Next hint: " + m_content.get<Component::Hints>("game:hints")->next() + "\n";
 
   return out;
   

@@ -13,11 +13,13 @@ History of versions and modifications of the SOSAGE engine.
 ### Interface and Menus
 
 - Nothing
-- Handling configuration file
+- Handling configuration file and persistent settings
+- Switch fullscreen on/off
 
 ### Game Engine
 
 - Much better path finder: 30x faster (0.5ms instead of 15ms)
+- Resource manager to avoid loading N times the same file
   
 ### Content
 
