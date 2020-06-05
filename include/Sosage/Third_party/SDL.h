@@ -28,6 +28,7 @@
 #define SOSAGE_THIRD_PARTY_SDL_H
 
 #include <Sosage/Config/config.h>
+#include <Sosage/Utils/Resource_manager.h>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -42,22 +43,32 @@ class SDL
 {
 public:
 
+  typedef Resource_manager<SDL_Surface> Surface_manager;
+  typedef Resource_manager<SDL_Texture> Texture_manager;
+  typedef Resource_manager<TTF_Font> Font_manager;
+  
+  typedef typename Surface_manager::Resource_handle Surface;
+  typedef typename Texture_manager::Resource_handle Texture;
+  typedef typename Font_manager::Resource_handle Font_base;
+  
   struct Image
   {
-    SDL_Surface* surface;
-    SDL_Texture* texture;
+    Surface surface;
+    Texture texture;
     double scaling;
 
-    Image (SDL_Surface* surface = nullptr, SDL_Texture* texture = nullptr, double scaling = 1.)
+    Image (Surface surface = Surface(), Texture texture = Texture(), double scaling = 1.)
       : surface (surface), texture (texture), scaling (scaling)
     { }
   };
 
-  typedef SDL_Surface* Surface;
-  typedef std::pair<TTF_Font*, TTF_Font*> Font;
+  typedef std::pair<Font_base, Font_base> Font;
   
   static SDL_Window* m_window;
   static SDL_Renderer* m_renderer;
+  static Surface_manager m_surfaces;
+  static Texture_manager m_textures;
+  static Font_manager m_fonts;
 
 public:
 
@@ -72,9 +83,6 @@ public:
   static Image create_outlined_text (const Font& font, const std::string& color_str,
                                      const std::string& text);
   static void rescale (Image& source, double scaling);
-  static void delete_surface (const Surface& source);
-  static void delete_image (const Image& source);
-  static void delete_font (const Font& font);
   static std::array<unsigned char, 3> get_color (Surface image, int x, int y);
   static bool is_inside_image (Image image, int x, int y);
   static int width (Surface image);

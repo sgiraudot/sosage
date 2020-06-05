@@ -138,11 +138,6 @@ Ground_map::Ground_map (const std::string& id,
   t.stop();
 }
 
-Ground_map::~Ground_map()
-{
-  Core::Graphic::delete_surface (m_image);
-}
-
 void Ground_map::find_path (Point origin,
                             Point target,
                             std::vector<Point>& out)

@@ -55,11 +55,6 @@ Image::Image (const std::string& id, Font_handle font, const std::string& color_
     m_core = Core::Graphic::create_text (font->core(), color_str, text);
 }
 
-Image::~Image()
-{
-  Core::Graphic::delete_image(m_core);
-}
-
 std::string Image::str() const
 {
   return this->id() + " at (" + std::to_string (m_origin.x())
