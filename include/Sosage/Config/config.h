@@ -42,6 +42,10 @@ constexpr int world_width = 1920;
 constexpr int world_height = 1000;
 constexpr int world_depth = 3240;
 
+constexpr int camera_limit_left = world_width / 4;
+constexpr int camera_limit_right = (3 * world_width) / 4;
+constexpr double camera_speed = 0.1;
+
 constexpr int interface_depth = 1000000;
 constexpr int inventory_back_depth = interface_depth + 1;
 constexpr int inventory_front_depth = inventory_back_depth + 1;

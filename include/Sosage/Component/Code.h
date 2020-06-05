@@ -77,4 +77,4 @@ typedef std::shared_ptr<Code> Code_handle;
 
 } // namespace Sosage::Component
 
-#endif // SOSAGE_COMPONENT_INVENTORY_H
+#endif // SOSAGE_COMPONENT_CODE_H

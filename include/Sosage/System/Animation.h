@@ -67,7 +67,8 @@ private:
 
   void generate_random_mouth_animation (Component::Animation_handle mouth);
   void generate_pick_animation (Component::Animation_handle body);
-                             
+
+  void update_camera_target();
 };
 
 } // namespace Sosage::System

@@ -96,6 +96,7 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
              });
 
   bool locked = (m_content.get<Component::String>("game:status")->value() == "locked");
+  double xcamera = m_content.get<Component::Double>("camera:position")->value();
   
   for (const auto& img : images)
   {
@@ -104,15 +105,19 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
       if (locked &&
            img->entity() == "cursor")
         continue;
-      
-      auto p = m_content.get<Component::Position>(img->entity() + ":position");
+
+      auto position = m_content.get<Component::Position>(img->entity() + ":position");
+      Point p = position->value();
+
+      if (!position->absolute())
+        p = p + Vector (-xcamera, 0);
 
       int xmin = img->xmin();
       int ymin = img->ymin();
       int xmax = img->xmax();
       int ymax = img->ymax();
       
-      Point screen_position = p->value() - img->core().scaling * Vector(img->origin());
+      Point screen_position = p - img->core().scaling * Vector(img->origin());
 
       m_core.draw (img->core(), xmin, ymin, (xmax - xmin), (ymax - ymin),
                    screen_position.x(), screen_position.y(),
@@ -128,28 +133,28 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
     ground_map->for_each_vertex
       ([&](const Point& point)
        {
-         m_core.draw_square (point.x(), point.y(), 10);
+         m_core.draw_square (point.x() - xcamera, point.y(), 10);
        });
       
     ground_map->for_each_edge
       ([&](const Point& source, const Point& target)
        {
-         m_core.draw_line (source.x(), source.y(),
-                           target.x(), target.y());
+         m_core.draw_line (source.x() - xcamera, source.y(),
+                           target.x() - xcamera, target.y());
        });
 
     auto path = m_content.request<Component::Path>("character:path");
     if (path)
     {
       Point current = m_content.get<Component::Position>("character_body:position")->value();
-      m_core.draw_square (current.x(), current.y(), 10, 0, 255, 0);
+      m_core.draw_square (current.x() - xcamera, current.y(), 10, 0, 255, 0);
 
       for (std::size_t p = path->current(); p < path->size(); ++ p)
       {
         Point next = (*path)[p];
-        m_core.draw_square (next.x(), next.y(), 10, 0, 255, 0);
-        m_core.draw_line (current.x(), current.y(),
-                          next.x(), next.y(), 0, 255, 0);
+        m_core.draw_square (next.x() - xcamera, next.y(), 10, 0, 255, 0);
+        m_core.draw_line (current.x() - xcamera, current.y(),
+                          next.x() - xcamera, next.y(), 0, 255, 0);
         current = next;
       }
 

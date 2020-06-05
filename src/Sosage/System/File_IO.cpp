@@ -261,20 +261,20 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
                                           0, 11, 2, true);
   amouth->set_relative_origin(0.5, 1.0);
   
-  auto pbody = m_content.set<Component::Position>("character_body:position", Point(x, y));
+  auto pbody = m_content.set<Component::Position>("character_body:position", Point(x, y), false);
 
-  m_content.set<Component::Position>("character_head:gap_right", Point(hdx_right,hdy));
-  m_content.set<Component::Position>("character_head:gap_left", Point(hdx_left,hdy));
+  m_content.set<Component::Position>("character_head:gap_right", Point(hdx_right,hdy), false);
+  m_content.set<Component::Position>("character_head:gap_left", Point(hdx_left,hdy), false);
 
-  m_content.set<Component::Position>("character_mouth:gap_right", Point(mdx_right,mdy));
-  m_content.set<Component::Position>("character_mouth:gap_left", Point(mdx_left,mdy));
+  m_content.set<Component::Position>("character_mouth:gap_right", Point(mdx_right,mdy), false);
+  m_content.set<Component::Position>("character_mouth:gap_left", Point(mdx_left,mdy), false);
   
   auto phead
-    = m_content.set<Component::Position>("character_head:position", Point(x - hdx_right, y - hdy));
+    = m_content.set<Component::Position>("character_head:position", Point(x - hdx_right, y - hdy), false);
 
   auto pmouth
     = m_content.set<Component::Position>("character_mouth:position", Point(x - hdx_right - mdx_right,
-                                                                           y - hdy - mdy));
+                                                                           y - hdy - mdy), false);
 
   auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
   
@@ -313,7 +313,7 @@ std::string File_IO::read_room (const std::string& file_name)
     = m_content.set<Component::Image>("background:image", local_file_name(background), 0);
   background_img->box_collision() = true;
   
-  m_content.set<Component::Position>("background:position", Point(0, 0));
+  m_content.set<Component::Position>("background:position", Point(0, 0), false);
   m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map),
                                        front_z, back_z);
 
@@ -387,7 +387,7 @@ void File_IO::read_animation (const Core::File_IO::Node& node, const std::string
   std::string skin = node["skin"].string("images", "animations", "png");
   int length = node["length"].integer();
       
-  auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y));
+  auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
   auto img = m_content.set<Component::Animation>(id + ":image", local_file_name(skin), z,
                                                  length, 1, false);
   img->on() = false;
@@ -494,8 +494,8 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
       
   m_content.set<Component::String>(id + ":name", name);
   auto state_handle = m_content.get<Component::String>(id + ":state");
-  auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y));
-  m_content.set<Component::Position>(id + ":view", Point(vx,vy));
+  auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
+  m_content.set<Component::Position>(id + ":view", Point(vx,vy), false);
 
   Component::State_conditional_handle conditional_handle;
 
@@ -603,7 +603,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
   int z = node["coordinates"][2].integer();
   std::string skin = node["skin"].string("images", "scenery", "png");
       
-  auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y));
+  auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
   auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), z);
   img->set_relative_origin(0.5, 1.0);
   debug("Scenery " + id + " at position " + std::to_string(img->z()));

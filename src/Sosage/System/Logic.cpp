@@ -212,6 +212,7 @@ void Logic::run (const double& current_time)
     }
   }
 
+  update_camera();
   update_debug_info (m_content.get<Component::Debug>("game:debug"));
   update_console (m_content.get<Component::Console>("game:console"));
 }
@@ -258,9 +259,11 @@ bool Logic::compute_path_from_target (Component::Position_handle target)
   auto position = m_content.get<Component::Position>("character_body:position");
       
   Point origin = position->value();
+  Point t = target->value();
+  t = t + Vector (m_content.get<Component::Double>("camera:position")->value(), 0);
 
   std::vector<Point> path;
-  ground_map->find_path (origin, target->value(), path);
+  ground_map->find_path (origin, t, path);
 
   // Check if character is already at target
   if ((path.size() == 1) && (path[0] == origin))
@@ -268,6 +271,16 @@ bool Logic::compute_path_from_target (Component::Position_handle target)
   
   m_content.set<Component::Path>("character:path", path);
   return true;
+}
+
+void Logic::update_camera()
+{
+  auto position = m_content.get<Component::Double>("camera:position");
+  auto target = m_content.get<Component::Double>("camera:target");
+
+  double dir = target->value() - position->value();
+  dir *= Config::camera_speed;
+  position->set (position->value() + dir);
 }
 
 void Logic::update_debug_info (Component::Debug_handle debug_info)

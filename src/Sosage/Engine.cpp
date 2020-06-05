@@ -53,6 +53,8 @@ Engine::Engine (const std::string& game_name)
   m_content.set<Component::Console>("game:console");
   m_content.set<Component::Boolean>("game:paused", false);
   m_content.set<Component::String>("game:status", "idle");
+  m_content.set<Component::Double>("camera:position", 0.0);
+  m_content.set<Component::Double>("camera:target", 0.0);
   
   m_file_io.read_config();  
   m_graphic.init();

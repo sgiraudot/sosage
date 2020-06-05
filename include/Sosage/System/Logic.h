@@ -65,6 +65,7 @@ private:
   void clear_timed(bool action_goto);
   
   bool compute_path_from_target (Component::Position_handle target);
+  void update_camera();
   void update_debug_info (Component::Debug_handle debug_info);
   void update_console (Component::Console_handle console);
 

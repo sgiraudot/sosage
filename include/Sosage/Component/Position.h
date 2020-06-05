@@ -40,13 +40,15 @@ namespace Sosage::Component
 class Position : public Base
 {
   Point m_pos;
+  bool m_absolute;
 
 public:
 
-  Position (const std::string& id, const Point& coord);
+  Position (const std::string& id, const Point& coord, bool absolute = true);
   virtual std::string str() const;
   Point value () const { return m_pos; }
   void set (const Point& p) { m_pos = p; }
+  bool absolute() const { return m_absolute; }
 };
 typedef std::shared_ptr<Position> Position_handle;
 

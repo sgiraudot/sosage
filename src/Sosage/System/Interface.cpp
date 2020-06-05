@@ -762,6 +762,7 @@ void Interface::detect_collision (Component::Position_handle cursor)
   }
 
   m_collision = Component::Image_handle();
+  double xcamera = m_content.get<Component::Double>("camera:position")->value();
   
   for (const auto& e : m_content)
     if (auto img = Component::cast<Component::Image>(e))
@@ -773,9 +774,13 @@ void Interface::detect_collision (Component::Position_handle cursor)
           img->id().find("interface_") == 0)
         continue;
       
-      auto p = m_content.get<Component::Position>(img->entity() + ":position");
+      auto position = m_content.get<Component::Position>(img->entity() + ":position");
+      Point p = position->value();
 
-      Point screen_position = p->value() - img->core().scaling * Vector(img->origin());
+      if (!position->absolute())
+        p = p + Vector (-xcamera, 0);
+
+      Point screen_position = p - img->core().scaling * Vector(img->origin());
       int xmin = screen_position.x();
       int ymin = screen_position.y();
       int xmax = xmin + (img->core().scaling * (img->xmax() - img->xmin()));
@@ -790,6 +795,9 @@ void Interface::detect_collision (Component::Position_handle cursor)
       if (!img->box_collision())
       {
         int x_in_image = cursor->value().x() - xmin;
+        if (!position->absolute())
+          x_in_image += xcamera;
+        
         int y_in_image = cursor->value().y() - ymin;
         if (!img->is_target_inside (x_in_image, y_in_image))
           continue;

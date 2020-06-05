@@ -29,8 +29,8 @@
 namespace Sosage::Component
 {
 
-Position::Position (const std::string& id, const Point& point)
-  : Base(id), m_pos (point)
+Position::Position (const std::string& id, const Point& point, bool absolute)
+  : Base(id), m_pos (point), m_absolute (absolute)
 { }
 
 std::string Position::str() const

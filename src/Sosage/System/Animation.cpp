@@ -40,14 +40,16 @@ namespace Sosage::System
 Animation::Animation (Content& content)
   : m_content (content)
 {
-
 }
 
 void Animation::run()
 {
   auto path = m_content.request<Component::Path>("character:path");
   if (path)
+  {
     compute_movement_from_path(path);
+    update_camera_target();
+  }
   
   auto lookat = m_content.request<Component::Position>("character:lookat");
   if (lookat)
@@ -394,6 +396,20 @@ void Animation::generate_pick_animation (Component::Animation_handle image)
   image->frames().clear();
   
   image->frames().push_back (Component::Animation::Frame (5, row_index, 1));
+}
+
+void Animation::update_camera_target ()
+{
+  int xbody = m_content.get<Component::Position>("character_body:position")->value().x();
+  double xcamera = m_content.get<Component::Double>("camera:position")->value();
+
+  if (xbody < xcamera + Config::camera_limit_left)
+    m_content.get<Component::Double>("camera:target")->set (std::max (0, xbody - Config::camera_limit_right));
+  else if (xbody > xcamera + Config::camera_limit_right)
+  {
+    int width = m_content.get<Component::Image>("background:image")->width();
+    m_content.get<Component::Double>("camera:target")->set (std::min (width - Config::world_width, xbody - Config::camera_limit_left));
+  }
 }
 
 } // namespace Sosage::System
