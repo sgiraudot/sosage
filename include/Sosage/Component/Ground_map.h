@@ -50,7 +50,11 @@ class Ground_map : public Base
     { }
   };
 
-  struct Edge { };
+  struct Edge
+  {
+    bool border;
+    Edge() : border(true) { }
+  };
 
   typedef Sosage::Graph<Vertex, Edge> Graph;
   typedef typename Graph::Vertex GVertex;
@@ -136,7 +140,7 @@ public:
     {
       const Point& s = m_latest_graph[m_latest_graph.source(e)].point;
       const Point& t = m_latest_graph[m_latest_graph.target(e)].point;
-      functor (s, t);
+      functor (s, t, m_latest_graph[e].border);
     }
   }
   
@@ -149,6 +153,10 @@ public:
 
   void shortest_path (GVertex vorigin, GVertex vtarget,
                       std::vector<Point>& out);
+
+  bool intersects_border (const Graph& g,
+                          const Segment& seg,
+                          const std::function<bool(const GEdge&)>& condition) const;
 
 };
 typedef std::shared_ptr<Ground_map> Ground_map_handle;

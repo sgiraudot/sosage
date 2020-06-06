@@ -137,10 +137,11 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
        });
       
     ground_map->for_each_edge
-      ([&](const Point& source, const Point& target)
+      ([&](const Point& source, const Point& target, bool border)
        {
          m_core.draw_line (source.x() - xcamera, source.y(),
-                           target.x() - xcamera, target.y());
+                           target.x() - xcamera, target.y(),
+                           (border ? 255 : 0), 0, (border ? 0 : 255));
        });
 
     auto path = m_content.request<Component::Path>("character:path");

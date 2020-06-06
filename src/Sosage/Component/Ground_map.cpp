@@ -133,6 +133,38 @@ Ground_map::Ground_map (const std::string& id,
   m_graph.validity();
   m_graph.clean();
   m_graph.validity();
+
+  std::cerr << "Edges = " << m_graph.num_edges() << std::endl;
+  
+  for (auto it0 = m_graph.vertices().begin(); it0 != m_graph.vertices().end(); ++ it0)
+  {
+    GVertex v0 = *it0;
+    auto it1 = it0;
+    ++ it1;
+    for (; it1 != m_graph.vertices().end(); ++ it1)
+    {
+      GVertex v1 = *it1;
+      if (m_graph.is_edge(v0, v1))
+        continue;
+      Segment seg (m_graph[v0].point, m_graph[v1].point);
+      if (intersects_border
+          (m_graph, seg,
+           [&](const GEdge& e) -> bool
+           {
+             return (m_graph.edge_has_vertex(e, v0) ||
+                     m_graph.edge_has_vertex(e, v1));
+           }))
+        continue;
+
+      Point mid = midpoint (m_graph[v0].point, m_graph[v1].point);
+      if (!is_ground_point(mid))
+        continue;
+
+      GEdge e = m_graph.add_edge(v0, v1);
+      m_graph[e].border = false;
+    }
+  }
+  std::cerr << "Edges = " << m_graph.num_edges() << std::endl;
   
   m_latest_graph = m_graph;
   t.stop();
@@ -203,22 +235,15 @@ void Ground_map::find_path (Point origin,
     vtarget = m_latest_graph.add_vertex(target);
 
   Segment segment (origin, target);
-  bool intersection = false;
-  for (GEdge e : m_latest_graph.edges())
-  {
-    if (m_latest_graph.edge_has_vertex(e, vorigin)
-        || m_latest_graph.edge_has_vertex(e, vtarget))
-      continue;
-    Segment eseg (m_latest_graph[m_latest_graph.source(e)].point,
-                  m_latest_graph[m_latest_graph.target(e)].point);
-    if (intersect(segment, eseg))
-    {
-      intersection = true;
-      break;
-    }
-  }
-
-  if (!intersection) // Nothing intersected, straight line is fine
+  
+  // If no  border intersected, straight line is fine
+  if (!intersects_border
+      (m_latest_graph, segment,
+       [&](const GEdge& e) -> bool
+       {
+         return (m_latest_graph.edge_has_vertex(e, vorigin)
+                 || m_latest_graph.edge_has_vertex(e, vtarget));
+       }))
   {
     // Additional check if we join 2 borders through a hole
     Point mid = midpoint (origin, target);
@@ -244,22 +269,12 @@ void Ground_map::find_path (Point origin,
         continue;
         
       Segment seg (m_latest_graph[v].point, m_latest_graph[n].point);
-      bool intersection = false;
-      for (GEdge e : m_latest_graph.edges())
-      {
-        if (e == eorigin || e == etarget)
-          continue;
-        if (m_latest_graph.edge_has_vertex(e, v))
-          continue;
-        Segment eseg (m_latest_graph[m_latest_graph.source(e)].point,
-                      m_latest_graph[m_latest_graph.target(e)].point);
-        if (intersect(seg, eseg))
-        {
-          intersection = true;
-          break;
-        }
-      }
-      if (intersection)
+      if (intersects_border
+          (m_latest_graph, seg,
+           [&](const GEdge& e) -> bool
+           {
+             return ((e == eorigin || e == etarget) || m_latest_graph.edge_has_vertex(e, v));
+           }))
         continue;
 
       to_add.insert (std::make_pair(v, n));
@@ -267,7 +282,10 @@ void Ground_map::find_path (Point origin,
   }
 
   for (const auto& p : to_add)
-    m_latest_graph.add_edge(p.first, p.second);
+  {
+    GEdge e = m_latest_graph.add_edge(p.first, p.second);
+    m_latest_graph[e].border = false;
+  }
 
   m_latest_graph.clean();
   
@@ -408,5 +426,20 @@ void Ground_map::shortest_path (GVertex vorigin, GVertex vtarget,
              std::back_inserter (out));
 }
 
+bool Ground_map::intersects_border (const Graph& g,
+                                    const Segment& seg,
+                                    const std::function<bool(const GEdge&)>& condition) const
+{
+  for (GEdge e : g.edges())
+  {
+    if (!g[e].border || condition(e))
+      continue;
+    Segment eseg (g[g.source(e)].point,
+                  g[g.target(e)].point);
+    if (intersect(seg, eseg))
+      return true;
+  }
+  return false;
+}
 
 } // namespace Sosage::Component
