@@ -42,6 +42,7 @@
 #include <Sosage/Utils/geometry.h>
 
 #include <algorithm>
+#include <fstream>
 #include <vector>
 
 namespace Sosage::System
@@ -82,7 +83,6 @@ void Logic::run (const double& current_time)
   auto clicked = m_content.request<Component::Event>("cursor:clicked");
   if (clicked && collision)
   {
-    DBG_CERR << "Collision with " << collision->id() << std::endl;
     if (auto name = m_content.request<Component::String>(collision->entity() + ":name"))
     {
       if (m_content.get<Component::String> ("chosen_verb:text")->entity() == "verb_goto")
@@ -120,13 +120,11 @@ void Logic::run (const double& current_time)
 
     if (code->failure())
     {
-      std::cerr << "Failure" << std::endl;
       code->reset();
       m_content.set<Component::Event>("code:play_failure");
     }
     else if (code->success())
     {
-      std::cerr << "Success" << std::endl;
       code->reset();
       m_content.set<Component::Event>("code:play_success");
       m_timed.insert (std::make_pair (m_current_time + Config::button_click_duration,
@@ -184,12 +182,18 @@ void Logic::run (const double& current_time)
         while (m_next_step != m_current_action->size())
         {
           const Component::Action::Step& s = (*m_current_action)[m_next_step ++];
-          DBG_CERR << s.get(0) << std::endl;
 
           if (s.get(0) == "comment")
             action_comment (s);
           else if (s.get(0) == "goto")
             action_goto (m_current_action->entity());
+          else if (s.get(0) == "load")
+          {
+            // temporary
+            std::ofstream f ("content.log");
+            for (const auto& c : m_content)
+              f << c->id() << std::endl;
+          }
           else if (s.get(0) == "look")
             action_look (m_current_action->entity());
           else if (s.get(0) == "move")
@@ -214,7 +218,6 @@ void Logic::run (const double& current_time)
 
   update_camera();
   update_debug_info (m_content.get<Component::Debug>("game:debug"));
-  update_console (m_content.get<Component::Console>("game:console"));
 }
 
 bool Logic::exit()
@@ -229,9 +232,6 @@ bool Logic::paused()
 
 void Logic::clear_timed(bool action_goto)
 {
-  if (action_goto)
-    std::cerr << "GOTO" << std::endl;
-  
   std::set<Timed_handle> new_timed_handle;
   
   for (const Timed_handle& th : m_timed)
@@ -249,7 +249,6 @@ void Logic::clear_timed(bool action_goto)
         m_content.remove (th.second->id());
     }
   m_timed.swap(new_timed_handle);
-  std::cerr << m_timed.size() << std::endl;
 }
 
 bool Logic::compute_path_from_target (Component::Position_handle target)
@@ -303,25 +302,6 @@ void Logic::update_debug_info (Component::Debug_handle debug_info)
 
 }
 
-void Logic::update_console (Component::Console_handle console)
-{
-  if (console->value())
-  {
-    auto debug_font = m_content.get<Component::Font> ("debug:font");
-    auto console_img = m_content.set<Component::Image> ("console:image",
-                                                        debug_font, "FF0000",
-                                                        console->console_str());
-    auto console_pos = m_content.set<Component::Position>("console:position", Point(0,0));
-  }
-  else
-  {
-    auto console_img = m_content.request<Component::Image> ("console:image");
-    if (console_img)
-      console_img->on() = false;
-  }
-
-}
-
 void Logic::action_comment (Component::Action::Step step)
 {
   std::string text = step.get(1);
@@ -353,7 +333,6 @@ void Logic::action_comment (Component::Action::Step step)
 
   m_content.set<Component::Event>("character:start_talking");
 
-  DBG_CERR << nb_seconds << std::endl;
   m_timed.insert (std::make_pair (m_current_time + nb_seconds,
                                   Component::make_handle<Component::Event>
                                   ("character:stop_talking")));

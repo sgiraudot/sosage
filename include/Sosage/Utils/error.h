@@ -33,6 +33,10 @@
 #include <android/log.h>
 #endif
 
+#if !defined(NDEBUG) && !defined(SOSAGE_DEBUG)
+#define SOSAGE_DEBUG
+#endif
+
 #include <iostream>
 
 namespace Sosage
@@ -40,10 +44,10 @@ namespace Sosage
 
 #define check(test, msg) if (!(test)) check_impl (__FILE__, __LINE__, msg)
 
-#if defined(NDEBUG)
-#define dbg_check(test, msg) (static_cast<void>(0))
-#else
+#ifdef SOSAGE_DEBUG
 #define dbg_check(test, msg) if (!(test)) check_impl (__FILE__, __LINE__, msg)
+#else
+#define dbg_check(test, msg) (static_cast<void>(0))
 #endif
 
 #if defined(SOSAGE_ANDROID)
@@ -70,7 +74,7 @@ inline void debug (const std::string& str)
 {
   __android_log_print (ANDROID_LOG_INFO, "Info", "%s", str.c_str());
 }
-#elif not defined(NDEBUG)
+#elif defined(SOSAGE_DEBUG)
 inline void debug (const std::string& str)
 {
   std::cerr << str << std::endl;
@@ -80,11 +84,6 @@ inline void debug (const std::string&)
 {
 }
 #endif
-
-inline void output (const std::string& str)
-{
-  std::cerr << str << std::endl;
-}
 
 struct No_such_file : public std::exception { };
 

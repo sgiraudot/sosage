@@ -41,8 +41,8 @@ Ground_map::Ground_map (const std::string& id,
                         int front_z, int back_z)
   : Base(id), m_front_z (front_z), m_back_z (back_z)
 {
-  static Timer t ("Ground map init");
-  t.start();
+  SOSAGE_TIMER_START(Ground_map__Ground_map);
+  
   m_image = Core::Graphic::load_surface (file_name);
 
   int width = Core::Graphic::width(m_image);
@@ -134,7 +134,7 @@ Ground_map::Ground_map (const std::string& id,
   m_graph.clean();
   m_graph.validity();
 
-  std::cerr << "Edges = " << m_graph.num_edges() << std::endl;
+  debug("Edges = " + std::to_string(m_graph.num_edges()));
   
   for (auto it0 = m_graph.vertices().begin(); it0 != m_graph.vertices().end(); ++ it0)
   {
@@ -164,18 +164,18 @@ Ground_map::Ground_map (const std::string& id,
       m_graph[e].border = false;
     }
   }
-  std::cerr << "Edges = " << m_graph.num_edges() << std::endl;
+  debug("Edges = " + std::to_string(m_graph.num_edges()));
   
   m_latest_graph = m_graph;
-  t.stop();
+  
+  SOSAGE_TIMER_STOP(Ground_map__Ground_map);
 }
 
 void Ground_map::find_path (Point origin,
                             Point target,
                             std::vector<Point>& out)
 {
-  static Timer t ("Path finder");
-  t.start();
+  SOSAGE_TIMER_START(Ground_map__find_path);
 
   m_latest_graph = m_graph;
 
@@ -251,7 +251,7 @@ void Ground_map::find_path (Point origin,
     {
       out.push_back (target);
       m_latest_graph = m_graph;
-      t.stop();
+      SOSAGE_TIMER_STOP(Ground_map__find_path);
       return;
     }
   }
@@ -294,7 +294,7 @@ void Ground_map::find_path (Point origin,
 
   shortest_path(vorigin, vtarget, out);
 
-  t.stop();
+  SOSAGE_TIMER_STOP(Ground_map__find_path);
 }
 
 double Ground_map::z_at_point (const Point& p) const

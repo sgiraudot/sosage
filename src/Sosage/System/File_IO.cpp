@@ -295,8 +295,8 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
 
 std::string File_IO::read_room (const std::string& file_name)
 {
-  Timer t ("Room reading");
-  t.start();
+  SOSAGE_TIMER_START(File_IO__read_room);
+  
   Core::File_IO input (local_file_name(file_name));
   input.parse();
 
@@ -368,8 +368,9 @@ std::string File_IO::read_room (const std::string& file_name)
       condition->add(state, Component::make_handle<Component::String>("hint:text", text));
       hints->add (condition);
     }
-  
-  t.stop();
+
+  SOSAGE_TIMER_STOP(File_IO__read_room);
+
   return std::string();
 }
 

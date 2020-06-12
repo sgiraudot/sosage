@@ -29,6 +29,20 @@
 
 #include <Sosage/Core/Time.h>
 
+#include <algorithm>
+
+#ifdef SOSAGE_PROFILE
+#  define SOSAGE_TIMER_START(x) static Timer x(#x); x.start()
+#  define SOSAGE_TIMER_RESTART(x) x.start()
+#  define SOSAGE_TIMER_STOP(x) x.stop()
+#  define SOSAGE_COUNT(x) static Counter x(#x); x.increment()
+#else
+#  define SOSAGE_TIMER_START(x)
+#  define SOSAGE_TIMER_RESTART(x)
+#  define SOSAGE_TIMER_STOP(x)
+#  define SOSAGE_COUNT(x)
+#endif
+
 namespace Sosage
 {
 using namespace Core;
@@ -39,15 +53,20 @@ class Timer
   Time::Unit m_start;
   Time::Duration m_duration;
   unsigned int m_nb;
-  
+  bool m_master;
+
 public:
 
-  Timer (const std::string& id) : m_id (id), m_nb(0) { }
+  Timer (const std::string& id, bool master = true) : m_id (id), m_nb(0), m_master(master) { }
 
   ~Timer()
   {
-    output("[" + m_id + " profiling] " + to_string(m_duration) + " ("
-           + to_string(mean_duration()) + " per iteration)");
+    if (m_master)
+    {
+      std::cerr << "[Profiling " << m_id << "] ";
+      display();
+      std::cerr << std::endl;
+    }
   }
 
   void start()
@@ -64,14 +83,39 @@ public:
 
   double mean_duration() const { return m_duration / double(m_nb); }
 
-  std::string to_string (double d)
+  void display() const
   {
-    if (d < 100)
-      return std::to_string(d) + "ms";
-    return std::to_string(d / 1000.) + "s";
+    std::cerr << to_string(m_duration);
+    if (m_nb > 1)
+      std::cerr << " ("
+                << to_string(mean_duration())
+                << " per iteration, " << m_nb << " iterations)";
+  }
+
+  std::string to_string (double d) const
+  {
+    if (d < 900)
+      return std::to_string(std::round(d * 100) / 100).substr(0,4) + "ms";
+    return std::to_string(std::round((d / 1000.) * 100) / 100).substr(0,4) + "s";
   }
 };
 
+class Counter
+{
+  std::string m_id;
+  unsigned int m_nb;
+
+public:
+
+  Counter (const std::string& id) : m_id (id), m_nb(0) { }
+  ~Counter ()
+  {
+    std::cerr << "[Profiling " << m_id << "] "
+              << m_nb << " iteration(s)" << std::endl;
+  }
+
+  void increment() { ++ m_nb; }
+};
 
 }
 

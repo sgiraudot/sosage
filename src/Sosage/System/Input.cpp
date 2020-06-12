@@ -25,7 +25,6 @@
 */
 
 #include <Sosage/Component/Condition.h>
-#include <Sosage/Component/Console.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/System/Input.h>

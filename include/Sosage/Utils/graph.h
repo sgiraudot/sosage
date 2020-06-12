@@ -28,6 +28,7 @@
 #define SOSAGE_UTILS_GRAPH_H
 
 #include <Sosage/Config/config.h>
+#include <Sosage/Utils/error.h>
 
 #include <map>
 #include <vector>
@@ -253,7 +254,7 @@ public:
 
   void validity()
   {
-    std::cerr << "Checking graph" << std::endl;
+    debug("checking graph");
     for (Vertex v : vertices())
     {
       for (std::size_t i = 0; i < incident_edges(v).size(); ++ i)

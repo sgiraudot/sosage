@@ -30,6 +30,7 @@
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Component/cast.h>
 #include <Sosage/Utils/error.h>
+#include <Sosage/Utils/profiling.h>
 
 namespace Sosage
 {
@@ -53,6 +54,7 @@ public:
   template <typename T>
   void set (const std::shared_ptr<T>& t)
   {
+    count_set_ptr();
     Component::Handle_set::iterator iter = m_data.find(t);
     if (iter != m_data.end())
       m_data.erase(iter);
@@ -62,6 +64,7 @@ public:
   template <typename T, typename ... Args>
   std::shared_ptr<T> set (Args&& ... args)
   {
+    count_set_args();
     std::shared_ptr<T> new_component = std::make_shared<T>(args...);
     set (new_component);
     return new_component;
@@ -70,6 +73,7 @@ public:
   template <typename T>
   std::shared_ptr<T> request (const std::string& key)
   {
+    count_request();
     Component::Handle_set::iterator iter = m_data.find(std::make_shared<Component::Base>(key));
     if (iter == m_data.end())
       return std::shared_ptr<T>();
@@ -81,8 +85,9 @@ public:
   template <typename T>
   std::shared_ptr<T> get (const std::string& key)
   {
+    count_get();
     std::shared_ptr<T> out = request<T>(key);
-#ifndef NDEBUG
+#ifdef SOSAGE_DEBUG
     if (out == std::shared_ptr<T>())
     {
       std::cerr << "Candidate are:" << std::endl;
@@ -95,7 +100,13 @@ public:
     check (out != std::shared_ptr<T>(), "Cannot find " + key);
     return out;
   }
-  
+
+private:
+
+  inline void count_set_ptr() { SOSAGE_COUNT (Content__set_ptr); }
+  inline void count_set_args() { SOSAGE_COUNT (Content__set_args); }
+  inline void count_request() { SOSAGE_COUNT (Content__request); }
+  inline void count_get() { SOSAGE_COUNT (Content__get); }
 };
 
 } // namespace Sosage

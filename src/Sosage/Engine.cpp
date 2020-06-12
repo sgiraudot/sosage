@@ -25,7 +25,6 @@
 */
 
 #include <Sosage/Component/Animation.h>
-#include <Sosage/Component/Console.h>
 #include <Sosage/Component/Debug.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Image.h>
@@ -33,9 +32,12 @@
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
 #include <Sosage/Config/platform.h>
+#include <Sosage/Config/version.h>
 #include <Sosage/Engine.h>
 #include <Sosage/Utils/profiling.h>
 #include <Sosage/Utils/file.h>
+
+#include <ctime>
 
 namespace Sosage
 {
@@ -49,8 +51,9 @@ Engine::Engine (const std::string& game_name)
   , m_file_io (m_content)
   , m_logic (m_content)
 {
+  debug ("Running Sosage " + Sosage::Version::str());
+  
   m_content.set<Component::String>("game:name", game_name);
-  m_content.set<Component::Console>("game:console");
   m_content.set<Component::Boolean>("game:paused", false);
   m_content.set<Component::String>("game:status", "idle");
   m_content.set<Component::Double>("camera:position", 0.0);
@@ -70,6 +73,8 @@ Engine::~Engine()
 
 void Engine::run()
 {
+  SOSAGE_TIMER_START(Engine__run__Frame_computation);
+  
   std::size_t frame_id = m_clock.frame_id();
 
   m_content.set<Component::Event>("music:start");
@@ -89,9 +94,21 @@ void Engine::run()
     }
     m_sound.run();
     frame_id = new_frame_id;
+    
+    SOSAGE_TIMER_STOP(Engine__run__Frame_computation);
+    
+    SOSAGE_TIMER_START(Engine__run__Rendering);
     m_graphic.run();
+    SOSAGE_TIMER_STOP(Engine__run__Rendering);
+    
+    SOSAGE_TIMER_START(Engine__run__Sleep);
     m_clock.wait(true);
+    SOSAGE_TIMER_STOP(Engine__run__Sleep);
+    
+    SOSAGE_TIMER_RESTART(Engine__run__Frame_computation);
   }
+
+  SOSAGE_TIMER_STOP(Engine__run__Frame_computation);
 }
 
 int Engine::run (const std::string& folder_name)

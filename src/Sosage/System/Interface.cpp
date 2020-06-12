@@ -26,7 +26,6 @@
 
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Code.h>
-#include <Sosage/Component/Console.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Position.h>
@@ -310,12 +309,9 @@ void Interface::vertical_layout()
   double w_scaling = interface_width / double(min_verbs_width);
   double h_scaling = interface_height / double(min_verbs_height);
 
-  DBG_CERR << "Scaling = " << w_scaling << "*" << h_scaling << std::endl;
-
   double min_scaling = (std::min)(h_scaling, w_scaling);
 
   int h_spacing = interface_height;
-  DBG_CERR << h_spacing << " ";
   for (std::size_t i = 0; i < m_verbs.size(); ++ i)
   {
     int h = int(m_verbs[i]->height() * min_scaling);
@@ -324,7 +320,6 @@ void Interface::vertical_layout()
   }
 
   h_spacing /= 8;
-  DBG_CERR << h_spacing << " ";
 
   int x = Config::world_width + interface_width / 2;
   int current_y= h_spacing / 2;
@@ -435,8 +430,6 @@ void Interface::horizontal_layout()
 
   double w_scaling = interface_width / double(min_verbs_width);
   double h_scaling = interface_height / double(min_verbs_height);
-
-  DBG_CERR << "Scaling = " << w_scaling << "*" << h_scaling << std::endl;
 
   double min_scaling = (std::min)(h_scaling, w_scaling);
 

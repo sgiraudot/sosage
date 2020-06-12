@@ -36,7 +36,7 @@ namespace Sosage::Component
 
 class Base
 {
-  std::string m_id; // entity:component or entity:state:component
+  std::string m_id; // entity:component
   
 public:
   Base(const std::string& id) : m_id (id) { }

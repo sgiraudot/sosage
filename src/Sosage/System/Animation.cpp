@@ -25,7 +25,6 @@
 */
 
 #include <Sosage/Component/Animation.h>
-#include <Sosage/Component/Console.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Path.h>
@@ -264,7 +263,6 @@ void Animation::generate_random_idle_head_animation (Component::Animation_handle
   if (direction.x() < 0)
     row_index = 1;
 
-  DBG_CERR << "Row index = " << row_index << std::endl;
   // Generate 10 poses with transitions
   int pose = 0;
   for (int i = 0; i < 10; ++ i)
