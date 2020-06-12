@@ -32,6 +32,8 @@
 #include <Sosage/Utils/error.h>
 #include <Sosage/Utils/profiling.h>
 
+#include <functional>
+
 namespace Sosage
 {
 
@@ -50,6 +52,15 @@ public:
   Component::Handle_set::const_iterator begin() const { return m_data.begin(); }
   Component::Handle_set::const_iterator end() const { return m_data.end(); }
   void remove (const std::string& key, bool optional = false);
+
+  void clear (const std::function<bool(Component::Handle)>& filter)
+  {
+    Component::Handle_set new_set;
+    for (Component::Handle c : m_data)
+      if (!filter(c))
+        new_set.insert(c);
+    m_data.swap (new_set);
+  }
 
   template <typename T>
   void set (const std::shared_ptr<T>& t)

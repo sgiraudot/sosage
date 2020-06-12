@@ -87,6 +87,13 @@ void Engine::run()
     if (!m_logic.paused())
     {
       m_logic.run(m_clock.frame_time());
+
+      if (auto new_room = m_content.request<Component::String>("game:new_room"))
+      {
+        m_file_io.read_room (new_room->value());
+        m_content.remove ("game:new_room");
+      }
+      
       m_interface.run();
       if (new_frame_id != frame_id)
         for (std::size_t i = frame_id; i < new_frame_id; ++ i)
@@ -123,17 +130,14 @@ int Engine::run (const std::string& folder_name)
 
   m_interface.init();
 
-  while (room_name != std::string())
-  {
-    room_name = m_file_io.read_room (room_name);
-    m_animation.generate_random_idle_animation
-      (m_content.get<Component::Animation>("character_body:image"),
-       m_content.get<Component::Animation>("character_head:image"),
-       m_content.get<Component::Animation>("character_mouth:image"),
-       Vector(1,0));
+  m_file_io.read_room (room_name);
+  m_animation.generate_random_idle_animation
+    (m_content.get<Component::Animation>("character_body:image"),
+     m_content.get<Component::Animation>("character_head:image"),
+     m_content.get<Component::Animation>("character_mouth:image"),
+     Vector(1,0));
     
-    run();
-  }
+  run();
   
   m_file_io.write_config();
   return EXIT_SUCCESS;

@@ -188,12 +188,7 @@ void Logic::run (const double& current_time)
           else if (s.get(0) == "goto")
             action_goto (m_current_action->entity());
           else if (s.get(0) == "load")
-          {
-            // temporary
-            std::ofstream f ("content.log");
-            for (const auto& c : m_content)
-              f << c->id() << std::endl;
-          }
+            m_content.set<Component::String>("game:new_room", s.get(1));
           else if (s.get(0) == "look")
             action_look (m_current_action->entity());
           else if (s.get(0) == "move")

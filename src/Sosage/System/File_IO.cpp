@@ -224,8 +224,8 @@ std::string File_IO::read_init (const std::string& folder_name)
     }
 
   }
-    
-  return input["load_room"].string("data", "rooms", "yaml");
+
+  return input["load_room"].string();
 }
 
 void File_IO::read_character (const std::string& file_name, int x, int y)
@@ -293,11 +293,17 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
 
 }
 
-std::string File_IO::read_room (const std::string& file_name)
+void File_IO::read_room (const std::string& file_name)
 {
-  SOSAGE_TIMER_START(File_IO__read_room);
+  m_content.clear
+    ([&](Component::Handle c) -> bool
+     {
+       return (m_latest_room_entities.find(c->entity()) != m_latest_room_entities.end());
+     });
   
-  Core::File_IO input (local_file_name(file_name));
+  SOSAGE_TIMER_START(File_IO__read_room);
+
+  Core::File_IO input (local_file_name("data", "rooms", file_name, "yaml"));
   input.parse();
 
   std::string name = input["name"].string();
@@ -326,6 +332,7 @@ std::string File_IO::read_room (const std::string& file_name)
   for (std::size_t i = 0; i < input["content"].size(); ++ i)
   {
     const Core::File_IO::Node& node = input["content"][i];
+    m_latest_room_entities.insert (node["id"].string());
     if (input["content"][i].has("states"))
     {
       std::string id = node["id"].string();
@@ -370,13 +377,18 @@ std::string File_IO::read_room (const std::string& file_name)
     }
 
   SOSAGE_TIMER_STOP(File_IO__read_room);
-
-  return std::string();
 }
 
 std::string File_IO::local_file_name (const std::string& file_name) const
 {
   return m_folder_name + file_name;
+}
+
+std::string File_IO::local_file_name (const std::string& folder, const std::string& subfolder,
+                                      const std::string& file_name, const std::string& extension) const
+{
+  return m_folder_name + folder + Config::folder_separator + subfolder + Config::folder_separator
+    + file_name + '.' + extension;
 }
 
 
