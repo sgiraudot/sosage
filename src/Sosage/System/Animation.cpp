@@ -29,6 +29,7 @@
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
+#include <Sosage/Component/Status.h>
 #include <Sosage/Config/config.h>
 #include <Sosage/System/Animation.h>
 #include <Sosage/Utils/random.h>
@@ -43,6 +44,20 @@ Animation::Animation (Content& content)
 
 void Animation::run()
 {
+  auto status = m_content.get<Component::Status>("game:status");
+  if (status->value() == PAUSED)
+    return;
+
+  if (m_content.request<Component::Event>("game:new_character"))
+  {
+    generate_random_idle_animation
+      (m_content.get<Component::Animation>("character_body:image"),
+       m_content.get<Component::Animation>("character_head:image"),
+       m_content.get<Component::Animation>("character_mouth:image"),
+       Vector(1,0));
+    m_content.remove("game:new_character");
+  }
+  
   auto path = m_content.request<Component::Path>("character:path");
   if (path)
   {

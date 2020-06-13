@@ -58,6 +58,10 @@ Logic::Logic (Content& content)
 
 void Logic::run (const double& current_time)
 {
+  auto status = m_content.get<Component::Status>("game:status");
+  if (status->value() == PAUSED)
+    return;
+  
   m_current_time = current_time;
 
   std::set<Timed_handle> new_timed_handle;
@@ -154,7 +158,7 @@ void Logic::run (const double& current_time)
     auto window = m_content.get<Component::Image>("game:window");
     window->on() = false;
     code->reset();
-    m_content.get<Component::Status>("game:status")->pop();
+    status->pop();
       
     m_current_action = m_content.get<Component::Action>
       (m_content.get<Component::Code>("game:code")->entity() + ":action");
@@ -202,9 +206,9 @@ void Logic::run (const double& current_time)
           else if (s.get(0) == "set_state")
             action_set_state (s);
           else if (s.get(0) == "lock")
-            m_content.get<Component::Status>("game:status")->push(LOCKED);
+            status->push(LOCKED);
           else if (s.get(0) == "unlock")
-            m_content.get<Component::Status>("game:status")->pop();
+            status->pop();
           else if (s.get(0) == "show")
             action_show (s);
           else if (s.get(0) == "sync")

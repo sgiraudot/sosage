@@ -15,6 +15,7 @@ History of versions and modifications of the SOSAGE engine.
 - Nothing
 - Handling configuration file and persistent settings
 - Switch fullscreen on/off
+- Loading screen
 
 ### Game Engine
 

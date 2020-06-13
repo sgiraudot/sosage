@@ -53,11 +53,14 @@ Engine::Engine (const std::string& game_name)
   , m_logic (m_content)
 {
   debug ("Running Sosage " + Sosage::Version::str());
-  
+
+  // Init main variables
   m_content.set<Component::String>("game:name", game_name);
   m_content.set<Component::Status>("game:status");
   m_content.set<Component::Double>("camera:position", 0.0);
   m_content.set<Component::Double>("camera:target", 0.0);
+  m_content.set<Component::Debug>("game:debug", m_content, m_clock);
+  m_content.set<Component::Inventory>("game:inventory");
   
   m_file_io.read_config();  
   m_graphic.init();
@@ -73,8 +76,6 @@ Engine::~Engine()
 
 void Engine::run()
 {
-  SOSAGE_TIMER_START(Engine__run__Frame_computation);
-  
   std::size_t frame_id = m_clock.frame_id();
 
   m_content.set<Component::Event>("music:start");
@@ -84,61 +85,55 @@ void Engine::run()
 
   while (!m_logic.exit())
   {
-    m_input.run();
-    std::size_t new_frame_id = m_clock.frame_id();
-    if (status->value() != PAUSED)
-    {
-      m_logic.run(m_clock.frame_time());
-
-      if (auto new_room = m_content.request<Component::String>("game:new_room"))
-      {
-        m_file_io.read_room (new_room->value());
-        m_content.remove ("game:new_room");
-      }
-      
-      m_interface.run();
-      if (new_frame_id != frame_id)
-        for (std::size_t i = frame_id; i < new_frame_id; ++ i)
-          m_animation.run();
-    }
-    m_sound.run();
-    frame_id = new_frame_id;
-    
-    SOSAGE_TIMER_STOP(Engine__run__Frame_computation);
-    
     SOSAGE_TIMER_START(Engine__run__Rendering);
     m_graphic.run();
     SOSAGE_TIMER_STOP(Engine__run__Rendering);
     
+    if (auto new_room = m_content.request<Component::String>("game:new_room"))
+    {
+      // If new room must be loaded, first notify loading and restart
+      // loop so that Graphic displays loading screen, then only load
+      if (status->value() != LOADING)
+      {
+        status->push(LOADING);
+        continue;
+      }
+      else
+      {
+        m_file_io.read_room (new_room->value());
+        m_content.remove ("game:new_room");
+        status->pop();
+      }
+    }
+    
+    SOSAGE_TIMER_START(Engine__run__Frame_computation);
+  
+    m_input.run();
+    m_logic.run(m_clock.frame_time());
+    m_interface.run();
+    
+    std::size_t new_frame_id = m_clock.frame_id();
+    if (new_frame_id != frame_id)
+      for (std::size_t i = frame_id; i < new_frame_id; ++ i)
+        m_animation.run();
+    frame_id = new_frame_id;
+    
+    m_sound.run();
+    
+    SOSAGE_TIMER_STOP(Engine__run__Frame_computation);
+    
     SOSAGE_TIMER_START(Engine__run__Sleep);
     m_clock.wait(true);
     SOSAGE_TIMER_STOP(Engine__run__Sleep);
-    
-    SOSAGE_TIMER_RESTART(Engine__run__Frame_computation);
   }
-
-  SOSAGE_TIMER_STOP(Engine__run__Frame_computation);
 }
 
 int Engine::run (const std::string& folder_name)
 {
-  std::string room_name = m_file_io.read_init (folder_name);
-
-  // Create debug info
-  auto debug_info = m_content.set<Component::Debug>("game:debug", m_content, m_clock);
-
-  // Create inventory
-  auto inventory = m_content.set<Component::Inventory>("game:inventory");
+  m_file_io.read_init (folder_name);
 
   m_interface.init();
 
-  m_file_io.read_room (room_name);
-  m_animation.generate_random_idle_animation
-    (m_content.get<Component::Animation>("character_body:image"),
-     m_content.get<Component::Animation>("character_head:image"),
-     m_content.get<Component::Animation>("character_mouth:image"),
-     Vector(1,0));
-    
   run();
   
   m_file_io.write_config();

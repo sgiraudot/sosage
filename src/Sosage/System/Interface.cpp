@@ -48,6 +48,10 @@ Interface::Interface (Content& content)
 
 void Interface::run()
 {
+  auto status = m_content.get<Component::Status>("game:status");
+  if (status->value() == PAUSED)
+    return;
+  
   if (m_content.request<Component::Event>("window:rescaled"))
     update_responsive();
   
@@ -59,10 +63,9 @@ void Interface::run()
     = m_content.request<Component::Event>("cursor:clicked");
   if (clicked && m_collision)
   {
-    Status status = m_content.get<Component::Status>("game:status")->value();
-    if (status == IN_WINDOW)
+    if (status->value() == IN_WINDOW)
       window_clicked();
-    else if (status == IN_CODE)
+    else if (status->value() == IN_CODE)
       code_clicked(cursor);
     else
     {

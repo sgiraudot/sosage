@@ -96,15 +96,18 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
                return (a->z() < b->z());
              });
 
-  bool locked = (m_content.get<Component::Status>("game:status")->value() == LOCKED);
+  auto status = m_content.get<Component::Status>("game:status");
   double xcamera = m_content.get<Component::Double>("camera:position")->value();
   
   for (const auto& img : images)
   {
     if (img->on())
     {
-      if (locked &&
+      if (status->value() == LOCKED &&
            img->entity() == "cursor")
+        continue;
+      if (status->value() == LOADING &&
+          img->entity() != "loading")
         continue;
 
       auto position = m_content.get<Component::Position>(img->entity() + ":position");

@@ -28,6 +28,7 @@
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Cropped.h>
+#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Hints.h>
@@ -143,7 +144,7 @@ void File_IO::write_config()
                 m_content.get<Component::Int>("interface:height")->value());
 }
 
-std::string File_IO::read_init (const std::string& folder_name)
+void File_IO::read_init (const std::string& folder_name)
 {
   m_folder_name = folder_name;
   std::string file_name = folder_name + "data" + Config::folder_separator + "init.yaml";
@@ -159,19 +160,18 @@ std::string File_IO::read_init (const std::string& folder_name)
   std::string cursor = input["cursor"].string("images", "interface", "png");
   auto cursor_img = Component::make_handle<Component::Image> ("cursor:image", local_file_name(cursor),
                                                               Config::cursor_depth);
-  
+  cursor_img->set_relative_origin(0.5, 0.5);
+
+  auto status = m_content.get<Component::Status>("game:status");
   // Cursor displayed = NOT (paused OR virtual)
   m_content.set<Component::Conditional>
-  ("cursor:virtual_cond",
+  ("cursor:conditional",
    Component::make_not
    (Component::make_or
-    (Component::make_value_condition<Sosage::Status>
-     (m_content.get<Component::Status>("game:status"), PAUSED),
+    (Component::make_value_condition<Sosage::Status> (status, PAUSED),
      m_content.get<Component::Boolean>("interface:virtual_cursor"))),
    cursor_img);
- 
-  cursor_img->set_relative_origin(0.5, 0.5);
-  
+
   m_content.set<Component::Position> ("cursor:position", Point(0,0));
   
   std::string turnicon = input["turnicon"].string("images", "interface", "png");
@@ -182,7 +182,14 @@ std::string File_IO::read_init (const std::string& folder_name)
   std::string loading = input["loading"].string("images", "interface", "png");
   auto loading_img = Component::make_handle<Component::Image> ("loading:image", local_file_name(loading),
                                                                Config::cursor_depth);
-
+  loading_img->set_relative_origin(0.5, 0.5);
+  m_content.set<Component::Position> ("loading:position", Point(Config::world_width / 2,
+                                                                Config::world_height / 2));
+  
+  m_content.set<Component::Conditional>
+  ("loading:conditional",
+   Component::make_value_condition<Sosage::Status> (status, LOADING),
+   loading_img);
 
   std::string click_sound = input["click_sound"].string("sounds", "effects", "wav");
   m_content.set<Component::Sound>("click:sound", local_file_name(click_sound));
@@ -235,7 +242,7 @@ std::string File_IO::read_init (const std::string& folder_name)
 
   }
 
-  return input["load_room"].string();
+  m_content.set<Component::String>("game:new_room", input["load_room"].string());
 }
 
 void File_IO::read_character (const std::string& file_name, int x, int y)
@@ -301,6 +308,7 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
   amouth->z() += 2;
   pmouth->set (phead->value() - ahead->core().scaling * Vector(mdx_right, mdy));
 
+  m_content.set<Component::Event>("game:new_character");
 }
 
 void File_IO::read_room (const std::string& file_name)
