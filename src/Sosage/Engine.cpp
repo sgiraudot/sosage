@@ -31,6 +31,7 @@
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
+#include <Sosage/Component/Status.h>
 #include <Sosage/Config/platform.h>
 #include <Sosage/Config/version.h>
 #include <Sosage/Engine.h>
@@ -54,8 +55,7 @@ Engine::Engine (const std::string& game_name)
   debug ("Running Sosage " + Sosage::Version::str());
   
   m_content.set<Component::String>("game:name", game_name);
-  m_content.set<Component::Boolean>("game:paused", false);
-  m_content.set<Component::String>("game:status", "idle");
+  m_content.set<Component::Status>("game:status");
   m_content.set<Component::Double>("camera:position", 0.0);
   m_content.set<Component::Double>("camera:target", 0.0);
   
@@ -80,11 +80,13 @@ void Engine::run()
   m_content.set<Component::Event>("music:start");
   m_content.set<Component::Event>("window:rescaled");
 
+  auto status = m_content.get<Component::Status>("game:status");
+
   while (!m_logic.exit())
   {
     m_input.run();
     std::size_t new_frame_id = m_clock.frame_id();
-    if (!m_logic.paused())
+    if (status->value() != PAUSED)
     {
       m_logic.run(m_clock.frame_time());
 

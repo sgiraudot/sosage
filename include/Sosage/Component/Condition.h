@@ -28,12 +28,11 @@
 #define SOSAGE_COMPONENT_CONDITION_H
 
 #include <Sosage/Component/Handle.h>
-#include <Sosage/Component/Simple.h>
 
 namespace Sosage::Component
 {
 
-class Condition : public Base
+class Condition : public Value<bool>
 {
 public:
 
@@ -58,20 +57,23 @@ public:
 
 typedef std::shared_ptr<Boolean> Boolean_handle;
 
-class State_boolean : public Condition
+template <typename T>
+class Value_condition : public Condition
 {
-  String_handle m_state;
-  std::string m_value;
-  
+  Value_handle<T> m_handle;
+  T m_value;
+
 public:
 
-  State_boolean (const std::string& id, String_handle state, const std::string& value)
-    : Condition(id), m_state (state), m_value(value) { }
+  Value_condition (const std::string& id, Value_handle<T> handle, const T& value)
+    : Condition(id), m_handle (handle), m_value (value)
+  { }
 
-  virtual bool value() const { return (m_state->value() == m_value); }
+  virtual bool value() const { return m_handle->value() == m_value; }
 };
 
-typedef std::shared_ptr<State_boolean> State_boolean_handle;
+template <typename T>
+using Value_condition_handle = std::shared_ptr<Value_condition<T> >;
 
 class And : public Condition
 {
@@ -112,8 +114,26 @@ public:
   virtual bool value() const { return !(m_value->value()); }
 };
 
-typedef std::shared_ptr<And> And_handle;
+typedef std::shared_ptr<Not> Not_handle;
 
+// Helpers
+template <typename T>
+Value_condition_handle<T> make_value_condition (Value_handle<T> handle, const T& value)
+{
+  return make_handle<Value_condition<T> >(handle->entity() + ":value_cond", handle, value);
+}
+inline And_handle make_and (Condition_handle h0, Condition_handle h1)
+{
+  return make_handle<And>(h0->entity() + "_" + h1->entity() + ":and", h0, h1);
+}
+inline Or_handle make_or (Condition_handle h0, Condition_handle h1)
+{
+  return make_handle<Or>(h0->entity() + "_" + h1->entity() + ":or", h0, h1);
+}
+inline Not_handle make_not (Condition_handle handle)
+{
+  return make_handle<Not>(handle->entity() + ":not", handle);
+}
 
 } // namespace Sosage::Component
 

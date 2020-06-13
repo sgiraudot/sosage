@@ -61,6 +61,17 @@ public:
 
 typedef std::shared_ptr<Base> Handle;
 
+template <typename T>
+class Value : public Base
+{
+public:
+  Value(const std::string& id) : Base(id) { }
+  virtual T value() const = 0;
+};
+
+template <typename T>
+using Value_handle = std::shared_ptr<Value<T> >;
+
 template <typename T, typename ... Args>
 std::shared_ptr<T> make_handle (Args ... args)
 {

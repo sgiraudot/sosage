@@ -29,6 +29,7 @@
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
+#include <Sosage/Component/Status.h>
 #include <Sosage/System/Graphic.h>
 
 #include <algorithm>
@@ -95,7 +96,7 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
                return (a->z() < b->z());
              });
 
-  bool locked = (m_content.get<Component::String>("game:status")->value() == "locked");
+  bool locked = (m_content.get<Component::Status>("game:status")->value() == LOCKED);
   double xcamera = m_content.get<Component::Double>("camera:position")->value();
   
   for (const auto& img : images)

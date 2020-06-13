@@ -1,6 +1,6 @@
 /*
-  [src/Sosage/Component/Condition.cpp]
-  Boolean logic conditions.
+  [include/Sosage/Component/Variable.h]
+  Handle to point variably to another handle.
 
   =====================================================================
 
@@ -24,19 +24,31 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#include <Sosage/Component/Condition.h>
+#ifndef SOSAGE_COMPONENT_VARIABLE_H
+#define SOSAGE_COMPONENT_VARIABLE_H
+
+#include <Sosage/Component/Conditional.h>
+#include <Sosage/Component/Handle.h>
 
 namespace Sosage::Component
 {
 
-Condition::Condition (const std::string& id)
-  : Value(id)
-{ }
-
-std::string Condition::str() const
+class Variable : public Conditional_base
 {
-  return this->id() + " " + (value() ? "TRUE" : "FALSE");
-}
+  Handle m_target;
 
+public:
+
+  Variable (const std::string& id, Handle target)
+    : Conditional_base(id), m_target(target)
+  { }
+
+  void set (Handle target) { m_target = target; }
+  virtual Handle get() const { return m_target; }
+};
+
+typedef std::shared_ptr<Variable> Variable_handle;
 
 } // namespace Sosage::Component
+
+#endif // SOSAGE_COMPONENT_VARIABLE_H

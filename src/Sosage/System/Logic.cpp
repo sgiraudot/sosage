@@ -37,6 +37,8 @@
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
+#include <Sosage/Component/Status.h>
+#include <Sosage/Component/Variable.h>
 #include <Sosage/System/Logic.h>
 #include <Sosage/Utils/error.h>
 #include <Sosage/Utils/geometry.h>
@@ -152,7 +154,7 @@ void Logic::run (const double& current_time)
     auto window = m_content.get<Component::Image>("game:window");
     window->on() = false;
     code->reset();
-    m_content.get<Component::String>("game:status")->set ("idle");
+    m_content.get<Component::Status>("game:status")->pop();
       
     m_current_action = m_content.get<Component::Action>
       (m_content.get<Component::Code>("game:code")->entity() + ":action");
@@ -200,9 +202,9 @@ void Logic::run (const double& current_time)
           else if (s.get(0) == "set_state")
             action_set_state (s);
           else if (s.get(0) == "lock")
-            m_content.get<Component::String>("game:status")->set("locked");
+            m_content.get<Component::Status>("game:status")->push(LOCKED);
           else if (s.get(0) == "unlock")
-            m_content.get<Component::String>("game:status")->set("idle");
+            m_content.get<Component::Status>("game:status")->pop();
           else if (s.get(0) == "show")
             action_show (s);
           else if (s.get(0) == "sync")
@@ -218,11 +220,6 @@ void Logic::run (const double& current_time)
 bool Logic::exit()
 {
   return (m_content.request<Component::Event>("game:exit") != Component::Handle());
-}
-
-bool Logic::paused()
-{
-  return m_content.get<Component::Boolean>("game:paused")->value();
 }
 
 void Logic::clear_timed(bool action_goto)
@@ -414,11 +411,11 @@ void Logic::action_show (Component::Action::Step step)
   auto code = m_content.request<Component::Code>(target + ":code");
   if (code)
   {
-    m_content.get<Component::String>("game:status")->set ("code");
+    m_content.get<Component::Status>("game:status")->push (IN_CODE);
     m_content.set<Component::Variable>("game:code", code);
   }
   else
-    m_content.get<Component::String>("game:status")->set ("window");
+    m_content.get<Component::Status>("game:status")->push (IN_WINDOW);
 }
 
 void Logic::create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog)

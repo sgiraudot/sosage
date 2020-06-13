@@ -28,6 +28,7 @@
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Music.h>
 #include <Sosage/Component/Sound.h>
+#include <Sosage/Component/Status.h>
 #include <Sosage/Config/platform.h>
 #include <Sosage/System/Sound.h>
 
@@ -52,7 +53,7 @@ void Sound::run()
     m_content.remove ("music:start");
   }
   
-  bool paused = m_content.get<Component::Boolean>("game:paused")->value();
+  bool paused = (m_content.get<Component::Status>("game:status")->value() == PAUSED);
   if (paused && music->on())
   {
     m_core.pause_music (music->core());

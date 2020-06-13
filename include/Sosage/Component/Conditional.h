@@ -47,20 +47,6 @@ public:
 
 typedef std::shared_ptr<Conditional_base> Conditional_base_handle;
 
-class Variable : public Conditional_base
-{
-  Handle m_target;
-
-public:
-
-  Variable (const std::string& id, Handle target);
-
-  void set (Handle target) { m_target = target; }
-  virtual Handle get() const { return m_target; }
-};
-
-typedef std::shared_ptr<Variable> Variable_handle;
-
 class Conditional : public Conditional_base
 {
   Condition_handle m_condition;
@@ -72,7 +58,7 @@ public:
   Conditional (const std::string& id,
                Condition_handle condition,
                Handle if_true,
-               Handle if_false);
+               Handle if_false = Handle());
 
   virtual ~Conditional();
   virtual std::string str() const;
@@ -81,22 +67,22 @@ public:
 
 typedef std::shared_ptr<Conditional> Conditional_handle;
 
-class State_conditional : public Conditional_base
+class String_conditional : public Conditional_base
 {
   String_handle m_state;
   std::unordered_map<std::string, Handle> m_handles;
   
 public:
 
-  State_conditional (const std::string& id,
-                     String_handle state);
-  virtual ~State_conditional();
+  String_conditional (const std::string& id,
+                      String_handle state);
+  virtual ~String_conditional();
   virtual std::string str() const;
   void add (const std::string& state, Handle h);
   virtual Handle get() const;
 };
 
-typedef std::shared_ptr<State_conditional> State_conditional_handle;
+typedef std::shared_ptr<String_conditional> String_conditional_handle;
 
 class Random_conditional : public Conditional_base
 {

@@ -30,6 +30,8 @@
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
+#include <Sosage/Component/Status.h>
+#include <Sosage/Component/Variable.h>
 #include <Sosage/System/Interface.h>
 
 namespace Sosage::System
@@ -57,10 +59,10 @@ void Interface::run()
     = m_content.request<Component::Event>("cursor:clicked");
   if (clicked && m_collision)
   {
-    std::string status = m_content.get<Component::String>("game:status")->value();
-    if (status == "window")
+    Status status = m_content.get<Component::Status>("game:status")->value();
+    if (status == IN_WINDOW)
       window_clicked();
-    else if (status == "code")
+    else if (status == IN_CODE)
       code_clicked(cursor);
     else
     {
@@ -536,7 +538,7 @@ void Interface::window_clicked()
   if (m_collision != window)
   {
     window->on() = false;
-    m_content.get<Component::String>("game:status")->set ("idle");
+    m_content.get<Component::Status>("game:status")->pop();
   }
   m_content.remove("cursor:clicked");
 }
@@ -549,7 +551,7 @@ void Interface::code_clicked (Component::Position_handle cursor)
   {
     window->on() = false;
     code->reset();
-    m_content.get<Component::String>("game:status")->set ("idle");
+    m_content.get<Component::Status>("game:status")->pop();
   }
   else
   {
@@ -714,12 +716,13 @@ void Interface::update_pause_screen()
   pause_screen_img->z() += 10;
       
   // Create pause screen
-  auto paused
-    = m_content.get<Component::Boolean>("game:paused");
-  
+  auto status
+    = m_content.get<Component::Status>("game:status");
+
   auto pause_screen
-    = m_content.set<Component::Conditional>("pause_screen:conditional", paused,
-                                            pause_screen_img, Component::Handle());
+    = m_content.set<Component::Conditional>("pause_screen:conditional",
+                                            Component::make_value_condition<Sosage::Status>(status, PAUSED),
+                                            pause_screen_img);
 
   auto pause_text_img
     = Component::make_handle<Component::Image>("pause_text:image", interface_font, "FFFFFF", "PAUSE");
@@ -737,8 +740,9 @@ void Interface::update_pause_screen()
   window_overlay_img->on() = false;
 
   auto pause_text
-    = m_content.set<Component::Conditional>("pause_text:conditional", paused,
-                                            pause_text_img, Component::Handle());
+    = m_content.set<Component::Conditional>("pause_text:conditional",
+                                            Component::make_value_condition<Sosage::Status>(status, PAUSED),
+                                            pause_text_img);
     
   m_content.set<Component::Position>("pause_text:position", Point(Config::world_width / 2,
                                                                   Config::world_height / 2));
@@ -860,13 +864,13 @@ void Interface::update_action ()
 
 void Interface::update_inventory ()
 {
-  if (m_content.get<Component::String>("game:status")->value() == "window"
-      || m_content.get<Component::String>("game:status")->value() == "locked")
+  Status status = m_content.get<Component::Status>("game:status")->value();
+  if (status == IN_WINDOW || status == LOCKED)
   {
     m_content.get<Component::Image> ("interface_action:image")->z() = Config::inventory_over_depth;
     m_content.get<Component::Image> ("interface_verbs:image")->z() = Config::inventory_over_depth;
     m_content.get<Component::Image> ("interface_inventory:image")->z() = Config::inventory_over_depth;
-    if (m_content.get<Component::String>("game:status")->value() == "window")
+    if (status == IN_WINDOW)
       m_content.get<Component::Image> ("window_overlay:image")->on() = true;
     return;
   }

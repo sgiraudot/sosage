@@ -27,6 +27,7 @@
 #include <Sosage/Component/Condition.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Position.h>
+#include <Sosage/Component/Status.h>
 #include <Sosage/System/Input.h>
 
 namespace Sosage::System
@@ -48,12 +49,16 @@ void Input::run()
     if (m_core.is_exit(ev))
       m_content.set<Component::Event>("game:exit");
 
+    auto status = m_content.get<Component::Status>("game:status");
     if (m_core.is_pause(ev))
-      m_content.get<Component::Boolean>("game:paused")->toggle();
+    {
+      if (status->value() == PAUSED)
+        status->pop();
+      else
+        status->push(PAUSED);
+    }
 
-    auto paused = m_content.request<Component::Boolean>("game:paused");
-
-    if (paused && paused->value())
+    if (status->value() == PAUSED)
       continue;
 
     if (m_core.is_debug(ev))
@@ -108,7 +113,7 @@ void Input::run()
     }
 
     // If paused, ignore mouse events
-    if (m_content.get<Component::String>("game:status")->value() == "locked")
+    if (status->value() == LOCKED)
       continue;
   
     if (m_core.is_mouse_motion(ev))

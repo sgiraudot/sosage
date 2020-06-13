@@ -37,6 +37,7 @@
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
 #include <Sosage/Component/Sound.h>
+#include <Sosage/Component/Status.h>
 #include <Sosage/Config/platform.h>
 #include <Sosage/Config/version.h>
 #include <Sosage/System/File_IO.h>
@@ -158,12 +159,16 @@ std::string File_IO::read_init (const std::string& folder_name)
   std::string cursor = input["cursor"].string("images", "interface", "png");
   auto cursor_img = Component::make_handle<Component::Image> ("cursor:image", local_file_name(cursor),
                                                               Config::cursor_depth);
-  auto virtual_cursor = m_content.get<Component::Boolean>("interface:virtual_cursor");
-  auto paused = m_content.get<Component::Boolean>("game:paused");
-  auto orcond = Component::make_handle<Component::Or>("cursor:orcond", virtual_cursor, paused);
-  auto notcond = Component::make_handle<Component::Not>("cursor:notcond", orcond);
-  auto virtual_cond = m_content.set<Component::Conditional>("cursor:virtual_cond", notcond,
-                                                            cursor_img, Component::Handle()); 
+  
+  // Cursor displayed = NOT (paused OR virtual)
+  m_content.set<Component::Conditional>
+  ("cursor:virtual_cond",
+   Component::make_not
+   (Component::make_or
+    (Component::make_value_condition<Sosage::Status>
+     (m_content.get<Component::Status>("game:status"), PAUSED),
+     m_content.get<Component::Boolean>("interface:virtual_cursor"))),
+   cursor_img);
  
   cursor_img->set_relative_origin(0.5, 0.5);
   
@@ -173,6 +178,11 @@ std::string File_IO::read_init (const std::string& folder_name)
   auto turnicon_img
     = m_content.set<Component::Image>("turnicon:image", local_file_name(turnicon), 0);
   turnicon_img->on() = false;
+
+  std::string loading = input["loading"].string("images", "interface", "png");
+  auto loading_img = Component::make_handle<Component::Image> ("loading:image", local_file_name(loading),
+                                                               Config::cursor_depth);
+
 
   std::string click_sound = input["click_sound"].string("sounds", "effects", "wav");
   m_content.set<Component::Sound>("click:sound", local_file_name(click_sound));
@@ -370,7 +380,7 @@ void File_IO::read_room (const std::string& file_name)
       std::string state = node["state"].string();
       std::string text = node["text"].string();
 
-      auto condition = Component::make_handle<Component::State_conditional>
+      auto condition = Component::make_handle<Component::String_conditional>
         ("hint:condition", m_content.get<Component::String>(id + ":state"));
       condition->add(state, Component::make_handle<Component::String>("hint:text", text));
       hints->add (condition);
@@ -420,8 +430,8 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
   auto code = m_content.set<Component::Code>(id + ":code");
       
   auto state_handle = m_content.get<Component::String>(id + ":state");
-  Component::State_conditional_handle conditional_handle_off;
-  Component::State_conditional_handle conditional_handle_on;
+  Component::String_conditional_handle conditional_handle_off;
+  Component::String_conditional_handle conditional_handle_on;
 
   for (std::size_t j = 0; j < node["states"].size(); ++ j)
   {
@@ -435,15 +445,15 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
     {
       state_handle->set(state);
       conditional_handle_off
-        = m_content.set<Component::State_conditional>(id + ":image", state_handle);
+        = m_content.set<Component::String_conditional>(id + ":image", state_handle);
       conditional_handle_on
-        = m_content.set<Component::State_conditional>(id + "_button:image", state_handle);
+        = m_content.set<Component::String_conditional>(id + "_button:image", state_handle);
       init = true;
     }
     else
     {
-      conditional_handle_off = m_content.get<Component::State_conditional>(id + ":image");
-      conditional_handle_on = m_content.get<Component::State_conditional>(id + "_button:image");
+      conditional_handle_off = m_content.get<Component::String_conditional>(id + ":image");
+      conditional_handle_on = m_content.get<Component::String_conditional>(id + "_button:image");
     }
 
     std::string skin_off = istate["skin"][0].string("images", "windows", "png");
@@ -510,7 +520,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
   auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
   m_content.set<Component::Position>(id + ":view", Point(vx,vy), false);
 
-  Component::State_conditional_handle conditional_handle;
+  Component::String_conditional_handle conditional_handle;
 
   for (std::size_t j = 0; j < node["states"].size(); ++ j)
   {
@@ -523,11 +533,11 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
     if (state_handle->value() == "")
     {
       state_handle->set(state);
-      conditional_handle = m_content.set<Component::State_conditional>(id + ":image", state_handle);
+      conditional_handle = m_content.set<Component::String_conditional>(id + ":image", state_handle);
       init = true;
     }
     else
-      conditional_handle = m_content.get<Component::State_conditional>(id + ":image");
+      conditional_handle = m_content.get<Component::String_conditional>(id + ":image");
 
     if (state == "none")
       conditional_handle->add(state, nullptr);
@@ -582,14 +592,14 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
       {
         std::string state = iaction["state"].string();
         auto conditional_handle
-          = m_content.request<Component::State_conditional>(corrected_id + ":" + a_id);
+          = m_content.request<Component::String_conditional>(corrected_id + ":" + a_id);
 
         if (!conditional_handle)
         {
           auto state_handle
             = m_content.get<Component::String>(corrected_id + ":state");
           conditional_handle
-            = m_content.set<Component::State_conditional>(corrected_id + ":" + a_id, state_handle);
+            = m_content.set<Component::String_conditional>(corrected_id + ":" + a_id, state_handle);
         }
 
         action = Component::make_handle<Component::Action>(corrected_id + ":" + a_id + ":" + state);

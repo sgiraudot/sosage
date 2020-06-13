@@ -33,8 +33,10 @@ namespace Sosage::Component
 {
 
 template <typename T>
-class Simple : public Base
+class Simple : public Value<T>
 {
+  typedef Value<T> Base;
+  
   T m_value;
   
 public:
@@ -42,9 +44,12 @@ public:
   Simple (const std::string& id, const T& value = T())
     : Base(id), m_value(value) { }
   virtual ~Simple() { }
-  const T& value() const { return m_value; }
+  virtual T value() const { return m_value; }
   void set (const T& value) { m_value = value; }
 };
+
+template <typename T>
+using Simple_handle = std::shared_ptr<Simple<T> >;
 
 typedef Simple<int> Int;
 typedef std::shared_ptr<Int> Int_handle;

@@ -29,10 +29,6 @@
 namespace Sosage::Component
 {
 
-Variable::Variable (const std::string& id, Handle target)
-  : Conditional_base(id), m_target (target)
-{ }
-
 Conditional::Conditional (const std::string& id,
                           Condition_handle condition,
                           Handle if_true,
@@ -63,30 +59,30 @@ Handle Conditional::get() const
   return (m_condition->value() ? m_if_true : m_if_false);
 }
 
-State_conditional::State_conditional (const std::string& id,
-                                      String_handle state)
+String_conditional::String_conditional (const std::string& id,
+                                        String_handle state)
   : Conditional_base(id)
   , m_state (state)
 { }
 
-State_conditional::~State_conditional()
+String_conditional::~String_conditional()
 {
   m_state = String_handle();
   m_handles.clear();
 }
 
-std::string State_conditional::str() const
+std::string String_conditional::str() const
 {
   return this->id() + " -> " + m_state->id() + " ? "
     + (get() ? get()->id() : "NULL");
 }
 
-void State_conditional::add (const std::string& state, Handle h)
+void String_conditional::add (const std::string& state, Handle h)
 {
   m_handles.insert (std::make_pair (state, h));
 }
   
-Handle State_conditional::get() const
+Handle String_conditional::get() const
 {
   auto iter
     = m_handles.find(m_state->value());
