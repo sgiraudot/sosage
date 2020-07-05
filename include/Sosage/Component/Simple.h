@@ -28,6 +28,7 @@
 #define SOSAGE_COMPONENT_SIMPLE_H
 
 #include <string>
+#include <vector>
 
 namespace Sosage::Component
 {
@@ -59,6 +60,11 @@ typedef std::shared_ptr<Double> Double_handle;
 
 typedef Simple<std::string> String;
 typedef std::shared_ptr<String> String_handle;
+
+template <typename T>
+using Vector = Simple<std::vector<T> >;
+template <typename T>
+using Vector_handle = std::shared_ptr<Vector<T> >;
 
 } // namespace Sosage::Component
 

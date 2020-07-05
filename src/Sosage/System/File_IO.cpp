@@ -39,6 +39,7 @@
 #include <Sosage/Component/Simple.h>
 #include <Sosage/Component/Sound.h>
 #include <Sosage/Component/Status.h>
+#include <Sosage/Component/Variable.h>
 #include <Sosage/Config/platform.h>
 #include <Sosage/Config/version.h>
 #include <Sosage/System/File_IO.h>
@@ -253,36 +254,48 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
   std::string name = input["name"].string();
 
   std::string mouth = input["mouth"]["skin"].string("images", "characters", "png");
-  int mdx_right = input["mouth"]["dx_right"].integer();
-  int mdx_left = input["mouth"]["dx_left"].integer();
-  int mdy = input["mouth"]["dy"].integer();
-  
-  std::string head = input["head"]["skin"].string("images", "characters", "png");
-  int hdx_right = input["head"]["dx_right"].integer();
-  int hdx_left = input["head"]["dx_left"].integer();
-  int hdy = input["head"]["dy"].integer();
-  
-  std::string body = input["body"]["skin"].string("images", "characters", "png");
-  
-  auto abody = m_content.set<Component::Animation>("character_body:image", local_file_name(body),
-                                                   0, 8, 6, true);
-  abody->set_relative_origin(0.5, 0.95);
-  
-  auto ahead
-    = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
-                                          0, 7, 2, true);
-  ahead->set_relative_origin(0.5, 1.0);
-  
   auto amouth
     = m_content.set<Component::Animation>("character_mouth:image", local_file_name(mouth),
                                           0, 11, 2, true);
   amouth->set_relative_origin(0.5, 1.0);
   
-  auto pbody = m_content.set<Component::Position>("character_body:position", Point(x, y), false);
+  std::string head = input["head"]["skin"].string("images", "characters", "png");
+  auto ahead
+    = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
+                                          0, 7, 2, true);
+  ahead->set_relative_origin(0.5, 1.0);
+  
+  std::string walk = input["walk"]["skin"].string("images", "characters", "png");
+  auto awalk = m_content.set<Component::Animation>("character_walking:image", local_file_name(walk),
+                                                   0, 8, 4, true);
+  awalk->set_relative_origin(0.5, 0.95);
+  awalk->on() = false;
 
+  std::string idle = input["idle"]["skin"].string("images", "characters", "png");
+  std::vector<std::string> positions;
+  for (std::size_t i = 0; i < input["idle"]["positions"].size(); ++ i)
+    positions.push_back (input["idle"]["positions"][i].string());
+
+  m_content.set<Component::Vector<std::string> >("character_idle:values", positions);
+  
+  // todo positions component
+  auto aidle = m_content.set<Component::Animation>("character_idle:image", local_file_name(idle),
+                                                   0, positions.size(), 2, true);
+  aidle->set_relative_origin(0.5, 0.95);
+  
+  auto pbody = m_content.set<Component::Position>("character_body:position", Point(x, y), false);
+  m_content.set<Component::Variable>("character_walking:position", pbody);
+  m_content.set<Component::Variable>("character_idle:position", pbody);
+
+  int hdx_right = input["head"]["dx_right"].integer();
+  int hdx_left = input["head"]["dx_left"].integer();
+  int hdy = input["head"]["dy"].integer();
   m_content.set<Component::Position>("character_head:gap_right", Point(hdx_right,hdy), false);
   m_content.set<Component::Position>("character_head:gap_left", Point(hdx_left,hdy), false);
 
+  int mdx_right = input["mouth"]["dx_right"].integer();
+  int mdx_left = input["mouth"]["dx_left"].integer();
+  int mdy = input["mouth"]["dy"].integer();
   m_content.set<Component::Position>("character_mouth:gap_right", Point(mdx_right,mdy), false);
   m_content.set<Component::Position>("character_mouth:gap_left", Point(mdx_left,mdy), false);
   
@@ -298,11 +311,12 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
   Point pos_body = pbody->value();
 
   double z_at_point = ground_map->z_at_point (pos_body);
-  abody->rescale (z_at_point);
+  awalk->rescale (z_at_point);
+  aidle->rescale (z_at_point);
   
   ahead->rescale (z_at_point);
   ahead->z() += 1;
-  phead->set (pbody->value() - abody->core().scaling * Vector(hdx_right, hdy));
+  phead->set (pbody->value() - awalk->core().scaling * Vector(hdx_right, hdy));
   
   amouth->rescale (z_at_point);
   amouth->z() += 2;
