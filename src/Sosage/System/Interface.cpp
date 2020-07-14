@@ -40,8 +40,6 @@ namespace Sosage::System
 Interface::Interface (Content& content)
   : m_content (content)
   , m_layout (Config::AUTO)
-  , m_action_min_height(50)
-  , m_interface_min_height(150)
 {
 
 }
@@ -125,8 +123,6 @@ void Interface::init()
 
 void Interface::update_responsive()
 {
-  int world_width = Config::world_width;
-  int world_height = Config::world_height;
   int window_width = m_content.get<Component::Int>("window:width")->value();
   int window_height = m_content.get<Component::Int>("window:height")->value();
 
@@ -286,7 +282,6 @@ void Interface::vertical_layout()
 {
   auto interface_font = m_content.get<Component::Font> ("interface:font");
   
-  int top_width = 0;
   auto interface_verbs = m_content.get<Component::Image>("interface_verbs:image");
   int interface_width = interface_verbs->width();
   int interface_height = interface_verbs->height();
@@ -399,7 +394,6 @@ void Interface::horizontal_layout()
 {
   auto interface_font = m_content.get<Component::Font> ("interface:font");
   
-  int top_width = 0;
   auto interface_verbs = m_content.get<Component::Image>("interface_verbs:image");
   int interface_width = interface_verbs->width();
   int interface_height = interface_verbs->height();

@@ -424,7 +424,6 @@ void Logic::action_show (Component::Action::Step step)
 
 void Logic::create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog)
 {
-  static const double scale = 0.75;
   static const int width_max = int(0.95 * Config::world_width);
   
   auto img
@@ -447,7 +446,7 @@ void Logic::create_dialog (const std::string& text, std::vector<Component::Image
     cuts.front() = 0;
     cuts.back() = text.size();
     
-    for (int i = 1; i < cuts.size() - 1; ++ i)
+    for (std::size_t i = 1; i < cuts.size() - 1; ++ i)
     {
       std::size_t cut = std::size_t(i * (text.size() / double(nb_imgs)));
       if (text[cut] == ' ')

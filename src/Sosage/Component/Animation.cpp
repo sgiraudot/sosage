@@ -48,8 +48,8 @@ int Animation::reset (bool all_frames)
   
   m_frames.clear();
   if (all_frames)
-    for (std::size_t i = 0; i < m_width_subdiv; ++ i)
-      for (std::size_t j = 0; j < m_height_subdiv; ++ j)
+    for (int i = 0; i < m_width_subdiv; ++ i)
+      for (int j = 0; j < m_height_subdiv; ++ j)
       {
         m_frames.push_back (Frame(i,j,1));
         out += 1;

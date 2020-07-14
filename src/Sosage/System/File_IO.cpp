@@ -462,7 +462,6 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
     std::string state = istate["id"].string();
 
     // init with first state found
-    bool init = false;
     if (state_handle->value() == "")
     {
       state_handle->set(state);
@@ -470,7 +469,6 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
         = m_content.set<Component::String_conditional>(id + ":image", state_handle);
       conditional_handle_on
         = m_content.set<Component::String_conditional>(id + "_button:image", state_handle);
-      init = true;
     }
     else
     {
@@ -551,12 +549,10 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
     std::string state = istate["id"].string();
 
     // init with first state found
-    bool init = false;
     if (state_handle->value() == "")
     {
       state_handle->set(state);
       conditional_handle = m_content.set<Component::String_conditional>(id + ":image", state_handle);
-      init = true;
     }
     else
       conditional_handle = m_content.get<Component::String_conditional>(id + ":image");

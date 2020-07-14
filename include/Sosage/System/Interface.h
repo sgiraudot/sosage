@@ -44,9 +44,6 @@ class Interface
   Config::Layout m_layout;
   Component::Image_handle m_collision;
   
-  const int m_action_min_height;
-  const int m_interface_min_height;
-
   int m_action_height;
   double m_verb_scale;
 

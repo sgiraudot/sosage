@@ -52,8 +52,8 @@ Ground_map::Ground_map (const std::string& id,
   
   std::map<Point, GVertex> map_p2v;
 
-  for (std::size_t x = 0; x < width - 1; ++ x)
-    for (std::size_t y = 0; y < height - 1; ++ y)
+  for (int x = 0; x < width - 1; ++ x)
+    for (int y = 0; y < height - 1; ++ y)
     {
       std::array<unsigned char, 3> c
         = Core::Graphic::get_color (m_image, x, y);
