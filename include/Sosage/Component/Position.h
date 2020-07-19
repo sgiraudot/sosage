@@ -49,6 +49,7 @@ public:
   Point value () const { return m_pos; }
   void set (const Point& p) { m_pos = p; }
   bool absolute() const { return m_absolute; }
+  bool& absolute() { return m_absolute; }
 };
 typedef std::shared_ptr<Position> Position_handle;
 

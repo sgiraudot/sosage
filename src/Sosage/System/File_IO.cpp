@@ -389,7 +389,7 @@ void File_IO::read_room (const std::string& file_name)
     else if (type == "window")
       read_window (node, id);
     else
-      check (false, "Unknown content type " + type);
+      debug ("Unknown content type " + type);
   }
 
   auto hints = m_content.set<Component::Hints>("game:hints");
@@ -566,9 +566,21 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
         skin = istate["skin"].string("images", "inventory", "png");
       else
         skin = istate["skin"].string("images", "objects", "png");
-          
-      auto img
-        = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin), z);
+
+      Component::Image_handle img;
+      if (istate.has("frames")) // Animation
+      {
+        int nb_frames = istate["frames"].integer();
+        int duration = istate["duration"].integer();
+        auto anim = Component::make_handle<Component::Animation>(id + ":conditional_image",
+                                                                 local_file_name(skin), z,
+                                                                 nb_frames, 1, true);
+        anim->reset(true, duration);
+        img = anim;
+      }
+      else
+        img = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin), z);
+
       img->set_relative_origin(0.5, 1.0);
       img->box_collision() = box_collision;
 

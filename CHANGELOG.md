@@ -22,10 +22,11 @@ History of versions and modifications of the SOSAGE engine.
 - Much better path finder: 30x faster (0.5ms instead of 15ms)
 - Resource manager to avoid loading N times the same file
 - Moving camera for horizontal scrolling
+- Animated objects
   
 ### Content
 
-- Nothing
+- Second room in progress
 
 ## `v0.1.0 (alpha1)` - 2020-04-25
 

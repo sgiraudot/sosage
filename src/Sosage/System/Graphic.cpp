@@ -124,7 +124,7 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
       Point screen_position = p - img->core().scaling * Vector(img->origin());
 
       m_core.draw (img->core(), xmin, ymin, (xmax - xmin), (ymax - ymin),
-                   screen_position.x(), screen_position.y(),
+                   screen_position.X(), screen_position.Y(),
                    img->core().scaling * (xmax - xmin),
                    img->core().scaling * (ymax - ymin));
     }

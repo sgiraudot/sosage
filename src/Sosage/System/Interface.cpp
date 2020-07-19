@@ -789,9 +789,6 @@ void Interface::detect_collision (Component::Position_handle cursor)
       if (!img->box_collision())
       {
         int x_in_image = cursor->value().x() - xmin;
-        if (!position->absolute())
-          x_in_image += xcamera;
-        
         int y_in_image = cursor->value().y() - ymin;
         if (!img->is_target_inside (x_in_image, y_in_image))
           continue;

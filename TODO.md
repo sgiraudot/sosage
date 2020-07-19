@@ -9,6 +9,7 @@
 
  - Test de robustesse de la ground map
  - Contenu graphique pièce 2
+ - Action automatique avec clic droit
 
 ## Moyen terme
 

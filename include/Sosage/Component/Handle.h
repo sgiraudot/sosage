@@ -44,14 +44,14 @@ public:
 
   const std::string& id() const { return m_id; }
 
-  std::string entity()
+  std::string entity() const
   {
     return std::string (m_id.begin(), m_id.begin() + m_id.find_first_of(':'));
   }
 
-  std::string component()
+  std::string component() const
   {
-    return std::string (m_id.begin() + m_id.find_last_of(':'), m_id.end());
+    return std::string (m_id.begin() + m_id.find_last_of(':') + 1, m_id.end());
   }
 
   virtual std::string str() const { return m_id; }

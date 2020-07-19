@@ -205,6 +205,8 @@ void Logic::run (const double& current_time)
             action_pick_animation (s);
           else if (s.get(0) == "set_state")
             action_set_state (s);
+          else if (s.get(0) == "set_coordinates")
+            action_set_coordinates (s);
           else if (s.get(0) == "lock")
             status->push(LOCKED);
           else if (s.get(0) == "unlock")
@@ -255,7 +257,9 @@ bool Logic::compute_path_from_target (Component::Position_handle target)
       
   Point origin = position->value();
   Point t = target->value();
-  t = t + Vector (m_content.get<Component::Double>("camera:position")->value(), 0);
+
+  if (target->component() != "view")
+    t = t + Vector (m_content.get<Component::Double>("camera:position")->value(), 0);
 
   std::vector<Point> path;
   ground_map->find_path (origin, t, path);
@@ -367,7 +371,7 @@ void Logic::action_play (Component::Action::Step step)
   std::string target = step.get(1);
 
   auto animation = m_content.get<Component::Animation>(target + ":image");
-  animation->reset (true);
+  animation->reset (true, 1);
   animation->on() = true;
 }
 
@@ -385,12 +389,24 @@ void Logic::action_pick_animation (Component::Action::Step step)
 void Logic::action_set_state (Component::Action::Step step)
 {
   std::string target = step.get(1);
-  std::string state = step.get(2);
 
   auto current_state = m_content.get<Component::String>(target + ":state");
 
+  std::string state;
+  if (step.size() == 3)
+    state = step.get(2);
+  else // if (step.size() == 4)
+  {
+    if (step.get(2) != current_state->value())
+      return;
+    state = step.get(3);
+  }
+
   if (current_state->value() == "inventory")
+  {
     m_content.get<Component::Inventory>("game:inventory")->remove(target);
+    m_content.get<Component::Position>(target + ":position")->absolute() = false;
+  }
   
   current_state->set (state);
   if (state == "inventory")
@@ -401,6 +417,17 @@ void Logic::action_set_state (Component::Action::Step step)
     img->set_relative_origin(0.5, 0.5);
     img->z() = Config::inventory_back_depth;
   }
+}
+
+void Logic::action_set_coordinates (Component::Action::Step step)
+{
+  std::string target = step.get(1);
+  int x = step.get_int(2);
+  int y = step.get_int(3);
+  int z = step.get_int(4);
+
+  m_content.get<Component::Position>(target + ":position")->set (Point(x, y));
+  m_content.get<Component::Image>(target + ":image")->z() = z;
 }
 
 void Logic::action_show (Component::Action::Step step)

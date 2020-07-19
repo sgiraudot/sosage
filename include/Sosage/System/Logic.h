@@ -74,6 +74,7 @@ private:
   void action_play (Component::Action::Step step);
   void action_pick_animation (Component::Action::Step step);
   void action_set_state (Component::Action::Step step);
+  void action_set_coordinates (Component::Action::Step step);
   void action_show (Component::Action::Step step);
 
   void create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog);

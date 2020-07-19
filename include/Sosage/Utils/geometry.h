@@ -99,6 +99,8 @@ public:
 
   double x() const { return m_x; }
   double y() const { return m_y; }
+  int X() const { return std::lround(m_x); }
+  int Y() const { return std::lround(m_y); }
 
   Box box() const { return Box(m_x, m_y, m_x, m_y); }
 

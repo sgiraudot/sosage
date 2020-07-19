@@ -42,7 +42,7 @@ Animation::Animation (const std::string& id, const std::string& file_name, int z
   reset();
 }
 
-int Animation::reset (bool all_frames)
+int Animation::reset (bool all_frames, int duration)
 {
   int out = 0;
   
@@ -51,12 +51,12 @@ int Animation::reset (bool all_frames)
     for (int i = 0; i < m_width_subdiv; ++ i)
       for (int j = 0; j < m_height_subdiv; ++ j)
       {
-        m_frames.push_back (Frame(i,j,1));
+        m_frames.push_back (Frame(i,j,duration));
         out += 1;
       }
   else
   {
-    m_frames.push_back (Frame(0,0,1));
+    m_frames.push_back (Frame(0,0,duration));
     out = 1;
   }
   m_current = 0;
