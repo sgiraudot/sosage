@@ -1,0 +1,19 @@
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := yaml
+
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/libyaml/include $(LOCAL_PATH)/libyaml/src
+
+LOCAL_SRC_FILES := $(wildcard $(LOCAL_PATH)/libyaml/src/*.c)
+
+LOCAL_EXPORT_C_INCLUDES += $(LOCAL_C_INCLUDES)
+
+LOCAL_CFLAGS := \
+  -DYAML_VERSION_MAJOR=0 \
+  -DYAML_VERSION_MINOR=2 \
+  -DYAML_VERSION_PATCH=2 \
+  -DYAML_VERSION_STRING=\"0.2.2\"
+
+include $(BUILD_SHARED_LIBRARY)
