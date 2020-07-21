@@ -46,17 +46,8 @@ inline File open (const std::string& filename, bool write = false)
 {
   File out;
   out.buffer = SDL_RWFromFile(filename.c_str(), write ? "w" : "r");
-  if constexpr (Config::android)
-  {
-    check (out.buffer != nullptr, "Cannot read " + filename);
-  }
-#ifndef SOSAGE_ANDROID // Stupid Android does not get if constexpr
-  else
-  {
-    if (out.buffer == nullptr)
-      throw Sosage::No_such_file();
-  }
-#endif
+  if (out.buffer == nullptr)
+    throw Sosage::No_such_file();
   
   out.size = std::size_t(SDL_RWsize (out.buffer));
   return out;
