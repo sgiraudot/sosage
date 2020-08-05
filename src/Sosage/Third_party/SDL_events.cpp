@@ -125,6 +125,14 @@ bool SDL_events::is_left_click (const Event& ev)
           ev.button.state == SDL_PRESSED);
 }
 
+bool SDL_events::is_right_click (const Event& ev)
+{
+  return (ev.type == SDL_MOUSEBUTTONDOWN &&
+          ev.button.type == SDL_MOUSEBUTTONDOWN &&
+          ev.button.button == SDL_BUTTON_RIGHT &&
+          ev.button.state == SDL_PRESSED);
+}
+
 bool SDL_events::is_window_resized (const Event& ev)
 {
   return ((ev.type == SDL_WINDOWEVENT &&

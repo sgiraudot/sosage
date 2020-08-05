@@ -63,6 +63,7 @@ public:
   bool is_alt_off (const Event& ev);
   bool is_enter (const Event& ev);
   bool is_left_click (const Event& ev);
+  bool is_right_click(const Event& ev);
   bool is_mouse_motion (const Event& ev);
   bool is_window_resized (const Event& ev);
   std::pair<int, int> mouse_position (const Event& ev,

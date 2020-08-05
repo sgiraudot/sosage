@@ -651,12 +651,10 @@ void Interface::action_clicked(const std::string& verb)
       {
         // If default action on inventory,  look
         auto state = m_content.request<Component::String>(m_collision->entity() + ":state");
-        if (state && (state->value() == "inventory"))
+        if (state && (state->value() == "inventory") ||
+            !m_content.get<Component::Boolean>("click:left")->value())
         {
-          auto action
-            = m_content.request<Component::Action> (m_collision->entity() + ":look");
-          if (action)
-            m_content.set<Component::Variable>("character:action", action);
+          m_content.set<Component::Variable>("character:action", m_content.request<Component::Action> (m_collision->entity() + ":look"));
           m_content.remove("cursor:clicked");
         }
         // Else, goto
@@ -676,20 +674,8 @@ void Interface::action_clicked(const std::string& verb)
     m_content.remove ("action:source", true);
     if (verb == "goto")
     {
-      auto state = m_content.request<Component::String>(m_collision->entity() + ":state");
-      if (state && (state->value() == "inventory"))
-      {
-        auto action
-          = m_content.request<Component::Action> (m_collision->entity() + ":look");
-        if (action)
-          m_content.set<Component::Variable>("character:action", action);
-        m_content.remove("cursor:clicked");
-      }
-      else
-      {
-        m_content.set<Component::Variable>("cursor:target", m_collision);
-        return;
-      }
+      m_content.set<Component::Variable>("cursor:target", m_collision);
+      return;
     }
   }
 
@@ -753,6 +739,8 @@ void Interface::detect_collision (Component::Position_handle cursor)
   {
     if (m_collision->entity().find("verb_") == 0)
       m_collision->set_scale(m_verb_scale);
+    if (auto name = m_content.request<Component::String>(m_collision->entity() + ":name"))
+      m_content.get<Component::Image>("verb_look:image")->set_scale(m_verb_scale);
   }
 
   m_collision = Component::Image_handle();
@@ -818,8 +806,10 @@ void Interface::update_action ()
   {
     if (m_collision->entity().find("verb_") == 0)
       m_collision->set_scale(1.1 * m_verb_scale);
+
     if (auto name = m_content.request<Component::String>(m_collision->entity() + ":name"))
     {
+      m_content.get<Component::Image>("verb_look:image")->set_scale(1.1 * m_verb_scale);
       target_object = name->value();
       auto state = m_content.request<Component::String>(m_collision->entity() + ":state");
       if (state && state->value() == "inventory")
