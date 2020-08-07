@@ -45,17 +45,19 @@ public:
   Animation (Content& content);
 
   void run();
+
+  void place_and_scale_character(bool looking_right);
   
   void generate_random_idle_animation (Component::Animation_handle image,
                                        Component::Animation_handle head,
                                        Component::Animation_handle mouth,
-                                       const Vector& direction);
+                                       bool facing_right);
 
   void generate_random_idle_head_animation (Component::Animation_handle head,
                                             Component::Animation_handle mouth,
-                                            const Vector& direction);
+                                            bool facing_right);
   void generate_random_idle_body_animation (Component::Animation_handle body,
-                                            const Vector& direction);
+                                            bool facing_right);
 
 private:
   

@@ -194,7 +194,7 @@ void Logic::run (const double& current_time)
           else if (s.get(0) == "goto")
             action_goto (m_current_action->entity());
           else if (s.get(0) == "load")
-            m_content.set<Component::String>("game:new_room", s.get(1));
+            action_load (s);
           else if (s.get(0) == "look")
             action_look (m_current_action->entity());
           else if (s.get(0) == "move")
@@ -343,6 +343,13 @@ void Logic::action_goto (const std::string& target)
   auto position = m_content.request<Component::Position>(target + ":view");
   if (compute_path_from_target(position))
     m_timed.insert (std::make_pair (0, m_content.get<Component::Path>("character:path")));
+}
+
+void Logic::action_load (Component::Action::Step step)
+{
+  m_content.set<Component::String>("game:new_room", step.get(1));
+  m_content.get<Component::Position>("character_body:position")->set(Point(step.get_int(2), step.get_int(3)));
+  m_content.set<Component::Boolean>("character:in_new_room", step.get_boolean(4));
 }
 
 void Logic::action_look (const std::string& target)

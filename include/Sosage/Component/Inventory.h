@@ -43,6 +43,9 @@ public:
 
   Inventory (const std::string& id);
 
+  std::vector<std::string>::const_iterator begin() const { return m_data.begin(); }
+  std::vector<std::string>::const_iterator end() const { return m_data.end(); }
+
   void add (const std::string& entity);
   void remove (const std::string& entity);
   void next();

@@ -243,6 +243,13 @@ void File_IO::read_init (const std::string& folder_name)
 
   }
 
+  std::string character = input["character"].string("data", "characters", "yaml");
+  int x = input["coordinates"][0].integer();
+  int y = input["coordinates"][1].integer();
+  bool facing_right = input["coordinates"][2].boolean();
+  read_character (character, x, y);
+  m_content.set<Component::Boolean>("character:in_new_room", facing_right);
+
   m_content.set<Component::String>("game:new_room", input["load_room"].string());
 }
 
@@ -298,38 +305,30 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
   int mdy = input["mouth"]["dy"].integer();
   m_content.set<Component::Position>("character_mouth:gap_right", Point(mdx_right,mdy), false);
   m_content.set<Component::Position>("character_mouth:gap_left", Point(mdx_left,mdy), false);
-  
-  auto phead
-    = m_content.set<Component::Position>("character_head:position", Point(x - hdx_right, y - hdy), false);
-
-  auto pmouth
-    = m_content.set<Component::Position>("character_mouth:position", Point(x - hdx_right - mdx_right,
-                                                                           y - hdy - mdy), false);
-
-  auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
-  
-  Point pos_body = pbody->value();
-
-  double z_at_point = ground_map->z_at_point (pos_body);
-  awalk->rescale (z_at_point);
-  aidle->rescale (z_at_point);
-  
-  ahead->rescale (z_at_point);
-  ahead->z() += 1;
-  phead->set (pbody->value() - awalk->core().scaling * Vector(hdx_right, hdy));
-  
-  amouth->rescale (z_at_point);
-  amouth->z() += 2;
-  pmouth->set (phead->value() - ahead->core().scaling * Vector(mdx_right, mdy));
-
-  m_content.set<Component::Event>("game:new_character");
+  m_content.set<Component::Position>("character_head:position", Point(x - hdx_right, y - hdy), false);
+  m_content.set<Component::Position>("character_mouth:position", Point(x - hdx_right - mdx_right,
+                                                                       y - hdy - mdy), false);
 }
 
 void File_IO::read_room (const std::string& file_name)
 {
+  std::unordered_set<std::string> inventory_entities;
+  auto inventory = m_content.get<Component::Inventory>("game:inventory");
+  for (const std::string& entity : *inventory)
+    inventory_entities.insert (entity);
+
   m_content.clear
     ([&](Component::Handle c) -> bool
      {
+       // keep inventory
+       if (inventory_entities.find(c->entity()) != inventory_entities.end())
+         return false;
+
+       // keep states and positions
+       if (c->component() == "state" || c->component() == "position")
+         return false;
+
+       // else, remove component if belonged to the latest room
        return (m_latest_room_entities.find(c->entity()) != m_latest_room_entities.end());
      });
   
@@ -355,20 +354,20 @@ void File_IO::read_room (const std::string& file_name)
   m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map),
                                        front_z, back_z);
 
-  std::string character = input["character"].string("data", "characters", "yaml");
-  int x = input["coordinates"][0].integer();
-  int y = input["coordinates"][1].integer();
-  read_character (character, x, y);
+
 
   // First instantiate all states
   for (std::size_t i = 0; i < input["content"].size(); ++ i)
   {
     const Core::File_IO::Node& node = input["content"][i];
     m_latest_room_entities.insert (node["id"].string());
-    if (input["content"][i].has("states"))
+    if (node.has("states"))
     {
       std::string id = node["id"].string();
-      m_content.set<Component::String>(id + ":state");
+
+      // Add state if does not exist (it might for inventory objects for example)
+      if (!m_content.request<Component::String>(id + ":state"))
+        m_content.set<Component::String>(id + ":state");
     }
   }
   
@@ -462,9 +461,10 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
     std::string state = istate["id"].string();
 
     // init with first state found
-    if (state_handle->value() == "")
+    if (j == 0)
     {
-      state_handle->set(state);
+      if (state_handle->value() == "")
+        state_handle->set(state);
       conditional_handle_off
         = m_content.set<Component::String_conditional>(id + ":image", state_handle);
       conditional_handle_on
@@ -527,6 +527,14 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
 
 void File_IO::read_object (const Core::File_IO::Node& node, const std::string& id)
 {
+  // First, check if object already exists in inventory (if so, skip)
+  auto state_handle = m_content.get<Component::String>(id + ":state");
+  if (state_handle->value() == "inventory")
+  {
+    std::cerr << "Skipping " << id << std::endl;
+    return;
+  }
+
   std::string name = node["name"].string();
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
@@ -536,12 +544,15 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
   bool box_collision = node["box_collision"].boolean();
       
   m_content.set<Component::String>(id + ":name", name);
-  auto state_handle = m_content.get<Component::String>(id + ":state");
-  auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
+
+  // Position might already exists if room was already loaded
+  auto pos = m_content.request<Component::Position>(id + ":position");
+  if (!pos)
+    pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
+
   m_content.set<Component::Position>(id + ":view", Point(vx,vy), false);
 
   Component::String_conditional_handle conditional_handle;
-
   for (std::size_t j = 0; j < node["states"].size(); ++ j)
   {
     const Core::File_IO::Node& istate = node["states"][j];
@@ -549,9 +560,10 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
     std::string state = istate["id"].string();
 
     // init with first state found
-    if (state_handle->value() == "")
+    if (j == 0)
     {
-      state_handle->set(state);
+      if (state_handle->value() == "")
+        state_handle->set(state);
       conditional_handle = m_content.set<Component::String_conditional>(id + ":image", state_handle);
     }
     else

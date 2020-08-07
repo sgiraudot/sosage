@@ -48,14 +48,16 @@ void Animation::run()
   if (status->value() == PAUSED)
     return;
 
-  if (m_content.request<Component::Event>("game:new_character"))
+  if (auto facing_right = m_content.request<Component::Boolean>("character:in_new_room"))
   {
+    std::cerr << "Placing" << std::endl;
+    place_and_scale_character(facing_right->value());
     generate_random_idle_animation
       (m_content.get<Component::Animation>("character_idle:image"),
        m_content.get<Component::Animation>("character_head:image"),
        m_content.get<Component::Animation>("character_mouth:image"),
-       Vector(1,0));
-    m_content.remove("game:new_character");
+       facing_right->value());
+    m_content.remove("character:in_new_room");
   }
   
   auto path = m_content.request<Component::Path>("character:path");
@@ -75,8 +77,9 @@ void Animation::run()
     auto pmouth = m_content.get<Component::Position>("character_mouth:position");
 
     Vector direction (phead->value(), lookat->value());
+    bool facing_right = (direction.x() > 0);
     
-    if (direction.x() > 0)
+    if (facing_right)
     {
       phead->set (pbody->value() - abody->core().scaling
                   * Vector(m_content.get<Component::Position>("character_head:gap_right")->value()));
@@ -93,7 +96,7 @@ void Animation::run()
     
     generate_random_idle_animation (abody, ahead,
                                     m_content.get<Component::Animation>("character_mouth:image"),
-                                    direction);
+                                    facing_right);
     m_content.remove("character:lookat");
   }
 
@@ -105,24 +108,16 @@ void Animation::run()
   
   if (m_content.request<Component::Event>("character:stop_talking"))
   {
-    Vector direction (1, 0);
-    if (m_content.get<Component::Animation>("character_head:image")->frames().front().y == 1)
-      direction = Vector(-1, 0);
-    
     generate_random_idle_head_animation (m_content.get<Component::Animation>("character_head:image"),
                                          m_content.get<Component::Animation>("character_mouth:image"),
-                                         direction);
+                                         m_content.get<Component::Animation>("character_head:image")->frames().front().y == 0);
     m_content.remove("character:stop_talking");
   }
 
   if (m_content.request<Component::Event>("character:stop_pick_animation"))
   {
-    Vector direction (1, 0);
-    if (m_content.get<Component::Animation>("character_head:image")->frames().front().y == 1)
-      direction = Vector(-1, 0);
-
     generate_random_idle_body_animation (m_content.get<Component::Animation>("character_idle:image"),
-                                         direction);
+                                         m_content.get<Component::Animation>("character_head:image")->frames().front().y == 0);
     m_content.remove("character:stop_pick_animation");
   }
 
@@ -142,6 +137,41 @@ void Animation::run()
   for (const auto& animation : animations)
     if (!animation->next_frame())
       animation->on() = false;
+}
+
+void Animation::place_and_scale_character(bool looking_right)
+{
+  auto abody = m_content.get<Component::Animation>("character_walking:image");
+  auto aidle = m_content.get<Component::Animation>("character_idle:image");
+  auto ahead = m_content.get<Component::Animation>("character_head:image");
+  auto amouth = m_content.get<Component::Animation>("character_mouth:image");
+  auto pbody = m_content.get<Component::Position>("character_body:position");
+  auto phead = m_content.get<Component::Position>("character_head:position");
+  auto pmouth = m_content.get<Component::Position>("character_mouth:position");
+  auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
+
+  double new_z = ground_map->z_at_point (pbody->value());
+  abody->rescale (new_z);
+  aidle->rescale (new_z);
+  ahead->rescale (new_z);
+  ahead->z() += 1;
+  amouth->rescale (new_z);
+  amouth->z() += 2;
+
+  if (looking_right)
+  {
+    phead->set (pbody->value() - abody->core().scaling
+                * Vector(m_content.get<Component::Position>("character_head:gap_right")->value()));
+    pmouth->set (phead->value() - ahead->core().scaling
+                * Vector(m_content.get<Component::Position>("character_mouth:gap_right")->value()));
+  }
+  else
+  {
+    phead->set (pbody->value() - abody->core().scaling
+                * Vector(m_content.get<Component::Position>("character_head:gap_left")->value()));
+    pmouth->set (phead->value() - ahead->core().scaling
+                * Vector(m_content.get<Component::Position>("character_mouth:gap_left")->value()));
+  }
 }
 
 void Animation::compute_movement_from_path (Component::Path_handle path)
@@ -183,35 +213,15 @@ void Animation::compute_movement_from_path (Component::Path_handle path)
     {
       pos = (*path)[path->current()];
       m_content.remove("character:path");
-      generate_random_idle_animation(aidle, ahead, amouth, current_vector);
+      generate_random_idle_animation(aidle, ahead, amouth, current_vector.x() > 0);
       break;
     }
     path->current() ++;
   }
 
-  double new_z = ground_map->z_at_point (pos);
-  abody->rescale (new_z);
-  aidle->rescale (new_z);
-  ahead->rescale (new_z);
-  ahead->z() += 1;
-  amouth->rescale (new_z);
-  amouth->z() += 2;
-  pbody->set(pos);
 
-  if (direction.x() > 0)
-  {
-    phead->set (pbody->value() - abody->core().scaling
-                * Vector(m_content.get<Component::Position>("character_head:gap_right")->value()));
-    pmouth->set (phead->value() - ahead->core().scaling
-                * Vector(m_content.get<Component::Position>("character_mouth:gap_right")->value()));
-  } 
-  else
-  {
-    phead->set (pbody->value() - abody->core().scaling
-                * Vector(m_content.get<Component::Position>("character_head:gap_left")->value()));
-    pmouth->set (phead->value() - ahead->core().scaling
-                * Vector(m_content.get<Component::Position>("character_mouth:gap_left")->value()));
-  }      
+  pbody->set(pos);
+  place_and_scale_character(direction.x() > 0);
 }
 
 void Animation::set_move_animation (Component::Animation_handle image,
@@ -259,15 +269,15 @@ void Animation::set_move_animation (Component::Animation_handle image,
 void Animation::generate_random_idle_animation (Component::Animation_handle image,
                                                 Component::Animation_handle head,
                                                 Component::Animation_handle mouth,
-                                                const Vector& direction)
+                                                bool facing_right)
 {
-  generate_random_idle_body_animation (image, direction);
-  generate_random_idle_head_animation (head, mouth, direction);
+  generate_random_idle_body_animation (image, facing_right);
+  generate_random_idle_head_animation (head, mouth, facing_right);
 }
 
 void Animation::generate_random_idle_head_animation (Component::Animation_handle head,
                                                      Component::Animation_handle mouth,
-                                                     const Vector& direction)
+                                                     bool facing_right)
 {
   // Reset all
   head->reset();
@@ -280,7 +290,7 @@ void Animation::generate_random_idle_head_animation (Component::Animation_handle
   mouth->on() = true;
 
   std::size_t row_index = 0;
-  if (direction.x() < 0)
+  if (!facing_right)
     row_index = 1;
 
   // Generate 10 poses with transitions
@@ -343,7 +353,7 @@ void Animation::generate_random_idle_head_animation (Component::Animation_handle
 }
 
 void Animation::generate_random_idle_body_animation (Component::Animation_handle image,
-                                                     const Vector& direction)
+                                                     bool facing_right)
 {
   m_content.get<Component::Animation>("character_walking:image")->on() = false;
   // Reset all
@@ -352,7 +362,7 @@ void Animation::generate_random_idle_body_animation (Component::Animation_handle
   image->frames().clear();
 
   std::size_t row_index = 0;
-  if (direction.x() < 0)
+  if (!facing_right)
     row_index = 1;
 
   std::vector<int> possibles_values;

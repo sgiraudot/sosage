@@ -69,6 +69,7 @@ private:
 
   void action_comment (Component::Action::Step step);
   void action_goto (const std::string& target);
+  void action_load (Component::Action::Step step);
   void action_look (const std::string& target);
   void action_move (Component::Action::Step step);
   void action_play (Component::Action::Step step);
