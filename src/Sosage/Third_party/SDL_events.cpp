@@ -43,125 +43,101 @@ SDL_events::~SDL_events ()
 
 }
 
-bool SDL_events::next_event (SDL_events::Event& ev)
+Event SDL_events::next_event (int interface_width, int interface_height)
 {
-  return (SDL_PollEvent (&ev) == 1);
-}
+  SDL_Event ev;
+  if (SDL_PollEvent(&ev) != 1)
+    return Event();
 
-bool SDL_events::is_exit (const Event& ev)
-{
-  if constexpr (Config::android)
-    return (ev.type == SDL_KEYUP && (ev.key.keysym.sym == SDLK_AC_BACK));
+  // Exit button
+  if (ev.type == SDL_QUIT)
+    return Event (WINDOW, QUIT);
 
-  // Quit on: interface X-cross / Escape key / Q key
-  return (ev.type == SDL_QUIT ||
-          (ev.type == SDL_KEYUP && (ev.key.keysym.sym == SDLK_ESCAPE
-                                    || ev.key.keysym.sym == SDLK_q)));
-}
+  // Window resized
+  if (ev.type == SDL_WINDOWEVENT &&
+      ev.window.event == SDL_WINDOWEVENT_RESIZED)
+    return Event (WINDOW, RESIZED, ev.window.data1, ev.window.data2);
 
-bool SDL_events::is_pause (const Event& ev)
-{
-  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_SPACE);
-}
+  Event::Type type = EMPTY;
+  Event::Value value = NONE;
 
-bool SDL_events::is_debug (const Event& ev)
-{
-  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_d);
-}
+  // Mouse/finger
 
-bool SDL_events::is_console (const Event& ev)
-{
-  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_c);
-}
+  bool is_mouse = false;
+  bool is_finger = false;
+  if (ev.type == SDL_MOUSEBUTTONDOWN)
+  {
+    type = CURSOR_DOWN;
+    is_mouse = true;
+  }
+  else if (ev.type == SDL_MOUSEMOTION)
+  {
+    type = CURSOR_MOVE;
+    is_mouse = true;
+  }
+  else if (ev.type == SDL_MOUSEBUTTONUP)
+  {
+    type = CURSOR_UP;
+    is_mouse = true;
+  }
+  else if (ev.type == SDL_FINGERDOWN)
+  {
+    type = CURSOR_DOWN;
+    is_finger = true;
+  }
+  else if (ev.type == SDL_FINGERMOTION)
+  {
+    type = CURSOR_MOVE;
+    is_finger = true;
+  }
+  else if (ev.type == SDL_FINGERUP)
+  {
+    type = CURSOR_UP;
+    is_finger = true;
+  }
 
-bool SDL_events::is_f1 (const Event& ev)
-{
-  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_F1);
-}
+  if (is_mouse)
+  {
+    if (ev.button.button == SDL_BUTTON_LEFT)
+      value = LEFT;
+    else if (ev.button.button == SDL_BUTTON_RIGHT)
+      value = RIGHT;
+    if (ev.type == SDL_MOUSEMOTION)
+      return Event (type, value, ev.motion.x, ev.motion.y);
+    // else
+    return Event (type, value, ev.button.x, ev.button.y);
+  }
 
-bool SDL_events::is_f2 (const Event& ev)
-{
-  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_F2);
-}
+  if (is_finger)
+    return Event (type, LEFT,
+                  ev.tfinger.x * (Config::world_width + interface_width),
+                  ev.tfinger.y * (Config::world_height + interface_height));
 
-bool SDL_events::is_f3 (const Event& ev)
-{
-  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_F3);
-}
+  // Keys
+  if (ev.type == SDL_KEYDOWN)
+    type = KEY_DOWN;
+  else if (ev.type == SDL_KEYUP)
+    type = KEY_UP;
+  else
+    return Event();
 
-bool SDL_events::is_f4 (const Event& ev)
-{
-  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_F4);
-}
 
-bool SDL_events::is_f5 (const Event& ev)
-{
-  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_F5);
-}
+  if (ev.key.keysym.sym == SDLK_LALT)
+    return Event (type, ALT);
+  if (ev.key.keysym.sym == SDLK_AC_BACK)
+    return Event (type, ANDROID_BACK);
+  if (ev.key.keysym.sym == SDLK_RETURN)
+      return Event (type, ENTER);
+  if (ev.key.keysym.sym == SDLK_ESCAPE)
+    return Event (type, EXIT);
+  if (ev.key.keysym.sym == SDLK_SPACE)
+    return Event (type, SPACE);
+  if (SDLK_a <= ev.key.keysym.sym && ev.key.keysym.sym <= SDLK_z)
+    return Event (type, Event::Value(A + (ev.key.keysym.sym - SDLK_a)));
+  if (SDLK_F1 <= ev.key.keysym.sym && ev.key.keysym.sym <= SDLK_F12)
+    return Event (type, Event::Value(F1 + (ev.key.keysym.sym - SDLK_F1)));
 
-bool SDL_events::is_alt_on (const Event& ev)
-{
-  return (ev.type == SDL_KEYDOWN && ev.key.keysym.sym == SDLK_LALT);
-}
-
-bool SDL_events::is_alt_off (const Event& ev)
-{
-  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_LALT);
-}
-
-bool SDL_events::is_enter (const Event& ev)
-{
-  return (ev.type == SDL_KEYUP && ev.key.keysym.sym == SDLK_RETURN);
-}
-
-bool SDL_events::is_left_click (const Event& ev)
-{
-  if constexpr (Config::android)
-    return ev.type == SDL_FINGERUP;
-
-  return (ev.type == SDL_MOUSEBUTTONDOWN &&
-          ev.button.type == SDL_MOUSEBUTTONDOWN &&
-          ev.button.button == SDL_BUTTON_LEFT &&
-          ev.button.state == SDL_PRESSED);
-}
-
-bool SDL_events::is_right_click (const Event& ev)
-{
-  return (ev.type == SDL_MOUSEBUTTONDOWN &&
-          ev.button.type == SDL_MOUSEBUTTONDOWN &&
-          ev.button.button == SDL_BUTTON_RIGHT &&
-          ev.button.state == SDL_PRESSED);
-}
-
-bool SDL_events::is_window_resized (const Event& ev)
-{
-  return ((ev.type == SDL_WINDOWEVENT &&
-           ev.window.event == SDL_WINDOWEVENT_RESIZED));
-}
-
-bool SDL_events::is_mouse_motion (const Event& ev)
-{
-  if constexpr (Config::android)
-    return (ev.type == SDL_FINGERMOTION);
-  return (ev.type == SDL_MOUSEMOTION);
-}
-
-std::pair<int, int> SDL_events::mouse_position (const Event& ev,
-                                                int interface_width,
-                                                int interface_height)
-{
-  if constexpr (Config::android)
-    return std::make_pair (ev.tfinger.x * (Config::world_width + interface_width),
-                           ev.tfinger.y * (Config::world_height + interface_height));
-  if (ev.type == SDL_MOUSEMOTION)
-    return std::make_pair (ev.motion.x, ev.motion.y);
-  //  else
-  return std::make_pair (ev.button.x, ev.button.y);
-}
-
-std::pair<int, int> SDL_events::window_size (const Event& ev)
-{
-  return std::make_pair (ev.window.data1, ev.window.data2);
+  return Event();
 }
 
 } // namespace Sosage::Third_party

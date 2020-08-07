@@ -42,15 +42,19 @@ Input::Input (Content& content)
 
 void Input::run()
 {
-  Core::Input::Event ev;
-
-  while (m_core.next_event(ev))
+  while (Event ev = m_core.next_event
+         (m_content.get<Component::Int>("interface:width")->value(),
+          m_content.get<Component::Int>("interface:height")->value()))
   {
-    if (m_core.is_exit(ev))
+    // Quit on: interface X-cross / Escape key / Q key
+    if (ev == Event(WINDOW, QUIT) ||
+        ev == Event(KEY_UP, EXIT) ||
+        ev == Event(KEY_UP, Q) ||
+        ev == Event(KEY_UP, ANDROID_BACK))
       m_content.set<Component::Event>("game:exit");
 
     auto status = m_content.get<Component::Status>("game:status");
-    if (m_core.is_pause(ev))
+    if (ev == Event(KEY_UP, SPACE))
     {
       if (status->value() == PAUSED)
         status->pop();
@@ -61,88 +65,78 @@ void Input::run()
     if (status->value() == PAUSED)
       continue;
 
-    if (m_core.is_debug(ev))
+    if (ev == Event(KEY_UP, D))
       m_content.get<Component::Boolean>("game:debug")->toggle();
     
-    if (m_core.is_console(ev))
+    if (ev == Event(KEY_UP, C))
+    {
       m_content.get<Component::Boolean>("game:console")->toggle();
+    }
 
-    if (m_core.is_f1(ev))
+    if (ev == Event(KEY_UP, F1))
     {
       m_content.get<Component::Int>("interface:layout")->set(Config::AUTO);
       m_content.set<Component::Event>("window:rescaled");
     }
-    else if (m_core.is_f2(ev))
+    else if (ev == Event(KEY_UP, F2))
     {
       m_content.get<Component::Int>("interface:layout")->set(Config::WIDESCREEN);
       m_content.set<Component::Event>("window:rescaled");
     }
-    else if (m_core.is_f3(ev))
+    else if (ev == Event(KEY_UP, F3))
     {
       m_content.get<Component::Int>("interface:layout")->set(Config::STANDARD);
       m_content.set<Component::Event>("window:rescaled");
     }
-    else if (m_core.is_f4(ev))
+    else if (ev == Event(KEY_UP, F4))
     {
       m_content.get<Component::Int>("interface:layout")->set(Config::SQUARE);
       m_content.set<Component::Event>("window:rescaled");
     }
-    else if (m_core.is_f5(ev))
+    else if (ev == Event(KEY_UP, F5))
     {
       m_content.get<Component::Int>("interface:layout")->set(Config::PORTRAIT);
       m_content.set<Component::Event>("window:rescaled");
     }
-    else if (m_core.is_alt_on(ev))
+    else if (ev == Event(KEY_DOWN, ALT))
       m_alt = true;
-    else if (m_core.is_alt_off(ev))
+    else if (ev == Event(KEY_UP, ALT))
       m_alt = false;
-    else if (m_core.is_enter(ev))
+    else if (ev == Event(KEY_UP, ENTER))
     {
       m_content.get<Component::Boolean>("window:fullscreen")->toggle();
       m_content.set<Component::Event>("window:toggle_fullscreen");
     }
 
-    
-    if (m_core.is_window_resized(ev))
+    if (ev == Event(WINDOW, RESIZED))
     {
-      std::pair<int, int> window_size
-        = m_core.window_size(ev);
-      m_content.get<Component::Int>("window:width")->set(window_size.first);
-      m_content.get<Component::Int>("window:height")->set(window_size.second);
+      m_content.get<Component::Int>("window:width")->set(ev.x());
+      m_content.get<Component::Int>("window:height")->set(ev.y());
       m_content.set<Component::Event>("window:rescaled");
     }
 
     // If paused, ignore mouse events
     if (status->value() == LOCKED)
       continue;
-  
-    if (m_core.is_mouse_motion(ev))
+
+    if (ev.type() == CURSOR_MOVE)
       m_content.set<Component::Position>
-        ("cursor:position",
-         Point(m_core.mouse_position
-               (ev,
-                m_content.get<Component::Int>("interface:width")->value(),
-                m_content.get<Component::Int>("interface:height")->value())));
-    
-    if (m_core.is_left_click(ev))
+          ("cursor:position",
+           Point(ev.x(), ev.y()));
+
+    if (ev == Event(CURSOR_DOWN, LEFT))
     {
       m_content.set<Component::Position>
-        ("cursor:position",
-         Point(m_core.mouse_position
-               (ev,
-                m_content.get<Component::Int>("interface:width")->value(),
-                m_content.get<Component::Int>("interface:height")->value())));
+          ("cursor:position",
+           Point(ev.x(), ev.y()));
       m_content.set<Component::Event>("cursor:clicked");
       m_content.set<Component::Boolean>("click:left", true);
     }
-    if (m_core.is_right_click(ev))
+    if (ev == Event(CURSOR_DOWN, RIGHT))
     {
       m_content.set<Component::Position>
-        ("cursor:position",
-         Point(m_core.mouse_position
-               (ev,
-                m_content.get<Component::Int>("interface:width")->value(),
-                m_content.get<Component::Int>("interface:height")->value())));
+          ("cursor:position",
+           Point(ev.x(), ev.y()));
       m_content.set<Component::Event>("cursor:clicked");
       m_content.set<Component::Boolean>("click:left", false);
     }
