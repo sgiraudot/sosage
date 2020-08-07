@@ -119,26 +119,69 @@ void Input::run()
     if (status->value() == LOCKED)
       continue;
 
-    if (ev.type() == CURSOR_MOVE)
-      m_content.set<Component::Position>
-          ("cursor:position",
-           Point(ev.x(), ev.y()));
+    if (m_content.get<Component::Boolean>("interface:virtual_cursor")->value())
+    {
+      if (ev.type() == CURSOR_DOWN)
+      {
+        m_virtual_cursor.down = true;
+        m_virtual_cursor.has_moved = false;
+        m_virtual_cursor.time = Time::now();
+        m_virtual_cursor.x = ev.x();
+        m_virtual_cursor.y = ev.y();
 
-    if (ev == Event(CURSOR_DOWN, LEFT))
-    {
-      m_content.set<Component::Position>
-          ("cursor:position",
-           Point(ev.x(), ev.y()));
-      m_content.set<Component::Event>("cursor:clicked");
-      m_content.set<Component::Boolean>("click:left", true);
+        const Point& pos = m_content.get<Component::Position>("cursor:position")->value();
+        m_virtual_cursor.cursor_x = pos.x();
+        m_virtual_cursor.cursor_y = pos.y();
+      }
+
+      if (ev.type() == CURSOR_UP)
+      {
+        m_virtual_cursor.down = false;
+
+        if (!m_virtual_cursor.has_moved)
+        {
+          m_content.set<Component::Event>("cursor:clicked");
+          m_content.set<Component::Boolean>("click:left", true);
+        }
+      }
+
+      if (m_virtual_cursor.down &&
+          ev.type() == CURSOR_MOVE)
+      {
+        auto pos = m_content.get<Component::Position>("cursor:position");
+        pos->set(Point(m_virtual_cursor.cursor_x + ev.x() - m_virtual_cursor.x,
+                       m_virtual_cursor.cursor_y + ev.y() - m_virtual_cursor.y));
+        if (!m_virtual_cursor.has_moved &&
+            distance(pos->value().x(), pos->value().y(),
+                     m_virtual_cursor.cursor_x,
+                     m_virtual_cursor.cursor_y) < Config::virtual_cursor_sensitivity)
+          m_virtual_cursor.has_moved = true;
+      }
+
     }
-    if (ev == Event(CURSOR_DOWN, RIGHT))
+    else // regular cursor
     {
-      m_content.set<Component::Position>
-          ("cursor:position",
-           Point(ev.x(), ev.y()));
-      m_content.set<Component::Event>("cursor:clicked");
-      m_content.set<Component::Boolean>("click:left", false);
+      if (ev.type() == CURSOR_MOVE)
+        m_content.set<Component::Position>
+            ("cursor:position",
+             Point(ev.x(), ev.y()));
+
+      if (ev == Event(CURSOR_DOWN, LEFT))
+      {
+        m_content.set<Component::Position>
+            ("cursor:position",
+             Point(ev.x(), ev.y()));
+        m_content.set<Component::Event>("cursor:clicked");
+        m_content.set<Component::Boolean>("click:left", true);
+      }
+      if (ev == Event(CURSOR_DOWN, RIGHT))
+      {
+        m_content.set<Component::Position>
+            ("cursor:position",
+             Point(ev.x(), ev.y()));
+        m_content.set<Component::Event>("cursor:clicked");
+        m_content.set<Component::Boolean>("click:left", false);
+      }
     }
   }
 }

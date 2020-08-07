@@ -38,7 +38,19 @@ class Input
   Content& m_content;
   Core::Input m_core;
 
+  struct Virtual_cursor
+  {
+    bool down = false;
+    bool has_moved = false;
+    Time::Unit time;
+    int x;
+    int y;
+    double cursor_x;
+    double cursor_y;
+  };
+
   bool m_alt;
+  Virtual_cursor m_virtual_cursor;
 
 public:
 

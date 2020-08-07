@@ -164,14 +164,27 @@ void File_IO::read_init (const std::string& folder_name)
   cursor_img->set_relative_origin(0.5, 0.5);
 
   auto status = m_content.get<Component::Status>("game:status");
-  // Cursor displayed = NOT (paused OR virtual)
-  m_content.set<Component::Conditional>
-  ("cursor:conditional",
-   Component::make_not
-   (Component::make_or
-    (Component::make_value_condition<Sosage::Status> (status, PAUSED),
-     m_content.get<Component::Boolean>("interface:virtual_cursor"))),
-   cursor_img);
+
+  if constexpr (Config::android)
+  {
+    // Cursor displayed = NOT paused AND virtual
+    m_content.set<Component::Conditional>
+        ("cursor:conditional",
+         Component::make_and
+         (Component::make_not
+          (Component::make_value_condition<Sosage::Status> (status, PAUSED)),
+           m_content.get<Component::Boolean>("interface:virtual_cursor")),
+         cursor_img);
+  }
+  else
+  {
+    // Cursor displayed = NOT paused
+    m_content.set<Component::Conditional>
+        ("cursor:conditional",
+         Component::make_not
+         (Component::make_value_condition<Sosage::Status> (status, PAUSED)),
+         cursor_img);
+  }
 
   m_content.set<Component::Position> ("cursor:position", Point(0,0));
   

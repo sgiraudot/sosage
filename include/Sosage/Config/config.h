@@ -65,6 +65,7 @@ constexpr int text_outline = 10;
 constexpr int displayed_inventory_size = 4;
 
 constexpr double button_click_duration = 0.1;
+constexpr double virtual_cursor_sensitivity = 5;
 
 } // namespace Config
 
