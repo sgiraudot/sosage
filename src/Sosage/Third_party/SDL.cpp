@@ -149,6 +149,7 @@ SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& 
 
   Texture out = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, back.get());
   check (out != Texture(), "Cannot create texture from text \"" + text + "\"");
+
   return Image (back, out, 1);
 }
 

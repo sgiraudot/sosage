@@ -469,13 +469,11 @@ void Logic::create_dialog (const std::string& text, std::vector<Component::Image
     int nb_imgs = 1 + (img->width() / width_max);
 
     // Find space characters where to cut
-    std::vector<std::size_t> cuts (nb_imgs + 1);
-    cuts.front() = 0;
-    cuts.back() = text.size();
-    
-    for (std::size_t i = 1; i < cuts.size() - 1; ++ i)
+    std::vector<std::size_t> cuts (nb_imgs  - 1);
+
+    for (std::size_t i = 0; i < cuts.size(); ++ i)
     {
-      std::size_t cut = std::size_t(i * (text.size() / double(nb_imgs)));
+      std::size_t cut = std::size_t((i+1) * (text.size() / double(nb_imgs)));
       if (text[cut] == ' ')
         cuts[i] = cut;
       else
@@ -502,12 +500,14 @@ void Logic::create_dialog (const std::string& text, std::vector<Component::Image
 
     for (int i = 0; i < nb_imgs; ++ i)
     {
+      std::size_t begin = (i == 0 ? 0 : cuts[i-1] + 1);
+      std::size_t end = (i == nb_imgs - 1 ? text.size() : cuts[i]);
       auto img
         = m_content.set<Component::Image> ("comment_" + std::to_string(i) + ":image",
                                            m_content.get<Component::Font> ("interface:font"),
                                            m_content.get<Component::String> ("interface:color")->value(),
-                                           std::string(text.begin() + cuts[i],
-                                                       text.begin() + cuts[i+1]), true);
+                                           std::string(text.begin() + begin,
+                                                       text.begin() + end), true);
       img->z() = Config::inventory_over_depth;
       img->set_scale(0.75);
       img->set_relative_origin(0.5, 0.5);

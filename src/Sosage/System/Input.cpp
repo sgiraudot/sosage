@@ -134,7 +134,6 @@ void Input::run()
                 m_content.get<Component::Int>("interface:height")->value())));
       m_content.set<Component::Event>("cursor:clicked");
       m_content.set<Component::Boolean>("click:left", true);
-      std::cerr << "Left" << std::endl;
     }
     if (m_core.is_right_click(ev))
     {
@@ -146,7 +145,6 @@ void Input::run()
                 m_content.get<Component::Int>("interface:height")->value())));
       m_content.set<Component::Event>("cursor:clicked");
       m_content.set<Component::Boolean>("click:left", false);
-      std::cerr << "Right" << std::endl;
     }
   }
 }
