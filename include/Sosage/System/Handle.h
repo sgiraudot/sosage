@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/System/Graphic.h]
-  Renders the content of the game at each frame.
+  [include/Sosage/System/Handle.h]
+  Virtual basis for all systems.
 
   =====================================================================
 
@@ -24,41 +24,34 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_SYSTEM_GRAPHIC_H
-#define SOSAGE_SYSTEM_GRAPHIC_H
+#ifndef SOSAGE_SYSTEM_HANDLE_H
+#define SOSAGE_SYSTEM_HANDLE_H
 
-#include <Sosage/Component/Image.h>
-#include <Sosage/Core/Graphic.h>
-#include <Sosage/Content.h>
-#include <Sosage/System/Handle.h>
-
-#include <vector>
+#include <memory>
+#include <string>
+#include <unordered_set>
 
 namespace Sosage::System
 {
 
-class Graphic : public Base
+class Base
 {
-private:
-
-  Content& m_content;
-  Core::Graphic m_core;
-
 public:
 
-  Graphic (Content& content);
-
-  virtual void init();
-
-  virtual void run();
-
-private:
-
-  void get_images (std::vector<Component::Image_handle>& images);
-
-  void display_images (std::vector<Component::Image_handle>& images);
+  virtual ~Base() { }
+  virtual void init() { }
+  virtual void run() = 0;
 };
 
-} // namespace Sosage::System
+typedef std::shared_ptr<Base> Handle;
 
-#endif // SOSAGE_SYSTEM_GRAPHIC_H
+template <typename T, typename ... Args>
+std::shared_ptr<T> make_handle (Args& ... args)
+{
+  return std::make_shared<T>(args...);
+}
+
+
+} // namespace Sosage::Component
+
+#endif // SOSAGE_COMPONENT_HANDLE_H

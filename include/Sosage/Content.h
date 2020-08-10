@@ -47,6 +47,8 @@ public:
 
   Content ();
 
+  Content (const Content&) = delete;
+
   void clear() { m_data.clear(); }
   std::size_t size() const { return m_data.size(); }
   Component::Handle_set::const_iterator begin() const { return m_data.begin(); }
@@ -71,7 +73,7 @@ public:
       m_data.erase(iter);
     m_data.insert(t);
   }
-  
+
   template <typename T, typename ... Args>
   std::shared_ptr<T> set (Args&& ... args)
   {
@@ -92,7 +94,7 @@ public:
     std::shared_ptr<T> out = Component::cast<T>(*iter);
     return out;
   }
-  
+
   template <typename T>
   std::shared_ptr<T> get (const std::string& key)
   {

@@ -30,11 +30,12 @@
 #include <Sosage/Content.h>
 #include <Sosage/Core/Sound.h>
 #include <Sosage/Config/platform.h>
+#include <Sosage/System/Handle.h>
 
 namespace Sosage::System
 {
 
-class Sound
+class Sound : public Base
 {
   Content& m_content;
   Core::Sound m_core;
@@ -43,7 +44,7 @@ public:
 
   Sound (Content& content);
 
-  void run();
+  virtual void run();
 };
 
 } // namespace Sosage::System

@@ -33,13 +33,14 @@
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
 #include <Sosage/Content.h>
+#include <Sosage/System/Handle.h>
 
 #include <set>
 
 namespace Sosage::System
 {
 
-class Logic
+class Logic : public Base
 {
 private:
 
@@ -56,8 +57,7 @@ public:
 
   Logic (Content& content);
 
-  void run();
-  bool paused();
+  virtual void run();
 
 private:
   void clear_timed(bool action_goto);

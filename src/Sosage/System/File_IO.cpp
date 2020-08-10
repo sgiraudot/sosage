@@ -140,6 +140,7 @@ void File_IO::read_config()
   m_content.set<Component::Int>("interface:height", interface_height);
   m_content.set<Component::Int>("window:width", window_width);
   m_content.set<Component::Int>("window:height", window_height);
+
 }
 
 void File_IO::write_config()

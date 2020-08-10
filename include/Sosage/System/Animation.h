@@ -30,11 +30,12 @@
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Content.h>
+#include <Sosage/System/Handle.h>
 
 namespace Sosage::System
 {
 
-class Animation
+class Animation : public Base
 {
 private:
 
@@ -45,7 +46,7 @@ public:
 
   Animation (Content& content);
 
-  void run();
+  virtual void run();
 
   void place_and_scale_character(bool looking_right);
 

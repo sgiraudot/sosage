@@ -29,11 +29,12 @@
 
 #include <Sosage/Content.h>
 #include <Sosage/Core/Input.h>
+#include <Sosage/System/Handle.h>
 
 namespace Sosage::System
 {
 
-class Input
+class Input : public Base
 {
   Content& m_content;
   Core::Input m_core;
@@ -56,8 +57,8 @@ public:
 
   Input (Content& content);
 
-  void run ();
-  
+  virtual void run ();
+
 };
 
 } // namespace Sosage::System

@@ -29,14 +29,7 @@
 
 #define SOSAGE_ASSERTIONS_AS_EXCEPTIONS
 #include <Sosage/Content.h>
-#include <Sosage/System/Animation.h>
-#include <Sosage/System/File_IO.h>
-#include <Sosage/System/Graphic.h>
-#include <Sosage/System/Input.h>
-#include <Sosage/System/Interface.h>
-#include <Sosage/System/Logic.h>
-#include <Sosage/System/Sound.h>
-#include <Sosage/System/Time.h>
+#include <Sosage/System/Handle.h>
 #include <Sosage/Utils/error.h>
 
 namespace Sosage
@@ -45,21 +38,13 @@ namespace Sosage
 class Engine
 {
   Content m_content;
-  System::Animation m_animation;
-  System::Graphic m_graphic;
-  System::Sound m_sound;
-  System::Input m_input;
-  System::Interface m_interface;
-  System::File_IO m_file_io;
-  System::Logic m_logic;
-  System::Time m_time;
+  std::vector<System::Handle> m_systems;
+
 public:
 
   Engine (const std::string& game_name);
   ~Engine();
-  void run ();
   int run (const std::string& folder_name);
-  void init_interface ();
 };
 
 } // namespace Sosage

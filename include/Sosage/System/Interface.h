@@ -30,6 +30,7 @@
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Content.h>
+#include <Sosage/System/Handle.h>
 
 #include <string>
 #include <vector>
@@ -37,13 +38,13 @@
 namespace Sosage::System
 {
 
-class Interface
+class Interface : public Base
 {
 
   Content& m_content;
   Config::Layout m_layout;
   Component::Image_handle m_collision;
-  
+
   int m_action_height;
   double m_verb_scale;
 
@@ -53,9 +54,9 @@ public:
 
   Interface (Content& content);
 
-  void run();
+  virtual void run();
 
-  void init();
+  virtual void init();
 
 private:
   void update_responsive();
@@ -74,7 +75,7 @@ private:
   void action_clicked(const std::string& verb);
 
   void update_pause_screen();
-  
+
   void detect_collision (Component::Position_handle cursor);
   void update_action ();
   void update_inventory ();

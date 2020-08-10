@@ -28,12 +28,13 @@
 #define SOSAGE_SYSTEM_TIME_H
 
 #include <Sosage/Content.h>
+#include <Sosage/System/Sound.h>
 #include <Sosage/Utils/time.h>
 
 namespace Sosage::System
 {
 
-class Time
+class Time : public Base
 {
   Content& m_content;
   Clock m_clock;
@@ -42,7 +43,7 @@ public:
 
   Time (Content& content);
 
-  void run();
+  virtual void run();
 };
 
 } // namespace Sosage::System

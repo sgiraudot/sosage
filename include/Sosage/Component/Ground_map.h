@@ -89,14 +89,14 @@ class Ground_map : public Base
   struct Compare_ordered_pair
   {
     template <typename Pair>
-    Pair ordered (const Pair& p)
+    Pair ordered (const Pair& p) const
     {
       if (p.first > p.second)
         return Pair(p.second, p.first);
       return p;
     }
     template <typename Pair>
-    bool operator() (const Pair& a, const Pair& b)
+    bool operator() (const Pair& a, const Pair& b) const
     {
       return ordered(a) < ordered(b);
     }
@@ -107,7 +107,7 @@ class Ground_map : public Base
   int m_back_z;
   Graph m_graph;
   Graph m_latest_graph;
-  
+
   GVertex add_vertex (std::map<Point, GVertex>& map_p2v,
                       const Point& p, const unsigned char& red)
   {
@@ -143,7 +143,7 @@ public:
       functor (s, t, m_latest_graph[e].border);
     }
   }
-  
+
   void find_path (Point origin, Point target,
                   std::vector<Point>& out);
   double z_at_point (const Point& p) const;

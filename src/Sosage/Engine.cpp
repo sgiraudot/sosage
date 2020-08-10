@@ -34,6 +34,14 @@
 #include <Sosage/Config/platform.h>
 #include <Sosage/Config/version.h>
 #include <Sosage/Engine.h>
+#include <Sosage/System/Animation.h>
+#include <Sosage/System/File_IO.h>
+#include <Sosage/System/Graphic.h>
+#include <Sosage/System/Input.h>
+#include <Sosage/System/Interface.h>
+#include <Sosage/System/Logic.h>
+#include <Sosage/System/Sound.h>
+#include <Sosage/System/Time.h>
 #include <Sosage/Utils/profiling.h>
 #include <Sosage/Utils/file.h>
 
@@ -43,16 +51,10 @@ namespace Sosage
 {
 
 Engine::Engine (const std::string& game_name)
-  : m_animation (m_content)
-  , m_graphic (m_content)
-  , m_sound (m_content)
-  , m_input (m_content)
-  , m_interface (m_content)
-  , m_file_io (m_content)
-  , m_logic (m_content)
-  , m_time (m_content)
 {
   debug ("Running Sosage " + Sosage::Version::str());
+
+  srand(time(nullptr));
 
   // Init main variables
   m_content.set<Component::String>("game:name", game_name);
@@ -61,10 +63,18 @@ Engine::Engine (const std::string& game_name)
   m_content.set<Component::Double>("camera:target", 0.0);
   m_content.set<Component::Inventory>("game:inventory");
 
-  m_file_io.read_config();
-  m_graphic.init();
+  // Create all systems
+  m_systems.push_back (System::make_handle<System::Graphic>(m_content));
+  m_systems.push_back (System::make_handle<System::File_IO>(m_content));
+  m_systems.push_back (System::make_handle<System::Input>(m_content));
+  m_systems.push_back (System::make_handle<System::Logic>(m_content));
+  m_systems.push_back (System::make_handle<System::Interface>(m_content));
+  m_systems.push_back (System::make_handle<System::Animation>(m_content));
+  m_systems.push_back (System::make_handle<System::Sound>(m_content));
+  m_systems.push_back (System::make_handle<System::Time>(m_content));
 
-  srand(time(nullptr));
+  std::dynamic_pointer_cast<System::File_IO>(m_systems[1])->read_config();
+  m_systems[0]->init(); // init graphics
 }
 
 Engine::~Engine()
@@ -73,41 +83,20 @@ Engine::~Engine()
   m_content.clear();
 }
 
-void Engine::run()
+int Engine::run (const std::string& folder_name)
 {
+  std::dynamic_pointer_cast<System::File_IO>(m_systems[1])->read_init (folder_name);
+
+  m_systems[4]->init(); // init interface
+
   m_content.set<Component::Event>("music:start");
   m_content.set<Component::Event>("window:rescaled");
 
   while (!m_content.request<Component::Event>("game:exit"))
-  {
-    SOSAGE_TIMER_START(Engine__run__Rendering);
-    m_graphic.run();
-    SOSAGE_TIMER_STOP(Engine__run__Rendering);
+    for (System::Handle system : m_systems)
+      system->run();
 
-    m_file_io.run();
-
-    SOSAGE_TIMER_START(Engine__run__Frame_computation);
-
-    m_input.run();
-    m_logic.run();
-    m_interface.run();
-    m_animation.run();
-    m_sound.run();
-    m_time.run();
-
-    SOSAGE_TIMER_STOP(Engine__run__Frame_computation);
-  }
-}
-
-int Engine::run (const std::string& folder_name)
-{
-  m_file_io.read_init (folder_name);
-
-  m_interface.init();
-
-  run();
-
-  m_file_io.write_config();
+  std::dynamic_pointer_cast<System::File_IO>(m_systems[1])->write_config();
   return EXIT_SUCCESS;
 }
 

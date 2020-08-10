@@ -29,13 +29,14 @@
 
 #include <Sosage/Content.h>
 #include <Sosage/Core/File_IO.h>
+#include <Sosage/System/Handle.h>
 
 #include <unordered_set>
 
 namespace Sosage::System
 {
 
-class File_IO
+class File_IO : public Base
 {
 private:
 
@@ -47,7 +48,7 @@ public:
 
   File_IO (Content& content);
 
-  void run();
+  virtual void run();
 
   void read_config();
   void write_config();
