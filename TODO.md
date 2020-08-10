@@ -1,24 +1,42 @@
 # TODO list
 
-## Bugs
+### Bugs
 
- - code octal Y/Z
- - ajouter feuille de sécu
- 
-## Court terme
+* bugs aléatoires de la ground map
 
- - Test de robustesse de la ground map
- - Contenu graphique pièce 2
- - Action automatique avec clic droit
+### Graphique
 
-## Moyen terme
+* Code octal Y/Z
+* Fiche de sécu
+* Digicode
+* Lampe allumée / CoM allumé
+* Animations Superflu
+* Câble
+* Sophie électrique
+* Sophie téléphone
+* Choix du mode de curseur
+* Page tuto clics/curseur virtuel
+* Menus
+* Intro
 
- - Finir système d'indices
- - Persos multiples
- - Dialogues
- 
-## Long terme
+### Sons
 
- - Menus
- - Sauvegarde / chargement
- - Tests / benchmarks
+* Digicode
+* Portes
+* Passage secret
+* Grincement tableau
+* Choc électrique
+* Bip ordi
+* Bruits clavier
+* Clef voiture
+* Musique intro
+* Musique flug 2
+
+### Code
+
+* Menus
+* Dialogues
+* Action défaut
+* Indices
+* Cutscenes
+* Choix du mode de curseur Android
