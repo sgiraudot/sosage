@@ -56,13 +56,12 @@ public:
 
   Logic (Content& content);
 
-  void run(const double& current_time);
-  bool exit();
+  void run();
   bool paused();
 
 private:
   void clear_timed(bool action_goto);
-  
+
   bool compute_path_from_target (Component::Position_handle target);
   void update_camera();
   void update_debug_info (Component::Debug_handle debug_info);

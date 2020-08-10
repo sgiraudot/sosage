@@ -25,7 +25,6 @@
 */
 
 #include <Sosage/Component/Animation.h>
-#include <Sosage/Component/Debug.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Inventory.h>
@@ -51,6 +50,7 @@ Engine::Engine (const std::string& game_name)
   , m_interface (m_content)
   , m_file_io (m_content)
   , m_logic (m_content)
+  , m_time (m_content)
 {
   debug ("Running Sosage " + Sosage::Version::str());
 
@@ -59,12 +59,11 @@ Engine::Engine (const std::string& game_name)
   m_content.set<Component::Status>("game:status");
   m_content.set<Component::Double>("camera:position", 0.0);
   m_content.set<Component::Double>("camera:target", 0.0);
-  m_content.set<Component::Debug>("game:debug", m_content, m_clock);
   m_content.set<Component::Inventory>("game:inventory");
-  
-  m_file_io.read_config();  
+
+  m_file_io.read_config();
   m_graphic.init();
-  
+
   srand(time(nullptr));
 }
 
@@ -76,55 +75,27 @@ Engine::~Engine()
 
 void Engine::run()
 {
-  std::size_t frame_id = m_clock.frame_id();
-
   m_content.set<Component::Event>("music:start");
   m_content.set<Component::Event>("window:rescaled");
 
-  auto status = m_content.get<Component::Status>("game:status");
-
-  while (!m_logic.exit())
+  while (!m_content.request<Component::Event>("game:exit"))
   {
     SOSAGE_TIMER_START(Engine__run__Rendering);
     m_graphic.run();
     SOSAGE_TIMER_STOP(Engine__run__Rendering);
-    
-    if (auto new_room = m_content.request<Component::String>("game:new_room"))
-    {
-      // If new room must be loaded, first notify loading and restart
-      // loop so that Graphic displays loading screen, then only load
-      if (status->value() != LOADING)
-      {
-        status->push(LOADING);
-        continue;
-      }
-      else
-      {
-        m_file_io.read_room (new_room->value());
-        m_content.remove ("game:new_room");
-        status->pop();
-      }
-    }
-    
+
+    m_file_io.run();
+
     SOSAGE_TIMER_START(Engine__run__Frame_computation);
-  
+
     m_input.run();
-    m_logic.run(m_clock.frame_time());
+    m_logic.run();
     m_interface.run();
-    
-    std::size_t new_frame_id = m_clock.frame_id();
-    if (new_frame_id != frame_id)
-      for (std::size_t i = frame_id; i < new_frame_id; ++ i)
-        m_animation.run();
-    frame_id = new_frame_id;
-    
+    m_animation.run();
     m_sound.run();
-    
+    m_time.run();
+
     SOSAGE_TIMER_STOP(Engine__run__Frame_computation);
-    
-    SOSAGE_TIMER_START(Engine__run__Sleep);
-    m_clock.wait(true);
-    SOSAGE_TIMER_STOP(Engine__run__Sleep);
   }
 }
 
@@ -135,7 +106,7 @@ int Engine::run (const std::string& folder_name)
   m_interface.init();
 
   run();
-  
+
   m_file_io.write_config();
   return EXIT_SUCCESS;
 }

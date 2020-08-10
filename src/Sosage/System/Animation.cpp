@@ -38,16 +38,25 @@ namespace Sosage::System
 {
 
 Animation::Animation (Content& content)
-  : m_content (content)
+  : m_content (content), m_frame_id(0)
 {
 }
 
 void Animation::run()
 {
   auto status = m_content.get<Component::Status>("game:status");
-  if (status->value() == PAUSED)
+  if (status->value() == PAUSED || status->value() == LOADING)
     return;
 
+  std::size_t new_frame_id = m_content.get<Component::Int>("clock:frame_id")->value();
+  if (new_frame_id != m_frame_id)
+    for (std::size_t i = m_frame_id; i < new_frame_id; ++ i)
+      run_one_frame();
+  m_frame_id = new_frame_id;
+}
+
+void Animation::run_one_frame()
+{
   if (auto facing_right = m_content.request<Component::Boolean>("character:in_new_room"))
   {
     std::cerr << "Placing" << std::endl;
@@ -59,14 +68,14 @@ void Animation::run()
        facing_right->value());
     m_content.remove("character:in_new_room");
   }
-  
+
   auto path = m_content.request<Component::Path>("character:path");
   if (path)
   {
     compute_movement_from_path(path);
     update_camera_target();
   }
-  
+
   auto lookat = m_content.request<Component::Position>("character:lookat");
   if (lookat)
   {
@@ -78,14 +87,14 @@ void Animation::run()
 
     Vector direction (phead->value(), lookat->value());
     bool facing_right = (direction.x() > 0);
-    
+
     if (facing_right)
     {
       phead->set (pbody->value() - abody->core().scaling
                   * Vector(m_content.get<Component::Position>("character_head:gap_right")->value()));
       pmouth->set (phead->value() - ahead->core().scaling
                    * Vector(m_content.get<Component::Position>("character_mouth:gap_right")->value()));
-    } 
+    }
     else
     {
       phead->set (pbody->value() - abody->core().scaling
@@ -93,7 +102,7 @@ void Animation::run()
       pmouth->set (phead->value() - ahead->core().scaling
                    * Vector(m_content.get<Component::Position>("character_mouth:gap_left")->value()));
     }
-    
+
     generate_random_idle_animation (abody, ahead,
                                     m_content.get<Component::Animation>("character_mouth:image"),
                                     facing_right);
@@ -105,7 +114,7 @@ void Animation::run()
     generate_random_mouth_animation (m_content.get<Component::Animation>("character_mouth:image"));
     m_content.remove("character:start_talking");
   }
-  
+
   if (m_content.request<Component::Event>("character:stop_talking"))
   {
     generate_random_idle_head_animation (m_content.get<Component::Animation>("character_head:image"),
@@ -126,7 +135,7 @@ void Animation::run()
     generate_pick_animation (m_content.get<Component::Animation>("character_idle:image"));
     m_content.remove("character:start_pick_animation");
   }
-  
+
   std::vector<Component::Animation_handle> animations;
 
   for (const auto& e : m_content)
@@ -188,7 +197,7 @@ void Animation::compute_movement_from_path (Component::Path_handle path)
   Point pos = pbody->value();
 
   double to_walk = Config::character_speed * ground_map->z_at_point (pos) / Config::world_depth;
-      
+
   Vector direction (pos, (*path)[path->current()]);
   direction.normalize();
   direction = to_walk * direction;
@@ -198,7 +207,7 @@ void Animation::compute_movement_from_path (Component::Path_handle path)
   while (true)
   {
     Vector current_vector (pos, (*path)[path->current()]);
-        
+
     if (current_vector.length() > to_walk) // Next position is between current and current + 1
     {
       current_vector.normalize();
@@ -231,7 +240,7 @@ void Animation::set_move_animation (Component::Animation_handle image,
 {
   m_content.get<Component::Animation>("character_idle:image")->on() = false;
   image->on() = true;
-  
+
   if (head->on())
   {
     image->reset();
@@ -283,7 +292,7 @@ void Animation::generate_random_idle_head_animation (Component::Animation_handle
   head->reset();
   head->frames().clear();
   head->on() = true;
-  
+
   // Reset all
   mouth->reset();
   mouth->frames().clear();
@@ -378,7 +387,7 @@ void Animation::generate_random_idle_body_animation (Component::Animation_handle
     }
     else if (positions[i] == "idle")
       possibles_values.push_back (int(i));
-  
+
   // Generate 10 poses with transitions
 
   for (int i = 0; i < 10; ++ i)
@@ -387,12 +396,12 @@ void Animation::generate_random_idle_body_animation (Component::Animation_handle
     image->frames().push_back
       (Component::Animation::Frame
        (pose, row_index, random_int(20, 150)));
-    
+
     // Transition
     image->frames().push_back
       (Component::Animation::Frame
        (0, row_index, 2));
-    
+
     int new_pose;
     do
     {
@@ -411,7 +420,7 @@ void Animation::generate_random_mouth_animation (Component::Animation_handle ima
   image->on() = true;
 
   std::size_t row_index = (m_content.get<Component::Animation>("character_head:image")->frames().front().y);
-  
+
   // Generate 50 poses
   int pose = random_int(1,11);
   for (int i = 0; i < 50; ++ i)
@@ -419,7 +428,7 @@ void Animation::generate_random_mouth_animation (Component::Animation_handle ima
     image->frames().push_back
       (Component::Animation::Frame
        (pose, row_index, 1));
-    
+
     int new_pose;
     do
     {
@@ -427,7 +436,7 @@ void Animation::generate_random_mouth_animation (Component::Animation_handle ima
     }
     while (new_pose == pose);
     pose = new_pose;
-    
+
   }
 }
 
@@ -438,7 +447,7 @@ void Animation::generate_pick_animation (Component::Animation_handle image)
   // Reset all
   image->reset();
   image->frames().clear();
-  
+
   const std::vector<std::string>& positions
     = m_content.get<Component::Vector<std::string> >("character_idle:values")->value();
 
@@ -450,7 +459,7 @@ void Animation::generate_pick_animation (Component::Animation_handle image)
       break;
     }
   check (index != -1, "No action skin found");
-  
+
   image->frames().push_back (Component::Animation::Frame (index, row_index, 1));
 }
 

@@ -39,6 +39,7 @@ class Animation
 private:
 
   Content& m_content;
+  std::size_t m_frame_id;
 
 public:
 
@@ -47,7 +48,7 @@ public:
   void run();
 
   void place_and_scale_character(bool looking_right);
-  
+
   void generate_random_idle_animation (Component::Animation_handle image,
                                        Component::Animation_handle head,
                                        Component::Animation_handle mouth,
@@ -60,7 +61,9 @@ public:
                                             bool facing_right);
 
 private:
-  
+
+  void run_one_frame();
+
   void compute_movement_from_path (Component::Path_handle path);
   void set_move_animation (Component::Animation_handle image,
                            Component::Animation_handle head,

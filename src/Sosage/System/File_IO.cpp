@@ -55,6 +55,28 @@ File_IO::File_IO (Content& content)
 {
 }
 
+void File_IO::run()
+{
+  if (auto new_room = m_content.request<Component::String>("game:new_room"))
+  {
+    auto status = m_content.get<Component::Status>("game:status");
+
+    // If new room must be loaded, first notify loading and restart
+    // loop so that Graphic displays loading screen, then only load
+    if (status->value() != LOADING)
+    {
+      status->push(LOADING);
+      return;
+    }
+    else
+    {
+      read_room (new_room->value());
+      m_content.remove ("game:new_room");
+      status->pop();
+    }
+  }
+}
+
 void File_IO::read_config()
 {
   std::string file_name = Sosage::pref_path() + "config.yaml";
@@ -63,7 +85,7 @@ void File_IO::read_config()
   bool fullscreen = Config::android;
   int layout = int(Config::AUTO);
   bool virtual_cursor = Config::android;
-  
+
   double char_per_second = 12.0;
   double dialog_size = 0.75;
 
@@ -72,12 +94,12 @@ void File_IO::read_config()
 
   bool autosave = true;
   bool hints = true;
-  
+
   int interface_width = 0;
   int interface_height = 200;
   int window_width = -1;
   int window_height = -1;
-  
+
   try
   {
     Core::File_IO input (file_name);
@@ -98,22 +120,22 @@ void File_IO::read_config()
   }
   catch (Sosage::No_such_file&)
   {
-    
+
   }
-  
+
   m_content.set<Component::Boolean>("window:fullscreen", fullscreen);
   m_content.set<Component::Int>("interface:layout", layout);
   m_content.set<Component::Boolean>("interface:virtual_cursor", virtual_cursor);
-  
+
   m_content.set<Component::Double>("text:char_per_second", char_per_second);
   m_content.set<Component::Double>("text:dialog_size", dialog_size);
-  
+
   m_content.set<Component::Int>("music:volume", music_volume);
   m_content.set<Component::Int>("sounds:volume", sounds_volume);
-  
+
   m_content.set<Component::Boolean>("game:autosave", autosave);
   m_content.set<Component::Boolean>("game:hints_on", hints);
-  
+
   m_content.set<Component::Int>("interface:width", interface_width);
   m_content.set<Component::Int>("interface:height", interface_height);
   m_content.set<Component::Int>("window:width", window_width);
@@ -130,13 +152,13 @@ void File_IO::write_config()
 
   output.write ("char_per_second", m_content.get<Component::Double>("text:char_per_second")->value());
   output.write ("dialog_size", m_content.get<Component::Double>("text:dialog_size")->value());
-  
+
   output.write ("music_volume", m_content.get<Component::Int>("music:volume")->value());
   output.write ("sounds_volume", m_content.get<Component::Int>("sounds:volume")->value());
 
   output.write ("autosave", m_content.get<Component::Boolean>("game:autosave")->value());
   output.write ("hints", m_content.get<Component::Boolean>("game:hints_on")->value());
-  
+
   output.write ("window",
                 m_content.get<Component::Int>("window:width")->value(),
                 m_content.get<Component::Int>("window:height")->value());
@@ -157,7 +179,7 @@ void File_IO::read_init (const std::string& folder_name)
   check (Version::parse(v) <= Version::get(),
          "Error: room version " + v + " incompatible with Sosage " + Version::str());
 
-  
+
   std::string cursor = input["cursor"].string("images", "interface", "png");
   auto cursor_img = Component::make_handle<Component::Image> ("cursor:image", local_file_name(cursor),
                                                               Config::cursor_depth);
@@ -187,7 +209,7 @@ void File_IO::read_init (const std::string& folder_name)
   }
 
   m_content.set<Component::Position> ("cursor:position", Point(0,0));
-  
+
   std::string turnicon = input["turnicon"].string("images", "interface", "png");
   auto turnicon_img
     = m_content.set<Component::Image>("turnicon:image", local_file_name(turnicon), 0);
@@ -199,7 +221,7 @@ void File_IO::read_init (const std::string& folder_name)
   loading_img->set_relative_origin(0.5, 0.5);
   m_content.set<Component::Position> ("loading:position", Point(Config::world_width / 2,
                                                                 Config::world_height / 2));
-  
+
   m_content.set<Component::Conditional>
   ("loading:conditional",
    Component::make_value_condition<Sosage::Status> (status, LOADING),
@@ -207,13 +229,13 @@ void File_IO::read_init (const std::string& folder_name)
 
   std::string click_sound = input["click_sound"].string("sounds", "effects", "wav");
   m_content.set<Component::Sound>("click:sound", local_file_name(click_sound));
-  
+
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
   m_content.set<Component::Font> ("debug:font", local_file_name(debug_font), 40);
 
   std::string interface_font = input["interface_font"].string("fonts", "ttf");
   m_content.set<Component::Font> ("interface:font", local_file_name(interface_font), 80);
-  
+
   std::string interface_color = input["interface_color"].string();
   m_content.set<Component::String> ("interface:color", interface_color);
 
@@ -278,13 +300,13 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
     = m_content.set<Component::Animation>("character_mouth:image", local_file_name(mouth),
                                           0, 11, 2, true);
   amouth->set_relative_origin(0.5, 1.0);
-  
+
   std::string head = input["head"]["skin"].string("images", "characters", "png");
   auto ahead
     = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
                                           0, 7, 2, true);
   ahead->set_relative_origin(0.5, 1.0);
-  
+
   std::string walk = input["walk"]["skin"].string("images", "characters", "png");
   auto awalk = m_content.set<Component::Animation>("character_walking:image", local_file_name(walk),
                                                    0, 8, 4, true);
@@ -297,12 +319,12 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
     positions.push_back (input["idle"]["positions"][i].string());
 
   m_content.set<Component::Vector<std::string> >("character_idle:values", positions);
-  
+
   // todo positions component
   auto aidle = m_content.set<Component::Animation>("character_idle:image", local_file_name(idle),
                                                    0, positions.size(), 2, true);
   aidle->set_relative_origin(0.5, 0.95);
-  
+
   auto pbody = m_content.set<Component::Position>("character_body:position", Point(x, y), false);
   m_content.set<Component::Variable>("character_walking:position", pbody);
   m_content.set<Component::Variable>("character_idle:position", pbody);
@@ -344,7 +366,7 @@ void File_IO::read_room (const std::string& file_name)
        // else, remove component if belonged to the latest room
        return (m_latest_room_entities.find(c->entity()) != m_latest_room_entities.end());
      });
-  
+
   SOSAGE_TIMER_START(File_IO__read_room);
 
   Core::File_IO input (local_file_name("data", "rooms", file_name, "yaml"));
@@ -353,7 +375,7 @@ void File_IO::read_room (const std::string& file_name)
   std::string name = input["name"].string();
   std::string music = input["music"].string("sounds", "musics", "ogg");
   m_content.set<Component::Music>("game:music", local_file_name(music));
-  
+
   std::string background = input["background"].string("images", "backgrounds", "png");
   std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
   int front_z = input["front_z"].integer();
@@ -362,7 +384,7 @@ void File_IO::read_room (const std::string& file_name)
   auto background_img
     = m_content.set<Component::Image>("background:image", local_file_name(background), 0);
   background_img->box_collision() = true;
-  
+
   m_content.set<Component::Position>("background:position", Point(0, 0), false);
   m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map),
                                        front_z, back_z);
@@ -383,7 +405,7 @@ void File_IO::read_room (const std::string& file_name)
         m_content.set<Component::String>(id + ":state");
     }
   }
-  
+
   for (std::size_t i = 0; i < input["content"].size(); ++ i)
   {
     const Core::File_IO::Node& node = input["content"][i];
@@ -443,7 +465,7 @@ void File_IO::read_animation (const Core::File_IO::Node& node, const std::string
   int z = node["coordinates"][2].integer();
   std::string skin = node["skin"].string("images", "animations", "png");
   int length = node["length"].integer();
-      
+
   auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
   auto img = m_content.set<Component::Animation>(id + ":image", local_file_name(skin), z,
                                                  length, 1, false);
@@ -462,7 +484,7 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
   m_content.set<Component::Sound>(id + "_failure:sound", local_file_name(failure_sound));
 
   auto code = m_content.set<Component::Code>(id + ":code");
-      
+
   auto state_handle = m_content.get<Component::String>(id + ":state");
   Component::String_conditional_handle conditional_handle_off;
   Component::String_conditional_handle conditional_handle_on;
@@ -495,7 +517,7 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
                                                  Config::inventory_back_depth);
     img_off->set_relative_origin(0.5, 0.5);
     img_off->on() = false;
-        
+
     m_content.set<Component::Position>(id + ":position",
                                        Point(Config::world_width / 2,
                                              Config::world_height / 2));
@@ -515,7 +537,7 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
     conditional_handle_off->add(state, img_off);
     conditional_handle_on->add(state, img_on);
   }
-      
+
   for (std::size_t j = 0; j < node["buttons"].size(); ++ j)
   {
     const Core::File_IO::Node& ibutton = node["buttons"][j];
@@ -529,10 +551,10 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
                       coordinates[2].integer(),
                       coordinates[3].integer());
   }
-      
+
   for (std::size_t j = 0; j < node["answer"].size(); ++ j)
     code->add_answer_item (node["answer"][j].string());
-      
+
   auto action = m_content.set<Component::Action> (id + ":action");
   for (std::size_t j = 0; j < node["on_success"].size(); ++ j)
     action->add (node["on_success"][j].string_array());
@@ -555,7 +577,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
   int vx = node["view"][0].integer();
   int vy = node["view"][1].integer();
   bool box_collision = node["box_collision"].boolean();
-      
+
   m_content.set<Component::String>(id + ":name", name);
 
   // Position might already exists if room was already loaded
@@ -614,7 +636,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
       conditional_handle->add(state, img);
     }
   }
-      
+
   if (state_handle->value() == "inventory")
   {
     m_content.get<Component::Inventory>("game:inventory")->add(id);
@@ -634,7 +656,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
     {
       std::string a_id = (nb_actions == 0 ? iaction["id"].string() : iaction["id"][j].string());
       std::string corrected_id = id;
-      
+
       if (iaction.has("target"))
       {
         a_id = a_id + "_" + id;
@@ -642,7 +664,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
       }
 
       Component::Action_handle action;
-              
+
       if (iaction.has("state"))
       {
         std::string state = iaction["state"].string();
@@ -680,7 +702,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
   int y = node["coordinates"][1].integer();
   int z = node["coordinates"][2].integer();
   std::string skin = node["skin"].string("images", "scenery", "png");
-      
+
   auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
   auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), z);
   img->set_relative_origin(0.5, 1.0);
@@ -690,12 +712,12 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
 void File_IO::read_window (const Core::File_IO::Node& node, const std::string& id)
 {
   std::string skin = node["skin"].string("images", "windows", "png");
-      
+
   auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin),
                                              Config::inventory_front_depth);
   img->set_relative_origin(0.5, 0.5);
   img->on() = false;
-      
+
   m_content.set<Component::Position>(id + ":position",
                                      Point(Config::world_width / 2,
                                            Config::world_height / 2));

@@ -30,14 +30,14 @@
 #define SOSAGE_ASSERTIONS_AS_EXCEPTIONS
 #include <Sosage/Content.h>
 #include <Sosage/System/Animation.h>
+#include <Sosage/System/File_IO.h>
 #include <Sosage/System/Graphic.h>
-#include <Sosage/System/Sound.h>
 #include <Sosage/System/Input.h>
 #include <Sosage/System/Interface.h>
-#include <Sosage/System/File_IO.h>
 #include <Sosage/System/Logic.h>
+#include <Sosage/System/Sound.h>
+#include <Sosage/System/Time.h>
 #include <Sosage/Utils/error.h>
-#include <Sosage/Utils/time.h>
 
 namespace Sosage
 {
@@ -52,8 +52,7 @@ class Engine
   System::Interface m_interface;
   System::File_IO m_file_io;
   System::Logic m_logic;
-  Clock m_clock;
-
+  System::Time m_time;
 public:
 
   Engine (const std::string& game_name);

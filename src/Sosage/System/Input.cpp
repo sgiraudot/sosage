@@ -54,6 +54,9 @@ void Input::run()
       m_content.set<Component::Event>("game:exit");
 
     auto status = m_content.get<Component::Status>("game:status");
+    if (status->value() == LOADING)
+      return;
+
     if (ev == Event(KEY_UP, SPACE))
     {
       if (status->value() == PAUSED)
@@ -67,7 +70,7 @@ void Input::run()
 
     if (ev == Event(KEY_UP, D))
       m_content.get<Component::Boolean>("game:debug")->toggle();
-    
+
     if (ev == Event(KEY_UP, C))
     {
       m_content.get<Component::Boolean>("game:console")->toggle();

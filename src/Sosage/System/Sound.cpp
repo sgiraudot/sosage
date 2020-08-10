@@ -43,6 +43,10 @@ Sound::Sound (Content& content)
 
 void Sound::run()
 {
+  auto status = m_content.get<Component::Status>("game:status");
+  if (status->value() == LOADING)
+    return;
+
   auto music = m_content.request<Component::Music>("game:music");
 
   auto start = m_content.request<Component::Event>("music:start");
@@ -52,8 +56,8 @@ void Sound::run()
     music->on() = true;
     m_content.remove ("music:start");
   }
-  
-  bool paused = (m_content.get<Component::Status>("game:status")->value() == PAUSED);
+
+  bool paused = (status->value() == PAUSED);
   if (paused && music->on())
   {
     m_core.pause_music (music->core());
@@ -65,13 +69,13 @@ void Sound::run()
     music->on() = true;
   }
 
-  
+
   if (auto clicked = m_content.request<Component::Event>("game:verb_clicked"))
   {
     m_core.play_sound (m_content.get<Component::Sound>("click:sound")->core());
     m_content.remove ("game:verb_clicked");
   }
-  
+
   if (auto failure = m_content.request<Component::Event>("code:play_failure"))
   {
     m_core.play_sound

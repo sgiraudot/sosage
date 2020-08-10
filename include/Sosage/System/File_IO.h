@@ -47,15 +47,17 @@ public:
 
   File_IO (Content& content);
 
+  void run();
+
   void read_config();
   void write_config();
-  
+
   void read_init (const std::string& folder_name);
   void read_character (const std::string& file_name, int x, int y);
   void read_room (const std::string& file_name);
 
 private:
-  
+
   std::string local_file_name (const std::string& file_name) const;
   std::string local_file_name (const std::string& folder, const std::string& subfolder,
                                const std::string& file_name, const std::string& extension) const;
@@ -65,7 +67,7 @@ private:
   void read_object (const Core::File_IO::Node& node, const std::string& id);
   void read_scenery (const Core::File_IO::Node& node, const std::string& id);
   void read_window (const Core::File_IO::Node& node, const std::string& id);
-  
+
 };
 
 } // namespace Sosage::System

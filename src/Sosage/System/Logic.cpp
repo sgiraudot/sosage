@@ -56,16 +56,18 @@ Logic::Logic (Content& content)
 {
 }
 
-void Logic::run (const double& current_time)
+void Logic::run ()
 {
   auto status = m_content.get<Component::Status>("game:status");
-  if (status->value() == PAUSED)
+  if (status->value() == PAUSED || status->value() == LOADING)
     return;
-  
+
+  double current_time = m_content.get<Component::Double> ("clock:frame_time")->value();
+
   m_current_time = current_time;
 
   std::set<Timed_handle> new_timed_handle;
-  
+
   for (const Timed_handle& th : m_timed)
     if (th.first == 0) // special case for Path
     {
@@ -84,7 +86,7 @@ void Logic::run (const double& current_time)
     else
       new_timed_handle.insert(th);
   m_timed.swap(new_timed_handle);
-  
+
   auto collision = m_content.request<Component::Image> ("cursor:target");
   auto clicked = m_content.request<Component::Event>("cursor:clicked");
   if (clicked && collision)
@@ -96,7 +98,7 @@ void Logic::run (const double& current_time)
     }
     else
       compute_path_from_target(m_content.get<Component::Position>("cursor:position"));
-    
+
     m_content.remove("cursor:clicked");
     m_content.remove("cursor:target");
 
@@ -117,7 +119,7 @@ void Logic::run (const double& current_time)
       (window->entity() + "_button:position",
        m_content.get<Component::Position>(window->entity() + ":position")->value()
        + Vector(code->xmin(), code->ymin()));
-      
+
     cropped->on() = true;
 
     m_timed.insert (std::make_pair (m_current_time + Config::button_click_duration,
@@ -139,10 +141,10 @@ void Logic::run (const double& current_time)
     }
     else
       m_content.set<Component::Event>("code:play_click");
-    
+
     m_content.remove("code:button_clicked");
   }
-  
+
   if (auto stop_flashing = m_content.request<Component::Event>("code:stop_flashing"))
   {
     auto window = m_content.get<Component::Image>("game:window");
@@ -151,7 +153,7 @@ void Logic::run (const double& current_time)
     cropped->on() = false;
     m_content.remove("code:stop_flashing");
   }
-  
+
   if (auto code_quit = m_content.request<Component::Event>("code:quit"))
   {
     auto code = m_content.get<Component::Code>("game:code");
@@ -159,14 +161,14 @@ void Logic::run (const double& current_time)
     window->on() = false;
     code->reset();
     status->pop();
-      
+
     m_current_action = m_content.get<Component::Action>
       (m_content.get<Component::Code>("game:code")->entity() + ":action");
     m_next_step = 0;
-      
+
     m_content.remove("code:quit");
   }
-  
+
   auto action = m_content.request<Component::Action>("character:action");
   if (action && action != m_current_action)
   {
@@ -223,15 +225,10 @@ void Logic::run (const double& current_time)
   update_debug_info (m_content.get<Component::Debug>("game:debug"));
 }
 
-bool Logic::exit()
-{
-  return (m_content.request<Component::Event>("game:exit") != Component::Handle());
-}
-
 void Logic::clear_timed(bool action_goto)
 {
   std::set<Timed_handle> new_timed_handle;
-  
+
   for (const Timed_handle& th : m_timed)
     if (th.first == 0) // special case for Path
       continue;
@@ -254,7 +251,7 @@ bool Logic::compute_path_from_target (Component::Position_handle target)
   auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
 
   auto position = m_content.get<Component::Position>("character_body:position");
-      
+
   Point origin = position->value();
   Point t = target->value();
 
@@ -267,7 +264,7 @@ bool Logic::compute_path_from_target (Component::Position_handle target)
   // Check if character is already at target
   if ((path.size() == 1) && (path[0] == origin))
     return false;
-  
+
   m_content.set<Component::Path>("character:path", path);
   return true;
 }
@@ -297,7 +294,7 @@ void Logic::update_debug_info (Component::Debug_handle debug_info)
     auto dbg_img = m_content.request<Component::Image> ("debug:image");
     if (dbg_img)
       dbg_img->on() = false;
-    
+
   }
 
 }
@@ -308,7 +305,7 @@ void Logic::action_comment (Component::Action::Step step)
 
   std::vector<Component::Image_handle> dialog;
   create_dialog (text, dialog);
-  
+
   int nb_char = int(text.size());
   double nb_seconds = nb_char / m_content.get<Component::Double>("text:char_per_second")->value();
 
@@ -321,7 +318,7 @@ void Logic::action_comment (Component::Action::Step step)
     else if (x - 0.75 * img->width() / 2 < int(0.1 * Config::world_width))
       x = int(0.1 * Config::world_width) + 0.75 * img->width() / 2;
 
-    
+
   for (auto img : dialog)
   {
     auto pos = m_content.set<Component::Position> (img->entity() + ":position", Point(x,y));
@@ -361,7 +358,7 @@ void Logic::action_look (const std::string& target)
     m_content.set<Component::Position>("character:lookat",
                                        m_content.get<Component::Position>(target + ":position")->value());
 }
-  
+
 void Logic::action_move (Component::Action::Step step)
 {
   std::string target = step.get(1);
@@ -414,7 +411,7 @@ void Logic::action_set_state (Component::Action::Step step)
     m_content.get<Component::Inventory>("game:inventory")->remove(target);
     m_content.get<Component::Position>(target + ":position")->absolute() = false;
   }
-  
+
   current_state->set (state);
   if (state == "inventory")
   {
@@ -459,7 +456,7 @@ void Logic::action_show (Component::Action::Step step)
 void Logic::create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog)
 {
   static const int width_max = int(0.95 * Config::world_width);
-  
+
   auto img
     = m_content.set<Component::Image> ("comment:image",
                                        m_content.get<Component::Font> ("interface:font"),
@@ -490,7 +487,7 @@ void Logic::create_dialog (const std::string& text, std::vector<Component::Image
           -- candidate_before;
         if (text[candidate_before] != ' ')
           candidate_before = 10000;
-        
+
         std::size_t candidate_after = cut;
         while (candidate_after != text.size() && text[candidate_after] != ' ')
           ++ candidate_after;
