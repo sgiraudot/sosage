@@ -4,7 +4,7 @@
 
 int main (int argc, char** argv)
 {
-  Sosage::Engine sosage ("Superflu et le Mystère du Voleur de Pommes");
+  Sosage::Engine sosage;
 
 #ifdef SOSAGE_INSTALL_DATA_FOLDER
   try

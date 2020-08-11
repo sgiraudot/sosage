@@ -48,8 +48,7 @@ void Graphic::init()
   auto ih = m_content.get<Component::Int>("window:height");
   int w = iw->value();
   int h = ih->value();
-  m_core.init (m_content.get<Component::String>("game:name")->value(),
-               w, h,
+  m_core.init (w, h,
                m_content.get<Component::Boolean>("window:fullscreen")->value());
   iw->set(w);
   ih->set(h);
@@ -57,6 +56,12 @@ void Graphic::init()
 
 void Graphic::run()
 {
+  if (auto name = m_content.request<Component::String>("game:name"))
+  {
+    m_core.update_window_title (name->value());
+    m_content.remove ("game:name");
+  }
+
   if (m_content.request<Component::Event>("window:rescaled"))
   {
     m_core.update_view (m_content.get<Component::Int>("interface:width")->value(),
@@ -69,7 +74,7 @@ void Graphic::run()
     m_content.remove ("window:toggle_fullscreen");
   }
 
-  
+
   std::vector<Component::Image_handle> images;
 
   m_core.begin();
@@ -98,7 +103,7 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
 
   auto status = m_content.get<Component::Status>("game:status");
   double xcamera = m_content.get<Component::Double>("camera:position")->value();
-  
+
   for (const auto& img : images)
   {
     if (img->on())
@@ -120,7 +125,7 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
       int ymin = img->ymin();
       int xmax = img->xmax();
       int ymax = img->ymax();
-      
+
       Point screen_position = p - img->core().scaling * Vector(img->origin());
 
       m_core.draw (img->core(), xmin, ymin, (xmax - xmin), (ymax - ymin),
@@ -139,7 +144,7 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
        {
          m_core.draw_square (point.x() - xcamera, point.y(), 10);
        });
-      
+
     ground_map->for_each_edge
       ([&](const Point& source, const Point& target, bool border)
        {

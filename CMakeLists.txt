@@ -59,7 +59,7 @@ include(${SOSAGE_DATA_FOLDER}/config.cmake)
 ## Fetch sources and create executable
 
 file(GLOB_RECURSE SOSAGE_SRC "src/Sosage/*.cpp")
-add_executable(${SOSAGE_EXE_NAME} "src/main.cpp" ${SOSAGE_SRC})
+add_executable(${SOSAGE_EXE_NAME} ${SOSAGE_SRC})
 target_compile_options(${SOSAGE_EXE_NAME} PUBLIC -DSOSAGE_DATA_FOLDER="${SOSAGE_DATA_FOLDER}/data/")
 
 ## Compilation dependencies

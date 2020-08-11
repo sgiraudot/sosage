@@ -42,7 +42,7 @@ class Engine
 
 public:
 
-  Engine (const std::string& game_name);
+  Engine ();
   ~Engine();
   int run (const std::string& folder_name);
 };

@@ -50,31 +50,10 @@
 namespace Sosage
 {
 
-Engine::Engine (const std::string& game_name)
+Engine::Engine ()
 {
   debug ("Running Sosage " + Sosage::Version::str());
-
   srand(time(nullptr));
-
-  // Init main variables
-  m_content.set<Component::String>("game:name", game_name);
-  m_content.set<Component::Status>("game:status");
-  m_content.set<Component::Double>("camera:position", 0.0);
-  m_content.set<Component::Double>("camera:target", 0.0);
-  m_content.set<Component::Inventory>("game:inventory");
-
-  // Create all systems
-  m_systems.push_back (System::make_handle<System::Graphic>(m_content));
-  m_systems.push_back (System::make_handle<System::File_IO>(m_content));
-  m_systems.push_back (System::make_handle<System::Input>(m_content));
-  m_systems.push_back (System::make_handle<System::Logic>(m_content));
-  m_systems.push_back (System::make_handle<System::Interface>(m_content));
-  m_systems.push_back (System::make_handle<System::Animation>(m_content));
-  m_systems.push_back (System::make_handle<System::Sound>(m_content));
-  m_systems.push_back (System::make_handle<System::Time>(m_content));
-
-  std::dynamic_pointer_cast<System::File_IO>(m_systems[1])->read_config();
-  m_systems[0]->init(); // init graphics
 }
 
 Engine::~Engine()
@@ -85,7 +64,32 @@ Engine::~Engine()
 
 int Engine::run (const std::string& folder_name)
 {
-  std::dynamic_pointer_cast<System::File_IO>(m_systems[1])->read_init (folder_name);
+  // Init main variables
+  m_content.set<Component::Status>("game:status");
+  m_content.set<Component::Double>("camera:position", 0.0);
+  m_content.set<Component::Double>("camera:target", 0.0);
+  m_content.set<Component::Inventory>("game:inventory");
+
+  // Raise exception now if folder does not exit
+  std::shared_ptr<System::File_IO>
+    file_io = System::make_handle<System::File_IO>(m_content);
+  file_io->test_init_folder (folder_name);
+
+  // Create all systems
+  m_systems.push_back (file_io);
+  m_systems.push_back (System::make_handle<System::Graphic>(m_content));
+  m_systems.push_back (System::make_handle<System::Input>(m_content));
+  m_systems.push_back (System::make_handle<System::Logic>(m_content));
+  m_systems.push_back (System::make_handle<System::Interface>(m_content));
+  m_systems.push_back (System::make_handle<System::Animation>(m_content));
+  m_systems.push_back (System::make_handle<System::Sound>(m_content));
+  m_systems.push_back (System::make_handle<System::Time>(m_content));
+
+  file_io->read_config();
+
+  m_systems[1]->init(); // init graphics
+
+  file_io->read_init (folder_name);
 
   m_systems[4]->init(); // init interface
 
@@ -96,7 +100,8 @@ int Engine::run (const std::string& folder_name)
     for (System::Handle system : m_systems)
       system->run();
 
-  std::dynamic_pointer_cast<System::File_IO>(m_systems[1])->write_config();
+  file_io->write_config();
+
   return EXIT_SUCCESS;
 }
 

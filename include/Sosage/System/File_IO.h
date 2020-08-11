@@ -53,6 +53,9 @@ public:
   void read_config();
   void write_config();
 
+  void test_init_folder (const std::string& folder_name)
+  { Core::File_IO input (folder_name + "data" + Config::folder_separator + "init.yaml"); }
+
   void read_init (const std::string& folder_name);
   void read_character (const std::string& file_name, int x, int y);
   void read_room (const std::string& file_name);

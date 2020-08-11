@@ -140,7 +140,6 @@ void File_IO::read_config()
   m_content.set<Component::Int>("interface:height", interface_height);
   m_content.set<Component::Int>("window:width", window_width);
   m_content.set<Component::Int>("window:height", window_height);
-
 }
 
 void File_IO::write_config()
@@ -180,6 +179,8 @@ void File_IO::read_init (const std::string& folder_name)
   check (Version::parse(v) <= Version::get(),
          "Error: room version " + v + " incompatible with Sosage " + Version::str());
 
+  std::string game_name = input["name"].string();
+  m_content.set<Component::String>("game:name", game_name);
 
   std::string cursor = input["cursor"].string("images", "interface", "png");
   auto cursor_img = Component::make_handle<Component::Image> ("cursor:image", local_file_name(cursor),

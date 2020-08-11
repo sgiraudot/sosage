@@ -64,10 +64,10 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
   check (out != Texture(), "Cannot create rectangle texture");
   if (a != 255)
     SDL_SetTextureBlendMode(out.get(), SDL_BLENDMODE_BLEND);
-    
+
   return Image (surf, out, 1);
 }
-  
+
 SDL::Surface SDL::load_surface (const std::string& file_name)
 {
   Surface surf = m_surfaces.make_mapped (file_name, IMG_Load, file_name.c_str());
@@ -90,7 +90,7 @@ SDL::Font SDL::load_font (const std::string& file_name, int size)
   Font_base out2 = m_fonts.make_mapped (file_name + ".outlined", TTF_OpenFont, file_name.c_str(), size);
   check (out2 != Font_base(), "Cannot load font " + file_name);
   TTF_SetFontOutline(out2.get(), Config::text_outline);
-  
+
   return std::make_pair(out, out2);
 }
 
@@ -103,7 +103,7 @@ SDL_Color SDL::black()
   out.a = 0;
   return out;
 }
-  
+
 SDL_Color SDL::color (const std::string& color_str)
 {
   std::stringstream ss(color_str);
@@ -118,7 +118,7 @@ SDL_Color SDL::color (const std::string& color_str)
   out.b = color[2];
   return out;
 }
-  
+
 SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str,
                              const std::string& text)
 {
@@ -127,7 +127,7 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
     surf = m_surfaces.make_single (TTF_RenderUTF8_Blended, font.first.get(), text.c_str(), color(color_str));
   else
     surf = m_surfaces.make_single (TTF_RenderUTF8_Blended_Wrapped, font.first.get(), text.c_str(), color(color_str), 1920);
-    
+
   check (surf != Surface(), "Cannot create text \"" + text + "\"");
   Texture out = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf.get());
   check (out != Texture(), "Cannot create texture from text \"" + text + "\"");
@@ -139,12 +139,12 @@ SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& 
 {
   Surface surf = m_surfaces.make_single (TTF_RenderUTF8_Blended, font.first.get(), text.c_str(), color(color_str));
   check (surf != Surface(), "Cannot create text \"" + text + "\"");
-  
+
   Surface back = m_surfaces.make_single (TTF_RenderUTF8_Blended, font.second.get(), text.c_str(), black());
   check (back != Surface(), "Cannot create text \"" + text + "\"");
-  
+
   SDL_Rect rect = {Config::text_outline, Config::text_outline, surf->w, surf->h};
-  SDL_SetSurfaceBlendMode(surf.get(), SDL_BLENDMODE_BLEND); 
+  SDL_SetSurfaceBlendMode(surf.get(), SDL_BLENDMODE_BLEND);
   SDL_BlitSurface (surf.get(), NULL, back.get(), &rect);
 
   Texture out = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, back.get());
@@ -194,7 +194,7 @@ std::array<unsigned char, 3> SDL::get_color (SDL::Surface image, int x, int y)
   SDL_UnlockSurface (image.get());
   return out;
 }
-  
+
 bool SDL::is_inside_image (SDL::Image image, int x, int y)
 {
   SDL_LockSurface (image.surface.get());
@@ -231,7 +231,7 @@ bool SDL::is_inside_image (SDL::Image image, int x, int y)
   SDL_UnlockSurface (image.surface.get());
   return (a != 0);
 }
-  
+
 int SDL::width (SDL::Surface image) { return image->w; }
 int SDL::height (SDL::Surface image) { return image->h; }
 int SDL::width (SDL::Image image)
@@ -252,7 +252,7 @@ SDL::SDL ()
 
 }
 
-void SDL::init (const std::string& game_name, int& window_width, int& window_height, bool fullscreen)
+void SDL::init (int& window_width, int& window_height, bool fullscreen)
 {
   int okay = SDL_Init(SDL_INIT_VIDEO);
   check (okay != -1, "Cannot initialize SDL");
@@ -270,19 +270,19 @@ void SDL::init (const std::string& game_name, int& window_width, int& window_hei
     window_width = int(0.8 * DM.w);
     window_height = int(0.8 * DM.h);
   }
-  m_window = SDL_CreateWindow (game_name.c_str(),
+  m_window = SDL_CreateWindow ("",
                                SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED,
                                window_width, window_height,
                                SDL_WINDOW_RESIZABLE |
                                (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
   check (m_window != nullptr, "Cannot create SDL Window");
-  
+
   m_renderer = SDL_CreateRenderer (m_window, -1, 0);
   check (m_renderer != nullptr, "Cannot create SDL Renderer");
 
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
-  
+
   // Render black screen while the rest is loading
   SDL_SetRenderDrawColor (m_renderer, 0, 0, 0, 255);
   SDL_RenderClear (m_renderer);
@@ -297,10 +297,15 @@ SDL::~SDL ()
   m_fonts.clear();
   TTF_Quit ();
   IMG_Quit ();
-  
+
   SDL_DestroyRenderer (m_renderer);
   SDL_DestroyWindow (m_window);
   SDL_Quit ();
+}
+
+void SDL::update_window_title (const std::string& name)
+{
+  SDL_SetWindowTitle (m_window, name.c_str());
 }
 
 void SDL::update_view(int interface_width, int interface_height)
@@ -333,13 +338,13 @@ void SDL::draw (const Image& image,
   source.y = ysource;
   source.w = wsource;
   source.h = hsource;
-  
+
   SDL_Rect target;
   target.x = xtarget;
   target.y = ytarget;
   target.w = wtarget;
   target.h = htarget;
-  
+
   SDL_RenderCopy(m_renderer, image.texture.get(), &source, &target);
 }
 
@@ -369,4 +374,3 @@ void SDL::end ()
 }
 
 } // namespace Sosage::Third_party
-

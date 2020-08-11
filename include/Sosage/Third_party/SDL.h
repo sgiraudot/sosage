@@ -46,11 +46,11 @@ public:
   typedef Resource_manager<SDL_Surface> Surface_manager;
   typedef Resource_manager<SDL_Texture> Texture_manager;
   typedef Resource_manager<TTF_Font> Font_manager;
-  
+
   typedef typename Surface_manager::Resource_handle Surface;
   typedef typename Texture_manager::Resource_handle Texture;
   typedef typename Font_manager::Resource_handle Font_base;
-  
+
   struct Image
   {
     Surface surface;
@@ -63,7 +63,7 @@ public:
   };
 
   typedef std::pair<Font_base, Font_base> Font;
-  
+
   static SDL_Window* m_window;
   static SDL_Renderer* m_renderer;
   static Surface_manager m_surfaces;
@@ -93,8 +93,9 @@ public:
   SDL ();
   ~SDL ();
 
-  void init (const std::string& game_name, int& window_width, int& window_height, bool fullscreen);
+  void init (int& window_width, int& window_height, bool fullscreen);
 
+  void update_window_title (const std::string& name);
   void update_view(int interface_width, int interface_height);
   void toggle_fullscreen(bool fullscreen);
   void get_window_size (int& w, int& h);
