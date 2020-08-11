@@ -1,4 +1,4 @@
-# Superflu PnC
+# Sosage (Superfluous Open Source Adventure Game Engine)
 
 ## Dépendances
 
@@ -12,7 +12,7 @@
 
 1. `# apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev libyaml-dev`
 2. `$ mkdir build && cd build`
-3. `$ cmake .. -DCMAKE_BUILD_TYPE=Release`
+3. `$ cmake .. -DCMAKE_BUILD_TYPE=Release -DSOSAGE_DATA_FOLDER=[where_the_data_is]`
 4. `$ make`
 
 ## Compilation (Android)
@@ -28,4 +28,3 @@
 8. `$ ./gradlew assemble`
 
 ## Compilation (Navigateur)
-

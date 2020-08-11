@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.2)
-project (superflu_pnc)
+project (sosage)
 
 ## Use C++17 and load local CMake modules
 set(CMAKE_CXX_STANDARD 17)
@@ -7,56 +7,64 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 ## Check all dependencies
 
-set(SUPERFLU_PNC_DEPENDENCIES_OKAY true)
+set(SOSAGE_DEPENDENCIES_OKAY true)
 
 find_package(YAML REQUIRED)
 if (NOT YAML_FOUND)
   message(STATUS "libyaml is required and not found")
-  set(SUPERFLU_PNC_DEPENDENCIES_OKAY false)
+  set(SOSAGE_DEPENDENCIES_OKAY false)
 endif()
 
 find_package(SDL2 REQUIRED)
 if (NOT SDL2_FOUND)
   message(STATUS "SDL2 is required and not found")
-  set(SUPERFLU_PNC_DEPENDENCIES_OKAY false)
-endif()  
+  set(SOSAGE_DEPENDENCIES_OKAY false)
+endif()
 
 find_package(SDL2_mixer QUIET)
 if (NOT SDL2_MIXER_FOUND)
   message(STATUS "SDL2 Mixer is optional and not found (no sound will be available)")
-endif()  
+endif()
 
 find_package(SDL2_image REQUIRED)
 if (NOT SDL2_IMAGE_FOUND)
   message(STATUS "SDL2 Image is required and not found")
-  set(SUPERFLU_PNC_DEPENDENCIES_OKAY false)
-endif()  
+  set(SOSAGE_DEPENDENCIES_OKAY false)
+endif()
 
 find_package(SDL2_ttf REQUIRED)
 if (NOT SDL2_ttf_FOUND)
   message(STATUS "SDL2 TTF is required and not found")
-  set(SUPERFLU_PNC_DEPENDENCIES_OKAY false)
+  set(SOSAGE_DEPENDENCIES_OKAY false)
 endif()
 
 ## Abort if at least one dependency is missing
 
-if (NOT SUPERFLU_PNC_DEPENDENCIES_OKAY)
+if (NOT SOSAGE_DEPENDENCIES_OKAY)
   message(STATUS "Some dependencies are missing (see below), project won't be compiled")
   return()
 endif()
 
-## Fetch sources and create executable
-
-file(GLOB_RECURSE SUPERFLU_PNC_SRC "src/Sosage/*.cpp")
-add_executable(superflu_pnc "src/main.cpp" ${SUPERFLU_PNC_SRC})
-
 ## Set up data folder
 
-target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_DATA_FOLDER="${CMAKE_CURRENT_LIST_DIR}/data/")
+set(SOSAGE_DATA_FOLDER "" CACHE PATH "Where the game data is")
+
+if (SOSAGE_DATA_FOLDER STREQUAL "")
+  message(STATUS "No data folder provided, nothing will be compiled")
+  return()
+endif()
+
+include(${SOSAGE_DATA_FOLDER}/config.cmake)
+
+## Fetch sources and create executable
+
+file(GLOB_RECURSE SOSAGE_SRC "src/Sosage/*.cpp")
+add_executable(${SOSAGE_EXE_NAME} "src/main.cpp" ${SOSAGE_SRC})
+target_compile_options(${SOSAGE_EXE_NAME} PUBLIC -DSOSAGE_DATA_FOLDER="${SOSAGE_DATA_FOLDER}/data/")
 
 ## Compilation dependencies
 
-target_include_directories (superflu_pnc PUBLIC
+target_include_directories (${SOSAGE_EXE_NAME} PUBLIC
   "include"
   ${YAML_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
@@ -68,7 +76,7 @@ target_include_directories (superflu_pnc PUBLIC
 message(${YAML_LIBRARIES})
 message(${SDL2_LIBRARY})
 
-target_link_libraries(superflu_pnc PUBLIC
+target_link_libraries(${SOSAGE_EXE_NAME} PUBLIC
   ${YAML_LIBRARIES}
   ${SDL2_LIBRARY}
   ${SDL2_IMAGE_LIBRARIES}
@@ -76,24 +84,24 @@ target_link_libraries(superflu_pnc PUBLIC
 
 ## Optional sound
 if (SDL2_MIXER_FOUND)
-  target_include_directories (superflu_pnc PUBLIC ${SDL2_MIXER_INCLUDE_DIR})
-  target_link_libraries(superflu_pnc PUBLIC ${SDL2_MIXER_LIBRARIES})
-  target_compile_definitions(superflu_pnc PUBLIC "-DSOSAGE_LINKED_WITH_SDL_MIXER")
+  target_include_directories (${SOSAGE_EXE_NAME} PUBLIC ${SDL2_MIXER_INCLUDE_DIR})
+  target_link_libraries(${SOSAGE_EXE_NAME} PUBLIC ${SDL2_MIXER_LIBRARIES})
+  target_compile_definitions(${SOSAGE_EXE_NAME} PUBLIC "-DSOSAGE_LINKED_WITH_SDL_MIXER")
 endif()
 
 ## Platform-specific instructions
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
-  target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_INSTALL_DATA_FOLDER="../share/games/superflu_pnc/")
-  install(TARGETS superflu_pnc DESTINATION games)
-  install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/data/ DESTINATION share/games/superflu_pnc)
-  install(FILES ${CMAKE_CURRENT_LIST_DIR}/resources/icon.svg DESTINATION share/icons/hicolor/scalable/apps/ RENAME superflu_pnc.svg)
-  install(FILES ${CMAKE_CURRENT_LIST_DIR}/resources/superflu_pnc.desktop DESTINATION share/applications/)
+  target_compile_options(${SOSAGE_EXE_NAME} PUBLIC -DSOSAGE_INSTALL_DATA_FOLDER="../share/games/${SOSAGE_EXE_NAME}/")
+  install(TARGETS ${SOSAGE_EXE_NAME} DESTINATION games)
+  install(DIRECTORY ${SOSAGE_DATA_FOLDER}/data/ DESTINATION share/games/${SOSAGE_EXE_NAME})
+  install(FILES ${SOSAGE_DATA_FOLDER}/resources/icon.svg DESTINATION share/icons/hicolor/scalable/apps/ RENAME ${SOSAGE_EXE_NAME}.svg)
+  install(FILES ${SOSAGE_DATA_FOLDER}/resources/${SOSAGE_EXE_NAME}.desktop DESTINATION share/applications/)
 elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
-  target_compile_options(superflu_pnc PUBLIC -DSUPERFLU_INSTALL_DATA_FOLDER="data/")
-  install(TARGETS superflu_pnc DESTINATION Superflu\ PnC)
-  install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/data/ DESTINATION Superflu\ PnC/data)
+  target_compile_options(${SOSAGE_EXE_NAME} PUBLIC -DSOSAGE_INSTALL_DATA_FOLDER="data/")
+  install(TARGETS ${SOSAGE_EXE_NAME} DESTINATION ${SOSAGE_WIN_EXE_NAME})
+  install(DIRECTORY ${SOSAGE_DATA_FOLDER}/data/ DESTINATION ${SOSAGE_WIN_EXE_NAME}/data)
 elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
-  
+
 endif()
 
 # Activate concurrency?
@@ -102,11 +110,11 @@ option(SOSAGE_COMPILE_TESTS "Compile Sosage tests" OFF)
 if(SOSAGE_COMPILE_TESTS)
 
   enable_testing()
-  
+
   set (SOSAGE_TEST_TARGETS "unit_component_action")
 
   foreach(target ${SOSAGE_TEST_TARGETS})
-    add_executable("test_${target}" "test/${target}.cpp" ${SUPERFLU_PNC_SRC})
+    add_executable("test_${target}" "test/${target}.cpp" ${SOSAGE_SRC})
     target_include_directories ("test_${target}" PUBLIC
       "include"
       ${YAML_INCLUDE_DIR}
@@ -118,7 +126,7 @@ if(SOSAGE_COMPILE_TESTS)
       ${SDL2_LIBRARY}
       ${SDL2_IMAGE_LIBRARIES}
       ${SDL2_TTF_LIBRARIES})
-    
+
     if (SDL2_MIXER_FOUND)
       target_include_directories ("test_${target}" PUBLIC ${SDL2_MIXER_INCLUDE_DIR})
       target_link_libraries("test_${target}" PUBLIC ${SDL2_MIXER_LIBRARIES})
@@ -127,5 +135,5 @@ if(SOSAGE_COMPILE_TESTS)
 
     add_test(${target} "test_${target}" "")
   endforeach()
-  
+
 endif()
