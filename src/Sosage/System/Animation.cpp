@@ -44,11 +44,11 @@ Animation::Animation (Content& content)
 
 void Animation::run()
 {
-  auto status = m_content.get<Component::Status>("game:status");
+  auto status = m_content.get<Component::Status>(GAME__STATUS);
   if (status->value() == PAUSED || status->value() == LOADING)
     return;
 
-  std::size_t new_frame_id = m_content.get<Component::Int>("clock:frame_id")->value();
+  std::size_t new_frame_id = m_content.get<Component::Int>(CLOCK__FRAME_ID)->value();
   if (new_frame_id != m_frame_id)
     for (std::size_t i = m_frame_id; i < new_frame_id; ++ i)
       run_one_frame();
@@ -466,7 +466,7 @@ void Animation::generate_pick_animation (Component::Animation_handle image)
 void Animation::update_camera_target ()
 {
   int xbody = m_content.get<Component::Position>("character_body:position")->value().x();
-  double xcamera = m_content.get<Component::Double>("camera:position")->value();
+  double xcamera = m_content.get<Component::Double>(CAMERA__POSITION)->value();
 
   if (xbody < xcamera + Config::camera_limit_left)
     m_content.get<Component::Double>("camera:target")->set (std::max (0, xbody - Config::camera_limit_right));

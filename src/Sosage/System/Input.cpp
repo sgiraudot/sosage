@@ -53,7 +53,7 @@ void Input::run()
         ev == Event(KEY_UP, ANDROID_BACK))
       m_content.set<Component::Event>("game:exit");
 
-    auto status = m_content.get<Component::Status>("game:status");
+    auto status = m_content.get<Component::Status>(GAME__STATUS);
     if (status->value() == LOADING)
       return;
 
@@ -105,7 +105,7 @@ void Input::run()
       m_alt = true;
     else if (ev == Event(KEY_UP, ALT))
       m_alt = false;
-    else if (ev == Event(KEY_UP, ENTER))
+    else if (ev == Event(KEY_UP, ENTER) && m_alt)
     {
       m_content.get<Component::Boolean>("window:fullscreen")->toggle();
       m_content.set<Component::Event>("window:toggle_fullscreen");
@@ -132,7 +132,7 @@ void Input::run()
         m_virtual_cursor.x = ev.x();
         m_virtual_cursor.y = ev.y();
 
-        const Point& pos = m_content.get<Component::Position>("cursor:position")->value();
+        const Point& pos = m_content.get<Component::Position>(CURSOR__POSITION)->value();
         m_virtual_cursor.cursor_x = pos.x();
         m_virtual_cursor.cursor_y = pos.y();
       }
@@ -151,7 +151,7 @@ void Input::run()
       if (m_virtual_cursor.down &&
           ev.type() == CURSOR_MOVE)
       {
-        auto pos = m_content.get<Component::Position>("cursor:position");
+        auto pos = m_content.get<Component::Position>(CURSOR__POSITION);
         pos->set(Point(m_virtual_cursor.cursor_x + ev.x() - m_virtual_cursor.x,
                        m_virtual_cursor.cursor_y + ev.y() - m_virtual_cursor.y));
         if (!m_virtual_cursor.has_moved &&
@@ -165,23 +165,20 @@ void Input::run()
     else // regular cursor
     {
       if (ev.type() == CURSOR_MOVE)
-        m_content.set<Component::Position>
-            ("cursor:position",
-             Point(ev.x(), ev.y()));
+        m_content.get<Component::Position>
+            (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
 
       if (ev == Event(CURSOR_DOWN, LEFT))
       {
-        m_content.set<Component::Position>
-            ("cursor:position",
-             Point(ev.x(), ev.y()));
+        m_content.get<Component::Position>
+            (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
         m_content.set<Component::Event>("cursor:clicked");
         m_content.set<Component::Boolean>("click:left", true);
       }
       if (ev == Event(CURSOR_DOWN, RIGHT))
       {
-        m_content.set<Component::Position>
-            ("cursor:position",
-             Point(ev.x(), ev.y()));
+        m_content.get<Component::Position>
+            (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
         m_content.set<Component::Event>("cursor:clicked");
         m_content.set<Component::Boolean>("click:left", false);
       }

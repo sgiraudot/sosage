@@ -65,8 +65,8 @@ Engine::~Engine()
 int Engine::run (const std::string& folder_name)
 {
   // Init main variables
-  m_content.set<Component::Status>("game:status");
-  m_content.set<Component::Double>("camera:position", 0.0);
+  m_content.set_fac<Component::Status>(GAME__STATUS, "game:status");
+  m_content.set_fac<Component::Double>(CAMERA__POSITION, "camera:position", 0.0);
   m_content.set<Component::Double>("camera:target", 0.0);
   m_content.set<Component::Inventory>("game:inventory");
 

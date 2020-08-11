@@ -37,11 +37,24 @@
 namespace Sosage
 {
 
+enum Fast_access_component
+{
+  CAMERA__POSITION,
+  CURSOR__POSITION,
+  CLOCK__FRAME_ID,
+  CLOCK__FRAME_TIME,
+  GAME__DEBUG,
+  GAME__STATUS,
+
+  NUMBER_OF_KEYS
+};
+
 class Content
 {
 private:
 
   Component::Handle_set m_data;
+  std::array<Component::Handle, NUMBER_OF_KEYS> m_fast_access_components;
 
 public:
 
@@ -120,7 +133,22 @@ public:
     return out;
   }
 
-private:
+  // Fast access version
+  template <typename T, typename ... Args>
+  std::shared_ptr<T> set_fac (const Fast_access_component& fac, Args&& ... args)
+  {
+    std::shared_ptr<T> new_component = set<T>(args...);
+    m_fast_access_components[std::size_t(fac)] = new_component;
+    return new_component;
+  }
+
+  template <typename T>
+  std::shared_ptr<T> get (const Fast_access_component& fac)
+  {
+    return Component::cast<T>(m_fast_access_components[std::size_t(fac)]);
+  }
+
+  private:
 
   inline void count_set_ptr() { SOSAGE_COUNT (Content__set_ptr); }
   inline void count_set_args() { SOSAGE_COUNT (Content__set_args); }

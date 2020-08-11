@@ -58,11 +58,11 @@ Logic::Logic (Content& content)
 
 void Logic::run ()
 {
-  auto status = m_content.get<Component::Status>("game:status");
+  auto status = m_content.get<Component::Status>(GAME__STATUS);
   if (status->value() == PAUSED || status->value() == LOADING)
     return;
 
-  double current_time = m_content.get<Component::Double> ("clock:frame_time")->value();
+  double current_time = m_content.get<Component::Double> (CLOCK__FRAME_TIME)->value();
 
   m_current_time = current_time;
 
@@ -97,7 +97,7 @@ void Logic::run ()
         compute_path_from_target(m_content.get<Component::Position>(collision->entity() + ":view"));
     }
     else
-      compute_path_from_target(m_content.get<Component::Position>("cursor:position"));
+      compute_path_from_target(m_content.get<Component::Position>(CURSOR__POSITION));
 
     m_content.remove("cursor:clicked");
     m_content.remove("cursor:target");
@@ -222,7 +222,7 @@ void Logic::run ()
   }
 
   update_camera();
-  update_debug_info (m_content.get<Component::Debug>("game:debug"));
+  update_debug_info (m_content.get<Component::Debug>(GAME__DEBUG));
 }
 
 void Logic::clear_timed(bool action_goto)
@@ -256,7 +256,7 @@ bool Logic::compute_path_from_target (Component::Position_handle target)
   Point t = target->value();
 
   if (target->component() != "view")
-    t = t + Vector (m_content.get<Component::Double>("camera:position")->value(), 0);
+    t = t + Vector (m_content.get<Component::Double>(CAMERA__POSITION)->value(), 0);
 
   std::vector<Point> path;
   ground_map->find_path (origin, t, path);
@@ -271,7 +271,7 @@ bool Logic::compute_path_from_target (Component::Position_handle target)
 
 void Logic::update_camera()
 {
-  auto position = m_content.get<Component::Double>("camera:position");
+  auto position = m_content.get<Component::Double>(CAMERA__POSITION);
   auto target = m_content.get<Component::Double>("camera:target");
 
   double dir = target->value() - position->value();
@@ -353,7 +353,7 @@ void Logic::action_look (const std::string& target)
 {
   if (target == "default")
     m_content.set<Component::Position>("character:lookat",
-                                       m_content.get<Component::Position>("cursor:position")->value());
+                                       m_content.get<Component::Position>(CURSOR__POSITION)->value());
   else if (m_content.get<Component::String>(target + ":state")->value() != "inventory")
     m_content.set<Component::Position>("character:lookat",
                                        m_content.get<Component::Position>(target + ":position")->value());
@@ -446,11 +446,11 @@ void Logic::action_show (Component::Action::Step step)
   auto code = m_content.request<Component::Code>(target + ":code");
   if (code)
   {
-    m_content.get<Component::Status>("game:status")->push (IN_CODE);
+    m_content.get<Component::Status>(GAME__STATUS)->push (IN_CODE);
     m_content.set<Component::Variable>("game:code", code);
   }
   else
-    m_content.get<Component::Status>("game:status")->push (IN_WINDOW);
+    m_content.get<Component::Status>(GAME__STATUS)->push (IN_WINDOW);
 }
 
 void Logic::create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog)

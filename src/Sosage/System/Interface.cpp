@@ -46,16 +46,15 @@ Interface::Interface (Content& content)
 
 void Interface::run()
 {
-  auto status = m_content.get<Component::Status>("game:status");
+  auto status = m_content.get<Component::Status>(GAME__STATUS);
   if (status->value() == PAUSED || status->value() == LOADING)
     return;
 
   if (m_content.request<Component::Event>("window:rescaled"))
     update_responsive();
 
-  auto cursor = m_content.request<Component::Position>("cursor:position");
-  if (cursor)
-    detect_collision (cursor);
+  auto cursor = m_content.get<Component::Position>(CURSOR__POSITION);
+  detect_collision (cursor);
 
   auto clicked
     = m_content.request<Component::Event>("cursor:clicked");
@@ -535,7 +534,7 @@ void Interface::window_clicked()
   if (m_collision != window)
   {
     window->on() = false;
-    m_content.get<Component::Status>("game:status")->pop();
+    m_content.get<Component::Status>(GAME__STATUS)->pop();
   }
   m_content.remove("cursor:clicked");
 }
@@ -548,7 +547,7 @@ void Interface::code_clicked (Component::Position_handle cursor)
   {
     window->on() = false;
     code->reset();
-    m_content.get<Component::Status>("game:status")->pop();
+    m_content.get<Component::Status>(GAME__STATUS)->pop();
   }
   else
   {
@@ -651,7 +650,7 @@ void Interface::action_clicked(const std::string& verb)
       {
         // If default action on inventory,  look
         auto state = m_content.request<Component::String>(m_collision->entity() + ":state");
-        if (state && (state->value() == "inventory") ||
+        if ((state && (state->value() == "inventory")) ||
             !m_content.get<Component::Boolean>("click:left")->value())
         {
           m_content.set<Component::Variable>("character:action", m_content.request<Component::Action> (m_collision->entity() + ":look"));
@@ -700,7 +699,7 @@ void Interface::update_pause_screen()
 
   // Create pause screen
   auto status
-    = m_content.get<Component::Status>("game:status");
+    = m_content.get<Component::Status>(GAME__STATUS);
 
   auto pause_screen
     = m_content.set<Component::Conditional>("pause_screen:conditional",
@@ -744,7 +743,7 @@ void Interface::detect_collision (Component::Position_handle cursor)
   }
 
   m_collision = Component::Image_handle();
-  double xcamera = m_content.get<Component::Double>("camera:position")->value();
+  double xcamera = m_content.get<Component::Double>(CAMERA__POSITION)->value();
 
   for (const auto& e : m_content)
     if (auto img = Component::cast<Component::Image>(e))
@@ -848,7 +847,7 @@ void Interface::update_action ()
 
 void Interface::update_inventory ()
 {
-  Status status = m_content.get<Component::Status>("game:status")->value();
+  Status status = m_content.get<Component::Status>(GAME__STATUS)->value();
   if (status == IN_WINDOW || status == LOCKED)
   {
     m_content.get<Component::Image> ("interface_action:image")->z() = Config::inventory_over_depth;

@@ -59,7 +59,7 @@ void File_IO::run()
 {
   if (auto new_room = m_content.request<Component::String>("game:new_room"))
   {
-    auto status = m_content.get<Component::Status>("game:status");
+    auto status = m_content.get<Component::Status>(GAME__STATUS);
 
     // If new room must be loaded, first notify loading and restart
     // loop so that Graphic displays loading screen, then only load
@@ -187,7 +187,7 @@ void File_IO::read_init (const std::string& folder_name)
                                                               Config::cursor_depth);
   cursor_img->set_relative_origin(0.5, 0.5);
 
-  auto status = m_content.get<Component::Status>("game:status");
+  auto status = m_content.get<Component::Status>(GAME__STATUS);
 
   if constexpr (Config::android)
   {
@@ -210,7 +210,7 @@ void File_IO::read_init (const std::string& folder_name)
          cursor_img);
   }
 
-  m_content.set<Component::Position> ("cursor:position", Point(0,0));
+  m_content.set_fac<Component::Position> (CURSOR__POSITION, "cursor:position", Point(0,0));
 
   std::string turnicon = input["turnicon"].string("images", "interface", "png");
   auto turnicon_img

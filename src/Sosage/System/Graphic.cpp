@@ -101,8 +101,8 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
                return (a->z() < b->z());
              });
 
-  auto status = m_content.get<Component::Status>("game:status");
-  double xcamera = m_content.get<Component::Double>("camera:position")->value();
+  auto status = m_content.get<Component::Status>(GAME__STATUS);
+  double xcamera = m_content.get<Component::Double>(CAMERA__POSITION)->value();
 
   for (const auto& img : images)
   {
@@ -135,7 +135,7 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
     }
   }
 
-  if (m_content.get<Component::Boolean>("game:debug")->value())
+  if (m_content.get<Component::Boolean>(GAME__DEBUG)->value())
   {
     auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
 

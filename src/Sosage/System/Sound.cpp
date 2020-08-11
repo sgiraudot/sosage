@@ -43,7 +43,7 @@ Sound::Sound (Content& content)
 
 void Sound::run()
 {
-  auto status = m_content.get<Component::Status>("game:status");
+  auto status = m_content.get<Component::Status>(GAME__STATUS);
   if (status->value() == LOADING)
     return;
 
