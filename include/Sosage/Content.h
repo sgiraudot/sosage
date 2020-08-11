@@ -49,6 +49,11 @@ public:
 
   Content (const Content&) = delete;
 
+  ~Content()
+  {
+    display_access();
+  }
+
   void clear() { m_data.clear(); }
   std::size_t size() const { return m_data.size(); }
   Component::Handle_set::const_iterator begin() const { return m_data.begin(); }
@@ -86,6 +91,7 @@ public:
   template <typename T>
   std::shared_ptr<T> request (const std::string& key)
   {
+    count_access(key);
     count_request();
     Component::Handle_set::iterator iter = m_data.find(std::make_shared<Component::Base>(key));
     if (iter == m_data.end())
@@ -120,6 +126,35 @@ private:
   inline void count_set_args() { SOSAGE_COUNT (Content__set_args); }
   inline void count_request() { SOSAGE_COUNT (Content__request); }
   inline void count_get() { SOSAGE_COUNT (Content__get); }
+
+#ifdef SOSAGE_PROFILE
+  std::unordered_map<std::string, std::size_t> m_access_count;
+  inline void count_access (const std::string& k)
+  {
+    auto inserted = m_access_count.insert (std::make_pair (k, 1));
+    if (!inserted.second)
+      inserted.first->second ++;
+  }
+  inline void display_access()
+  {
+    std::vector<std::pair<std::string, std::size_t> > sorted;
+    sorted.reserve (m_access_count.size());
+    std::copy (m_access_count.begin(), m_access_count.end(),
+               std::back_inserter (sorted));
+    std::sort (sorted.begin(), sorted.end(),
+               [](const auto& a, const auto& b) -> bool
+               {
+                 return a.second > b.second;
+               });
+    std::cerr << "[Profiling component access count (10 first)]" << std::endl;
+    for (std::size_t i = 0; i < 10; ++ i)
+      std::cerr << " * " << sorted[i].first << " (accessed "
+                << sorted[i].second << " times)" << std::endl;
+  }
+#else
+  inline void count_access (const std::string&) { }
+  inline void display_access () { }
+#endif
 };
 
 } // namespace Sosage
