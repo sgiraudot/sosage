@@ -531,11 +531,8 @@ void Interface::horizontal_layout()
 void Interface::window_clicked()
 {
   auto window = m_content.get<Component::Image>("game:window");
-  if (m_collision != window)
-  {
-    window->on() = false;
-    m_content.get<Component::Status>(GAME__STATUS)->pop();
-  }
+  window->on() = false;
+  m_content.get<Component::Status>(GAME__STATUS)->pop();
   m_content.remove("cursor:clicked");
 }
 
