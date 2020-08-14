@@ -27,24 +27,12 @@
 #ifndef SOSAGE_UTILS_EVENT_H
 #define SOSAGE_UTILS_EVENT_H
 
+#include <Sosage/Utils/enum.h>
+
 #include <iostream>
 
 namespace Sosage
 {
-
-enum Event_type
-{
-  EMPTY,
-
-  WINDOW,
-
-  CURSOR_DOWN,
-  CURSOR_MOVE,
-  CURSOR_UP,
-
-  KEY_DOWN,
-  KEY_UP
-};
 
 inline std::ostream& operator<< (std::ostream& os, const Event_type& type)
 {
@@ -58,29 +46,6 @@ inline std::ostream& operator<< (std::ostream& os, const Event_type& type)
   else os << "WTF";
   return os;
 }
-
-enum Event_value
-{
-  NONE,
-
-  // Window
-  QUIT,
-  RESIZED,
-
-  // Cursor
-  LEFT,
-  RIGHT,
-
-  // Keys
-  ALT,
-  ANDROID_BACK,
-  ENTER,
-  EXIT,
-  SPACE,
-
-  A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,
-  F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12
-};
 
 
 inline std::ostream& operator<< (std::ostream& os, const Event_value& value)

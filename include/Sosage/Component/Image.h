@@ -30,6 +30,7 @@
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Core/Graphic.h>
+#include <Sosage/Utils/enum.h>
 #include <Sosage/Utils/geometry.h>
 
 namespace Sosage::Component
@@ -42,8 +43,8 @@ private:
   Point m_origin;
   int m_z;
   bool m_on;
-  bool m_box_collision;
-  
+  Collision_type m_collision;
+
 public:
 
   Image (const std::string& id, int w, int h, int r = 0, int g = 0, int b = 0, int a = 255);
@@ -58,8 +59,8 @@ public:
   Point& origin() { return m_origin; }
   const bool& on() const { return m_on; }
   bool& on() { return m_on; }
-  const bool& box_collision() const { return m_box_collision; }
-  bool& box_collision() { return m_box_collision; }
+  const Collision_type& collision() const { return m_collision; }
+  Collision_type& collision() { return m_collision; }
   virtual int xmin() const { return 0; }
   virtual int xmax() const { return Core::Graphic::width(m_core); }
   virtual int ymin() const { return 0; }

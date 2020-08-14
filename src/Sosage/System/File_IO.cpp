@@ -384,7 +384,7 @@ void File_IO::read_room (const std::string& file_name)
 
   auto background_img
     = m_content.set<Component::Image>("background:image", local_file_name(background), 0);
-  background_img->box_collision() = true;
+  background_img->collision() = BOX;
 
   m_content.set<Component::Position>("background:position", Point(0, 0), false);
   m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map),
@@ -630,7 +630,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
         img = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin), z);
 
       img->set_relative_origin(0.5, 1.0);
-      img->box_collision() = box_collision;
+      img->collision() = (box_collision ? BOX : PIXEL_PERFECT);
 
       debug("Object " + id + ":" + state + " at position " + std::to_string(img->z()));
 
@@ -706,6 +706,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
 
   auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
   auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), z);
+  img->collision() = UNCLICKABLE;
   img->set_relative_origin(0.5, 1.0);
   debug("Scenery " + id + " at position " + std::to_string(img->z()));
 }

@@ -755,6 +755,7 @@ void Interface::detect_collision (Component::Position_handle cursor)
     if (auto img = Component::cast<Component::Image>(e))
     {
       if (!img->on() ||
+          img->collision() == UNCLICKABLE ||
           img->id().find("character") == 0 ||
           img->id().find("debug") == 0 ||
           img->id().find("chosen_verb") == 0 ||
@@ -779,7 +780,7 @@ void Interface::detect_collision (Component::Position_handle cursor)
           cursor->value().y() > ymax)
         continue;
 
-      if (!img->box_collision())
+      if (img->collision() == PIXEL_PERFECT)
       {
         int x_in_image = cursor->value().x() - xmin;
         int y_in_image = cursor->value().y() - ymin;

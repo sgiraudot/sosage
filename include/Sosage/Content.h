@@ -29,6 +29,7 @@
 
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Component/cast.h>
+#include <Sosage/Utils/enum.h>
 #include <Sosage/Utils/error.h>
 #include <Sosage/Utils/profiling.h>
 
@@ -36,18 +37,6 @@
 
 namespace Sosage
 {
-
-enum Fast_access_component
-{
-  CAMERA__POSITION,
-  CURSOR__POSITION,
-  CLOCK__FRAME_ID,
-  CLOCK__FRAME_TIME,
-  GAME__DEBUG,
-  GAME__STATUS,
-
-  NUMBER_OF_KEYS
-};
 
 class Content
 {

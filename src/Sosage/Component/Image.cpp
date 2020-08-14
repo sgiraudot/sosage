@@ -32,14 +32,14 @@ namespace Sosage::Component
 
 Image::Image (const std::string& id, int w, int h, int r, int g, int b, int a)
   : Base(id), m_origin(0,0), m_z(Config::interface_depth), m_on(true),
-    m_box_collision (false)
+    m_collision(PIXEL_PERFECT)
 {
   m_core = Core::Graphic::create_rectangle (w, h, r, g, b, a);
 }
 
 Image::Image (const std::string& id, const std::string& file_name, int z)
   : Base(id), m_origin(0,0), m_z(z), m_on(true),
-    m_box_collision (false)
+    m_collision (PIXEL_PERFECT)
 {
   m_core = Core::Graphic::load_image (file_name);
 }
@@ -47,7 +47,7 @@ Image::Image (const std::string& id, const std::string& file_name, int z)
 Image::Image (const std::string& id, Font_handle font, const std::string& color_str,
               const std::string& text, bool outlined)
   : Base(id), m_origin(0,0), m_z(Config::inventory_back_depth), m_on(true),
-    m_box_collision (true)
+    m_collision (BOX)
 {
   if (outlined)
     m_core = Core::Graphic::create_outlined_text (font->core(), color_str, text);
