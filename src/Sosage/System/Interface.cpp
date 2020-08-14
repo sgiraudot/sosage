@@ -622,9 +622,18 @@ void Interface::action_clicked(const std::string& verb)
           = m_content.request<Component::String>(m_collision->entity() + ":state");
         if (state && (state->value() == "inventory"))
         {
-          m_content.set<Component::String>("action:source", m_collision->entity());
-          m_content.remove("cursor:clicked");
-          return;
+          // Check if unary action exists
+          if (auto action = m_content.request<Component::Action> (m_collision->entity() + ":use"))
+          {
+            m_content.set<Component::Variable>("character:action", action);
+            action_found = true;
+          }
+          else // Set object as source
+          {
+            m_content.set<Component::String>("action:source", m_collision->entity());
+            m_content.remove("cursor:clicked");
+            return;
+          }
         }
       }
     }

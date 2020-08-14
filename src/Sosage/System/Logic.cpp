@@ -203,8 +203,8 @@ void Logic::run ()
             action_move (s);
           else if (s.get(0) == "play")
             action_play (s);
-          else if (s.get(0) == "pick_animation")
-            action_pick_animation (s);
+          else if (s.get(0) == "animate")
+            action_animate (s);
           else if (s.get(0) == "set_state")
             action_set_state (s);
           else if (s.get(0) == "set_coordinates")
@@ -379,14 +379,15 @@ void Logic::action_play (Component::Action::Step step)
   animation->on() = true;
 }
 
-void Logic::action_pick_animation (Component::Action::Step step)
+void Logic::action_animate (Component::Action::Step step)
 {
-  double duration = step.get_double(1);
-  m_content.set<Component::Event>("character:start_pick_animation");
+  std::string id = step.get(1);
+  double duration = step.get_double(2);
+  m_content.set<Component::String>("character:start_animation", id);
 
   m_timed.insert (std::make_pair (m_current_time + duration,
                                   Component::make_handle<Component::Event>
-                                  ("character:stop_pick_animation")));
+                                  ("character:stop_animation")));
 
 }
 

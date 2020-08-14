@@ -322,7 +322,6 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
 
   m_content.set<Component::Vector<std::string> >("character_idle:values", positions);
 
-  // todo positions component
   auto aidle = m_content.set<Component::Animation>("character_idle:image", local_file_name(idle),
                                                    0, positions.size(), 2, true);
   aidle->set_relative_origin(0.5, 0.95);

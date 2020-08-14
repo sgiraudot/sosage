@@ -72,7 +72,7 @@ private:
   void action_look (const std::string& target);
   void action_move (Component::Action::Step step);
   void action_play (Component::Action::Step step);
-  void action_pick_animation (Component::Action::Step step);
+  void action_animate (Component::Action::Step step);
   void action_set_state (Component::Action::Step step);
   void action_set_coordinates (Component::Action::Step step);
   void action_show (Component::Action::Step step);

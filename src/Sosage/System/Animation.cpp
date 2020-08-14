@@ -123,17 +123,17 @@ void Animation::run_one_frame()
     m_content.remove("character:stop_talking");
   }
 
-  if (m_content.request<Component::Event>("character:stop_pick_animation"))
+  if (m_content.request<Component::Event>("character:stop_animation"))
   {
     generate_random_idle_body_animation (m_content.get<Component::Animation>("character_idle:image"),
                                          m_content.get<Component::Animation>("character_head:image")->frames().front().y == 0);
-    m_content.remove("character:stop_pick_animation");
+    m_content.remove("character:stop_animation");
   }
 
-  if (m_content.request<Component::Event>("character:start_pick_animation"))
+  if (auto anim = m_content.request<Component::String>("character:start_animation"))
   {
-    generate_pick_animation (m_content.get<Component::Animation>("character_idle:image"));
-    m_content.remove("character:start_pick_animation");
+    generate_animation (m_content.get<Component::Animation>("character_idle:image"), anim->value());
+    m_content.remove("character:start_animation");
   }
 
   std::vector<Component::Animation_handle> animations;
@@ -440,7 +440,7 @@ void Animation::generate_random_mouth_animation (Component::Animation_handle ima
   }
 }
 
-void Animation::generate_pick_animation (Component::Animation_handle image)
+void Animation::generate_animation (Component::Animation_handle image, const std::string& id)
 {
   std::size_t row_index = image->frames().front().y;
 
@@ -453,12 +453,12 @@ void Animation::generate_pick_animation (Component::Animation_handle image)
 
   int index = -1;
   for (std::size_t i = 0; i < positions.size(); ++ i)
-    if (positions[i] == "action")
+    if (positions[i] == id)
     {
       index = i;
       break;
     }
-  check (index != -1, "No action skin found");
+  check (index != -1, "No " + id + " skin found");
 
   image->frames().push_back (Component::Animation::Frame (index, row_index, 1));
 }
