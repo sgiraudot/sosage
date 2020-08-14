@@ -310,7 +310,8 @@ void Logic::action_comment (Component::Action::Step step)
   double nb_seconds = nb_char / m_content.get<Component::Double>("text:char_per_second")->value();
 
   int y = 100;
-  int x = m_content.get<Component::Position>("character_body:position")->value().x();
+  int x = m_content.get<Component::Position>("character_body:position")->value().x()
+          - m_content.get<Component::Double>(CAMERA__POSITION)->value();
 
   for (auto img : dialog)
     if (x + 0.75 * img->width() / 2 > int(0.95 * Config::world_width))
