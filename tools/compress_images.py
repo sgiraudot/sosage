@@ -2,7 +2,11 @@ import os
 import sys
 import subprocess
 
-root = "../data/images/"
+if len(sys.argv) == 1:
+    print("Usage: " + sys.argv[0] + " [data_folder]")
+    exit()
+
+root = sys.argv[1]
 
 # Nice display of size
 def size_str(num):
