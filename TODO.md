@@ -6,14 +6,9 @@
 
 ### Graphique
 
-* Code octal Y/Z
-* Fiche de sécu
-* Digicode
-* Lampe allumée / CoM allumé
 * Animations Superflu
 * Câble
 * Sophie électrique
-* Sophie téléphone
 * Choix du mode de curseur
 * Page tuto clics/curseur virtuel
 * Menus
@@ -34,9 +29,9 @@
 
 ### Code
 
+* Compteur + conditionnel
 * Menus
 * Dialogues
-* Action défaut
 * Indices
 * Cutscenes
 * Choix du mode de curseur Android
