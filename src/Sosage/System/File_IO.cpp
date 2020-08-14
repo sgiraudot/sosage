@@ -647,6 +647,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
     img->z() = Config::inventory_back_depth;
   }
 
+  bool look_found = false;
   for (std::size_t i = 0; i < node["actions"].size(); ++ i)
   {
     const Core::File_IO::Node& iaction = node["actions"][i];
@@ -663,6 +664,9 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
         a_id = a_id + "_" + id;
         corrected_id = iaction["target"].string();
       }
+
+      if (a_id == "look")
+        look_found = true;
 
       Component::Action_handle action;
 
@@ -693,8 +697,9 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
       ++ j;
     }
     while (j < nb_actions);
-
   }
+
+  check (look_found, "Object " + id + " has no \"look\" action");
 }
 
 void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& id)
