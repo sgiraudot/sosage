@@ -47,13 +47,29 @@
 
 #include <ctime>
 
+#ifdef SOSAGE_EMSCRIPTEN
+#include <emscripten.h>
+#endif
+
 namespace Sosage
 {
+
+#ifdef SOSAGE_EMSCRIPTEN
+Engine* emscripten_global_engine_ptr;
+void emscripten_main_loop()
+{
+  emscripten_global_engine_ptr->run();
+}
+#endif
 
 Engine::Engine ()
 {
   debug ("Running Sosage " + Sosage::Version::str());
   srand(time(nullptr));
+
+#ifdef SOSAGE_EMSCRIPTEN
+  emscripten_global_engine_ptr = this;
+#endif
 }
 
 Engine::~Engine()
@@ -96,13 +112,22 @@ int Engine::run (const std::string& folder_name)
   m_content.set<Component::Event>("music:start");
   m_content.set<Component::Event>("window:rescaled");
 
-  while (!m_content.request<Component::Event>("game:exit"))
-    for (System::Handle system : m_systems)
-      system->run();
+#ifdef SOSAGE_EMSCRIPTEN
+  emscripten_set_main_loop (emscripten_main_loop, 0, 0);
+#else
+  run();
+#endif
 
   file_io->write_config();
 
   return EXIT_SUCCESS;
+}
+
+void Engine::run()
+{
+  while (!m_content.request<Component::Event>("game:exit"))
+    for (System::Handle system : m_systems)
+      system->run();
 }
 
 

@@ -45,6 +45,7 @@ public:
   Engine ();
   ~Engine();
   int run (const std::string& folder_name);
+  void run();
 };
 
 } // namespace Sosage
