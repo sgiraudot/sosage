@@ -17,14 +17,23 @@
 
 ## Compilation (Android)
 
-1. Télécharger SDK+NDK Android
+1. Télécharger et installer SDK+NDK Android
 2. `$ cd android`
 3. `$ ln -s [sdl_source_path] app/jni/SDL`
 4. `$ ln -s [sdl_image_source_path] app/jni/SDL_image`
 5. `$ ln -s [sdl_mixer_source_path] app/jni/SDL_mixer`
 6. `$ ln -s [sdl_ttf_source_path] app/jni/SDL_ttf`
 7. `$ ln -s [libyaml_source_path] app/jni/yaml/libyaml`
-8. `$ ln -s ../data app/src/main/assets/data`
+8. `$ ln -s [where_the_data_is]/data app/src/main/assets/data`
 8. `$ ./gradlew assemble`
 
-## Compilation (Navigateur)
+## Compilation (Emscripten/navigateur)
+
+1. Télécharger et installer Emscripten SDK
+2. `$ cd emscripten`
+3. `$ mkdir build`
+4. `$ cd build`
+5. `$ ln -s [where_the_data_is]/data data`
+6. `$ ln -s [libyaml_source_path] libyaml`
+7. `$ emcmake cmake .. -DCMAKE_BUILD_TYPE=Release`
+8. `$ make`
