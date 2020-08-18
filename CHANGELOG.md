@@ -2,17 +2,17 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `master`
+## `dev`
 
 ### Release Management
 
 - Basic script for generating AppImage
+- Support for Emscripten / running in web browser
 - Fix install path using relative resolution with `SDL_GetBasePath()`
 - Introduction of testing using CTest
 
 ### Interface and Menus
 
-- Nothing
 - Handling configuration file and persistent settings
 - Switch fullscreen on/off
 - Loading screen
@@ -23,7 +23,10 @@ History of versions and modifications of the SOSAGE engine.
 - Resource manager to avoid loading N times the same file
 - Moving camera for horizontal scrolling
 - Animated objects
-  
+- Room changing while keeping inventory, etc.
+- Integer objects + triggers
+- Default action with right click
+
 ### Content
 
 - Second room in progress
@@ -45,7 +48,7 @@ History of versions and modifications of the SOSAGE engine.
 - Most of the game mechanisms except for interactions with NPC
   (dialogs, giving objects, etc.) and changing room
 - First room (bureau) working entirely
-  
+
 ### Content
 
 - Full first room (bureau), although sounds are still from stock (this
