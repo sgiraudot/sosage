@@ -39,6 +39,7 @@ constexpr bool android = true;
 constexpr bool mac = false;
 constexpr bool windows = false;
 constexpr bool gnunux = false;
+constexpr bool emscripten = false;
 
 #elif defined(__APPLE__)
 #define SOSAGE_MAC
@@ -46,6 +47,7 @@ constexpr bool android = false;
 constexpr bool mac = true;
 constexpr bool windows = false;
 constexpr bool gnunux = false;
+constexpr bool emscripten = false;
 
 #elif defined(_WIN32)
 #define SOSAGE_WINDOWS
@@ -53,6 +55,7 @@ constexpr bool android = false;
 constexpr bool mac = false;
 constexpr bool windows = true;
 constexpr bool gnunux = false;
+constexpr bool emscripten = false;
 
 #elif defined(__linux__)
 #define SOSAGE_GNUNUX
@@ -60,6 +63,15 @@ constexpr bool android = false;
 constexpr bool mac = false;
 constexpr bool windows = false;
 constexpr bool gnunux = true;
+constexpr bool emscripten = false;
+
+#elif defined(__EMSCRIPTEN__)
+#define SOSAGE_EMSCRIPTEN
+constexpr bool android = false;
+constexpr bool mac = false;
+constexpr bool windows = false;
+constexpr bool gnunux = false;
+constexpr bool emscripten = true;
 
 #endif
 

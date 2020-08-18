@@ -33,6 +33,7 @@
 #include <Sosage/Utils/error.h>
 #include <Sosage/Utils/profiling.h>
 
+#include <array>
 #include <functional>
 
 namespace Sosage

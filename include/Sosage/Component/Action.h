@@ -29,6 +29,7 @@
 
 #include <Sosage/Component/Handle.h>
 
+#include <cstdlib>
 #include <vector>
 
 namespace Sosage::Component
@@ -37,7 +38,7 @@ namespace Sosage::Component
 class Action : public Base
 {
 public:
-  
+
   class Step
   {
   private:
@@ -61,7 +62,7 @@ public:
 private:
 
   std::vector<Step> m_steps;
-  
+
 public:
 
   Action (const std::string& id);

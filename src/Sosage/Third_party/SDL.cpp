@@ -297,7 +297,6 @@ SDL::~SDL ()
   m_fonts.clear();
   TTF_Quit ();
   IMG_Quit ();
-
   SDL_DestroyRenderer (m_renderer);
   SDL_DestroyWindow (m_window);
   SDL_Quit ();
