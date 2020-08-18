@@ -112,10 +112,13 @@ int Engine::run (const std::string& folder_name)
   m_content.set<Component::Event>("music:start");
   m_content.set<Component::Event>("window:rescaled");
 
+  debug("Init done, entering main loop");
+
 #ifdef SOSAGE_EMSCRIPTEN
   emscripten_set_main_loop (emscripten_main_loop, 0, 0);
+  emscripten_exit_with_live_runtime();
 #else
-  run();
+  while (run()) { }
 #endif
 
   file_io->write_config();
@@ -123,11 +126,11 @@ int Engine::run (const std::string& folder_name)
   return EXIT_SUCCESS;
 }
 
-void Engine::run()
+bool Engine::run()
 {
-  while (!m_content.request<Component::Event>("game:exit"))
-    for (System::Handle system : m_systems)
-      system->run();
+  for (System::Handle system : m_systems)
+    system->run();
+  return !m_content.request<Component::Event>("game:exit");
 }
 
 

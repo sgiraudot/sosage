@@ -33,6 +33,10 @@
 #include <android/log.h>
 #endif
 
+#ifdef SOSAGE_EMSCRIPTEN
+#include <SDL.h>
+#endif
+
 #if !defined(NDEBUG) && !defined(SOSAGE_DEBUG)
 #define SOSAGE_DEBUG
 #endif
@@ -56,6 +60,12 @@ inline void check_impl (const char* file, int line, const std::string& str)
   __android_log_print (ANDROID_LOG_ERROR, "error", "%s [%s:%i]", str.c_str(), file, line);
   exit(EXIT_FAILURE);
 }
+#elif defined(SOSAGE_EMSCRIPTEN)
+inline void check_impl (const char* file, int line, const std::string& str)
+{
+  SDL_Log("%s [%s:%i]", str.c_str(), file, line);
+  exit(EXIT_FAILURE);
+}
 #elif defined(SOSAGE_ASSERTIONS_AS_EXCEPTIONS)
 inline void check_impl (const char* file, int line, const std::string& str)
 {
@@ -73,6 +83,11 @@ inline void check_impl (const char* file, int line, const std::string& str)
 inline void debug (const std::string& str)
 {
   __android_log_print (ANDROID_LOG_INFO, "Info", "%s", str.c_str());
+}
+#elif defined(SOSAGE_EMSCRIPTEN)
+inline void debug (const std::string& str)
+{
+  SDL_Log("%s", str.c_str());
 }
 #elif defined(SOSAGE_DEBUG)
 inline void debug (const std::string& str)

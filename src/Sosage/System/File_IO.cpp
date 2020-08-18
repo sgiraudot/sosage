@@ -97,8 +97,14 @@ void File_IO::read_config()
 
   int interface_width = 0;
   int interface_height = 200;
+
+#ifdef SOSAGE_EMSCRIPTEN
+  int window_width = 768;
+  int window_height = 432;
+#else
   int window_width = -1;
   int window_height = -1;
+#endif
 
   try
   {

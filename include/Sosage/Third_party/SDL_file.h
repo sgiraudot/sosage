@@ -47,7 +47,10 @@ inline File open (const std::string& filename, bool write = false)
   File out;
   out.buffer = SDL_RWFromFile(filename.c_str(), write ? "w" : "r");
   if (out.buffer == nullptr)
+  {
+    debug ("File " + filename + " not found");
     throw Sosage::No_such_file();
+  }
 
   out.size = std::size_t(SDL_RWsize (out.buffer));
   return out;

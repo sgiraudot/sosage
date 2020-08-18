@@ -31,10 +31,6 @@
 
 #include <functional>
 
-#ifdef SOSAGE_EMSCRIPTEN
-#include <emscripten.h>
-#endif
-
 namespace Sosage::Third_party
 {
 
@@ -301,8 +297,6 @@ SDL::~SDL ()
   m_fonts.clear();
   TTF_Quit ();
   IMG_Quit ();
-  if constexpr (Config::emscripten)
-    emscripten_exit_with_live_runtime();
   SDL_DestroyRenderer (m_renderer);
   SDL_DestroyWindow (m_window);
   SDL_Quit ();

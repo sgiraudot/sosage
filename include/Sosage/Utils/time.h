@@ -45,7 +45,7 @@ class Clock
   double m_mean;
   double m_active;
   std::size_t m_nb;
-  
+
   double m_fps;
   double m_cpu;
 
@@ -71,8 +71,9 @@ public:
     Uint32 now = Time::now();
     Uint32 duration = now - m_latest;
 
-    if (duration < m_gui_refresh_time)
-      Time::wait (m_gui_refresh_time - duration);
+    if constexpr (!Config::emscripten)
+      if (duration < m_gui_refresh_time)
+        Time::wait (m_gui_refresh_time - duration);
 
     now = Time::now();
     if (verbose)

@@ -41,9 +41,7 @@ Time::Time (Content& content)
 
 void Time::run()
 {
-  if constexpr (!Config::emscripten)
-    m_clock.wait(true);
-
+  m_clock.wait(true);
   m_content.get<Component::Int> (CLOCK__FRAME_ID)->set(m_clock.frame_id());
   m_content.get<Component::Double> (CLOCK__FRAME_TIME)->set(m_clock.frame_time());
 }
