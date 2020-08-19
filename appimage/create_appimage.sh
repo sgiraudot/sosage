@@ -1,12 +1,13 @@
 #!/bin/sh
 
-if [ $# -ne 1 ];
+if [ $# -ne 2 ];
 then
-    echo Usage = $0 [your_linuxdeploy_file.AppImage]
+    echo Usage = $0 [your_linuxdeploy_file.AppImage] [where_the_game_data_is]
     exit
 fi
 
 LinuxDeploy=$1
+GameData=`realpath $2`
 
 echo [BUILDING APPIMAGE USING $LinuxDeploy]
 
@@ -16,7 +17,7 @@ echo [Configuration with CMake]
 
 mkdir -p build_dir
 cd build_dir
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ../..
+cmake -DSOSAGE_DATA_FOLDER=$GameData -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ../..
 
 echo [Compilation]
 
@@ -29,6 +30,6 @@ cd ..
 
 echo [Building AppImage]
 
-$LinuxDeploy --appdir install_dir -e install_dir/usr/games/superflu_pnc --output appimage 
+$LinuxDeploy --appdir install_dir -e install_dir/usr/games/superflu_pnc --output appimage
 
 echo [All done]
