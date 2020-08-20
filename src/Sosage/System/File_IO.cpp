@@ -188,6 +188,11 @@ void File_IO::read_init (const std::string& folder_name)
   std::string game_name = input["name"].string();
   m_content.set<Component::String>("game:name", game_name);
 
+  std::string icon = input["icon"].string("images", "interface", "png");
+  auto icon_img
+    = m_content.set<Component::Image>("icon:image", local_file_name(icon), 0);
+  icon_img->on() = false;
+
   std::string cursor = input["cursor"].string("images", "interface", "png");
   auto cursor_img = Component::make_handle<Component::Image> ("cursor:image", local_file_name(cursor),
                                                               Config::cursor_depth);

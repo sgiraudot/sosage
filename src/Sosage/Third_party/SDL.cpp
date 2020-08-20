@@ -302,9 +302,10 @@ SDL::~SDL ()
   SDL_Quit ();
 }
 
-void SDL::update_window_title (const std::string& name)
+void SDL::update_window (const std::string& name, const Image& icon)
 {
   SDL_SetWindowTitle (m_window, name.c_str());
+  SDL_SetWindowIcon (m_window, icon.surface.get());
 }
 
 void SDL::update_view(int interface_width, int interface_height)

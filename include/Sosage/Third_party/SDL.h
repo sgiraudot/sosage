@@ -95,7 +95,7 @@ public:
 
   void init (int& window_width, int& window_height, bool fullscreen);
 
-  void update_window_title (const std::string& name);
+  void update_window (const std::string& name, const Image& icon);
   void update_view(int interface_width, int interface_height);
   void toggle_fullscreen(bool fullscreen);
   void get_window_size (int& w, int& h);

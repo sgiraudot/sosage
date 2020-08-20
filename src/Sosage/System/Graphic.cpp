@@ -58,7 +58,7 @@ void Graphic::run()
 {
   if (auto name = m_content.request<Component::String>("game:name"))
   {
-    m_core.update_window_title (name->value());
+    m_core.update_window (name->value(), m_content.get<Component::Image>("icon:image")->core());
     m_content.remove ("game:name");
   }
 
