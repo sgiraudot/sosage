@@ -18,5 +18,4 @@ add_subdirectory(SDL_ttf)
 add_subdirectory(yaml)
 
 # My files
-add_subdirectory(../../../)
-
+add_subdirectory(../../../../)

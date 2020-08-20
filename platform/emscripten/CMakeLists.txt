@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 ## Fetch sources and create executable
 
-file(GLOB_RECURSE SOSAGE_SRC "../src/Sosage/*.cpp")
+file(GLOB_RECURSE SOSAGE_SRC "../../src/Sosage/*.cpp")
 file(GLOB_RECURSE YAML_SRC "libyaml/src/*.c")
 add_executable(superflu_pnc ${SOSAGE_SRC} ${YAML_SRC})
 target_compile_options(superflu_pnc PUBLIC -DSOSAGE_DATA_FOLDER="data/")
@@ -18,7 +18,7 @@ target_compile_definitions(superflu_pnc PUBLIC
 ## Compilation dependencies
 
 target_include_directories (superflu_pnc PUBLIC
-  "../include"
+  "../../include"
   "libyaml/include"
   "libyaml/src")
 
@@ -37,7 +37,6 @@ target_compile_definitions(superflu_pnc PUBLIC
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --embed-file data")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s DISABLE_EXCEPTION_CATCHING=0")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s TOTAL_MEMORY=268435456")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL_IMAGE=2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s SDL2_IMAGE_FORMATS='[\"png\"]'")
@@ -46,8 +45,4 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL_TTF=2")
 
 
 target_link_libraries(superflu_pnc PUBLIC "-s WASM=1")
-# target_link_libraries(superflu_pnc PUBLIC "-s USE_SDL=2")
-# target_link_libraries(superflu_pnc PUBLIC "-s USE_SDL_IMAGE=2")
-# target_link_libraries(superflu_pnc PUBLIC "-s USE_SDL_MIXER=2")
-# target_link_libraries(superflu_pnc PUBLIC "-s USE_SDL_TTF=2")
 target_link_libraries(superflu_pnc PUBLIC "-o superflu_pnc.html")

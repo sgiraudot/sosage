@@ -17,7 +17,7 @@ echo [Configuration with CMake]
 
 mkdir -p build_dir
 cd build_dir
-cmake -DSOSAGE_DATA_FOLDER=$GameData -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ../..
+cmake -DSOSAGE_DATA_FOLDER=$GameData -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ../../..
 
 echo [Compilation]
 

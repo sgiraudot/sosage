@@ -9,7 +9,7 @@ SDL_IMAGE_PATH := ../SDL_image
 SDL_MIXER_PATH := ../SDL_mixer
 SDL_TTF_PATH := ../SDL_ttf
 YAML_PATH := ../yaml
-SRC_PATH := ../../../../
+SRC_PATH := ../../../../../
 
 LOCAL_CPPFLAGS := -DSUPERFLU_DATA_FOLDER=\"data/\" -std=c++17 \
   -frtti \
