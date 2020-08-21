@@ -29,9 +29,12 @@
 
 ### Code
 
-* Compteur + conditionnel
-* Menus
+* Animation d'intro
+* Changement de musique
+* Chargement des sons
+* Tremblement de caméra
 * Dialogues
-* Indices
 * Cutscenes
+* Menus
+* Indices
 * Choix du mode de curseur Android

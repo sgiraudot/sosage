@@ -659,6 +659,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
   }
 
   bool look_found = false;
+  bool has_default = false;
   for (std::size_t i = 0; i < node["actions"].size(); ++ i)
   {
     const Core::File_IO::Node& iaction = node["actions"][i];
@@ -668,6 +669,12 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
     do
     {
       std::string a_id = (nb_actions == 0 ? iaction["id"].string() : iaction["id"][j].string());
+      if (a_id == "default")
+      {
+        has_default = true;
+        break;
+      }
+
       std::string corrected_id = id;
 
       if (iaction.has("target"))

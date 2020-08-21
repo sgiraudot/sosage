@@ -30,6 +30,7 @@
 #include <Sosage/Core/Time.h>
 
 #include <algorithm>
+#include <cmath>
 
 #ifdef SOSAGE_PROFILE
 #  define SOSAGE_TIMER_START(x) static Timer x(#x); x.start()

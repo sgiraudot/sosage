@@ -22,11 +22,11 @@ make -j 6
 
 echo [Installation in local directory]
 
-make install DESTDIR=../superflu-pnc/
+make install DESTDIR=../superflu-riteurnz/
 cd ..
 
 echo [Building Deb]
 
-dpkg-deb --build superflu-pnc
+dpkg-deb --build superflu-riteurnz
 
 echo [All done]

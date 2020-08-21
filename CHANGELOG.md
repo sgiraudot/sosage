@@ -8,6 +8,7 @@ History of versions and modifications of the SOSAGE engine.
 
 - Basic script for generating AppImage
 - Support for Emscripten / running in web browser
+- Script for generating Debian package
 - Fix install path using relative resolution with `SDL_GetBasePath()`
 - Introduction of testing using CTest
 
@@ -54,6 +55,6 @@ History of versions and modifications of the SOSAGE engine.
 - Full first room (bureau), although sounds are still from stock (this
   will be changed) and most graphics are missing shading
 
-## `beginning` - 2019-10-24
+## `beginning` - 2019-10-20
 
 - Nothing yet :)

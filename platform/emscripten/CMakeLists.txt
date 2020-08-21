@@ -10,26 +10,26 @@ set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB_RECURSE SOSAGE_SRC "../../src/Sosage/*.cpp")
 file(GLOB_RECURSE YAML_SRC "libyaml/src/*.c")
-add_executable(superflu_pnc ${SOSAGE_SRC} ${YAML_SRC})
-target_compile_options(superflu_pnc PUBLIC -DSOSAGE_DATA_FOLDER="data/")
-target_compile_definitions(superflu_pnc PUBLIC
+add_executable(superflu-riteurnz ${SOSAGE_SRC} ${YAML_SRC})
+target_compile_options(superflu-riteurnz PUBLIC -DSOSAGE_DATA_FOLDER="data/")
+target_compile_definitions(superflu-riteurnz PUBLIC
   "-DSOSAGE_LINKED_WITH_SDL_MIXER")
 
 ## Compilation dependencies
 
-target_include_directories (superflu_pnc PUBLIC
+target_include_directories (superflu-riteurnz PUBLIC
   "../../include"
   "libyaml/include"
   "libyaml/src")
 
 # Yaml config
-target_compile_definitions(superflu_pnc PUBLIC
+target_compile_definitions(superflu-riteurnz PUBLIC
   "-DYAML_VERSION_MAJOR=0")
-target_compile_definitions(superflu_pnc PUBLIC
+target_compile_definitions(superflu-riteurnz PUBLIC
   "-DYAML_VERSION_MINOR=2")
-target_compile_definitions(superflu_pnc PUBLIC
+target_compile_definitions(superflu-riteurnz PUBLIC
   "-DYAML_VERSION_PATCH=2")
-target_compile_definitions(superflu_pnc PUBLIC
+target_compile_definitions(superflu-riteurnz PUBLIC
   "-DYAML_VERSION_STRING=\"0.2.2\"")
 
 ## Link dependencies
@@ -44,5 +44,5 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL_MIXER=2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL_TTF=2")
 
 
-target_link_libraries(superflu_pnc PUBLIC "-s WASM=1")
-target_link_libraries(superflu_pnc PUBLIC "-o superflu_pnc.html")
+target_link_libraries(superflu-riteurnz PUBLIC "-s WASM=1")
+target_link_libraries(superflu-riteurnz PUBLIC "-o superflu-riteurnz.html")
