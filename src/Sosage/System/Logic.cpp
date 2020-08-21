@@ -71,8 +71,9 @@ void Logic::run ()
   for (const Timed_handle& th : m_timed)
     if (th.first == 0) // special case for Path
     {
+      const std::string& id = m_content.get<Component::String>("player:name")->value();
       auto saved_path = Component::cast<Component::Path>(th.second);
-      auto current_path = m_content.request<Component::Path>("character:path");
+      auto current_path = m_content.request<Component::Path>(id + ":path");
       if (saved_path == current_path)
         new_timed_handle.insert(th);
     }
@@ -250,7 +251,8 @@ bool Logic::compute_path_from_target (Component::Position_handle target)
 {
   auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
 
-  auto position = m_content.get<Component::Position>("character_body:position");
+  const std::string& id = m_content.get<Component::String>("player:name")->value();
+  auto position = m_content.get<Component::Position>(id + "_body:position");
 
   Point origin = position->value();
   Point t = target->value();
@@ -265,7 +267,7 @@ bool Logic::compute_path_from_target (Component::Position_handle target)
   if ((path.size() == 1) && (path[0] == origin))
     return false;
 
-  m_content.set<Component::Path>("character:path", path);
+  m_content.set<Component::Path>(id + ":path", path);
   return true;
 }
 
@@ -301,6 +303,8 @@ void Logic::update_debug_info (Component::Debug_handle debug_info)
 
 void Logic::action_comment (Component::Action::Step step)
 {
+  const std::string& id = m_content.get<Component::String>("player:name")->value();
+
   std::string text = step.get(1);
 
   std::vector<Component::Image_handle> dialog;
@@ -310,7 +314,7 @@ void Logic::action_comment (Component::Action::Step step)
   double nb_seconds = nb_char / m_content.get<Component::Double>("text:char_per_second")->value();
 
   int y = 100;
-  int x = m_content.get<Component::Position>("character_body:position")->value().x()
+  int x = m_content.get<Component::Position>(id + "_body:position")->value().x()
           - m_content.get<Component::Double>(CAMERA__POSITION)->value();
 
   for (auto img : dialog)
@@ -329,34 +333,41 @@ void Logic::action_comment (Component::Action::Step step)
     m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds), pos));
   }
 
-  m_content.set<Component::Event>("character:start_talking");
+  m_content.set<Component::Event>(id + ":start_talking");
 
   m_timed.insert (std::make_pair (m_current_time + nb_seconds,
                                   Component::make_handle<Component::Event>
-                                  ("character:stop_talking")));
+                                  (id + ":stop_talking")));
 }
 
 void Logic::action_goto (const std::string& target)
 {
+  const std::string& id = m_content.get<Component::String>("player:name")->value();
+
   auto position = m_content.request<Component::Position>(target + ":view");
   if (compute_path_from_target(position))
-    m_timed.insert (std::make_pair (0, m_content.get<Component::Path>("character:path")));
+    m_timed.insert (std::make_pair (0, m_content.get<Component::Path>(id + ":path")));
 }
 
 void Logic::action_load (Component::Action::Step step)
 {
+  const std::string& id = m_content.get<Component::String>("player:name")->value();
+
   m_content.set<Component::String>("game:new_room", step.get(1));
-  m_content.get<Component::Position>("character_body:position")->set(Point(step.get_int(2), step.get_int(3)));
-  m_content.set<Component::Boolean>("character:in_new_room", step.get_boolean(4));
+  m_content.get<Component::Position>(id + "_body:position")->set(Point(step.get_int(2), step.get_int(3)));
+  // Tofix
+  m_content.set<Component::Boolean>(id + "character:in_new_room", step.get_boolean(4));
 }
 
 void Logic::action_look (const std::string& target)
 {
+  const std::string& id = m_content.get<Component::String>("player:name")->value();
+
   if (target == "default")
-    m_content.set<Component::Position>("character:lookat",
+    m_content.set<Component::Position>(id + ":lookat",
                                        m_content.get<Component::Position>(CURSOR__POSITION)->value());
   else if (m_content.get<Component::String>(target + ":state")->value() != "inventory")
-    m_content.set<Component::Position>("character:lookat",
+    m_content.set<Component::Position>(id + ":lookat",
                                        m_content.get<Component::Position>(target + ":position")->value());
 }
 
@@ -382,13 +393,15 @@ void Logic::action_play (Component::Action::Step step)
 
 void Logic::action_animate (Component::Action::Step step)
 {
+  const std::string& character = m_content.get<Component::String>("player:name")->value();
+
   std::string id = step.get(1);
   double duration = step.get_double(2);
-  m_content.set<Component::String>("character:start_animation", id);
+  m_content.set<Component::String>(character + ":start_animation", id);
 
   m_timed.insert (std::make_pair (m_current_time + duration,
                                   Component::make_handle<Component::Event>
-                                  ("character:stop_animation")));
+                                  (character + ":stop_animation")));
 
 }
 

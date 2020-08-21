@@ -315,18 +315,16 @@ void File_IO::read_init (const std::string& folder_name)
 
   }
 
-  std::string character = input["character"].string("data", "characters", "yaml");
-  int x = input["coordinates"][0].integer();
-  int y = input["coordinates"][1].integer();
-  bool facing_right = input["coordinates"][2].boolean();
-  read_character (character, x, y);
-  m_content.set<Component::Boolean>("character:in_new_room", facing_right);
-
   m_content.set<Component::String>("game:new_room", input["load_room"].string());
 }
 
-void File_IO::read_character (const std::string& file_name, int x, int y)
+void File_IO::read_character (const Core::File_IO::Node& node, const std::string& id)
 {
+  std::string file_name = node["id"].string("data", "characters", "yaml");
+  int x = node["coordinates"][0].integer();
+  int y = node["coordinates"][1].integer();
+  bool facing_right = node["coordinates"][2].boolean();
+
   Core::File_IO input (local_file_name(file_name));
   input.parse();
 
@@ -334,18 +332,18 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
 
   std::string mouth = input["mouth"]["skin"].string("images", "characters", "png");
   auto amouth
-    = m_content.set<Component::Animation>("character_mouth:image", local_file_name(mouth),
+    = m_content.set<Component::Animation>(id + "_mouth:image", local_file_name(mouth),
                                           0, 11, 2, true);
   amouth->set_relative_origin(0.5, 1.0);
 
   std::string head = input["head"]["skin"].string("images", "characters", "png");
   auto ahead
-    = m_content.set<Component::Animation>("character_head:image", local_file_name(head),
+    = m_content.set<Component::Animation>(id + "_head:image", local_file_name(head),
                                           0, 7, 2, true);
   ahead->set_relative_origin(0.5, 1.0);
 
   std::string walk = input["walk"]["skin"].string("images", "characters", "png");
-  auto awalk = m_content.set<Component::Animation>("character_walking:image", local_file_name(walk),
+  auto awalk = m_content.set<Component::Animation>(id + "_walking:image", local_file_name(walk),
                                                    0, 8, 4, true);
   awalk->set_relative_origin(0.5, 0.95);
   awalk->on() = false;
@@ -355,30 +353,36 @@ void File_IO::read_character (const std::string& file_name, int x, int y)
   for (std::size_t i = 0; i < input["idle"]["positions"].size(); ++ i)
     positions.push_back (input["idle"]["positions"][i].string());
 
-  m_content.set<Component::Vector<std::string> >("character_idle:values", positions);
+  m_content.set<Component::Vector<std::string> >(id + "_idle:values", positions);
 
-  auto aidle = m_content.set<Component::Animation>("character_idle:image", local_file_name(idle),
+  auto aidle = m_content.set<Component::Animation>(id + "_idle:image", local_file_name(idle),
                                                    0, positions.size(), 2, true);
   aidle->set_relative_origin(0.5, 0.95);
 
-  auto pbody = m_content.set<Component::Position>("character_body:position", Point(x, y), false);
-  m_content.set<Component::Variable>("character_walking:position", pbody);
-  m_content.set<Component::Variable>("character_idle:position", pbody);
+  auto pbody = m_content.set<Component::Position>(id + "_body:position", Point(x, y), false);
+  m_content.set<Component::Variable>(id + "_walking:position", pbody);
+  m_content.set<Component::Variable>(id + "_idle:position", pbody);
 
   int hdx_right = input["head"]["dx_right"].integer();
   int hdx_left = input["head"]["dx_left"].integer();
   int hdy = input["head"]["dy"].integer();
-  m_content.set<Component::Position>("character_head:gap_right", Point(hdx_right,hdy), false);
-  m_content.set<Component::Position>("character_head:gap_left", Point(hdx_left,hdy), false);
+  m_content.set<Component::Position>(id + "_head:gap_right", Point(hdx_right,hdy), false);
+  m_content.set<Component::Position>(id + "_head:gap_left", Point(hdx_left,hdy), false);
 
   int mdx_right = input["mouth"]["dx_right"].integer();
   int mdx_left = input["mouth"]["dx_left"].integer();
   int mdy = input["mouth"]["dy"].integer();
-  m_content.set<Component::Position>("character_mouth:gap_right", Point(mdx_right,mdy), false);
-  m_content.set<Component::Position>("character_mouth:gap_left", Point(mdx_left,mdy), false);
-  m_content.set<Component::Position>("character_head:position", Point(x - hdx_right, y - hdy), false);
-  m_content.set<Component::Position>("character_mouth:position", Point(x - hdx_right - mdx_right,
+  m_content.set<Component::Position>(id + "_mouth:gap_right", Point(mdx_right,mdy), false);
+  m_content.set<Component::Position>(id + "_mouth:gap_left", Point(mdx_left,mdy), false);
+  m_content.set<Component::Position>(id + "_head:position", Point(x - hdx_right, y - hdy), false);
+  m_content.set<Component::Position>(id + "_mouth:position", Point(x - hdx_right - mdx_right,
                                                                        y - hdy - mdy), false);
+
+  auto new_char = m_content.request<Component::Vector<std::pair<std::string, bool> > >("game:new_characters");
+  if (!new_char)
+    new_char = m_content.set<Component::Vector<std::pair<std::string, bool> > >("game:new_characters");
+
+  new_char->value().push_back (std::make_pair (id, facing_right));
 }
 
 void File_IO::read_room (const std::string& file_name)
@@ -450,6 +454,8 @@ void File_IO::read_room (const std::string& file_name)
 
     if (type == "animation")
       read_animation (node, id);
+    else if (type == "character")
+      read_character (node, id);
     else if (type == "code")
       read_code (node, id);
     else if (type == "object")
@@ -478,6 +484,9 @@ void File_IO::read_room (const std::string& file_name)
       hints->add (condition);
     }
 
+
+  std::string player = input["player"].string();
+  m_content.set<Component::String>("player:name", player);
 
   m_content.remove ("game:new_room");
   m_content.get<Component::Status>(GAME__STATUS)->pop();

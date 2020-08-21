@@ -48,31 +48,20 @@ public:
 
   virtual void run();
 
-  void place_and_scale_character(bool looking_right);
-
-  void generate_random_idle_animation (Component::Animation_handle image,
-                                       Component::Animation_handle head,
-                                       Component::Animation_handle mouth,
-                                       bool facing_right);
-
-  void generate_random_idle_head_animation (Component::Animation_handle head,
-                                            Component::Animation_handle mouth,
-                                            bool facing_right);
-  void generate_random_idle_body_animation (Component::Animation_handle body,
-                                            bool facing_right);
+  void place_and_scale_character (const std::string& id, bool looking_right);
+  void generate_random_idle_animation (const std::string& id, bool looking_right);
+  void generate_random_idle_head_animation (const std::string& id, bool looking_right);
+  void generate_random_idle_body_animation  (const std::string& id, bool looking_right);
 
 private:
 
   void run_one_frame();
 
-  void compute_movement_from_path (Component::Path_handle path);
-  void set_move_animation (Component::Animation_handle image,
-                           Component::Animation_handle head,
-                           Component::Animation_handle mouth,
-                           const Vector& direction);
+  bool compute_movement_from_path (Component::Path_handle path);
+  void set_move_animation (const std::string& id, const Vector& direction);
 
-  void generate_random_mouth_animation (Component::Animation_handle mouth);
-  void generate_animation (Component::Animation_handle body, const std::string& id);
+  void generate_random_mouth_animation (const std::string& id);
+  void generate_animation (const std::string& id, const std::string& anim);
 
   void update_camera_target();
 };

@@ -66,7 +66,6 @@ public:
   { Core::File_IO input (folder_name + "data" + Config::folder_separator + "init.yaml"); }
 
   void read_init (const std::string& folder_name);
-  void read_character (const std::string& file_name, int x, int y);
   void read_room (const std::string& file_name);
 
 private:
@@ -76,6 +75,7 @@ private:
                                const std::string& file_name, const std::string& extension) const;
 
   void read_animation (const Core::File_IO::Node& node, const std::string& id);
+  void read_character (const Core::File_IO::Node& node, const std::string& id);
   void read_code (const Core::File_IO::Node& node, const std::string& id);
   void read_object (const Core::File_IO::Node& node, const std::string& id);
   void read_scenery (const Core::File_IO::Node& node, const std::string& id);

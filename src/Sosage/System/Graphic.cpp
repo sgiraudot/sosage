@@ -165,10 +165,11 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
                            (border ? 255 : 0), 0, (border ? 0 : 255));
        });
 
-    auto path = m_content.request<Component::Path>("character:path");
+    const std::string& id = m_content.get<Component::String>("player:name")->value();
+    auto path = m_content.request<Component::Path>(id + ":path");
     if (path)
     {
-      Point current = m_content.get<Component::Position>("character_body:position")->value();
+      Point current = m_content.get<Component::Position>(id + "_body:position")->value();
       m_core.draw_square (current.x() - xcamera, current.y(), 10, 0, 255, 0);
 
       for (std::size_t p = path->current(); p < path->size(); ++ p)
