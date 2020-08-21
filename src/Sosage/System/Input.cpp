@@ -42,6 +42,10 @@ Input::Input (Content& content)
 
 void Input::run()
 {
+  auto status = m_content.get<Component::Status>(GAME__STATUS);
+  if (status->value() == LOADING)
+    return;
+
   while (Event ev = m_core.next_event
          (m_content.get<Component::Int>("interface:width")->value(),
           m_content.get<Component::Int>("interface:height")->value()))
@@ -53,9 +57,6 @@ void Input::run()
         ev == Event(KEY_UP, ANDROID_BACK))
       m_content.set<Component::Event>("game:exit");
 
-    auto status = m_content.get<Component::Status>(GAME__STATUS);
-    if (status->value() == LOADING)
-      return;
 
     if (ev == Event(KEY_UP, SPACE))
     {

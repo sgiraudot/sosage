@@ -30,6 +30,8 @@
 #include <Sosage/Config/platform.h>
 #include <memory>
 
+#define SOSAGE_THREADS_ENABLED
+
 namespace Sosage
 {
 
@@ -66,6 +68,7 @@ constexpr int displayed_inventory_size = 4;
 
 constexpr double button_click_duration = 0.1;
 constexpr double virtual_cursor_sensitivity = 5;
+
 
 } // namespace Config
 

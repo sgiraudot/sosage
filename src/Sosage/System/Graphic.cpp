@@ -24,12 +24,14 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
+
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Status.h>
+#include <Sosage/Config/config.h>
 #include <Sosage/System/Graphic.h>
 
 #include <algorithm>
@@ -56,6 +58,16 @@ void Graphic::init()
 
 void Graphic::run()
 {
+#ifdef SOSAGE_THREADS_ENABLED
+  if (m_content.get<Component::Status>(GAME__STATUS)->value() == LOADING)
+  {
+    m_core.begin();
+    display_spin_loading();
+    m_core.end();
+    return;
+  }
+#endif
+
   if (auto name = m_content.request<Component::String>("game:name"))
   {
     m_core.update_window (name->value(), m_content.get<Component::Image>("icon:image")->core());
@@ -170,6 +182,25 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
 
     }
   }
+}
+
+void Graphic::display_spin_loading()
+{
+  auto img = m_content.get<Component::Image>(LOADING_SPIN__IMAGE);
+  auto position = m_content.get<Component::Position>(LOADING_SPIN__POSITION);
+  Point p = position->value();
+
+  int xmin = img->xmin();
+  int ymin = img->ymin();
+  int xmax = img->xmax();
+  int ymax = img->ymax();
+
+  Point screen_position = p - img->core().scaling * Vector(img->origin());
+
+  m_core.draw (img->core(), xmin, ymin, (xmax - xmin), (ymax - ymin),
+               screen_position.X(), screen_position.Y(),
+               img->core().scaling * (xmax - xmin),
+               img->core().scaling * (ymax - ymin));
 }
 
 } // namespace Sosage::System

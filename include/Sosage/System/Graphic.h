@@ -44,6 +44,7 @@ private:
   Content& m_content;
   Core::Graphic m_core;
 
+
 public:
 
   Graphic (Content& content);
@@ -57,6 +58,8 @@ private:
   void get_images (std::vector<Component::Image_handle>& images);
 
   void display_images (std::vector<Component::Image_handle>& images);
+
+  void display_spin_loading();
 };
 
 } // namespace Sosage::System

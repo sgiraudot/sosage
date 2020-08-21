@@ -30,6 +30,13 @@
 namespace Sosage
 {
 
+enum Thread_state
+{
+  NO_THREAD,
+  STARTED,
+  FINISHED
+};
+
 enum Collision_type
 {
   PIXEL_PERFECT,
@@ -82,6 +89,8 @@ enum Fast_access_component
   CLOCK__FRAME_TIME,
   GAME__DEBUG,
   GAME__STATUS,
+  LOADING_SPIN__IMAGE,
+  LOADING_SPIN__POSITION,
 
   NUMBER_OF_KEYS
 };

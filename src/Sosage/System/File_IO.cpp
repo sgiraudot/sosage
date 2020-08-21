@@ -57,6 +57,16 @@ File_IO::File_IO (Content& content)
 
 void File_IO::run()
 {
+#ifdef SOSAGE_THREADS_ENABLED
+  if (m_thread_state == STARTED)
+    return;
+  if (m_thread_state == FINISHED)
+  {
+    m_thread.join();
+    m_thread_state = NO_THREAD;
+  }
+#endif
+
   if (auto new_room = m_content.request<Component::String>("game:new_room"))
   {
     auto status = m_content.get<Component::Status>(GAME__STATUS);
@@ -70,9 +80,12 @@ void File_IO::run()
     }
     else
     {
+#ifdef SOSAGE_THREADS_ENABLED
+      m_thread_state = STARTED;
+      m_thread = std::thread (std::bind(&File_IO::read_room, this, new_room->value()));
+#else
       read_room (new_room->value());
-      m_content.remove ("game:new_room");
-      status->pop();
+#endif
     }
   }
 }
@@ -234,6 +247,17 @@ void File_IO::read_init (const std::string& folder_name)
   loading_img->set_relative_origin(0.5, 0.5);
   m_content.set<Component::Position> ("loading:position", Point(Config::world_width / 2,
                                                                 Config::world_height / 2));
+
+#ifdef SOSAGE_THREADS_ENABLED
+  std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
+  int nb_img = input["loading_spin"][1].integer();
+  auto loading_spin_img = m_content.set_fac<Component::Animation> (LOADING_SPIN__IMAGE, "loading_spin:image", local_file_name(loading_spin),
+                                                                   Config::cursor_depth, nb_img, 1, true);
+  loading_spin_img->on() = false;
+  loading_spin_img->set_relative_origin(0.5, 0.5);
+  m_content.set_fac<Component::Position> (LOADING_SPIN__POSITION, "loading_spin:position", Point(Config::world_width / 2,
+                                                                                                 Config::world_height / 2));
+#endif
 
   m_content.set<Component::Conditional>
   ("loading:conditional",
@@ -453,6 +477,11 @@ void File_IO::read_room (const std::string& file_name)
       condition->add(state, Component::make_handle<Component::String>("hint:text", text));
       hints->add (condition);
     }
+
+
+  m_content.remove ("game:new_room");
+  m_content.get<Component::Status>(GAME__STATUS)->pop();
+  m_thread_state = FINISHED;
 
   SOSAGE_TIMER_STOP(File_IO__read_room);
 }

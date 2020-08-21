@@ -44,14 +44,26 @@ Animation::Animation (Content& content)
 
 void Animation::run()
 {
-  auto status = m_content.get<Component::Status>(GAME__STATUS);
-  if (status->value() == PAUSED || status->value() == LOADING)
+  std::size_t new_frame_id = m_content.get<Component::Int>(CLOCK__FRAME_ID)->value();
+  if (new_frame_id == m_frame_id)
     return;
 
-  std::size_t new_frame_id = m_content.get<Component::Int>(CLOCK__FRAME_ID)->value();
-  if (new_frame_id != m_frame_id)
+  auto status = m_content.get<Component::Status>(GAME__STATUS);
+  if (status->value() == LOADING)
+  {
+#ifdef SOSAGE_THREADS_ENABLED
     for (std::size_t i = m_frame_id; i < new_frame_id; ++ i)
-      run_one_frame();
+      m_content.get<Component::Animation>(LOADING_SPIN__IMAGE)->next_frame();
+    m_frame_id = new_frame_id;
+#endif
+    return;
+  }
+
+  if (status->value() == PAUSED)
+    return;
+
+  for (std::size_t i = m_frame_id; i < new_frame_id; ++ i)
+    run_one_frame();
   m_frame_id = new_frame_id;
 }
 
