@@ -66,7 +66,6 @@ public:
 
     const Node& operator[] (const char* key) const
     {
-      std::cerr << "Access " << value << " -> " << key << std::endl;
       check(has(key), "Value " + std::string(key) + " not found in Yaml node " + value);
       return *(map.find(std::string(key))->second);
     }

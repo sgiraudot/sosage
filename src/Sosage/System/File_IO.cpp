@@ -481,7 +481,10 @@ void File_IO::read_room (const std::string& file_name)
 
   m_content.remove ("game:new_room");
   m_content.get<Component::Status>(GAME__STATUS)->pop();
+
+#ifdef SOSAGE_THREADS_ENABLED
   m_thread_state = FINISHED;
+#endif
 
   SOSAGE_TIMER_STOP(File_IO__read_room);
 }
@@ -754,13 +757,43 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
   int z = node["coordinates"][2].integer();
-  std::string skin = node["skin"].string("images", "scenery", "png");
 
   auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
-  auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), z);
-  img->collision() = UNCLICKABLE;
-  img->set_relative_origin(0.5, 1.0);
-  debug("Scenery " + id + " at position " + std::to_string(img->z()));
+
+  if (node.has("states"))
+  {
+    Component::String_conditional_handle conditional_handle;
+
+    auto state_handle = m_content.get<Component::String>(id + ":state");
+    for (std::size_t i = 0; i < node["states"].size(); ++ i)
+    {
+      const Core::File_IO::Node& istate = node["states"][i];
+      std::string state = istate["id"].string();
+
+      if (i == 0)
+      {
+        if (state_handle->value() == "")
+          state_handle->set(state);
+        conditional_handle = m_content.set<Component::String_conditional>(id + ":image", state_handle);
+      }
+      else
+        conditional_handle = m_content.get<Component::String_conditional>(id + ":image");
+
+      std::string skin = istate["skin"].string("images", "scenery", "png");
+      auto img = Component::make_handle<Component::Image>(id + ":conditional_image",
+                                                          local_file_name(skin), z);
+      conditional_handle->add (state, img);
+    }
+  }
+  else
+  {
+    std::string skin = node["skin"].string("images", "scenery", "png");
+
+    auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), z);
+    img->collision() = UNCLICKABLE;
+    img->set_relative_origin(0.5, 1.0);
+    debug("Scenery " + id + " at position " + std::to_string(img->z()));
+  }
 }
 
 void File_IO::read_window (const Core::File_IO::Node& node, const std::string& id)

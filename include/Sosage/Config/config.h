@@ -30,7 +30,9 @@
 #include <Sosage/Config/platform.h>
 #include <memory>
 
+#ifndef SOSAGE_EMSCRIPTEN
 #define SOSAGE_THREADS_ENABLED
+#endif
 
 namespace Sosage
 {
