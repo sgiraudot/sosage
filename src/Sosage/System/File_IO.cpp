@@ -382,7 +382,7 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   if (!new_char)
     new_char = m_content.set<Component::Vector<std::pair<std::string, bool> > >("game:new_characters");
 
-  new_char->value().push_back (std::make_pair (id, facing_right));
+  new_char->push_back (std::make_pair (id, facing_right));
 }
 
 void File_IO::read_room (const std::string& file_name)

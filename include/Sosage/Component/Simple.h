@@ -34,10 +34,10 @@ namespace Sosage::Component
 {
 
 template <typename T>
-class Simple : public Value<T>
+class Simple : public Base
 {
-  typedef Value<T> Base;
-  
+protected:
+
   T m_value;
   
 public:
@@ -45,7 +45,7 @@ public:
   Simple (const std::string& id, const T& value = T())
     : Base(id), m_value(value) { }
   virtual ~Simple() { }
-  virtual T value() const { return m_value; }
+  virtual const T& value() const { return m_value; }
   void set (const T& value) { m_value = value; }
 };
 
@@ -61,8 +61,19 @@ typedef std::shared_ptr<Double> Double_handle;
 typedef Simple<std::string> String;
 typedef std::shared_ptr<String> String_handle;
 
+
 template <typename T>
-using Vector = Simple<std::vector<T> >;
+class Vector : public Simple<std::vector<T> >
+{
+  typedef Simple<std::vector<T> > Base;
+public:
+
+  Vector (const std::string& id, const std::vector<T>& value = std::vector<T>())
+    : Base(id, value) { }
+
+  void push_back (const T& t) { this->m_value.push_back (t); }
+};
+
 template <typename T>
 using Vector_handle = std::shared_ptr<Vector<T> >;
 
