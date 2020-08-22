@@ -80,6 +80,7 @@ void Animation::run_one_frame()
   }
 
   std::vector<std::string> to_remove;
+  std::unordered_set<std::string> characters_talking;
   std::vector<Component::Animation_handle> animations;
 
   for (auto c : m_content)
@@ -118,6 +119,11 @@ void Animation::run_one_frame()
       }
 
       generate_random_idle_animation (id, looking_right);
+
+      // Avoid canceling mouth animation if character also starts talking now
+      if (characters_talking.find(id) != characters_talking.end())
+        generate_random_mouth_animation(id);
+
       to_remove.push_back (c->id());
     }
     else if (Component::cast<Component::Event>(c))
@@ -126,6 +132,7 @@ void Animation::run_one_frame()
       if (c->component() == "start_talking")
       {
         generate_random_mouth_animation (id);
+        characters_talking.insert (id);
         to_remove.push_back(c->id());
       }
       else if (c->component() == "stop_talking")
