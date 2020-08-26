@@ -66,7 +66,6 @@ public:
   { Core::File_IO input (folder_name + "data" + Config::folder_separator + "init.yaml"); }
 
   void read_init (const std::string& folder_name);
-  void read_room (const std::string& file_name);
 
 private:
 
@@ -74,6 +73,10 @@ private:
   std::string local_file_name (const std::string& folder, const std::string& subfolder,
                                const std::string& file_name, const std::string& extension) const;
 
+  // Implemented in File_IO__read_room.cpp:
+public:
+  void read_room (const std::string& file_name);
+private:
   void read_animation (const Core::File_IO::Node& node, const std::string& id);
   void read_character (const Core::File_IO::Node& node, const std::string& id);
   void read_code (const Core::File_IO::Node& node, const std::string& id);

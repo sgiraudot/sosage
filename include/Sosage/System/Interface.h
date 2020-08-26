@@ -59,14 +59,6 @@ public:
   virtual void init();
 
 private:
-  void update_responsive();
-  void interface_widescreen();
-  void interface_standard();
-  void interface_square();
-  void interface_portrait();
-
-  void vertical_layout();
-  void horizontal_layout();
 
   void window_clicked();
   void code_clicked (Component::Position_handle cursor);
@@ -80,6 +72,14 @@ private:
   void update_action ();
   void update_inventory ();
 
+  // Implemented in Interface__layout.cpp:
+  void update_layout();
+  void layout_widescreen();
+  void layout_standard();
+  void layout_square();
+  void layout_portrait();
+  void vertical_layout();
+  void horizontal_layout();
 };
 
 
