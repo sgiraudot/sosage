@@ -55,39 +55,13 @@ if (SOSAGE_DATA_FOLDER STREQUAL "")
 endif()
 
 include(${SOSAGE_DATA_FOLDER}/config.cmake)
+include(Sosage_utils)
 
 ## Fetch sources and create executable
 
 file(GLOB_RECURSE SOSAGE_SRC "src/Sosage/*.cpp")
 add_executable(${SOSAGE_EXE_NAME} ${SOSAGE_SRC})
-target_compile_options(${SOSAGE_EXE_NAME} PUBLIC -DSOSAGE_DATA_FOLDER="${SOSAGE_DATA_FOLDER}/data/")
-
-## Compilation dependencies
-
-target_include_directories (${SOSAGE_EXE_NAME} PUBLIC
-  "include"
-  ${YAML_INCLUDE_DIR}
-  ${SDL2_INCLUDE_DIR}
-  ${SDL2_IMAGE_INCLUDE_DIR}
-  ${SDL2_TTF_INCLUDE_DIR})
-
-## Link dependencies
-
-message(${YAML_LIBRARIES})
-message(${SDL2_LIBRARY})
-
-target_link_libraries(${SOSAGE_EXE_NAME} PUBLIC
-  ${YAML_LIBRARIES}
-  ${SDL2_LIBRARY}
-  ${SDL2_IMAGE_LIBRARIES}
-  ${SDL2_TTF_LIBRARIES})
-
-## Optional sound
-if (SDL2_MIXER_FOUND)
-  target_include_directories (${SOSAGE_EXE_NAME} PUBLIC ${SDL2_MIXER_INCLUDE_DIR})
-  target_link_libraries(${SOSAGE_EXE_NAME} PUBLIC ${SDL2_MIXER_LIBRARIES})
-  target_compile_definitions(${SOSAGE_EXE_NAME} PUBLIC "-DSOSAGE_LINKED_WITH_SDL_MIXER")
-endif()
+target_link_libraries(${SOSAGE_EXE_NAME} PUBLIC sosage)
 
 ## Platform-specific instructions
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
@@ -115,25 +89,19 @@ if(SOSAGE_COMPILE_TESTS)
 
   foreach(target ${SOSAGE_TEST_TARGETS})
     add_executable("test_${target}" "test/${target}.cpp" ${SOSAGE_SRC})
-    target_include_directories ("test_${target}" PUBLIC
-      "include"
-      ${YAML_INCLUDE_DIR}
-      ${SDL2_INCLUDE_DIR}
-      ${SDL2_IMAGE_INCLUDE_DIR}
-      ${SDL2_TTF_INCLUDE_DIR})
-    target_link_libraries("test_${target}" PUBLIC
-      ${YAML_LIBRARIES}
-      ${SDL2_LIBRARY}
-      ${SDL2_IMAGE_LIBRARIES}
-      ${SDL2_TTF_LIBRARIES})
-
-    if (SDL2_MIXER_FOUND)
-      target_include_directories ("test_${target}" PUBLIC ${SDL2_MIXER_INCLUDE_DIR})
-      target_link_libraries("test_${target}" PUBLIC ${SDL2_MIXER_LIBRARIES})
-      target_compile_definitions("test_${target}" PUBLIC "-DSOSAGE_LINKED_WITH_SDL_MIXER")
-    endif()
-
-    add_test(${target} "test_${target}" "")
+    target_link_libraries("test_${target}" PUBLIC sosage)
+    sosage_add_test("test_${target}")
   endforeach()
+
+  file(GLOB_RECURSE SOSAGE_HEADERS "include/Sosage/*.h")
+  foreach(header ${SOSAGE_HEADERS})
+    string(REPLACE "/" "_" target ${header})
+    string(REPLACE "." "_" target ${target})
+    add_executable("check_header_${target}" "test/check_header.cpp")
+    target_compile_definitions("check_header_${target}" PUBLIC "-DSOSAGE_TESTED_HEADER=\"${header}\"")
+    target_link_libraries("check_header_${target}" PUBLIC sosage)
+    sosage_add_test("check_header_${target}")
+  endforeach()
+
 
 endif()
