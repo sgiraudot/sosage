@@ -223,9 +223,7 @@ void File_IO::read_room (const std::string& file_name)
   m_content.remove ("game:new_room");
   m_content.get<Component::Status>(GAME__STATUS)->pop();
 
-#ifdef SOSAGE_THREADS_ENABLED
-  m_thread_state = FINISHED;
-#endif
+  m_thread.notify();
 
   SOSAGE_TIMER_STOP(File_IO__read_room);
 }

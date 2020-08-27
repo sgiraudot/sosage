@@ -57,15 +57,8 @@ File_IO::File_IO (Content& content)
 
 void File_IO::run()
 {
-#ifdef SOSAGE_THREADS_ENABLED
-  if (m_thread_state == STARTED)
+  if (m_thread.still_running())
     return;
-  if (m_thread_state == FINISHED)
-  {
-    m_thread.join();
-    m_thread_state = NO_THREAD;
-  }
-#endif
 
   if (auto new_room = m_content.request<Component::String>("game:new_room"))
   {
@@ -80,12 +73,7 @@ void File_IO::run()
     }
     else
     {
-#ifdef SOSAGE_THREADS_ENABLED
-      m_thread_state = STARTED;
-      m_thread = std::thread (std::bind(&File_IO::read_room, this, new_room->value()));
-#else
-      read_room (new_room->value());
-#endif
+      m_thread.run (std::bind(&File_IO::read_room, this, new_room->value()));
     }
   }
 }

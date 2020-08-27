@@ -31,12 +31,9 @@
 #include <Sosage/Content.h>
 #include <Sosage/Core/File_IO.h>
 #include <Sosage/System/Handle.h>
+#include <Sosage/Utils/thread.h>
 
 #include <unordered_set>
-#ifdef SOSAGE_THREADS_ENABLED
-#include <atomic>
-#include <thread>
-#endif
 
 namespace Sosage::System
 {
@@ -48,10 +45,7 @@ private:
   Content& m_content;
   std::string m_folder_name;
   std::unordered_set<std::string> m_latest_room_entities;
-#ifdef SOSAGE_THREADS_ENABLED
-  std::atomic<Thread_state> m_thread_state = NO_THREAD;
-  std::thread m_thread;
-#endif
+  Thread m_thread;
 
 public:
 
