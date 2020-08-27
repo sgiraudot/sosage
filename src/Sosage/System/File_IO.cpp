@@ -71,10 +71,8 @@ void File_IO::run()
       status->push(LOADING);
       return;
     }
-    else
-    {
-      m_thread.run (std::bind(&File_IO::read_room, this, new_room->value()));
-    }
+
+    m_thread.run (&File_IO::read_room, this, new_room->value());
   }
 }
 

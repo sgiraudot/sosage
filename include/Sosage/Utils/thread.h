@@ -45,11 +45,11 @@ class Thread
 
 public:
 
-  template <typename Function>
-  void run (const Function& f)
+  template <typename Function, typename... Args>
+  void run (Function&& f, Args&&... args)
   {
     m_thread_state = STARTED;
-    m_thread = std::thread (f);
+    m_thread = std::thread (std::bind(f, args...));
   }
 
   void notify()
@@ -80,8 +80,8 @@ class Thread
 {
 public:
 
-  template <typename Function>
-  void run (const Function& f) { f(); }
+  template <typename Function, typename... Args>
+  void run (Function&& f, Args&&... args) { std::bind(f, args...)(); }
   void notify() { }
   bool still_running() { return false; }
 
