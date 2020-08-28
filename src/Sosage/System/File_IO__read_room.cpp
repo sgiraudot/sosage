@@ -55,7 +55,7 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   std::string file_name = node["id"].string("data", "characters", "yaml");
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
-  bool facing_right = node["coordinates"][2].boolean();
+  bool looking_right = node["looking_right"].boolean();
 
   Core::File_IO input (local_file_name(file_name));
   input.parse();
@@ -114,7 +114,7 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   if (!new_char)
     new_char = m_content.set<Component::Vector<std::pair<std::string, bool> > >("game:new_characters");
 
-  new_char->push_back (std::make_pair (id, facing_right));
+  new_char->push_back (std::make_pair (id, looking_right));
 }
 
 void File_IO::read_room (const std::string& file_name)
@@ -161,8 +161,6 @@ void File_IO::read_room (const std::string& file_name)
   m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map),
                                        front_z, back_z);
 
-
-
   // First instantiate all states
   for (std::size_t i = 0; i < input["content"].size(); ++ i)
   {
@@ -192,6 +190,8 @@ void File_IO::read_room (const std::string& file_name)
       read_code (node, id);
     else if (type == "object")
       read_object (node, id);
+    else if (type == "origin")
+      read_origin (node, id);
     else if (type == "scenery")
       read_scenery (node, id);
     else if (type == "window")
@@ -216,11 +216,17 @@ void File_IO::read_room (const std::string& file_name)
       hints->add (condition);
     }
 
+  std::string player = m_content.get<Component::String>("player:name")->value();
 
-  std::string player = input["player"].string();
-  m_content.set<Component::String>("player:name", player);
+  const std::string& origin = m_content.get<Component::String>("game:new_room_origin")->value();
+  auto origin_coord = m_content.get<Component::Position>(origin + ":position");
+  auto origin_looking = m_content.get<Component::Boolean>(origin + ":looking_right");
+
+  m_content.get<Component::Position>(player + "_body:position")->set(origin_coord->value());
+  m_content.set<Component::Boolean>("game:in_new_room", origin_looking->value());
 
   m_content.remove ("game:new_room");
+  m_content.remove ("game:new_room_origin");
   m_content.get<Component::Status>(GAME__STATUS)->pop();
 
   m_thread.notify();
@@ -476,6 +482,16 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
   }
 
   check (look_found, "Object " + id + " has no \"look\" action");
+}
+
+void File_IO::read_origin(const Core::File_IO::Node& node, const std::string& id)
+{
+  int x = node["coordinates"][0].integer();
+  int y = node["coordinates"][1].integer();
+  bool looking_right = node["looking_right"].boolean();
+
+  m_content.set<Component::Position>(id + ":position", Point(x, y));
+  m_content.set<Component::Boolean>(id + ":looking_right", looking_right);
 }
 
 void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& id)

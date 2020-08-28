@@ -301,7 +301,11 @@ void File_IO::read_init (const std::string& folder_name)
 
   }
 
-  m_content.set<Component::String>("game:new_room", input["load_room"].string());
+  std::string player = input["player"].string();
+  m_content.set<Component::String>("player:name", player);
+
+  m_content.set<Component::String>("game:new_room", input["load_room"][0].string());
+  m_content.set<Component::String>("game:new_room_origin", input["load_room"][1].string());
 }
 
 std::string File_IO::local_file_name (const std::string& file_name) const

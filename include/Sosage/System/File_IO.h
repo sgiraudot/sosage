@@ -75,6 +75,7 @@ private:
   void read_character (const Core::File_IO::Node& node, const std::string& id);
   void read_code (const Core::File_IO::Node& node, const std::string& id);
   void read_object (const Core::File_IO::Node& node, const std::string& id);
+  void read_origin (const Core::File_IO::Node& node, const std::string& id);
   void read_scenery (const Core::File_IO::Node& node, const std::string& id);
   void read_window (const Core::File_IO::Node& node, const std::string& id);
 

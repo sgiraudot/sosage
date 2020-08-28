@@ -27,6 +27,8 @@
 #ifndef SOSAGE_COMPONENT_SIMPLE_H
 #define SOSAGE_COMPONENT_SIMPLE_H
 
+#include <Sosage/Component/Handle.h>
+
 #include <string>
 #include <vector>
 

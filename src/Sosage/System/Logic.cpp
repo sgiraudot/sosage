@@ -354,9 +354,7 @@ void Logic::action_load (Component::Action::Step step)
   const std::string& id = m_content.get<Component::String>("player:name")->value();
 
   m_content.set<Component::String>("game:new_room", step.get(1));
-  m_content.get<Component::Position>(id + "_body:position")->set(Point(step.get_int(2), step.get_int(3)));
-  // Tofix
-  m_content.set<Component::Boolean>(id + "character:in_new_room", step.get_boolean(4));
+  m_content.set<Component::String>("game:new_room_origin", step.get(2));
 }
 
 void Logic::action_look (const std::string& target)

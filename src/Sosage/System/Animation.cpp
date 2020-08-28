@@ -45,8 +45,6 @@ Animation::Animation (Content& content)
 void Animation::run()
 {
   std::size_t new_frame_id = m_content.get<Component::Int>(CLOCK__FRAME_ID)->value();
-  if (new_frame_id == m_frame_id)
-    return;
 
   auto status = m_content.get<Component::Status>(GAME__STATUS);
   if (status->value() == LOADING)
@@ -61,6 +59,14 @@ void Animation::run()
 
   if (status->value() == PAUSED)
     return;
+
+  if (new_frame_id == m_frame_id)
+  {
+    // Force update when new room is loaded
+    if (m_content.request<Component::Boolean>("game:in_new_room"))
+      run_one_frame();
+    return;
+  }
 
   for (std::size_t i = m_frame_id; i < new_frame_id; ++ i)
     run_one_frame();
@@ -77,6 +83,14 @@ void Animation::run_one_frame()
       generate_random_idle_animation (nc.first, nc.second);
     }
     m_content.remove("game:new_characters");
+  }
+
+  if (auto looking_right = m_content.request<Component::Boolean>("game:in_new_room"))
+  {
+    const std::string& player = m_content.get<Component::String>("player:name")->value();
+    place_and_scale_character (player, looking_right->value());
+    generate_random_idle_animation (player, looking_right->value());
+    m_content.remove("game:in_new_room");
   }
 
   std::vector<std::string> to_remove;
