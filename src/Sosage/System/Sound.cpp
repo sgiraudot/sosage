@@ -49,6 +49,9 @@ void Sound::run()
 
   auto music = m_content.request<Component::Music>("game:music");
 
+  if (m_content.request<Component::String>("game:new_room"))
+    music->on() = false;
+
   auto start = m_content.request<Component::Event>("music:start");
   if (start)
   {

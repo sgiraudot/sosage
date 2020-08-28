@@ -227,6 +227,8 @@ void File_IO::read_room (const std::string& file_name)
 
   m_content.remove ("game:new_room");
   m_content.remove ("game:new_room_origin");
+
+  m_content.set<Component::Event>("music:start");
   m_content.get<Component::Status>(GAME__STATUS)->pop();
 
   m_thread.notify();

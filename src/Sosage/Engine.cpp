@@ -109,7 +109,6 @@ int Engine::run (const std::string& folder_name)
 
   m_systems[4]->init(); // init interface
 
-  m_content.set<Component::Event>("music:start");
   m_content.set<Component::Event>("window:rescaled");
 
   debug("Init done, entering main loop");
