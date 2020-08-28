@@ -62,6 +62,9 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
 
   std::string name = input["name"].string();
 
+  std::string color = input["color"].string();
+  m_content.set<Component::String> (id + ":color", color);
+
   std::string mouth = input["mouth"]["skin"].string("images", "characters", "png");
   auto amouth
     = m_content.set<Component::Animation>(id + "_mouth:image", local_file_name(mouth),
@@ -119,16 +122,23 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
 
 void File_IO::read_room (const std::string& file_name)
 {
-  std::unordered_set<std::string> inventory_entities;
+  std::unordered_set<std::string> force_keep;
   auto inventory = m_content.get<Component::Inventory>("game:inventory");
   for (const std::string& entity : *inventory)
-    inventory_entities.insert (entity);
+    force_keep.insert (entity);
+
+  const std::string& player = m_content.get<Component::String>("player:name")->value();
+  force_keep.insert (player + "_body");
+  force_keep.insert (player + "_head");
+  force_keep.insert (player + "_mouth");
+  force_keep.insert (player + "_walking");
+  force_keep.insert (player + "_idle");
 
   m_content.clear
     ([&](Component::Handle c) -> bool
      {
-       // keep inventory
-       if (inventory_entities.find(c->entity()) != inventory_entities.end())
+       // keep inventory + other forced kept
+       if (force_keep.find(c->entity()) != force_keep.end())
          return false;
 
        // keep states and positions
@@ -165,15 +175,21 @@ void File_IO::read_room (const std::string& file_name)
   for (std::size_t i = 0; i < input["content"].size(); ++ i)
   {
     const Core::File_IO::Node& node = input["content"][i];
-    m_latest_room_entities.insert (node["id"].string());
-    if (node.has("states"))
+    std::string id = node["id"].string();
+    m_latest_room_entities.insert (id);
+    if(node["type"].string() == "character")
     {
-      std::string id = node["id"].string();
+      m_latest_room_entities.insert (id + "_body");
+      m_latest_room_entities.insert (id + "_head");
+      m_latest_room_entities.insert (id + "_mouth");
+      m_latest_room_entities.insert (id + "_idle");
+      m_latest_room_entities.insert (id + "_walking");
+    }
 
+    if (node.has("states"))
       // Add state if does not exist (it might for inventory objects for example)
       if (!m_content.request<Component::String>(id + ":state"))
         m_content.set<Component::String>(id + ":state");
-    }
   }
 
   for (std::size_t i = 0; i < input["content"].size(); ++ i)
@@ -216,7 +232,6 @@ void File_IO::read_room (const std::string& file_name)
       hints->add (condition);
     }
 
-  std::string player = m_content.get<Component::String>("player:name")->value();
 
   const std::string& origin = m_content.get<Component::String>("game:new_room_origin")->value();
   auto origin_coord = m_content.get<Component::Position>(origin + ":position");

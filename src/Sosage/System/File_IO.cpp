@@ -261,7 +261,6 @@ void File_IO::read_init (const std::string& folder_name)
 
   std::string interface_color = input["interface_color"].string();
   m_content.set<Component::String> ("interface:color", interface_color);
-
   std::array<unsigned char, 3> color = color_from_string (interface_color);
 
   for (std::size_t i = 0; i < input["inventory_arrows"].size(); ++ i)

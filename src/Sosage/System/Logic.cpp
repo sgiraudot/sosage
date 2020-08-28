@@ -351,8 +351,6 @@ void Logic::action_goto (const std::string& target)
 
 void Logic::action_load (Component::Action::Step step)
 {
-  const std::string& id = m_content.get<Component::String>("player:name")->value();
-
   m_content.set<Component::String>("game:new_room", step.get(1));
   m_content.set<Component::String>("game:new_room_origin", step.get(2));
 }
@@ -470,10 +468,15 @@ void Logic::create_dialog (const std::string& text, std::vector<Component::Image
 {
   static const int width_max = int(0.95 * Config::world_width);
 
+  auto interface_font = m_content.get<Component::Font> ("interface:font");
+  const std::string& color
+      = m_content.get<Component::String> (m_content.get<Component::String>("player:name")->value()
+                                          + ":color")->value();
+
   auto img
     = m_content.set<Component::Image> ("comment:image",
-                                       m_content.get<Component::Font> ("interface:font"),
-                                       m_content.get<Component::String> ("interface:color")->value(),
+                                       interface_font,
+                                       color,
                                        text, true);
   img->set_scale(0.75);
   img->set_relative_origin(0.5, 0.5);
@@ -521,8 +524,8 @@ void Logic::create_dialog (const std::string& text, std::vector<Component::Image
       std::size_t end = (i == nb_imgs - 1 ? text.size() : cuts[i]);
       auto img
         = m_content.set<Component::Image> ("comment_" + std::to_string(i) + ":image",
-                                           m_content.get<Component::Font> ("interface:font"),
-                                           m_content.get<Component::String> ("interface:color")->value(),
+                                           interface_font,
+                                           color,
                                            std::string(text.begin() + begin,
                                                        text.begin() + end), true);
       img->z() = Config::inventory_over_depth;
