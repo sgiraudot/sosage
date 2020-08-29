@@ -67,6 +67,7 @@ private:
   void update_debug_info (Component::Debug_handle debug_info);
 
   void action_comment (Component::Action::Step step);
+  void action_dialog (Component::Action::Step step);
   void action_goto (const std::string& target);
   void action_load (Component::Action::Step step);
   void action_look (const std::string& target);

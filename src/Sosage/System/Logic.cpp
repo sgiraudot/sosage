@@ -29,6 +29,7 @@
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Condition.h>
 #include <Sosage/Component/Cropped.h>
+#include <Sosage/Component/Dialog.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Font.h>
@@ -192,8 +193,12 @@ void Logic::run ()
         {
           const Component::Action::Step& s = (*m_current_action)[m_next_step ++];
 
-          if (s.get(0) == "comment")
+          if (s.get(0) == "animate")
+            action_animate (s);
+          else if (s.get(0) == "comment")
             action_comment (s);
+          else if (s.get(0) == "dialog")
+            action_dialog (s);
           else if (s.get(0) == "goto")
             action_goto (m_current_action->entity());
           else if (s.get(0) == "load")
@@ -204,20 +209,18 @@ void Logic::run ()
             action_move (s);
           else if (s.get(0) == "play")
             action_play (s);
-          else if (s.get(0) == "animate")
-            action_animate (s);
+          else if (s.get(0) == "lock")
+            status->push(LOCKED);
           else if (s.get(0) == "set_state")
             action_set_state (s);
           else if (s.get(0) == "set_coordinates")
             action_set_coordinates (s);
-          else if (s.get(0) == "lock")
-            status->push(LOCKED);
-          else if (s.get(0) == "unlock")
-            status->pop();
           else if (s.get(0) == "show")
             action_show (s);
           else if (s.get(0) == "sync")
             break;
+          else if (s.get(0) == "unlock")
+            status->pop();
         }
     }
   }
@@ -338,6 +341,11 @@ void Logic::action_comment (Component::Action::Step step)
   m_timed.insert (std::make_pair (m_current_time + nb_seconds,
                                   Component::make_handle<Component::Event>
                                   (id + ":stop_talking")));
+}
+
+void Logic::action_dialog (Component::Action::Step step)
+{
+  auto dialog = m_content.get<Component::Dialog>(step.get(1) + ":dialog");
 }
 
 void Logic::action_goto (const std::string& target)
