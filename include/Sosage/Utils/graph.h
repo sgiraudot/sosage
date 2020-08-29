@@ -36,7 +36,7 @@
 namespace Sosage
 {
 
-template <typename VertexType, typename EdgeType>
+template <typename VertexType, typename EdgeType, bool Directed>
 class Graph
 {
 public:
@@ -81,7 +81,7 @@ public:
     GEdge (const EdgeType& base, Vertex source, Vertex target)
       : base (base), source (source), target (target)
     {
-      if (source > target)
+      if (!Directed && source > target)
         std::swap (this->source, this->target);
     }
 
@@ -185,13 +185,14 @@ public:
   {
     Edge out = m_edges.push_back (GEdge(base, va, vb));
     m_vertices[va].incident_edges.push_back(out);
-    m_vertices[vb].incident_edges.push_back(out);
+    if (!Directed)
+      m_vertices[vb].incident_edges.push_back(out);
     return out;
   }
 
   bool is_edge (const Vertex& va, const Vertex& vb) const
   {
-    if (incident_edges(va).size() < incident_edges(vb).size())
+    if (Directed || incident_edges(va).size() < incident_edges(vb).size())
     {
       for (std::size_t i = 0; i < incident_edges(va).size(); ++ i)
         if (incident_vertex(va, 0) == vb)
@@ -214,14 +215,27 @@ public:
     m_edges[e].source = null_vertex();
     m_edges[e].target = null_vertex();
 
-    for (Vertex v : { vsource, vtarget })
-      for (auto it = m_vertices[v].incident_edges.begin();
-           it != m_vertices[v].incident_edges.end(); ++ it)
+    if (Directed)
+    {
+      for (auto it = m_vertices[vsource].incident_edges.begin();
+           it != m_vertices[vsource].incident_edges.end(); ++ it)
         if (*it == e)
         {
-          m_vertices[v].incident_edges.erase(it);
+          m_vertices[vsource].incident_edges.erase(it);
           break;
         }
+    }
+    else
+    {
+      for (Vertex v : { vsource, vtarget })
+        for (auto it = m_vertices[v].incident_edges.begin();
+             it != m_vertices[v].incident_edges.end(); ++ it)
+          if (*it == e)
+          {
+            m_vertices[v].incident_edges.erase(it);
+            break;
+          }
+    }
   }
 
   void clean()
@@ -245,7 +259,8 @@ public:
         Vertex new_target = map_v2v[target(i)];
         Edge new_edge = new_edges.push_back (GEdge(m_edges[i].base, new_source, new_target));
         new_vertices[new_source].incident_edges.push_back(new_edge);
-        new_vertices[new_target].incident_edges.push_back(new_edge);
+        if (!Directed)
+          new_vertices[new_target].incident_edges.push_back(new_edge);
       }
 
     m_vertices.swap (new_vertices);
@@ -260,7 +275,10 @@ public:
       for (std::size_t i = 0; i < incident_edges(v).size(); ++ i)
       {
         Edge e = incident_edge(v, i);
-        check (source(e) == v || target(e) == v, "Ill-formed edge");
+        if (Directed)
+          check (source(e), "Ill-formed edge");
+        else
+          check (source(e) == v || target(e) == v, "Ill-formed edge");
       }
     }
   }

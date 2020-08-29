@@ -56,7 +56,7 @@ class Ground_map : public Base
     Edge() : border(true) { }
   };
 
-  typedef Sosage::Graph<Vertex, Edge> Graph;
+  typedef Sosage::Graph<Vertex, Edge, false> Graph;
   typedef typename Graph::Vertex GVertex;
   typedef typename Graph::Edge GEdge;
 
