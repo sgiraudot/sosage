@@ -57,10 +57,14 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   int y = node["coordinates"][1].integer();
   bool looking_right = node["looking_right"].boolean();
 
+  if (node.has("actions"))
+    read_actions(node, id);
+
   Core::File_IO input (local_file_name(file_name));
   input.parse();
 
   std::string name = input["name"].string();
+  m_content.set<Component::String> (id + ":name", name);
 
   std::string color = input["color"].string();
   m_content.set<Component::String> (id + ":color", color);
@@ -439,6 +443,13 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
     img->z() = Config::inventory_back_depth;
   }
 
+  read_actions(node, id);
+
+}
+
+
+void File_IO::read_actions (const Core::File_IO::Node& node, const std::string& id)
+{
   bool look_found = false;
   bool has_default = false;
   for (std::size_t i = 0; i < node["actions"].size(); ++ i)

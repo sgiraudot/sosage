@@ -359,12 +359,16 @@ void Logic::action_look (const std::string& target)
 {
   const std::string& id = m_content.get<Component::String>("player:name")->value();
 
-  if (target == "default")
+  if (target == "default" || !m_content.request<Component::Position>(target + ":position"))
     m_content.set<Component::Position>(id + ":lookat",
                                        m_content.get<Component::Position>(CURSOR__POSITION)->value());
-  else if (m_content.get<Component::String>(target + ":state")->value() != "inventory")
-    m_content.set<Component::Position>(id + ":lookat",
-                                       m_content.get<Component::Position>(target + ":position")->value());
+  else
+  {
+    auto state = m_content.request<Component::String>(target + ":state");
+    if (!state || state->value() != "inventory")
+      m_content.set<Component::Position>(id + ":lookat",
+                                         m_content.get<Component::Position>(target + ":position")->value());
+  }
 }
 
 void Logic::action_move (Component::Action::Step step)

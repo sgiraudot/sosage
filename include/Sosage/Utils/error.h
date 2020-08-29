@@ -29,6 +29,8 @@
 
 #include <Sosage/Config/platform.h>
 
+#define SOSAGE_ASSERTIONS_AS_EXCEPTIONS
+
 #ifdef SOSAGE_ANDROID
 #include <android/log.h>
 #endif

@@ -49,6 +49,17 @@ public:
     return std::string (m_id.begin(), m_id.begin() + m_id.find_first_of(':'));
   }
 
+  std::string character_entity() const
+  {
+    for (const std::string& postfix : { "_body", "_head", "_idle", "_mouth", "_walking" })
+    {
+      std::size_t pos = m_id.find(postfix);
+      if (pos != std::string::npos)
+        return std::string (m_id.begin(), m_id.begin() + pos);
+    }
+    return std::string (m_id.begin(), m_id.begin() + m_id.find_first_of(':'));
+  }
+
   std::string component() const
   {
     return std::string (m_id.begin() + m_id.find_last_of(':') + 1, m_id.end());

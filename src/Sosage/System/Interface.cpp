@@ -179,7 +179,8 @@ void Interface::action_clicked(const std::string& verb)
   bool action_found = false;
 
   // If clicked target is an object
-  if (m_content.request<Component::String>(m_collision->entity() + ":name"))
+  const std::string& entity = m_collision->character_entity();
+  if (m_content.request<Component::String>(entity + ":name"))
   {
     // First try binary action
     if (verb == "use" || verb == "give")
@@ -188,7 +189,7 @@ void Interface::action_clicked(const std::string& verb)
       if (auto source = m_content.request<Component::String>("action:source"))
       {
         // Don't use source on source
-        if (source->value() == m_collision->entity())
+        if (source->value() == entity)
         {
           m_content.remove("cursor:clicked");
           return;
@@ -196,7 +197,7 @@ void Interface::action_clicked(const std::string& verb)
 
         // Find binary action
         auto action
-          = m_content.request<Component::Action> (m_collision->entity() + ":use_"
+          = m_content.request<Component::Action> (entity + ":use_"
                                                   + source->value());
         if (action)
         {
@@ -208,18 +209,18 @@ void Interface::action_clicked(const std::string& verb)
       else
       {
         auto state
-          = m_content.request<Component::String>(m_collision->entity() + ":state");
+          = m_content.request<Component::String>(entity + ":state");
         if (state && (state->value() == "inventory"))
         {
           // Check if unary action exists
-          if (auto action = m_content.request<Component::Action> (m_collision->entity() + ":use"))
+          if (auto action = m_content.request<Component::Action> (entity + ":use"))
           {
             m_content.set<Component::Variable>("character:action", action);
             action_found = true;
           }
           else // Set object as source
           {
-            m_content.set<Component::String>("action:source", m_collision->entity());
+            m_content.set<Component::String>("action:source", entity);
             m_content.remove("cursor:clicked");
             return;
           }
@@ -233,7 +234,7 @@ void Interface::action_clicked(const std::string& verb)
     {
       // Then try to get unary action
       auto action
-        = m_content.request<Component::Action> (m_collision->entity() + ":" + verb);
+        = m_content.request<Component::Action> (entity + ":" + verb);
       if (action)
       {
         m_content.set<Component::Variable>("character:action", action);
@@ -247,11 +248,11 @@ void Interface::action_clicked(const std::string& verb)
       if (verb == "goto")
       {
         // If default action on inventory,  look
-        auto state = m_content.request<Component::String>(m_collision->entity() + ":state");
+        auto state = m_content.request<Component::String>(entity + ":state");
         if ((state && (state->value() == "inventory")) ||
             !m_content.get<Component::Boolean>("click:left")->value())
         {
-          m_content.set<Component::Variable>("character:action", m_content.request<Component::Action> (m_collision->entity() + ":look"));
+          m_content.set<Component::Variable>("character:action", m_content.request<Component::Action> (entity + ":look"));
           m_content.remove("cursor:clicked");
         }
         // Else, goto
@@ -348,7 +349,6 @@ void Interface::detect_collision (Component::Position_handle cursor)
     {
       if (!img->on() ||
           img->collision() == UNCLICKABLE ||
-          img->id().find("character") == 0 ||
           img->id().find("debug") == 0 ||
           img->id().find("chosen_verb") == 0 ||
           img->id().find("interface_") == 0)
@@ -405,17 +405,19 @@ void Interface::update_action ()
     if (m_collision->entity().find("verb_") == 0)
       m_collision->set_scale(1.1 * m_verb_scale);
 
-    if (auto name = m_content.request<Component::String>(m_collision->entity() + ":name"))
-    {
-      m_content.get<Component::Image>("verb_look:image")->set_scale(1.1 * m_verb_scale);
-      target_object = name->value();
-      auto state = m_content.request<Component::String>(m_collision->entity() + ":state");
-      if (state && state->value() == "inventory")
+    const std::string& entity = m_collision->character_entity();
+    if (entity != m_content.get<Component::String>("player:name")->value())
+      if (auto name = m_content.request<Component::String>(entity + ":name"))
       {
-        if (verb->entity() == "verb_goto")
-          verb = m_content.get<Component::String>("verb_look:text");
+        m_content.get<Component::Image>("verb_look:image")->set_scale(1.1 * m_verb_scale);
+        target_object = name->value();
+        auto state = m_content.request<Component::String>(m_collision->entity() + ":state");
+        if (state && state->value() == "inventory")
+        {
+          if (verb->entity() == "verb_goto")
+            verb = m_content.get<Component::String>("verb_look:text");
+        }
       }
-    }
   }
 
   if (!m_content.request<Component::Action>("character:action")
