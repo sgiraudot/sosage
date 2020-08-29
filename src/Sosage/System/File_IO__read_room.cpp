@@ -28,6 +28,7 @@
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Cropped.h>
+#include <Sosage/Component/Dialog.h>
 #include <Sosage/Component/Event.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
@@ -208,6 +209,8 @@ void File_IO::read_room (const std::string& file_name)
       read_character (node, id);
     else if (type == "code")
       read_code (node, id);
+    else if (type == "dialog")
+      read_dialog (node, id);
     else if (type == "object")
       read_object (node, id);
     else if (type == "origin")
@@ -355,6 +358,71 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
   auto action = m_content.set<Component::Action> (id + ":action");
   for (std::size_t j = 0; j < node["on_success"].size(); ++ j)
     action->add (node["on_success"][j].string_array());
+}
+
+void File_IO::read_dialog (const Core::File_IO::Node& node, const std::string& id)
+{
+  auto dialog = m_content.set<Component::Dialog>(id + ":dialog");
+
+  // First, instantiate all vertices
+  std::unordered_map<std::string, Component::Dialog::GVertex> map_vertices;
+  for (std::size_t i = 0; i < node["vertices"].size(); ++ i)
+  {
+    const Core::File_IO::Node& v = node["vertices"][i];
+    std::string vid = v["id"].string();
+    Component::Dialog::GVertex vertex;
+    if (v.has("character"))
+    {
+      std::string character = v["character"].string();
+      std::string line = v["line"].string();
+      vertex = dialog->add_vertex (character, line);
+    }
+    else
+      vertex = dialog->add_vertex ();
+    map_vertices.insert (std::make_pair (vid, vertex));
+  }
+
+  // Then, edges
+  for (std::size_t i = 0; i < node["edges"].size(); ++ i)
+  {
+    const Core::File_IO::Node& e = node["edges"][i];
+
+    const std::string& s = e["source"].string();
+    const std::string& t = e["target"].string();
+    Component::Dialog::GVertex source = map_vertices[s];
+    Component::Dialog::GVertex target
+        = (t == "none" ? dialog->vertex_out() : map_vertices[t]);
+
+    if (e.has("line"))
+    {
+      bool once = e["once"].boolean();
+      std::string line = e["line"].string();
+      dialog->add_edge (source, target, once, line);
+    }
+    else
+      dialog->add_edge (source, target);
+  }
+
+  // Finally, second pass on vertices to auto create edges between
+  // two consecutive dialogs
+  Component::Dialog::GVertex previous
+      = dialog->vertex_in();
+  for (std::size_t i = 0; i < node["vertices"].size(); ++ i)
+  {
+    const Core::File_IO::Node& v = node["vertices"][i];
+    std::string vid = v["id"].string();
+    Component::Dialog::GVertex vertex = map_vertices[vid];
+    if (previous != Component::Dialog::GVertex())
+      dialog->add_edge(previous, vertex);
+    if (dialog->has_incident_edges(vertex))
+      previous = Component::Dialog::GVertex();
+    else
+      previous = vertex;
+  }
+
+  if (previous != Component::Dialog::GVertex())
+    dialog->add_edge(previous, dialog->vertex_out());
+
 }
 
 void File_IO::read_object (const Core::File_IO::Node& node, const std::string& id)
