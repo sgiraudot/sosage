@@ -41,9 +41,7 @@ class Graphic : public Base
 {
 private:
 
-  Content& m_content;
   Core::Graphic m_core;
-
 
 public:
 

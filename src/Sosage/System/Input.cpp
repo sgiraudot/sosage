@@ -33,8 +33,10 @@
 namespace Sosage::System
 {
 
+namespace C = Component;
+
 Input::Input (Content& content)
-  : m_content (content)
+  : Base (content)
   , m_core()
   , m_alt(false)
 {
@@ -42,20 +44,20 @@ Input::Input (Content& content)
 
 void Input::run()
 {
-  auto status = m_content.get<Component::Status>(GAME__STATUS);
+  auto status = get<C::Status>(GAME__STATUS);
   if (status->value() == LOADING)
     return;
 
   while (Event ev = m_core.next_event
-         (m_content.get<Component::Int>("interface:width")->value(),
-          m_content.get<Component::Int>("interface:height")->value()))
+         (get<C::Int>("interface:width")->value(),
+          get<C::Int>("interface:height")->value()))
   {
     // Quit on: interface X-cross / Escape key / Q key
     if (ev == Event(WINDOW, QUIT) ||
         ev == Event(KEY_UP, EXIT) ||
         ev == Event(KEY_UP, Q) ||
         ev == Event(KEY_UP, ANDROID_BACK))
-      m_content.set<Component::Event>("game:exit");
+      set<C::Event>("game:exit");
 
 
     if (ev == Event(KEY_UP, SPACE))
@@ -70,37 +72,37 @@ void Input::run()
       continue;
 
     if (ev == Event(KEY_UP, D))
-      m_content.get<Component::Boolean>("game:debug")->toggle();
+      get<C::Boolean>("game:debug")->toggle();
 
-    if (ev == Event(KEY_UP, C))
+    if (ev == Event(KEY_UP, Sosage::C))
     {
-      m_content.get<Component::Boolean>("game:console")->toggle();
+      get<C::Boolean>("game:console")->toggle();
     }
 
     if (ev == Event(KEY_UP, F1))
     {
-      m_content.get<Component::Int>("interface:layout")->set(Config::AUTO);
-      m_content.set<Component::Event>("window:rescaled");
+      get<C::Int>("interface:layout")->set(Config::AUTO);
+      set<C::Event>("window:rescaled");
     }
     else if (ev == Event(KEY_UP, F2))
     {
-      m_content.get<Component::Int>("interface:layout")->set(Config::WIDESCREEN);
-      m_content.set<Component::Event>("window:rescaled");
+      get<C::Int>("interface:layout")->set(Config::WIDESCREEN);
+      set<C::Event>("window:rescaled");
     }
     else if (ev == Event(KEY_UP, F3))
     {
-      m_content.get<Component::Int>("interface:layout")->set(Config::STANDARD);
-      m_content.set<Component::Event>("window:rescaled");
+      get<C::Int>("interface:layout")->set(Config::STANDARD);
+      set<C::Event>("window:rescaled");
     }
     else if (ev == Event(KEY_UP, F4))
     {
-      m_content.get<Component::Int>("interface:layout")->set(Config::SQUARE);
-      m_content.set<Component::Event>("window:rescaled");
+      get<C::Int>("interface:layout")->set(Config::SQUARE);
+      set<C::Event>("window:rescaled");
     }
     else if (ev == Event(KEY_UP, F5))
     {
-      m_content.get<Component::Int>("interface:layout")->set(Config::PORTRAIT);
-      m_content.set<Component::Event>("window:rescaled");
+      get<C::Int>("interface:layout")->set(Config::PORTRAIT);
+      set<C::Event>("window:rescaled");
     }
     else if (ev == Event(KEY_DOWN, ALT))
       m_alt = true;
@@ -108,22 +110,22 @@ void Input::run()
       m_alt = false;
     else if (ev == Event(KEY_UP, ENTER) && m_alt)
     {
-      m_content.get<Component::Boolean>("window:fullscreen")->toggle();
-      m_content.set<Component::Event>("window:toggle_fullscreen");
+      get<C::Boolean>("window:fullscreen")->toggle();
+      set<C::Event>("window:toggle_fullscreen");
     }
 
     if (ev == Event(WINDOW, RESIZED))
     {
-      m_content.get<Component::Int>("window:width")->set(ev.x());
-      m_content.get<Component::Int>("window:height")->set(ev.y());
-      m_content.set<Component::Event>("window:rescaled");
+      get<C::Int>("window:width")->set(ev.x());
+      get<C::Int>("window:height")->set(ev.y());
+      set<C::Event>("window:rescaled");
     }
 
     // If paused, ignore mouse events
     if (status->value() == LOCKED)
       continue;
 
-    if (m_content.get<Component::Boolean>("interface:virtual_cursor")->value())
+    if (get<C::Boolean>("interface:virtual_cursor")->value())
     {
       if (ev.type() == CURSOR_DOWN)
       {
@@ -133,7 +135,7 @@ void Input::run()
         m_virtual_cursor.x = ev.x();
         m_virtual_cursor.y = ev.y();
 
-        const Point& pos = m_content.get<Component::Position>(CURSOR__POSITION)->value();
+        const Point& pos = get<C::Position>(CURSOR__POSITION)->value();
         m_virtual_cursor.cursor_x = pos.x();
         m_virtual_cursor.cursor_y = pos.y();
       }
@@ -144,15 +146,15 @@ void Input::run()
 
         if (!m_virtual_cursor.has_moved)
         {
-          m_content.set<Component::Event>("cursor:clicked");
-          m_content.set<Component::Boolean>("click:left", true);
+          set<C::Event>("cursor:clicked");
+          set<C::Boolean>("click:left", true);
         }
       }
 
       if (m_virtual_cursor.down &&
           ev.type() == CURSOR_MOVE)
       {
-        auto pos = m_content.get<Component::Position>(CURSOR__POSITION);
+        auto pos = get<C::Position>(CURSOR__POSITION);
         pos->set(Point(m_virtual_cursor.cursor_x + ev.x() - m_virtual_cursor.x,
                        m_virtual_cursor.cursor_y + ev.y() - m_virtual_cursor.y));
         if (!m_virtual_cursor.has_moved &&
@@ -166,22 +168,22 @@ void Input::run()
     else // regular cursor
     {
       if (ev.type() == CURSOR_MOVE)
-        m_content.get<Component::Position>
+        get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
 
       if (ev == Event(CURSOR_DOWN, LEFT))
       {
-        m_content.get<Component::Position>
+        get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-        m_content.set<Component::Event>("cursor:clicked");
-        m_content.set<Component::Boolean>("click:left", true);
+        set<C::Event>("cursor:clicked");
+        set<C::Boolean>("click:left", true);
       }
       if (ev == Event(CURSOR_DOWN, RIGHT))
       {
-        m_content.get<Component::Position>
+        get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-        m_content.set<Component::Event>("cursor:clicked");
-        m_content.set<Component::Boolean>("click:left", false);
+        set<C::Event>("cursor:clicked");
+        set<C::Boolean>("click:left", false);
       }
     }
   }

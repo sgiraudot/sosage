@@ -36,7 +36,6 @@ namespace Sosage::System
 
 class Time : public Base
 {
-  Content& m_content;
   Clock m_clock;
 
 public:

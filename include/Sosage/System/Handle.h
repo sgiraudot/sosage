@@ -27,6 +27,8 @@
 #ifndef SOSAGE_SYSTEM_HANDLE_H
 #define SOSAGE_SYSTEM_HANDLE_H
 
+#include <Sosage/Content.h>
+
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -36,11 +38,32 @@ namespace Sosage::System
 
 class Base
 {
+protected:
+
+  Content& m_content;
+
 public:
 
+  Base (Content& content) : m_content (content) { }
   virtual ~Base() { }
   virtual void init() { }
   virtual void run() = 0;
+
+  template <typename T>
+  std::shared_ptr<T> get (const std::string& key) { return m_content.get<T>(key); }
+  template <typename T>
+  std::shared_ptr<T> get (const Fast_access_component& fac) { return m_content.get<T>(fac); }
+  template <typename T>
+  std::shared_ptr<T> request (const std::string& key) { return m_content.request<T>(key); }
+  template <typename T, typename ... Args>
+  std::shared_ptr<T> set (Args&& ... args) { return m_content.set<T>(std::forward<Args>(args)...); }
+  template <typename T>
+  void set (const std::shared_ptr<T>& t) { return m_content.set<T>(t); }
+  template <typename T, typename ... Args>
+  std::shared_ptr<T> set_fac (const Fast_access_component& fac, Args&& ... args)
+  { return m_content.set_fac<T>(fac, std::forward<Args>(args)...); }
+  void remove (const std::string& key, bool optional = false) { m_content.remove(key, optional); }
+
 };
 
 typedef std::shared_ptr<Base> Handle;

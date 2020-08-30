@@ -50,8 +50,10 @@
 namespace Sosage::System
 {
 
+namespace C = Component;
+
 File_IO::File_IO (Content& content)
-  : m_content (content)
+  : Base (content)
 {
 }
 
@@ -60,9 +62,9 @@ void File_IO::run()
   if (m_thread.still_running())
     return;
 
-  if (auto new_room = m_content.request<Component::String>("game:new_room"))
+  if (auto new_room = request<C::String>("game:new_room"))
   {
-    auto status = m_content.get<Component::Status>(GAME__STATUS);
+    auto status = get<C::Status>(GAME__STATUS);
 
     // If new room must be loaded, first notify loading and restart
     // loop so that Graphic displays loading screen, then only load
@@ -128,48 +130,48 @@ void File_IO::read_config()
 
   }
 
-  m_content.set<Component::Boolean>("window:fullscreen", fullscreen);
-  m_content.set<Component::Int>("interface:layout", layout);
-  m_content.set<Component::Boolean>("interface:virtual_cursor", virtual_cursor);
+  set<C::Boolean>("window:fullscreen", fullscreen);
+  set<C::Int>("interface:layout", layout);
+  set<C::Boolean>("interface:virtual_cursor", virtual_cursor);
 
-  m_content.set<Component::Double>("text:char_per_second", char_per_second);
-  m_content.set<Component::Double>("text:dialog_size", dialog_size);
+  set<C::Double>("text:char_per_second", char_per_second);
+  set<C::Double>("text:dialog_size", dialog_size);
 
-  m_content.set<Component::Int>("music:volume", music_volume);
-  m_content.set<Component::Int>("sounds:volume", sounds_volume);
+  set<C::Int>("music:volume", music_volume);
+  set<C::Int>("sounds:volume", sounds_volume);
 
-  m_content.set<Component::Boolean>("game:autosave", autosave);
-  m_content.set<Component::Boolean>("game:hints_on", hints);
+  set<C::Boolean>("game:autosave", autosave);
+  set<C::Boolean>("game:hints_on", hints);
 
-  m_content.set<Component::Int>("interface:width", interface_width);
-  m_content.set<Component::Int>("interface:height", interface_height);
-  m_content.set<Component::Int>("window:width", window_width);
-  m_content.set<Component::Int>("window:height", window_height);
+  set<C::Int>("interface:width", interface_width);
+  set<C::Int>("interface:height", interface_height);
+  set<C::Int>("window:width", window_width);
+  set<C::Int>("window:height", window_height);
 }
 
 void File_IO::write_config()
 {
   Core::File_IO output (Sosage::pref_path() + "config.yaml", true);
 
-  output.write ("fullscreen", m_content.get<Component::Boolean>("window:fullscreen")->value());
-  output.write ("layout", m_content.get<Component::Int>("interface:layout")->value());
-  output.write ("virtual_cursor", m_content.get<Component::Boolean>("interface:virtual_cursor")->value());
+  output.write ("fullscreen", get<C::Boolean>("window:fullscreen")->value());
+  output.write ("layout", get<C::Int>("interface:layout")->value());
+  output.write ("virtual_cursor", get<C::Boolean>("interface:virtual_cursor")->value());
 
-  output.write ("char_per_second", m_content.get<Component::Double>("text:char_per_second")->value());
-  output.write ("dialog_size", m_content.get<Component::Double>("text:dialog_size")->value());
+  output.write ("char_per_second", get<C::Double>("text:char_per_second")->value());
+  output.write ("dialog_size", get<C::Double>("text:dialog_size")->value());
 
-  output.write ("music_volume", m_content.get<Component::Int>("music:volume")->value());
-  output.write ("sounds_volume", m_content.get<Component::Int>("sounds:volume")->value());
+  output.write ("music_volume", get<C::Int>("music:volume")->value());
+  output.write ("sounds_volume", get<C::Int>("sounds:volume")->value());
 
-  output.write ("autosave", m_content.get<Component::Boolean>("game:autosave")->value());
-  output.write ("hints", m_content.get<Component::Boolean>("game:hints_on")->value());
+  output.write ("autosave", get<C::Boolean>("game:autosave")->value());
+  output.write ("hints", get<C::Boolean>("game:hints_on")->value());
 
   output.write ("window",
-                m_content.get<Component::Int>("window:width")->value(),
-                m_content.get<Component::Int>("window:height")->value());
+                get<C::Int>("window:width")->value(),
+                get<C::Int>("window:height")->value());
   output.write ("interface",
-                m_content.get<Component::Int>("interface:width")->value(),
-                m_content.get<Component::Int>("interface:height")->value());
+                get<C::Int>("interface:width")->value(),
+                get<C::Int>("interface:height")->value());
 }
 
 void File_IO::read_init (const std::string& folder_name)
@@ -185,94 +187,94 @@ void File_IO::read_init (const std::string& folder_name)
          "Error: room version " + v + " incompatible with Sosage " + Version::str());
 
   std::string game_name = input["name"].string();
-  m_content.set<Component::String>("game:name", game_name);
+  set<C::String>("game:name", game_name);
 
   std::string icon = input["icon"].string("images", "interface", "png");
   auto icon_img
-    = m_content.set<Component::Image>("icon:image", local_file_name(icon), 0);
+    = set<C::Image>("icon:image", local_file_name(icon), 0);
   icon_img->on() = false;
 
   std::string cursor = input["cursor"].string("images", "interface", "png");
-  auto cursor_img = Component::make_handle<Component::Image> ("cursor:image", local_file_name(cursor),
+  auto cursor_img = C::make_handle<C::Image> ("cursor:image", local_file_name(cursor),
                                                               Config::cursor_depth);
   cursor_img->set_relative_origin(0.5, 0.5);
 
-  auto status = m_content.get<Component::Status>(GAME__STATUS);
+  auto status = get<C::Status>(GAME__STATUS);
 
   if constexpr (Config::android)
   {
     // Cursor displayed = NOT paused AND virtual
-    m_content.set<Component::Conditional>
+    set<C::Conditional>
         ("cursor:conditional",
-         Component::make_and
-         (Component::make_not
-          (Component::make_value_condition<Sosage::Status> (status, PAUSED)),
-           m_content.get<Component::Boolean>("interface:virtual_cursor")),
+         C::make_and
+         (C::make_not
+          (C::make_value_condition<Sosage::Status> (status, PAUSED)),
+           get<C::Boolean>("interface:virtual_cursor")),
          cursor_img);
   }
   else
   {
     // Cursor displayed = NOT paused
-    m_content.set<Component::Conditional>
+    set<C::Conditional>
         ("cursor:conditional",
-         Component::make_not
-         (Component::make_value_condition<Sosage::Status> (status, PAUSED)),
+         C::make_not
+         (C::make_value_condition<Sosage::Status> (status, PAUSED)),
          cursor_img);
   }
 
-  m_content.set_fac<Component::Position> (CURSOR__POSITION, "cursor:position", Point(0,0));
+  set_fac<C::Position> (CURSOR__POSITION, "cursor:position", Point(0,0));
 
   std::string turnicon = input["turnicon"].string("images", "interface", "png");
   auto turnicon_img
-    = m_content.set<Component::Image>("turnicon:image", local_file_name(turnicon), 0);
+    = set<C::Image>("turnicon:image", local_file_name(turnicon), 0);
   turnicon_img->on() = false;
 
   std::string loading = input["loading"].string("images", "interface", "png");
-  auto loading_img = Component::make_handle<Component::Image> ("loading:image", local_file_name(loading),
+  auto loading_img = C::make_handle<C::Image> ("loading:image", local_file_name(loading),
                                                                Config::cursor_depth);
   loading_img->set_relative_origin(0.5, 0.5);
-  m_content.set<Component::Position> ("loading:position", Point(Config::world_width / 2,
+  set<C::Position> ("loading:position", Point(Config::world_width / 2,
                                                                 Config::world_height / 2));
 
 #ifdef SOSAGE_THREADS_ENABLED
   std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
   int nb_img = input["loading_spin"][1].integer();
-  auto loading_spin_img = m_content.set_fac<Component::Animation> (LOADING_SPIN__IMAGE, "loading_spin:image", local_file_name(loading_spin),
+  auto loading_spin_img = set_fac<C::Animation> (LOADING_SPIN__IMAGE, "loading_spin:image", local_file_name(loading_spin),
                                                                    Config::cursor_depth, nb_img, 1, true);
   loading_spin_img->on() = false;
   loading_spin_img->set_relative_origin(0.5, 0.5);
-  m_content.set_fac<Component::Position> (LOADING_SPIN__POSITION, "loading_spin:position", Point(Config::world_width / 2,
+  set_fac<C::Position> (LOADING_SPIN__POSITION, "loading_spin:position", Point(Config::world_width / 2,
                                                                                                  Config::world_height / 2));
 #endif
 
-  m_content.set<Component::Conditional>
+  set<C::Conditional>
   ("loading:conditional",
-   Component::make_value_condition<Sosage::Status> (status, LOADING),
+   C::make_value_condition<Sosage::Status> (status, LOADING),
    loading_img);
 
   std::string click_sound = input["click_sound"].string("sounds", "effects", "wav");
-  m_content.set<Component::Sound>("click:sound", local_file_name(click_sound));
+  set<C::Sound>("click:sound", local_file_name(click_sound));
 
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
-  m_content.set<Component::Font> ("debug:font", local_file_name(debug_font), 40);
+  set<C::Font> ("debug:font", local_file_name(debug_font), 40);
 
   std::string interface_font = input["interface_font"].string("fonts", "ttf");
-  m_content.set<Component::Font> ("interface:font", local_file_name(interface_font), 80);
+  set<C::Font> ("interface:font", local_file_name(interface_font), 80);
 
   std::string interface_color = input["interface_color"].string();
-  m_content.set<Component::String> ("interface:color", interface_color);
+  set<C::String> ("interface:color", interface_color);
   std::array<unsigned char, 3> color = color_from_string (interface_color);
 
   for (std::size_t i = 0; i < input["inventory_arrows"].size(); ++ i)
   {
     std::string id = input["inventory_arrows" ][i].string("images", "interface", "png");
     auto arrow
-      = m_content.set<Component::Image> ("inventory_arrow_" + std::to_string(i) + ":image",
+      = set<C::Image> ("inventory_arrow_" + std::to_string(i) + ":image",
                                          local_file_name(id),
                                          Config::inventory_front_depth);
     arrow->set_relative_origin(0.5, 0.5);
     auto arrow_background
-      = m_content.set<Component::Image> ("inventory_arrow_background_" + std::to_string(i)
+      = set<C::Image> ("inventory_arrow_background_" + std::to_string(i)
                                          + ":image",
                                          arrow->width(), arrow->height(),
                                          color[0], color[1], color[2]);
@@ -285,12 +287,12 @@ void File_IO::read_init (const std::string& folder_name)
     const Core::File_IO::Node& idefault = input["actions"][i];
     std::string id = idefault["id"].string();
 
-    auto action = m_content.set<Component::Random_conditional>("default:" + id);
+    auto action = set<C::Random_conditional>("default:" + id);
 
     for (std::size_t j = 0; j < idefault["effect"].size(); ++ j)
     {
       const Core::File_IO::Node& iaction = idefault["effect"][j];
-      auto rnd_action = Component::make_handle<Component::Action>
+      auto rnd_action = C::make_handle<C::Action>
         ("default:" + id + "_" + std::to_string(j));
       rnd_action->add ({ "look" });
       rnd_action->add (iaction.string_array());
@@ -301,10 +303,10 @@ void File_IO::read_init (const std::string& folder_name)
   }
 
   std::string player = input["player"].string();
-  m_content.set<Component::String>("player:name", player);
+  set<C::String>("player:name", player);
 
-  m_content.set<Component::String>("game:new_room", input["load_room"][0].string());
-  m_content.set<Component::String>("game:new_room_origin", input["load_room"][1].string());
+  set<C::String>("game:new_room", input["load_room"][0].string());
+  set<C::String>("game:new_room_origin", input["load_room"][1].string());
 }
 
 std::string File_IO::local_file_name (const std::string& file_name) const

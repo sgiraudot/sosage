@@ -32,7 +32,6 @@
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
-#include <Sosage/Content.h>
 #include <Sosage/System/Handle.h>
 
 #include <set>
@@ -47,7 +46,6 @@ private:
   typedef std::pair<double, Component::Handle> Timed_handle;
   std::set<Timed_handle> m_timed;
 
-  Content& m_content;
   double m_current_time;
 
   Component::Action_handle m_current_action;

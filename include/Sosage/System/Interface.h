@@ -40,8 +40,6 @@ namespace Sosage::System
 
 class Interface : public Base
 {
-
-  Content& m_content;
   Config::Layout m_layout;
   Component::Image_handle m_collision;
 

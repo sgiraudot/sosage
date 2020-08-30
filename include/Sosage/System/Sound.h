@@ -37,7 +37,6 @@ namespace Sosage::System
 
 class Sound : public Base
 {
-  Content& m_content;
   Core::Sound m_core;
 
 public:

@@ -31,19 +31,21 @@
 namespace Sosage::System
 {
 
+namespace C = Component;
+
 Time::Time (Content& content)
-  : m_content (content)
+  : Base (content)
 {
-  m_content.set_fac<Component::Debug>(GAME__DEBUG, "game:debug", m_content, m_clock);
-  m_content.set_fac<Component::Int> (CLOCK__FRAME_ID, "clock:frame_id", 0);
-  m_content.set_fac<Component::Double> (CLOCK__FRAME_TIME, "clock:frame_time", 0.);
+  set_fac<C::Debug>(GAME__DEBUG, "game:debug", m_content, m_clock);
+  set_fac<C::Int> (CLOCK__FRAME_ID, "clock:frame_id", 0);
+  set_fac<C::Double> (CLOCK__FRAME_TIME, "clock:frame_time", 0.);
 }
 
 void Time::run()
 {
   m_clock.wait(true);
-  m_content.get<Component::Int> (CLOCK__FRAME_ID)->set(m_clock.frame_id());
-  m_content.get<Component::Double> (CLOCK__FRAME_TIME)->set(m_clock.frame_time());
+  get<C::Int> (CLOCK__FRAME_ID)->set(m_clock.frame_id());
+  get<C::Double> (CLOCK__FRAME_TIME)->set(m_clock.frame_time());
 }
 
 } // namespace Sosage::System

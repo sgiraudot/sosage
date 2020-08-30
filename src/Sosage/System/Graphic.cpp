@@ -40,18 +40,20 @@
 namespace Sosage::System
 {
 
+namespace C = Component;
+
 Graphic::Graphic (Content& content)
-  : m_content (content)
+  : Base (content)
 { }
 
 void Graphic::init()
 {
-  auto iw = m_content.get<Component::Int>("window:width");
-  auto ih = m_content.get<Component::Int>("window:height");
+  auto iw = get<C::Int>("window:width");
+  auto ih = get<C::Int>("window:height");
   int w = iw->value();
   int h = ih->value();
   m_core.init (w, h,
-               m_content.get<Component::Boolean>("window:fullscreen")->value());
+               get<C::Boolean>("window:fullscreen")->value());
   iw->set(w);
   ih->set(h);
 }
@@ -59,7 +61,7 @@ void Graphic::init()
 void Graphic::run()
 {
 #ifdef SOSAGE_THREADS_ENABLED
-  if (m_content.get<Component::Status>(GAME__STATUS)->value() == LOADING)
+  if (get<C::Status>(GAME__STATUS)->value() == LOADING)
   {
     m_core.begin();
     display_spin_loading();
@@ -68,26 +70,26 @@ void Graphic::run()
   }
 #endif
 
-  if (auto name = m_content.request<Component::String>("game:name"))
+  if (auto name = request<C::String>("game:name"))
   {
-    m_core.update_window (name->value(), m_content.get<Component::Image>("icon:image")->core());
-    m_content.remove ("game:name");
+    m_core.update_window (name->value(), get<C::Image>("icon:image")->core());
+    remove ("game:name");
   }
 
-  if (m_content.request<Component::Event>("window:rescaled"))
+  if (request<C::Event>("window:rescaled"))
   {
-    m_core.update_view (m_content.get<Component::Int>("interface:width")->value(),
-                        m_content.get<Component::Int>("interface:height")->value());
-    m_content.remove ("window:rescaled");
+    m_core.update_view (get<C::Int>("interface:width")->value(),
+                        get<C::Int>("interface:height")->value());
+    remove ("window:rescaled");
   }
-  if (m_content.request<Component::Event>("window:toggle_fullscreen"))
+  if (request<C::Event>("window:toggle_fullscreen"))
   {
-    m_core.toggle_fullscreen (m_content.get<Component::Boolean>("window:fullscreen")->value());
-    m_content.remove ("window:toggle_fullscreen");
+    m_core.toggle_fullscreen (get<C::Boolean>("window:fullscreen")->value());
+    remove ("window:toggle_fullscreen");
   }
 
 
-  std::vector<Component::Image_handle> images;
+  std::vector<C::Image_handle> images;
 
   m_core.begin();
 
@@ -98,23 +100,23 @@ void Graphic::run()
   m_core.end();
 }
 
-void Graphic::get_images (std::vector<Component::Image_handle>& images)
+void Graphic::get_images (std::vector<C::Image_handle>& images)
 {
   for (const auto& e : m_content)
-    if (auto img = Component::cast<Component::Image>(e))
+    if (auto img = C::cast<C::Image>(e))
       images.push_back(img);
 }
 
-void Graphic::display_images (std::vector<Component::Image_handle>& images)
+void Graphic::display_images (std::vector<C::Image_handle>& images)
 {
   std::sort (images.begin(), images.end(),
-             [](Component::Image_handle a, Component::Image_handle b) -> bool
+             [](C::Image_handle a, C::Image_handle b) -> bool
              {
                return (a->z() < b->z());
              });
 
-  auto status = m_content.get<Component::Status>(GAME__STATUS);
-  double xcamera = m_content.get<Component::Double>(CAMERA__POSITION)->value();
+  auto status = get<C::Status>(GAME__STATUS);
+  double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
   for (const auto& img : images)
   {
@@ -127,7 +129,7 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
           img->entity() != "loading")
         continue;
 
-      auto position = m_content.get<Component::Position>(img->entity() + ":position");
+      auto position = get<C::Position>(img->entity() + ":position");
       Point p = position->value();
 
       if (!position->absolute())
@@ -147,9 +149,9 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
     }
   }
 
-  if (m_content.get<Component::Boolean>(GAME__DEBUG)->value())
+  if (get<C::Boolean>(GAME__DEBUG)->value())
   {
-    auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
+    auto ground_map = get<C::Ground_map>("background:ground_map");
 
     ground_map->for_each_vertex
       ([&](const Point& point)
@@ -165,11 +167,11 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
                            (border ? 255 : 0), 0, (border ? 0 : 255));
        });
 
-    const std::string& id = m_content.get<Component::String>("player:name")->value();
-    auto path = m_content.request<Component::Path>(id + ":path");
+    const std::string& id = get<C::String>("player:name")->value();
+    auto path = request<C::Path>(id + ":path");
     if (path)
     {
-      Point current = m_content.get<Component::Position>(id + "_body:position")->value();
+      Point current = get<C::Position>(id + "_body:position")->value();
       m_core.draw_square (current.x() - xcamera, current.y(), 10, 0, 255, 0);
 
       for (std::size_t p = path->current(); p < path->size(); ++ p)
@@ -187,8 +189,8 @@ void Graphic::display_images (std::vector<Component::Image_handle>& images)
 
 void Graphic::display_spin_loading()
 {
-  auto img = m_content.get<Component::Image>(LOADING_SPIN__IMAGE);
-  auto position = m_content.get<Component::Position>(LOADING_SPIN__POSITION);
+  auto img = get<C::Image>(LOADING_SPIN__IMAGE);
+  auto position = get<C::Position>(LOADING_SPIN__POSITION);
   Point p = position->value();
 
   int xmin = img->xmin();

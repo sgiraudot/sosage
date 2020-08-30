@@ -42,7 +42,6 @@ class File_IO : public Base
 {
 private:
 
-  Content& m_content;
   std::string m_folder_name;
   std::unordered_set<std::string> m_latest_room_entities;
   Thread m_thread;

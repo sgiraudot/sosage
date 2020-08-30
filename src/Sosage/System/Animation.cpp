@@ -37,21 +37,23 @@
 namespace Sosage::System
 {
 
+namespace C = ::Sosage::Component;
+
 Animation::Animation (Content& content)
-  : m_content (content), m_frame_id(0)
+  : Base (content), m_frame_id(0)
 {
 }
 
 void Animation::run()
 {
-  std::size_t new_frame_id = m_content.get<Component::Int>(CLOCK__FRAME_ID)->value();
+  std::size_t new_frame_id = get<C::Int>(CLOCK__FRAME_ID)->value();
 
-  auto status = m_content.get<Component::Status>(GAME__STATUS);
+  auto status = get<C::Status>(GAME__STATUS);
   if (status->value() == LOADING)
   {
 #ifdef SOSAGE_THREADS_ENABLED
     for (std::size_t i = m_frame_id; i < new_frame_id; ++ i)
-      m_content.get<Component::Animation>(LOADING_SPIN__IMAGE)->next_frame();
+      get<C::Animation>(LOADING_SPIN__IMAGE)->next_frame();
     m_frame_id = new_frame_id;
 #endif
     return;
@@ -63,7 +65,7 @@ void Animation::run()
   if (new_frame_id == m_frame_id)
   {
     // Force update when new room is loaded
-    if (m_content.request<Component::Boolean>("game:in_new_room"))
+    if (request<C::Boolean>("game:in_new_room"))
       run_one_frame();
     return;
   }
@@ -75,31 +77,31 @@ void Animation::run()
 
 void Animation::run_one_frame()
 {
-  if (auto new_char = m_content.request<Component::Vector<std::pair<std::string, bool> > >("game:new_characters"))
+  if (auto new_char = request<C::Vector<std::pair<std::string, bool> > >("game:new_characters"))
   {
     for (const auto& nc : new_char->value())
     {
       place_and_scale_character (nc.first, nc.second);
       generate_random_idle_animation (nc.first, nc.second);
     }
-    m_content.remove("game:new_characters");
+    remove("game:new_characters");
   }
 
-  if (auto looking_right = m_content.request<Component::Boolean>("game:in_new_room"))
+  if (auto looking_right = request<C::Boolean>("game:in_new_room"))
   {
-    const std::string& player = m_content.get<Component::String>("player:name")->value();
+    const std::string& player = get<C::String>("player:name")->value();
     place_and_scale_character (player, looking_right->value());
     generate_random_idle_animation (player, looking_right->value());
-    m_content.remove("game:in_new_room");
+    remove("game:in_new_room");
   }
 
   std::vector<std::string> to_remove;
   std::unordered_set<std::string> characters_talking;
-  std::vector<Component::Animation_handle> animations;
+  std::vector<C::Animation_handle> animations;
 
   for (auto c : m_content)
   {
-    if (auto path = Component::cast<Component::Path>(c))
+    if (auto path = C::cast<C::Path>(c))
     {
       if (!compute_movement_from_path(path))
         to_remove.push_back(c->id());
@@ -107,12 +109,12 @@ void Animation::run_one_frame()
     else if (c->component() == "lookat")
     {
       std::string id = c->entity();
-      auto lookat = Component::cast<Component::Position>(c);
-      auto abody = m_content.get<Component::Animation>(id + "_idle:image");
-      auto ahead = m_content.get<Component::Animation>(id + "_head:image");
-      auto pbody = m_content.get<Component::Position>(id + "_body:position");
-      auto phead = m_content.get<Component::Position>(id + "_head:position");
-      auto pmouth = m_content.get<Component::Position>(id + "_mouth:position");
+      auto lookat = C::cast<C::Position>(c);
+      auto abody = get<C::Animation>(id + "_idle:image");
+      auto ahead = get<C::Animation>(id + "_head:image");
+      auto pbody = get<C::Position>(id + "_body:position");
+      auto phead = get<C::Position>(id + "_head:position");
+      auto pmouth = get<C::Position>(id + "_mouth:position");
 
       Vector direction (phead->value(), lookat->value());
       bool looking_right = (direction.x() > 0);
@@ -120,16 +122,16 @@ void Animation::run_one_frame()
       if (looking_right)
       {
         phead->set (pbody->value() - abody->core().scaling
-                    * Vector(m_content.get<Component::Position>(id + "_head:gap_right")->value()));
+                    * Vector(get<C::Position>(id + "_head:gap_right")->value()));
         pmouth->set (phead->value() - ahead->core().scaling
-                     * Vector(m_content.get<Component::Position>(id + "_mouth:gap_right")->value()));
+                     * Vector(get<C::Position>(id + "_mouth:gap_right")->value()));
       }
       else
       {
         phead->set (pbody->value() - abody->core().scaling
-                    * Vector(m_content.get<Component::Position>(id + "_head:gap_left")->value()));
+                    * Vector(get<C::Position>(id + "_head:gap_left")->value()));
         pmouth->set (phead->value() - ahead->core().scaling
-                     * Vector(m_content.get<Component::Position>(id + "_mouth:gap_left")->value()));
+                     * Vector(get<C::Position>(id + "_mouth:gap_left")->value()));
       }
 
       generate_random_idle_animation (id, looking_right);
@@ -140,7 +142,7 @@ void Animation::run_one_frame()
 
       to_remove.push_back (c->id());
     }
-    else if (Component::cast<Component::Event>(c))
+    else if (C::cast<C::Event>(c))
     {
       std::string id = c->entity();
       if (c->component() == "start_talking")
@@ -152,32 +154,32 @@ void Animation::run_one_frame()
       else if (c->component() == "stop_talking")
       {
         generate_random_idle_head_animation (id,
-                                             m_content.get<Component::Animation>(id + "_head:image")
+                                             get<C::Animation>(id + "_head:image")
                                              ->frames().front().y == 0);
         to_remove.push_back (c->id());
       }
       else if (c->component() == "stop_animation")
       {
         generate_random_idle_body_animation (id,
-                                             m_content.get<Component::Animation>(id + "_head:image")
+                                             get<C::Animation>(id + "_head:image")
                                              ->frames().front().y == 0);
         to_remove.push_back (c->id());
       }
     }
     else if (c->component() == "start_animation")
     {
-      auto anim = Component::cast<Component::String>(c);
+      auto anim = C::cast<C::String>(c);
       std::string id = c->entity();
       generate_animation (id, anim->value());
       to_remove.push_back (c->id());
     }
-    else if (auto anim = Component::cast<Component::Animation>(c))
+    else if (auto anim = C::cast<C::Animation>(c))
       if (anim->on())
         animations.push_back(anim);
   }
 
   for (const std::string& c : to_remove)
-    m_content.remove(c);
+    remove(c);
 
   update_camera_target();
 
@@ -188,14 +190,14 @@ void Animation::run_one_frame()
 
 void Animation::place_and_scale_character(const std::string& id, bool looking_right)
 {
-  auto abody = m_content.get<Component::Animation>(id + "_walking:image");
-  auto aidle = m_content.get<Component::Animation>(id + "_idle:image");
-  auto ahead = m_content.get<Component::Animation>(id + "_head:image");
-  auto amouth = m_content.get<Component::Animation>(id + "_mouth:image");
-  auto pbody = m_content.get<Component::Position>(id + "_body:position");
-  auto phead = m_content.get<Component::Position>(id + "_head:position");
-  auto pmouth = m_content.get<Component::Position>(id + "_mouth:position");
-  auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
+  auto abody = get<C::Animation>(id + "_walking:image");
+  auto aidle = get<C::Animation>(id + "_idle:image");
+  auto ahead = get<C::Animation>(id + "_head:image");
+  auto amouth = get<C::Animation>(id + "_mouth:image");
+  auto pbody = get<C::Position>(id + "_body:position");
+  auto phead = get<C::Position>(id + "_head:position");
+  auto pmouth = get<C::Position>(id + "_mouth:position");
+  auto ground_map = get<C::Ground_map>("background:ground_map");
 
   double new_z = ground_map->z_at_point (pbody->value());
   abody->rescale (new_z);
@@ -208,32 +210,32 @@ void Animation::place_and_scale_character(const std::string& id, bool looking_ri
   if (looking_right)
   {
     phead->set (pbody->value() - abody->core().scaling
-                * Vector(m_content.get<Component::Position>(id + "_head:gap_right")->value()));
+                * Vector(get<C::Position>(id + "_head:gap_right")->value()));
     pmouth->set (phead->value() - ahead->core().scaling
-                * Vector(m_content.get<Component::Position>(id + "_mouth:gap_right")->value()));
+                * Vector(get<C::Position>(id + "_mouth:gap_right")->value()));
   }
   else
   {
     phead->set (pbody->value() - abody->core().scaling
-                * Vector(m_content.get<Component::Position>(id + "_head:gap_left")->value()));
+                * Vector(get<C::Position>(id + "_head:gap_left")->value()));
     pmouth->set (phead->value() - ahead->core().scaling
-                * Vector(m_content.get<Component::Position>(id + "_mouth:gap_left")->value()));
+                * Vector(get<C::Position>(id + "_mouth:gap_left")->value()));
   }
 }
 
-bool Animation::compute_movement_from_path (Component::Path_handle path)
+bool Animation::compute_movement_from_path (C::Path_handle path)
 {
   bool out = true;
 
   std::string id = path->entity();
-  auto abody = m_content.get<Component::Animation>(id + "_walking:image");
-  auto aidle = m_content.get<Component::Animation>(id + "_idle:image");
-  auto ahead = m_content.get<Component::Animation>(id + "_head:image");
-  auto amouth = m_content.get<Component::Animation>(id + "_mouth:image");
-  auto pbody = m_content.get<Component::Position>(id + "_body:position");
-  auto phead = m_content.get<Component::Position>(id + "_head:position");
-  auto pmouth = m_content.get<Component::Position>(id + "_mouth:position");
-  auto ground_map = m_content.get<Component::Ground_map>("background:ground_map");
+  auto abody = get<C::Animation>(id + "_walking:image");
+  auto aidle = get<C::Animation>(id + "_idle:image");
+  auto ahead = get<C::Animation>(id + "_head:image");
+  auto amouth = get<C::Animation>(id + "_mouth:image");
+  auto pbody = get<C::Position>(id + "_body:position");
+  auto phead = get<C::Position>(id + "_head:position");
+  auto pmouth = get<C::Position>(id + "_mouth:position");
+  auto ground_map = get<C::Ground_map>("background:ground_map");
 
   Point pos = pbody->value();
 
@@ -277,10 +279,10 @@ bool Animation::compute_movement_from_path (Component::Path_handle path)
 
 void Animation::set_move_animation (const std::string& id, const Vector& direction)
 {
-  auto image = m_content.get<Component::Animation>(id + "_walking:image");
-  auto head = m_content.get<Component::Animation>(id + "_head:image");
-  auto mouth = m_content.get<Component::Animation>(id + "_mouth:image");
-  m_content.get<Component::Animation>(id + "_idle:image")->on() = false;
+  auto image = get<C::Animation>(id + "_walking:image");
+  auto head = get<C::Animation>(id + "_head:image");
+  auto mouth = get<C::Animation>(id + "_mouth:image");
+  get<C::Animation>(id + "_idle:image")->on() = false;
 
   image->on() = true;
 
@@ -326,8 +328,8 @@ void Animation::generate_random_idle_animation (const std::string& id, bool look
 
 void Animation::generate_random_idle_head_animation (const std::string& id, bool looking_right)
 {
-  auto head = m_content.get<Component::Animation>(id + "_head:image");
-  auto mouth = m_content.get<Component::Animation>(id + "_mouth:image");
+  auto head = get<C::Animation>(id + "_head:image");
+  auto mouth = get<C::Animation>(id + "_mouth:image");
 
   // Reset all
   head->reset();
@@ -363,10 +365,10 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
 
       // Stand still for a while
       head->frames().push_back
-        (Component::Animation::Frame
+        (C::Animation::Frame
          (pose, row_index, next_blink));
       mouth->frames().push_back
-        (Component::Animation::Frame
+        (C::Animation::Frame
          (0, row_index, next_blink));
 
       if (remaining == 0)
@@ -374,10 +376,10 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
 
       // Blink eyes
       head->frames().push_back
-        (Component::Animation::Frame
+        (C::Animation::Frame
          (1, row_index, 1));
       mouth->frames().push_back
-        (Component::Animation::Frame
+        (C::Animation::Frame
          (0, row_index, 1));;
     }
 
@@ -404,8 +406,8 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
 
 void Animation::generate_random_idle_body_animation (const std::string& id, bool looking_right)
 {
-  auto image = m_content.get<Component::Animation>(id + "_idle:image");
-  m_content.get<Component::Animation>(id + "_walking:image")->on() = false;
+  auto image = get<C::Animation>(id + "_idle:image");
+  get<C::Animation>(id + "_walking:image")->on() = false;
 
   // Reset all
   image->on() = true;
@@ -418,7 +420,7 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
 
   std::vector<int> possibles_values;
   const std::vector<std::string>& positions
-    = m_content.get<Component::Vector<std::string> >(id + "_idle:values")->value();
+    = get<C::Vector<std::string> >(id + "_idle:values")->value();
 
   int pose = 1;
   for (std::size_t i = 0; i < positions.size(); ++ i)
@@ -436,12 +438,12 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
   {
     // Stand still for a while
     image->frames().push_back
-      (Component::Animation::Frame
+      (C::Animation::Frame
        (pose, row_index, random_int(20, 150)));
 
     // Transition
     image->frames().push_back
-      (Component::Animation::Frame
+      (C::Animation::Frame
        (0, row_index, 2));
 
     int new_pose;
@@ -456,20 +458,20 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
 
 void Animation::generate_random_mouth_animation (const std::string& id)
 {
-  auto image = m_content.get<Component::Animation>(id + "_mouth:image");
+  auto image = get<C::Animation>(id + "_mouth:image");
   // Reset all
   image->reset();
   image->frames().clear();
   image->on() = true;
 
-  std::size_t row_index = (m_content.get<Component::Animation>(id + "_head:image")->frames().front().y);
+  std::size_t row_index = (get<C::Animation>(id + "_head:image")->frames().front().y);
 
   // Generate 50 poses
   int pose = random_int(1,11);
   for (int i = 0; i < 50; ++ i)
   {
     image->frames().push_back
-      (Component::Animation::Frame
+      (C::Animation::Frame
        (pose, row_index, 1));
 
     int new_pose;
@@ -485,9 +487,9 @@ void Animation::generate_random_mouth_animation (const std::string& id)
 
 void Animation::generate_animation (const std::string& id, const std::string& anim)
 {
-  auto image = m_content.get<Component::Animation>(id + "_idle:image");
+  auto image = get<C::Animation>(id + "_idle:image");
   const std::vector<std::string>& positions
-    = m_content.get<Component::Vector<std::string> >(id + "_idle:values")->value();
+    = get<C::Vector<std::string> >(id + "_idle:values")->value();
 
   std::size_t row_index = image->frames().front().y;
 
@@ -505,21 +507,21 @@ void Animation::generate_animation (const std::string& id, const std::string& an
     }
   check (index != -1, "No " + anim + " skin found for " + id);
 
-  image->frames().push_back (Component::Animation::Frame (index, row_index, 1));
+  image->frames().push_back (C::Animation::Frame (index, row_index, 1));
 }
 
 void Animation::update_camera_target ()
 {
-  const std::string& id = m_content.get<Component::String>("player:name")->value();
-  int xbody = m_content.get<Component::Position>(id + "_body:position")->value().x();
-  double xcamera = m_content.get<Component::Double>(CAMERA__POSITION)->value();
+  const std::string& id = get<C::String>("player:name")->value();
+  int xbody = get<C::Position>(id + "_body:position")->value().x();
+  double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
   if (xbody < xcamera + Config::camera_limit_left)
-    m_content.get<Component::Double>("camera:target")->set (std::max (0, xbody - Config::camera_limit_right));
+    get<C::Double>("camera:target")->set (std::max (0, xbody - Config::camera_limit_right));
   else if (xbody > xcamera + Config::camera_limit_right)
   {
-    int width = m_content.get<Component::Image>("background:image")->width();
-    m_content.get<Component::Double>("camera:target")->set (std::min (width - Config::world_width, xbody - Config::camera_limit_left));
+    int width = get<C::Image>("background:image")->width();
+    get<C::Double>("camera:target")->set (std::min (width - Config::world_width, xbody - Config::camera_limit_left));
   }
 }
 

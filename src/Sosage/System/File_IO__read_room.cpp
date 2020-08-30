@@ -51,6 +51,8 @@
 namespace Sosage::System
 {
 
+namespace C = Component;
+
 void File_IO::read_character (const Core::File_IO::Node& node, const std::string& id)
 {
   std::string file_name = node["id"].string("data", "characters", "yaml");
@@ -65,25 +67,25 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   input.parse();
 
   std::string name = input["name"].string();
-  m_content.set<Component::String> (id + ":name", name);
+  set<C::String> (id + ":name", name);
 
   std::string color = input["color"].string();
-  m_content.set<Component::String> (id + ":color", color);
+  set<C::String> (id + ":color", color);
 
   std::string mouth = input["mouth"]["skin"].string("images", "characters", "png");
   auto amouth
-    = m_content.set<Component::Animation>(id + "_mouth:image", local_file_name(mouth),
+    = set<C::Animation>(id + "_mouth:image", local_file_name(mouth),
                                           0, 11, 2, true);
   amouth->set_relative_origin(0.5, 1.0);
 
   std::string head = input["head"]["skin"].string("images", "characters", "png");
   auto ahead
-    = m_content.set<Component::Animation>(id + "_head:image", local_file_name(head),
+    = set<C::Animation>(id + "_head:image", local_file_name(head),
                                           0, 7, 2, true);
   ahead->set_relative_origin(0.5, 1.0);
 
   std::string walk = input["walk"]["skin"].string("images", "characters", "png");
-  auto awalk = m_content.set<Component::Animation>(id + "_walking:image", local_file_name(walk),
+  auto awalk = set<C::Animation>(id + "_walking:image", local_file_name(walk),
                                                    0, 8, 4, true);
   awalk->set_relative_origin(0.5, 0.95);
   awalk->on() = false;
@@ -93,34 +95,34 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   for (std::size_t i = 0; i < input["idle"]["positions"].size(); ++ i)
     positions.push_back (input["idle"]["positions"][i].string());
 
-  m_content.set<Component::Vector<std::string> >(id + "_idle:values", positions);
+  set<C::Vector<std::string> >(id + "_idle:values", positions);
 
-  auto aidle = m_content.set<Component::Animation>(id + "_idle:image", local_file_name(idle),
+  auto aidle = set<C::Animation>(id + "_idle:image", local_file_name(idle),
                                                    0, positions.size(), 2, true);
   aidle->set_relative_origin(0.5, 0.95);
 
-  auto pbody = m_content.set<Component::Position>(id + "_body:position", Point(x, y), false);
-  m_content.set<Component::Variable>(id + "_walking:position", pbody);
-  m_content.set<Component::Variable>(id + "_idle:position", pbody);
+  auto pbody = set<C::Position>(id + "_body:position", Point(x, y), false);
+  set<C::Variable>(id + "_walking:position", pbody);
+  set<C::Variable>(id + "_idle:position", pbody);
 
   int hdx_right = input["head"]["dx_right"].integer();
   int hdx_left = input["head"]["dx_left"].integer();
   int hdy = input["head"]["dy"].integer();
-  m_content.set<Component::Position>(id + "_head:gap_right", Point(hdx_right,hdy), false);
-  m_content.set<Component::Position>(id + "_head:gap_left", Point(hdx_left,hdy), false);
+  set<C::Position>(id + "_head:gap_right", Point(hdx_right,hdy), false);
+  set<C::Position>(id + "_head:gap_left", Point(hdx_left,hdy), false);
 
   int mdx_right = input["mouth"]["dx_right"].integer();
   int mdx_left = input["mouth"]["dx_left"].integer();
   int mdy = input["mouth"]["dy"].integer();
-  m_content.set<Component::Position>(id + "_mouth:gap_right", Point(mdx_right,mdy), false);
-  m_content.set<Component::Position>(id + "_mouth:gap_left", Point(mdx_left,mdy), false);
-  m_content.set<Component::Position>(id + "_head:position", Point(x - hdx_right, y - hdy), false);
-  m_content.set<Component::Position>(id + "_mouth:position", Point(x - hdx_right - mdx_right,
+  set<C::Position>(id + "_mouth:gap_right", Point(mdx_right,mdy), false);
+  set<C::Position>(id + "_mouth:gap_left", Point(mdx_left,mdy), false);
+  set<C::Position>(id + "_head:position", Point(x - hdx_right, y - hdy), false);
+  set<C::Position>(id + "_mouth:position", Point(x - hdx_right - mdx_right,
                                                                        y - hdy - mdy), false);
 
-  auto new_char = m_content.request<Component::Vector<std::pair<std::string, bool> > >("game:new_characters");
+  auto new_char = request<C::Vector<std::pair<std::string, bool> > >("game:new_characters");
   if (!new_char)
-    new_char = m_content.set<Component::Vector<std::pair<std::string, bool> > >("game:new_characters");
+    new_char = set<C::Vector<std::pair<std::string, bool> > >("game:new_characters");
 
   new_char->push_back (std::make_pair (id, looking_right));
 }
@@ -128,11 +130,11 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
 void File_IO::read_room (const std::string& file_name)
 {
   std::unordered_set<std::string> force_keep;
-  auto inventory = m_content.get<Component::Inventory>("game:inventory");
+  auto inventory = get<C::Inventory>("game:inventory");
   for (const std::string& entity : *inventory)
     force_keep.insert (entity);
 
-  const std::string& player = m_content.get<Component::String>("player:name")->value();
+  const std::string& player = get<C::String>("player:name")->value();
   force_keep.insert (player + "_body");
   force_keep.insert (player + "_head");
   force_keep.insert (player + "_mouth");
@@ -140,7 +142,7 @@ void File_IO::read_room (const std::string& file_name)
   force_keep.insert (player + "_idle");
 
   m_content.clear
-    ([&](Component::Handle c) -> bool
+    ([&](C::Handle c) -> bool
      {
        // keep inventory + other forced kept
        if (force_keep.find(c->entity()) != force_keep.end())
@@ -161,7 +163,7 @@ void File_IO::read_room (const std::string& file_name)
 
   std::string name = input["name"].string();
   std::string music = input["music"].string("sounds", "musics", "ogg");
-  m_content.set<Component::Music>("game:music", local_file_name(music));
+  set<C::Music>("game:music", local_file_name(music));
 
   std::string background = input["background"].string("images", "backgrounds", "png");
   std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
@@ -169,11 +171,11 @@ void File_IO::read_room (const std::string& file_name)
   int back_z = input["back_z"].integer();
 
   auto background_img
-    = m_content.set<Component::Image>("background:image", local_file_name(background), 0);
+    = set<C::Image>("background:image", local_file_name(background), 0);
   background_img->collision() = BOX;
 
-  m_content.set<Component::Position>("background:position", Point(0, 0), false);
-  m_content.set<Component::Ground_map>("background:ground_map", local_file_name(ground_map),
+  set<C::Position>("background:position", Point(0, 0), false);
+  set<C::Ground_map>("background:ground_map", local_file_name(ground_map),
                                        front_z, back_z);
 
   // First instantiate all states
@@ -193,8 +195,8 @@ void File_IO::read_room (const std::string& file_name)
 
     if (node.has("states"))
       // Add state if does not exist (it might for inventory objects for example)
-      if (!m_content.request<Component::String>(id + ":state"))
-        m_content.set<Component::String>(id + ":state");
+      if (!request<C::String>(id + ":state"))
+        set<C::String>(id + ":state");
   }
 
   for (std::size_t i = 0; i < input["content"].size(); ++ i)
@@ -223,7 +225,7 @@ void File_IO::read_room (const std::string& file_name)
       debug ("Unknown content type " + type);
   }
 
-  auto hints = m_content.set<Component::Hints>("game:hints");
+  auto hints = set<C::Hints>("game:hints");
 
   if (input.has("hints"))
     for (std::size_t i = 0; i < input["hints"].size(); ++ i)
@@ -233,25 +235,25 @@ void File_IO::read_room (const std::string& file_name)
       std::string state = node["state"].string();
       std::string text = node["text"].string();
 
-      auto condition = Component::make_handle<Component::String_conditional>
-        ("hint:condition", m_content.get<Component::String>(id + ":state"));
-      condition->add(state, Component::make_handle<Component::String>("hint:text", text));
+      auto condition = C::make_handle<C::String_conditional>
+        ("hint:condition", get<C::String>(id + ":state"));
+      condition->add(state, C::make_handle<C::String>("hint:text", text));
       hints->add (condition);
     }
 
 
-  const std::string& origin = m_content.get<Component::String>("game:new_room_origin")->value();
-  auto origin_coord = m_content.get<Component::Position>(origin + ":position");
-  auto origin_looking = m_content.get<Component::Boolean>(origin + ":looking_right");
+  const std::string& origin = get<C::String>("game:new_room_origin")->value();
+  auto origin_coord = get<C::Position>(origin + ":position");
+  auto origin_looking = get<C::Boolean>(origin + ":looking_right");
 
-  m_content.get<Component::Position>(player + "_body:position")->set(origin_coord->value());
-  m_content.set<Component::Boolean>("game:in_new_room", origin_looking->value());
+  get<C::Position>(player + "_body:position")->set(origin_coord->value());
+  set<C::Boolean>("game:in_new_room", origin_looking->value());
 
-  m_content.remove ("game:new_room");
-  m_content.remove ("game:new_room_origin");
+  remove ("game:new_room");
+  remove ("game:new_room_origin");
 
-  m_content.set<Component::Event>("music:start");
-  m_content.get<Component::Status>(GAME__STATUS)->pop();
+  set<C::Event>("music:start");
+  get<C::Status>(GAME__STATUS)->pop();
 
   m_thread.notify();
 
@@ -266,8 +268,8 @@ void File_IO::read_animation (const Core::File_IO::Node& node, const std::string
   std::string skin = node["skin"].string("images", "animations", "png");
   int length = node["length"].integer();
 
-  auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
-  auto img = m_content.set<Component::Animation>(id + ":image", local_file_name(skin), z,
+  auto pos = set<C::Position>(id + ":position", Point(x,y), false);
+  auto img = set<C::Animation>(id + ":image", local_file_name(skin), z,
                                                  length, 1, false);
   img->on() = false;
   img->set_relative_origin(0.5, 1.0);
@@ -277,17 +279,17 @@ void File_IO::read_animation (const Core::File_IO::Node& node, const std::string
 void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
 {
   std::string button_sound = node["button_sound"].string("sounds", "effects", "wav");
-  m_content.set<Component::Sound>(id + "_button:sound", local_file_name(button_sound));
+  set<C::Sound>(id + "_button:sound", local_file_name(button_sound));
   std::string success_sound = node["success_sound"].string("sounds", "effects", "wav");
-  m_content.set<Component::Sound>(id + "_success:sound", local_file_name(success_sound));
+  set<C::Sound>(id + "_success:sound", local_file_name(success_sound));
   std::string failure_sound = node["failure_sound"].string("sounds", "effects", "wav");
-  m_content.set<Component::Sound>(id + "_failure:sound", local_file_name(failure_sound));
+  set<C::Sound>(id + "_failure:sound", local_file_name(failure_sound));
 
-  auto code = m_content.set<Component::Code>(id + ":code");
+  auto code = set<C::Code>(id + ":code");
 
-  auto state_handle = m_content.get<Component::String>(id + ":state");
-  Component::String_conditional_handle conditional_handle_off;
-  Component::String_conditional_handle conditional_handle_on;
+  auto state_handle = get<C::String>(id + ":state");
+  C::String_conditional_handle conditional_handle_off;
+  C::String_conditional_handle conditional_handle_on;
 
   for (std::size_t j = 0; j < node["states"].size(); ++ j)
   {
@@ -301,36 +303,36 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
       if (state_handle->value() == "")
         state_handle->set(state);
       conditional_handle_off
-        = m_content.set<Component::String_conditional>(id + ":image", state_handle);
+        = set<C::String_conditional>(id + ":image", state_handle);
       conditional_handle_on
-        = m_content.set<Component::String_conditional>(id + "_button:image", state_handle);
+        = set<C::String_conditional>(id + "_button:image", state_handle);
     }
     else
     {
-      conditional_handle_off = m_content.get<Component::String_conditional>(id + ":image");
-      conditional_handle_on = m_content.get<Component::String_conditional>(id + "_button:image");
+      conditional_handle_off = get<C::String_conditional>(id + ":image");
+      conditional_handle_on = get<C::String_conditional>(id + "_button:image");
     }
 
     std::string skin_off = istate["skin"][0].string("images", "windows", "png");
     auto img_off
-      = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin_off),
+      = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin_off),
                                                  Config::inventory_back_depth);
     img_off->set_relative_origin(0.5, 0.5);
     img_off->on() = false;
 
-    m_content.set<Component::Position>(id + ":position",
+    set<C::Position>(id + ":position",
                                        Point(Config::world_width / 2,
                                              Config::world_height / 2));
 
     std::string skin_on = istate["skin"][1].string("images", "windows", "png");
     auto img_on
-      = Component::make_handle<Component::Cropped>(id + "_button:conditional_image",
+      = C::make_handle<C::Cropped>(id + "_button:conditional_image",
                                                    local_file_name(skin_on),
                                                    Config::inventory_front_depth);
     img_on->set_relative_origin(0.5, 0.5);
     img_on->on() = false;
 
-    m_content.set<Component::Position>(id + "_button:position",
+    set<C::Position>(id + "_button:position",
                                        Point(Config::world_width / 2,
                                              Config::world_height / 2));
 
@@ -355,22 +357,22 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
   for (std::size_t j = 0; j < node["answer"].size(); ++ j)
     code->add_answer_item (node["answer"][j].string());
 
-  auto action = m_content.set<Component::Action> (id + ":action");
+  auto action = set<C::Action> (id + ":action");
   for (std::size_t j = 0; j < node["on_success"].size(); ++ j)
     action->add (node["on_success"][j].string_array());
 }
 
 void File_IO::read_dialog (const Core::File_IO::Node& node, const std::string& id)
 {
-  auto dialog = m_content.set<Component::Dialog>(id + ":dialog");
+  auto dialog = set<C::Dialog>(id + ":dialog");
 
   // First, instantiate all vertices
-  std::unordered_map<std::string, Component::Dialog::GVertex> map_vertices;
+  std::unordered_map<std::string, C::Dialog::GVertex> map_vertices;
   for (std::size_t i = 0; i < node["vertices"].size(); ++ i)
   {
     const Core::File_IO::Node& v = node["vertices"][i];
     std::string vid = v["id"].string();
-    Component::Dialog::GVertex vertex;
+    C::Dialog::GVertex vertex;
     if (v.has("character"))
     {
       std::string character = v["character"].string();
@@ -389,8 +391,8 @@ void File_IO::read_dialog (const Core::File_IO::Node& node, const std::string& i
 
     const std::string& s = e["source"].string();
     const std::string& t = e["target"].string();
-    Component::Dialog::GVertex source = map_vertices[s];
-    Component::Dialog::GVertex target
+    C::Dialog::GVertex source = map_vertices[s];
+    C::Dialog::GVertex target
         = (t == "none" ? dialog->vertex_out() : map_vertices[t]);
 
     if (e.has("line"))
@@ -405,22 +407,22 @@ void File_IO::read_dialog (const Core::File_IO::Node& node, const std::string& i
 
   // Finally, second pass on vertices to auto create edges between
   // two consecutive dialogs
-  Component::Dialog::GVertex previous
+  C::Dialog::GVertex previous
       = dialog->vertex_in();
   for (std::size_t i = 0; i < node["vertices"].size(); ++ i)
   {
     const Core::File_IO::Node& v = node["vertices"][i];
     std::string vid = v["id"].string();
-    Component::Dialog::GVertex vertex = map_vertices[vid];
-    if (previous != Component::Dialog::GVertex())
+    C::Dialog::GVertex vertex = map_vertices[vid];
+    if (previous != C::Dialog::GVertex())
       dialog->add_edge(previous, vertex);
     if (dialog->has_incident_edges(vertex))
-      previous = Component::Dialog::GVertex();
+      previous = C::Dialog::GVertex();
     else
       previous = vertex;
   }
 
-  if (previous != Component::Dialog::GVertex())
+  if (previous != C::Dialog::GVertex())
     dialog->add_edge(previous, dialog->vertex_out());
 
 }
@@ -428,7 +430,7 @@ void File_IO::read_dialog (const Core::File_IO::Node& node, const std::string& i
 void File_IO::read_object (const Core::File_IO::Node& node, const std::string& id)
 {
   // First, check if object already exists in inventory (if so, skip)
-  auto state_handle = m_content.get<Component::String>(id + ":state");
+  auto state_handle = get<C::String>(id + ":state");
   if (state_handle->value() == "inventory")
   {
     std::cerr << "Skipping " << id << std::endl;
@@ -443,16 +445,16 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
   int vy = node["view"][1].integer();
   bool box_collision = node["box_collision"].boolean();
 
-  m_content.set<Component::String>(id + ":name", name);
+  set<C::String>(id + ":name", name);
 
   // Position might already exists if room was already loaded
-  auto pos = m_content.request<Component::Position>(id + ":position");
+  auto pos = request<C::Position>(id + ":position");
   if (!pos)
-    pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
+    pos = set<C::Position>(id + ":position", Point(x,y), false);
 
-  m_content.set<Component::Position>(id + ":view", Point(vx,vy), false);
+  set<C::Position>(id + ":view", Point(vx,vy), false);
 
-  Component::String_conditional_handle conditional_handle;
+  C::String_conditional_handle conditional_handle;
   for (std::size_t j = 0; j < node["states"].size(); ++ j)
   {
     const Core::File_IO::Node& istate = node["states"][j];
@@ -464,10 +466,10 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
     {
       if (state_handle->value() == "")
         state_handle->set(state);
-      conditional_handle = m_content.set<Component::String_conditional>(id + ":image", state_handle);
+      conditional_handle = set<C::String_conditional>(id + ":image", state_handle);
     }
     else
-      conditional_handle = m_content.get<Component::String_conditional>(id + ":image");
+      conditional_handle = get<C::String_conditional>(id + ":image");
 
     if (state == "none")
       conditional_handle->add(state, nullptr);
@@ -479,19 +481,19 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
       else
         skin = istate["skin"].string("images", "objects", "png");
 
-      Component::Image_handle img;
+      C::Image_handle img;
       if (istate.has("frames")) // Animation
       {
         int nb_frames = istate["frames"].integer();
         int duration = istate["duration"].integer();
-        auto anim = Component::make_handle<Component::Animation>(id + ":conditional_image",
+        auto anim = C::make_handle<C::Animation>(id + ":conditional_image",
                                                                  local_file_name(skin), z,
                                                                  nb_frames, 1, true);
         anim->reset(true, duration);
         img = anim;
       }
       else
-        img = Component::make_handle<Component::Image>(id + ":conditional_image", local_file_name(skin), z);
+        img = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin), z);
 
       img->set_relative_origin(0.5, 1.0);
       img->collision() = (box_collision ? BOX : PIXEL_PERFECT);
@@ -504,9 +506,9 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
 
   if (state_handle->value() == "inventory")
   {
-    m_content.get<Component::Inventory>("game:inventory")->add(id);
+    get<C::Inventory>("game:inventory")->add(id);
     auto img
-      = m_content.get<Component::Image>(id + ":image");
+      = get<C::Image>(id + ":image");
     img->set_relative_origin(0.5, 0.5);
     img->z() = Config::inventory_back_depth;
   }
@@ -546,27 +548,27 @@ void File_IO::read_actions (const Core::File_IO::Node& node, const std::string& 
       if (a_id == "look")
         look_found = true;
 
-      Component::Action_handle action;
+      C::Action_handle action;
 
       if (iaction.has("state"))
       {
         std::string state = iaction["state"].string();
         auto conditional_handle
-          = m_content.request<Component::String_conditional>(corrected_id + ":" + a_id);
+          = request<C::String_conditional>(corrected_id + ":" + a_id);
 
         if (!conditional_handle)
         {
           auto state_handle
-            = m_content.get<Component::String>(corrected_id + ":state");
+            = get<C::String>(corrected_id + ":state");
           conditional_handle
-            = m_content.set<Component::String_conditional>(corrected_id + ":" + a_id, state_handle);
+            = set<C::String_conditional>(corrected_id + ":" + a_id, state_handle);
         }
 
-        action = Component::make_handle<Component::Action>(corrected_id + ":" + a_id + ":" + state);
+        action = C::make_handle<C::Action>(corrected_id + ":" + a_id + ":" + state);
         conditional_handle->add (state, action);
       }
       else
-        action = m_content.set<Component::Action>(corrected_id + ":" + a_id);
+        action = set<C::Action>(corrected_id + ":" + a_id);
 
 
       for (std::size_t k = 0; k < iaction["effect"].size(); ++ k)
@@ -586,8 +588,8 @@ void File_IO::read_origin(const Core::File_IO::Node& node, const std::string& id
   int y = node["coordinates"][1].integer();
   bool looking_right = node["looking_right"].boolean();
 
-  m_content.set<Component::Position>(id + ":position", Point(x, y));
-  m_content.set<Component::Boolean>(id + ":looking_right", looking_right);
+  set<C::Position>(id + ":position", Point(x, y));
+  set<C::Boolean>(id + ":looking_right", looking_right);
 }
 
 void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& id)
@@ -596,13 +598,13 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
   int y = node["coordinates"][1].integer();
   int z = node["coordinates"][2].integer();
 
-  auto pos = m_content.set<Component::Position>(id + ":position", Point(x,y), false);
+  auto pos = set<C::Position>(id + ":position", Point(x,y), false);
 
   if (node.has("states"))
   {
-    Component::String_conditional_handle conditional_handle;
+    C::String_conditional_handle conditional_handle;
 
-    auto state_handle = m_content.get<Component::String>(id + ":state");
+    auto state_handle = get<C::String>(id + ":state");
     for (std::size_t i = 0; i < node["states"].size(); ++ i)
     {
       const Core::File_IO::Node& istate = node["states"][i];
@@ -612,13 +614,13 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
       {
         if (state_handle->value() == "")
           state_handle->set(state);
-        conditional_handle = m_content.set<Component::String_conditional>(id + ":image", state_handle);
+        conditional_handle = set<C::String_conditional>(id + ":image", state_handle);
       }
       else
-        conditional_handle = m_content.get<Component::String_conditional>(id + ":image");
+        conditional_handle = get<C::String_conditional>(id + ":image");
 
       std::string skin = istate["skin"].string("images", "scenery", "png");
-      auto img = Component::make_handle<Component::Image>(id + ":conditional_image",
+      auto img = C::make_handle<C::Image>(id + ":conditional_image",
                                                           local_file_name(skin), z);
       conditional_handle->add (state, img);
     }
@@ -627,7 +629,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
   {
     std::string skin = node["skin"].string("images", "scenery", "png");
 
-    auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin), z);
+    auto img = set<C::Image>(id + ":image", local_file_name(skin), z);
     img->collision() = UNCLICKABLE;
     img->set_relative_origin(0.5, 1.0);
     debug("Scenery " + id + " at position " + std::to_string(img->z()));
@@ -638,12 +640,12 @@ void File_IO::read_window (const Core::File_IO::Node& node, const std::string& i
 {
   std::string skin = node["skin"].string("images", "windows", "png");
 
-  auto img = m_content.set<Component::Image>(id + ":image", local_file_name(skin),
+  auto img = set<C::Image>(id + ":image", local_file_name(skin),
                                              Config::inventory_front_depth);
   img->set_relative_origin(0.5, 0.5);
   img->on() = false;
 
-  m_content.set<Component::Position>(id + ":position",
+  set<C::Position>(id + ":position",
                                      Point(Config::world_width / 2,
                                            Config::world_height / 2));
 }

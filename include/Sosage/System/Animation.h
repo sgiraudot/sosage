@@ -39,7 +39,6 @@ class Animation : public Base
 {
 private:
 
-  Content& m_content;
   std::size_t m_frame_id;
 
 public:

@@ -36,7 +36,6 @@ namespace Sosage::System
 
 class Input : public Base
 {
-  Content& m_content;
   Core::Input m_core;
 
   struct Virtual_cursor

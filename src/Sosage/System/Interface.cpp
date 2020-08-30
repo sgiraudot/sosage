@@ -37,8 +37,10 @@
 namespace Sosage::System
 {
 
+namespace C = Component;
+
 Interface::Interface (Content& content)
-  : m_content (content)
+  : Base (content)
   , m_layout (Config::AUTO)
 {
 
@@ -46,18 +48,18 @@ Interface::Interface (Content& content)
 
 void Interface::run()
 {
-  auto status = m_content.get<Component::Status>(GAME__STATUS);
+  auto status = get<C::Status>(GAME__STATUS);
   if (status->value() == PAUSED || status->value() == LOADING)
     return;
 
-  if (m_content.request<Component::Event>("window:rescaled"))
+  if (request<C::Event>("window:rescaled"))
     update_layout();
 
-  auto cursor = m_content.get<Component::Position>(CURSOR__POSITION);
+  auto cursor = get<C::Position>(CURSOR__POSITION);
   detect_collision (cursor);
 
   auto clicked
-    = m_content.request<Component::Event>("cursor:clicked");
+    = request<C::Event>("cursor:clicked");
   if (clicked && m_collision)
   {
     if (status->value() == IN_WINDOW)
@@ -73,7 +75,7 @@ void Interface::run()
       else
       {
         std::string verb
-          = m_content.get<Component::String> ("chosen_verb:text")->entity();
+          = get<C::String> ("chosen_verb:text")->entity();
         verb = std::string (verb.begin() + 5, verb.end());
 
         action_clicked(verb);
@@ -88,8 +90,8 @@ void Interface::run()
 
 void Interface::init()
 {
-  auto interface_font = m_content.get<Component::Font> ("interface:font");
-  std::string color_str = m_content.get<Component::String> ("interface:color")->value();
+  auto interface_font = get<C::Font> ("interface:font");
+  std::string color_str = get<C::String> ("interface:color")->value();
 
   for (const auto& verb : { std::make_pair (std::string("open"), std::string("Ouvrir")),
         std::make_pair (std::string("close"), std::string("Fermer")),
@@ -100,78 +102,78 @@ void Interface::init()
         std::make_pair (std::string("use"), std::string("Utiliser")),
         std::make_pair (std::string("move"), std::string("Déplacer")) })
   {
-    m_content.set<Component::String> ("verb_" + verb.first + ":text", verb.second);
+    set<C::String> ("verb_" + verb.first + ":text", verb.second);
     auto verb_img
-      = m_content.set<Component::Image> ("verb_" + verb.first + ":image",
+      = set<C::Image> ("verb_" + verb.first + ":image",
                                          interface_font, color_str, verb.second);
-    m_content.set<Component::Position> ("verb_" + verb.first + ":position",
+    set<C::Position> ("verb_" + verb.first + ":position",
                                         Point(0,0));
     m_verbs.push_back (verb_img);
     verb_img->set_relative_origin(0.5, 0.5);
   }
 
-  auto verb_goto = m_content.set<Component::String> ("verb_goto:text", "Aller vers");
-  m_content.set<Component::Variable>("chosen_verb:text", verb_goto);
+  auto verb_goto = set<C::String> ("verb_goto:text", "Aller vers");
+  set<C::Variable>("chosen_verb:text", verb_goto);
 
   auto pause_screen_pos
-    = m_content.set<Component::Position>("pause_screen:position", Point(0, 0));
-  m_content.set<Component::Variable>("window_overlay:position", pause_screen_pos);
+    = set<C::Position>("pause_screen:position", Point(0, 0));
+  set<C::Variable>("window_overlay:position", pause_screen_pos);
 
   update_layout();
 }
 
 void Interface::window_clicked()
 {
-  auto window = m_content.get<Component::Image>("game:window");
+  auto window = get<C::Image>("game:window");
   window->on() = false;
-  m_content.get<Component::Status>(GAME__STATUS)->pop();
-  m_content.remove("cursor:clicked");
+  get<C::Status>(GAME__STATUS)->pop();
+  remove("cursor:clicked");
 }
 
-void Interface::code_clicked (Component::Position_handle cursor)
+void Interface::code_clicked (C::Position_handle cursor)
 {
-  auto code = m_content.get<Component::Code>("game:code");
-  auto window = m_content.get<Component::Image>("game:window");
+  auto code = get<C::Code>("game:code");
+  auto window = get<C::Image>("game:window");
   if (m_collision != window)
   {
     window->on() = false;
     code->reset();
-    m_content.get<Component::Status>(GAME__STATUS)->pop();
+    get<C::Status>(GAME__STATUS)->pop();
   }
   else
   {
     auto position
-      = m_content.get<Component::Position>(window->entity() + ":position");
+      = get<C::Position>(window->entity() + ":position");
 
     Point p = cursor->value() - Vector(position->value()) + Vector (0.5  * window->width(),
                                                                     0.5 * window->height());
     if (code->click(p.x(), p.y()))
     {
-      m_content.set<Component::Event>("code:button_clicked");
+      set<C::Event>("code:button_clicked");
       std::cerr << "Clicked!" << std::endl;
     }
   }
 
-  m_content.remove("cursor:clicked");
+  remove("cursor:clicked");
 }
 
 void Interface::verb_clicked()
 {
-  m_content.get<Component::Variable> ("chosen_verb:text")
-    ->set(m_content.get<Component::String>(m_collision->entity() + ":text"));
-  m_content.set<Component::Event>("game:verb_clicked");
-  m_content.remove("cursor:clicked");
-  m_content.remove ("action:source", true);
+  get<C::Variable> ("chosen_verb:text")
+    ->set(get<C::String>(m_collision->entity() + ":text"));
+  set<C::Event>("game:verb_clicked");
+  remove("cursor:clicked");
+  remove ("action:source", true);
 }
 
 void Interface::arrow_clicked()
 {
   if (m_collision->entity().find("_0") != std::string::npos ||
       m_collision->entity().find("_1") != std::string::npos)
-    m_content.get<Component::Inventory>("game:inventory")->prev();
+    get<C::Inventory>("game:inventory")->prev();
   else
-    m_content.get<Component::Inventory>("game:inventory")->next();
-  m_content.remove("cursor:clicked");
+    get<C::Inventory>("game:inventory")->next();
+  remove("cursor:clicked");
 }
 
 void Interface::action_clicked(const std::string& verb)
@@ -180,28 +182,28 @@ void Interface::action_clicked(const std::string& verb)
 
   // If clicked target is an object
   const std::string& entity = m_collision->character_entity();
-  if (m_content.request<Component::String>(entity + ":name"))
+  if (request<C::String>(entity + ":name"))
   {
     // First try binary action
     if (verb == "use" || verb == "give")
     {
       // If source was already cicked
-      if (auto source = m_content.request<Component::String>("action:source"))
+      if (auto source = request<C::String>("action:source"))
       {
         // Don't use source on source
         if (source->value() == entity)
         {
-          m_content.remove("cursor:clicked");
+          remove("cursor:clicked");
           return;
         }
 
         // Find binary action
         auto action
-          = m_content.request<Component::Action> (entity + ":use_"
+          = request<C::Action> (entity + ":use_"
                                                   + source->value());
         if (action)
         {
-          m_content.set<Component::Variable>("character:action", action);
+          set<C::Variable>("character:action", action);
           action_found = true;
         }
       }
@@ -209,35 +211,35 @@ void Interface::action_clicked(const std::string& verb)
       else
       {
         auto state
-          = m_content.request<Component::String>(entity + ":state");
+          = request<C::String>(entity + ":state");
         if (state && (state->value() == "inventory"))
         {
           // Check if unary action exists
-          if (auto action = m_content.request<Component::Action> (entity + ":use"))
+          if (auto action = request<C::Action> (entity + ":use"))
           {
-            m_content.set<Component::Variable>("character:action", action);
+            set<C::Variable>("character:action", action);
             action_found = true;
           }
           else // Set object as source
           {
-            m_content.set<Component::String>("action:source", entity);
-            m_content.remove("cursor:clicked");
+            set<C::String>("action:source", entity);
+            remove("cursor:clicked");
             return;
           }
         }
       }
     }
 
-    m_content.remove ("action:source", true);
+    remove ("action:source", true);
 
     if (!action_found)
     {
       // Then try to get unary action
       auto action
-        = m_content.request<Component::Action> (entity + ":" + verb);
+        = request<C::Action> (entity + ":" + verb);
       if (action)
       {
-        m_content.set<Component::Variable>("character:action", action);
+        set<C::Variable>("character:action", action);
         action_found = true;
       }
     }
@@ -248,104 +250,104 @@ void Interface::action_clicked(const std::string& verb)
       if (verb == "goto")
       {
         // If default action on inventory,  look
-        auto state = m_content.request<Component::String>(entity + ":state");
+        auto state = request<C::String>(entity + ":state");
         if ((state && (state->value() == "inventory")) ||
-            !m_content.get<Component::Boolean>("click:left")->value())
+            !get<C::Boolean>("click:left")->value())
         {
-          m_content.set<Component::Variable>("character:action", m_content.request<Component::Action> (entity + ":look"));
-          m_content.remove("cursor:clicked");
+          set<C::Variable>("character:action", request<C::Action> (entity + ":look"));
+          remove("cursor:clicked");
         }
         // Else, goto
         else
-          m_content.set<Component::Variable>("cursor:target", m_collision);
+          set<C::Variable>("cursor:target", m_collision);
         return;
       }
       // If no action found, use default
       else
-        m_content.set<Component::Variable>
+        set<C::Variable>
           ("character:action",
-           m_content.get<Component::Action> ("default:" + verb));
+           get<C::Action> ("default:" + verb));
     }
   }
   else
   {
-    m_content.remove ("action:source", true);
+    remove ("action:source", true);
     if (verb == "goto")
     {
-      m_content.set<Component::Variable>("cursor:target", m_collision);
+      set<C::Variable>("cursor:target", m_collision);
       return;
     }
   }
 
-  m_content.get<Component::Variable> ("chosen_verb:text")
-    ->set(m_content.get<Component::String>("verb_goto:text"));
+  get<C::Variable> ("chosen_verb:text")
+    ->set(get<C::String>("verb_goto:text"));
 
-  m_content.remove("cursor:clicked");
+  remove("cursor:clicked");
 }
 
 
 void Interface::update_pause_screen()
 {
-  auto interface_font = m_content.get<Component::Font> ("interface:font");
+  auto interface_font = get<C::Font> ("interface:font");
 
   auto pause_screen_img
-    = Component::make_handle<Component::Image>
+    = C::make_handle<C::Image>
     ("pause_screen:image",
-     Config::world_width + m_content.get<Component::Int>("interface:width")->value(),
-     Config::world_height + m_content.get<Component::Int>("interface:height")->value(),
+     Config::world_width + get<C::Int>("interface:width")->value(),
+     Config::world_height + get<C::Int>("interface:height")->value(),
      0, 0, 0, 192);
   pause_screen_img->z() += 10;
 
   // Create pause screen
   auto status
-    = m_content.get<Component::Status>(GAME__STATUS);
+    = get<C::Status>(GAME__STATUS);
 
   auto pause_screen
-    = m_content.set<Component::Conditional>("pause_screen:conditional",
-                                            Component::make_value_condition<Sosage::Status>(status, PAUSED),
+    = set<C::Conditional>("pause_screen:conditional",
+                                            C::make_value_condition<Sosage::Status>(status, PAUSED),
                                             pause_screen_img);
 
   auto pause_text_img
-    = Component::make_handle<Component::Image>("pause_text:image", interface_font, "FFFFFF", "PAUSE");
+    = C::make_handle<C::Image>("pause_text:image", interface_font, "FFFFFF", "PAUSE");
   pause_text_img->z() += 10;
   pause_text_img->set_relative_origin(0.5, 0.5);
 
   auto window_overlay_img
-    = m_content.set<Component::Image>("window_overlay:image",
+    = set<C::Image>("window_overlay:image",
                                       Config::world_width
-                                      + m_content.get<Component::Int>("interface:width")->value(),
+                                      + get<C::Int>("interface:width")->value(),
                                       Config::world_height
-                                      + m_content.get<Component::Int>("interface:height")->value(),
+                                      + get<C::Int>("interface:height")->value(),
                                       0, 0, 0, 128);
   window_overlay_img->z() = Config::interface_depth;
   window_overlay_img->on() = false;
 
   auto pause_text
-    = m_content.set<Component::Conditional>("pause_text:conditional",
-                                            Component::make_value_condition<Sosage::Status>(status, PAUSED),
+    = set<C::Conditional>("pause_text:conditional",
+                                            C::make_value_condition<Sosage::Status>(status, PAUSED),
                                             pause_text_img);
 
-  m_content.set<Component::Position>("pause_text:position", Point(Config::world_width / 2,
+  set<C::Position>("pause_text:position", Point(Config::world_width / 2,
                                                                   Config::world_height / 2));
 
 }
 
-void Interface::detect_collision (Component::Position_handle cursor)
+void Interface::detect_collision (C::Position_handle cursor)
 {
   // Deactive previous collisions
   if (m_collision)
   {
     if (m_collision->entity().find("verb_") == 0)
       m_collision->set_scale(m_verb_scale);
-    if (auto name = m_content.request<Component::String>(m_collision->entity() + ":name"))
-      m_content.get<Component::Image>("verb_look:image")->set_scale(m_verb_scale);
+    if (auto name = request<C::String>(m_collision->entity() + ":name"))
+      get<C::Image>("verb_look:image")->set_scale(m_verb_scale);
   }
 
-  m_collision = Component::Image_handle();
-  double xcamera = m_content.get<Component::Double>(CAMERA__POSITION)->value();
+  m_collision = C::Image_handle();
+  double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
   for (const auto& e : m_content)
-    if (auto img = Component::cast<Component::Image>(e))
+    if (auto img = C::cast<C::Image>(e))
     {
       if (!img->on() ||
           img->collision() == UNCLICKABLE ||
@@ -354,7 +356,7 @@ void Interface::detect_collision (Component::Position_handle cursor)
           img->id().find("interface_") == 0)
         continue;
 
-      auto position = m_content.get<Component::Position>(img->entity() + ":position");
+      auto position = get<C::Position>(img->entity() + ":position");
       Point p = position->value();
 
       if (!position->absolute())
@@ -397,7 +399,7 @@ void Interface::detect_collision (Component::Position_handle cursor)
 
 void Interface::update_action ()
 {
-  auto verb = m_content.get<Component::String> ("chosen_verb:text");
+  auto verb = get<C::String> ("chosen_verb:text");
   std::string target_object = "";
 
   if (m_collision)
@@ -406,29 +408,29 @@ void Interface::update_action ()
       m_collision->set_scale(1.1 * m_verb_scale);
 
     const std::string& entity = m_collision->character_entity();
-    if (entity != m_content.get<Component::String>("player:name")->value())
-      if (auto name = m_content.request<Component::String>(entity + ":name"))
+    if (entity != get<C::String>("player:name")->value())
+      if (auto name = request<C::String>(entity + ":name"))
       {
-        m_content.get<Component::Image>("verb_look:image")->set_scale(1.1 * m_verb_scale);
+        get<C::Image>("verb_look:image")->set_scale(1.1 * m_verb_scale);
         target_object = name->value();
-        auto state = m_content.request<Component::String>(m_collision->entity() + ":state");
+        auto state = request<C::String>(m_collision->entity() + ":state");
         if (state && state->value() == "inventory")
         {
           if (verb->entity() == "verb_goto")
-            verb = m_content.get<Component::String>("verb_look:text");
+            verb = get<C::String>("verb_look:text");
         }
       }
   }
 
-  if (!m_content.request<Component::Action>("character:action")
-      || verb != m_content.get<Component::String>("verb_goto:text"))
+  if (!request<C::Action>("character:action")
+      || verb != get<C::String>("verb_goto:text"))
   {
     std::string text = verb->value() + " " + target_object;
-    auto source = m_content.request<Component::String>("action:source");
+    auto source = request<C::String>("action:source");
     if (source)
     {
       if (auto name
-          = m_content.request<Component::String>(source->value() + ":name"))
+          = request<C::String>(source->value() + ":name"))
       {
         if (name->value() == target_object)
           target_object = "";
@@ -437,8 +439,8 @@ void Interface::update_action ()
     }
 
     auto text_img
-      = m_content.set<Component::Image>("chosen_verb:image",
-                                        m_content.get<Component::Font>("interface:font"), "FFFFFF",
+      = set<C::Image>("chosen_verb:image",
+                                        get<C::Font>("interface:font"), "FFFFFF",
                                         text);
 
     text_img->set_relative_origin(0.5, 0.5);
@@ -448,34 +450,34 @@ void Interface::update_action ()
 
 void Interface::update_inventory ()
 {
-  Status status = m_content.get<Component::Status>(GAME__STATUS)->value();
+  Status status = get<C::Status>(GAME__STATUS)->value();
   if (status == IN_WINDOW || status == LOCKED)
   {
-    m_content.get<Component::Image> ("interface_action:image")->z() = Config::inventory_over_depth;
-    m_content.get<Component::Image> ("interface_verbs:image")->z() = Config::inventory_over_depth;
-    m_content.get<Component::Image> ("interface_inventory:image")->z() = Config::inventory_over_depth;
+    get<C::Image> ("interface_action:image")->z() = Config::inventory_over_depth;
+    get<C::Image> ("interface_verbs:image")->z() = Config::inventory_over_depth;
+    get<C::Image> ("interface_inventory:image")->z() = Config::inventory_over_depth;
     if (status == IN_WINDOW)
-      m_content.get<Component::Image> ("window_overlay:image")->on() = true;
+      get<C::Image> ("window_overlay:image")->on() = true;
     return;
   }
   else
   {
-    m_content.get<Component::Image> ("interface_action:image")->z() = Config::interface_depth;
-    m_content.get<Component::Image> ("interface_verbs:image")->z() = Config::interface_depth;
-    m_content.get<Component::Image> ("interface_inventory:image")->z() = Config::interface_depth;
-    m_content.get<Component::Image> ("window_overlay:image")->on() = false;
+    get<C::Image> ("interface_action:image")->z() = Config::interface_depth;
+    get<C::Image> ("interface_verbs:image")->z() = Config::interface_depth;
+    get<C::Image> ("interface_inventory:image")->z() = Config::interface_depth;
+    get<C::Image> ("window_overlay:image")->on() = false;
   }
 
-  auto background = m_content.get<Component::Image>("interface_inventory:image");
+  auto background = get<C::Image>("interface_inventory:image");
 
-  auto inventory = m_content.get<Component::Inventory>("game:inventory");
+  auto inventory = get<C::Inventory>("game:inventory");
 
-  auto inv_pos = m_content.get<Component::Position>("interface_inventory:position");
+  auto inv_pos = get<C::Position>("interface_inventory:position");
 
   std::size_t position = inventory->position();
   for (std::size_t i = 0; i < inventory->size(); ++ i)
   {
-    auto img = m_content.get<Component::Image>(inventory->get(i) + ":image");
+    auto img = get<C::Image>(inventory->get(i) + ":image");
     double factor = 1.;
 
     if (img == m_collision)
@@ -512,7 +514,7 @@ void Interface::update_inventory ()
         y = inv_pos->value().y() + background->height() / 2;
       }
 
-      m_content.set<Component::Position>(inventory->get(i) + ":position", Point(x,y));
+      set<C::Position>(inventory->get(i) + ":position", Point(x,y));
 
 
     }
@@ -525,25 +527,25 @@ void Interface::update_inventory ()
 
   if (m_layout == Config::WIDESCREEN)
   {
-    m_content.get<Component::Image> ("inventory_arrow_0:image")->on() = left_on;
-    m_content.get<Component::Image> ("inventory_arrow_background_0:image")->on() = left_on;
-    m_content.get<Component::Image> ("inventory_arrow_1:image")->on() = false;
-    m_content.get<Component::Image> ("inventory_arrow_background_1:image")->on() = false;
-    m_content.get<Component::Image> ("inventory_arrow_2:image")->on() = right_on;
-    m_content.get<Component::Image> ("inventory_arrow_background_2:image")->on() = right_on;
-    m_content.get<Component::Image> ("inventory_arrow_3:image")->on() = false;
-    m_content.get<Component::Image> ("inventory_arrow_background_3:image")->on() = false;
+    get<C::Image> ("inventory_arrow_0:image")->on() = left_on;
+    get<C::Image> ("inventory_arrow_background_0:image")->on() = left_on;
+    get<C::Image> ("inventory_arrow_1:image")->on() = false;
+    get<C::Image> ("inventory_arrow_background_1:image")->on() = false;
+    get<C::Image> ("inventory_arrow_2:image")->on() = right_on;
+    get<C::Image> ("inventory_arrow_background_2:image")->on() = right_on;
+    get<C::Image> ("inventory_arrow_3:image")->on() = false;
+    get<C::Image> ("inventory_arrow_background_3:image")->on() = false;
   }
   else
   {
-    m_content.get<Component::Image> ("inventory_arrow_0:image")->on() = false;
-    m_content.get<Component::Image> ("inventory_arrow_background_0:image")->on() = false;
-    m_content.get<Component::Image> ("inventory_arrow_1:image")->on() = left_on;
-    m_content.get<Component::Image> ("inventory_arrow_background_1:image")->on() = left_on;
-    m_content.get<Component::Image> ("inventory_arrow_2:image")->on() = false;
-    m_content.get<Component::Image> ("inventory_arrow_background_2:image")->on() = false;
-    m_content.get<Component::Image> ("inventory_arrow_3:image")->on() = right_on;
-    m_content.get<Component::Image> ("inventory_arrow_background_3:image")->on() = right_on;
+    get<C::Image> ("inventory_arrow_0:image")->on() = false;
+    get<C::Image> ("inventory_arrow_background_0:image")->on() = false;
+    get<C::Image> ("inventory_arrow_1:image")->on() = left_on;
+    get<C::Image> ("inventory_arrow_background_1:image")->on() = left_on;
+    get<C::Image> ("inventory_arrow_2:image")->on() = false;
+    get<C::Image> ("inventory_arrow_background_2:image")->on() = false;
+    get<C::Image> ("inventory_arrow_3:image")->on() = right_on;
+    get<C::Image> ("inventory_arrow_background_3:image")->on() = right_on;
   }
 }
 
