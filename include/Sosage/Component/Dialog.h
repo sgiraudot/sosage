@@ -44,13 +44,15 @@ class Dialog : public Base
       : character (character), line (line) { }
   };
 
+  enum Edge_status { ALWAYS, ONCE, DISABLED };
+
   struct Edge
   {
-    bool once;
+    Edge_status status;
     std::string line;
 
     Edge (bool once = false, const std::string& line = "")
-      : once(once), line(line) { }
+      : status(once ? ONCE : ALWAYS), line(line) { }
   };
 
   using Graph = Sosage::Graph<Vertex, Edge, true>;
@@ -65,6 +67,7 @@ private:
   Graph m_graph;
   GVertex m_vin;
   GVertex m_vout;
+  GVertex m_current;
 
 public:
 
@@ -80,6 +83,61 @@ public:
 
   GVertex vertex_in() const { return m_vin; }
   GVertex vertex_out() const { return m_vout; }
+
+  void init() { m_current = m_vin; next(); }
+
+  void next()
+  {
+    m_current = m_graph.incident_vertex(m_current, 0);
+  }
+
+  void next (std::size_t choice)
+  {
+    std::size_t i = 0;
+    for (GEdge e : m_graph.incident_edges(m_current))
+    {
+      if (m_graph[e].status != DISABLED)
+      {
+        if (i == choice)
+        {
+          if (m_graph[e].status == ONCE)
+          {
+            std::cerr << "Disable " << m_graph[e].line << std::endl;
+            m_graph[e].status = DISABLED;
+          }
+          m_current = m_graph.incident_vertex(m_current, i);
+          return;
+        }
+        ++ i;
+      }
+      else
+      {
+        std::cerr << "Skipping ignored " << m_graph[e].line << std::endl;
+      }
+    }
+  }
+
+  bool is_over() const { return (m_current == m_vout); }
+
+  bool is_line() const
+  {
+    return (m_graph[m_current].character != "");
+  }
+
+  std::pair<std::string, std::string> line() const
+  { return std::make_pair (m_graph[m_current].character, m_graph[m_current].line); }
+
+  template <typename Container>
+  void get_choices (Container& choices)
+  {
+    for (GEdge e : m_graph.incident_edges(m_current))
+      if (m_graph[e].status != DISABLED)
+      {
+        std::cerr << "Pushing " << m_graph[e].line << std::endl;
+        choices.push_back (m_graph[e].line);
+      }
+
+  }
 
 };
 

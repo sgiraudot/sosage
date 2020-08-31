@@ -30,7 +30,7 @@
 #include <Sosage/Config/platform.h>
 #include <memory>
 
-#ifndef SOSAGE_EMSCRIPTEN
+#if !defined(SOSAGE_EMSCRIPTEN) && !defined(SOSAGE_WINDOWS)
 #define SOSAGE_THREADS_ENABLED
 #endif
 
@@ -54,7 +54,8 @@ constexpr int interface_depth = 1000000;
 constexpr int inventory_back_depth = interface_depth + 1;
 constexpr int inventory_front_depth = inventory_back_depth + 1;
 constexpr int inventory_over_depth = inventory_front_depth + 1;
-constexpr int cursor_depth = inventory_over_depth + 1;
+constexpr int dialog_depth = inventory_over_depth + 1;
+constexpr int cursor_depth = dialog_depth + 1;
 
 enum Layout { AUTO, WIDESCREEN, STANDARD, SQUARE, PORTRAIT };
 

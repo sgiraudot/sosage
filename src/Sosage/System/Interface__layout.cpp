@@ -47,6 +47,7 @@ void Interface::update_layout()
   int aspect_ratio = int(100. * window_width / double(window_height));
 
   Config::Layout layout = Config::Layout(get<C::Int>("interface:layout")->value());
+
   if ((layout == Config::AUTO && aspect_ratio >= 200) ||
       (layout == Config::WIDESCREEN))
   {

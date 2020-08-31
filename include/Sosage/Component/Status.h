@@ -30,13 +30,12 @@
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Content.h>
 #include <Sosage/Utils/time.h>
+#include <Sosage/Utils/enum.h>
 
 #include <stack>
 
 namespace Sosage
 {
-
-enum Status { IDLE, LOADING, PAUSED, LOCKED, IN_MENU, IN_WINDOW, IN_CODE };
 
 namespace Component
 {

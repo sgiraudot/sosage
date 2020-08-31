@@ -66,6 +66,8 @@ void Interface::run()
       window_clicked();
     else if (status->value() == IN_CODE)
       code_clicked(cursor);
+    else if (status->value() == DIALOG_CHOICE)
+      dialog_clicked();
     else
     {
       if (m_collision->entity().find("verb_") == 0)
@@ -85,6 +87,7 @@ void Interface::run()
 
   update_action();
   update_inventory();
+  update_dialog_choices();
 
 }
 
@@ -153,6 +156,39 @@ void Interface::code_clicked (C::Position_handle cursor)
       std::cerr << "Clicked!" << std::endl;
     }
   }
+
+  remove("cursor:clicked");
+}
+
+void Interface::dialog_clicked ()
+{
+  if (m_collision->entity().find("dialog_choice_") == std::string::npos)
+  {
+    remove("cursor:clicked");
+    return;
+  }
+
+  const std::vector<std::string>& choices
+      = get<C::Vector<std::string> >("dialog:choices")->value();
+
+  int choice
+      = std::atoi(std::string(m_collision->id().begin() +
+                              std::string("dialog_choice_").size(),
+                              m_collision->id().begin() +
+                              m_collision->id().find(':')).c_str());
+
+  set<C::Int>("dialog:choice", choice);
+
+  for (int c = choices.size() - 1; c >= 0; -- c)
+  {
+    std::string entity = "dialog_choice_" + std::to_string(c);
+    remove(entity + ":image");
+    remove(entity + ":position");
+  }
+  remove("dialog_choice_background:image");
+  remove("dialog_choice_background:position");
+
+  get<C::Status>(GAME__STATUS)->pop();
 
   remove("cursor:clicked");
 }
@@ -451,7 +487,7 @@ void Interface::update_action ()
 void Interface::update_inventory ()
 {
   Status status = get<C::Status>(GAME__STATUS)->value();
-  if (status == IN_WINDOW || status == LOCKED)
+  if (status == IN_WINDOW || status == LOCKED || status == DIALOG_CHOICE)
   {
     get<C::Image> ("interface_action:image")->z() = Config::inventory_over_depth;
     get<C::Image> ("interface_verbs:image")->z() = Config::inventory_over_depth;
@@ -547,6 +583,68 @@ void Interface::update_inventory ()
     get<C::Image> ("inventory_arrow_3:image")->on() = right_on;
     get<C::Image> ("inventory_arrow_background_3:image")->on() = right_on;
   }
+}
+
+void Interface::update_dialog_choices()
+{
+  if (get<C::Status>(GAME__STATUS)->value() != DIALOG_CHOICE)
+    return;
+
+  auto cursor = get<C::Position>(CURSOR__POSITION);
+
+  const std::vector<std::string>& choices
+      = get<C::Vector<std::string> >("dialog:choices")->value();
+
+  auto interface_font = get<C::Font> ("interface:font");
+
+  int bottom
+      = std::max(get<C::Position>("interface_action:position")->value().y()
+                 + get<C::Image>("interface_action:image")->height(),
+                 get<C::Position>("interface_verbs:position")->value().y()
+                 + get<C::Image>("interface_verbs:image")->height());
+  int y = bottom - 10;
+
+  for (int c = choices.size() - 1; c >= 0; -- c)
+  {
+    std::string entity = "dialog_choice_" + std::to_string(c);
+    auto img
+      = set<C::Image>(entity + ":image",
+                      get<C::Font>("interface:font"), "FFFFFF",
+                      choices[std::size_t(c)]);
+    img->z() = Config::dialog_depth;
+    img->set_scale(0.75);
+    img->set_relative_origin(0., 1.);
+
+    Point p (10, y);
+    set<C::Position>(entity + ":position", p);
+
+    Point screen_position = p - img->core().scaling * Vector(img->origin());
+    int xmin = screen_position.x();
+    int ymin = screen_position.y();
+    int xmax = xmin + (img->core().scaling * (img->xmax() - img->xmin()));
+    int ymax = ymin + (img->core().scaling * (img->ymax() - img->ymin()));
+
+    if (xmin <= cursor->value().x() && cursor->value().x() <= xmax &&
+        ymin <= cursor->value().y() && cursor->value().y() <= ymax)
+    {
+      auto img
+        = set<C::Image>(entity + ":image",
+                        get<C::Font>("interface:font"),
+                        get<C::String>(get<C::String>("player:name")->value()
+                                       + ":color")->value(),
+                        choices[std::size_t(c)]);
+      img->z() = Config::dialog_depth;
+      img->set_scale(0.75);
+      img->set_relative_origin(0., 1.);
+    }
+
+    y -= img->height() * 0.75;
+  }
+
+  auto background = set<C::Image> ("dialog_choice_background:image",
+                                   Config::world_width, bottom - y + 20, 0, 0, 0);
+  background->set_relative_origin(0., 1.);
+  set<C::Position>("dialog_choice_background:position", Point(0,bottom));
 }
 
 

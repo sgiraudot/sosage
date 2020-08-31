@@ -62,7 +62,8 @@ Logic::Logic (Content& content)
 void Logic::run ()
 {
   auto status = get<C::Status>(GAME__STATUS);
-  if (status->value() == PAUSED || status->value() == LOADING)
+  if (status->value() == PAUSED || status->value() == LOADING
+      || status->value() == DIALOG_CHOICE)
     return;
 
   double current_time = get<C::Double> (CLOCK__FRAME_TIME)->value();
@@ -200,7 +201,10 @@ void Logic::run ()
           else if (s.get(0) == "comment")
             action_comment (s);
           else if (s.get(0) == "dialog")
+          {
             action_dialog (s);
+            break; // action dialog replaces current action
+          }
           else if (s.get(0) == "goto")
             action_goto (m_current_action->entity());
           else if (s.get(0) == "load")
@@ -308,12 +312,24 @@ void Logic::update_debug_info (C::Debug_handle debug_info)
 
 void Logic::action_comment (C::Action::Step step)
 {
-  const std::string& id = get<C::String>("player:name")->value();
+  std::string id;
+  std::string text;
 
-  std::string text = step.get(1);
+  if (step.size() == 2)
+  {
+    id = get<C::String>("player:name")->value();
+    text = step.get(1);
+  }
+  else
+  {
+    check (step.size() == 3, "\"comment\" expects 2 or 3 arguments ("
+           + std::to_string(step.size()-1) + "given)");
+    id = step.get(1);
+    text = step.get(2);
+  }
 
   std::vector<C::Image_handle> dialog;
-  create_dialog (text, dialog);
+  create_dialog (id, text, dialog);
 
   int nb_char = int(text.size());
   double nb_seconds = nb_char / get<C::Double>("text:char_per_second")->value();
@@ -348,6 +364,50 @@ void Logic::action_comment (C::Action::Step step)
 void Logic::action_dialog (C::Action::Step step)
 {
   auto dialog = get<C::Dialog>(step.get(1) + ":dialog");
+
+  if (step.size() == 2)
+  {
+    get<C::Status>(GAME__STATUS)->push(LOCKED);
+    dialog->init();
+  }
+  else if (auto choice = request<C::Int>("dialog:choice"))
+  {
+    std::cerr << "Choice = " << choice->value() << std::endl;
+    dialog->next(choice->value());
+    remove("dialog:choice");
+  }
+  else
+    dialog->next();
+
+  if (dialog->is_over())
+  {
+    std::cerr << "Over" << std::endl;
+    get<C::Status>(GAME__STATUS)->pop();
+  }
+  else if (dialog->is_line())
+  {
+    std::cerr << "Line" << std::endl;
+    auto action = set<C::Action>("dialog:action");
+    std::string character;
+    std::string line;
+    std::tie (character, line) = dialog->line();
+    action->add ({ "comment", character, line });
+    action->add ({ "sync" });
+    action->add ({ "dialog", step.get(1), "continue" });
+    m_current_action = action;
+    m_next_step = 0;
+  }
+  else
+  {
+    std::cerr << "Choice" << std::endl;
+    get<C::Status>(GAME__STATUS)->push(DIALOG_CHOICE);
+    auto choices = set<C::Vector<std::string> >("dialog:choices");
+    dialog->get_choices (*choices);
+    auto action = set<C::Action>("dialog:action");
+    action->add ({ "dialog", step.get(1), "continue" });
+    m_current_action = action;
+    m_next_step = 0;
+  }
 }
 
 void Logic::action_goto (const std::string& target)
@@ -478,14 +538,14 @@ void Logic::action_show (C::Action::Step step)
     get<C::Status>(GAME__STATUS)->push (IN_WINDOW);
 }
 
-void Logic::create_dialog (const std::string& text, std::vector<C::Image_handle>& dialog)
+void Logic::create_dialog (const std::string& character,
+                           const std::string& text,
+                           std::vector<C::Image_handle>& dialog)
 {
   static const int width_max = int(0.95 * Config::world_width);
 
   auto interface_font = get<C::Font> ("interface:font");
-  const std::string& color
-      = get<C::String> (get<C::String>("player:name")->value()
-                                          + ":color")->value();
+  const std::string& color = get<C::String> (character + ":color")->value();
 
   auto img
     = set<C::Image> ("comment:image",

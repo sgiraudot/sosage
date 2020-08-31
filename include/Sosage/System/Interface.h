@@ -60,6 +60,7 @@ private:
 
   void window_clicked();
   void code_clicked (Component::Position_handle cursor);
+  void dialog_clicked ();
   void verb_clicked();
   void arrow_clicked();
   void action_clicked(const std::string& verb);
@@ -69,6 +70,7 @@ private:
   void detect_collision (Component::Position_handle cursor);
   void update_action ();
   void update_inventory ();
+  void update_dialog_choices ();
 
   // Implemented in Interface__layout.cpp:
   void update_layout();

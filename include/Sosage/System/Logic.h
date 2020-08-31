@@ -76,7 +76,9 @@ private:
   void action_set_coordinates (Component::Action::Step step);
   void action_show (Component::Action::Step step);
 
-  void create_dialog (const std::string& text, std::vector<Component::Image_handle>& dialog);
+  void create_dialog (const std::string& character,
+                      const std::string& text,
+                      std::vector<Component::Image_handle>& dialog);
 };
 
 } // namespace Sosage::System

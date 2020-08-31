@@ -30,6 +30,18 @@
 namespace Sosage
 {
 
+enum Status
+{
+  IDLE,
+  LOADING,
+  PAUSED,
+  LOCKED,
+  DIALOG_CHOICE,
+  IN_MENU,
+  IN_WINDOW,
+  IN_CODE
+};
+
 enum Thread_state
 {
   NO_THREAD,
