@@ -365,6 +365,8 @@ void Logic::action_dialog (C::Action::Step step)
 {
   auto dialog = get<C::Dialog>(step.get(1) + ":dialog");
 
+  auto action = C::make_handle<C::Action>("dialog:action");
+
   if (step.size() == 2)
   {
     get<C::Status>(GAME__STATUS)->push(LOCKED);
@@ -372,7 +374,10 @@ void Logic::action_dialog (C::Action::Step step)
   }
   else if (auto choice = request<C::Int>("dialog:choice"))
   {
-    std::cerr << "Choice = " << choice->value() << std::endl;
+    action->add ({ "comment",
+                   get<C::Vector<std::string> >("dialog:choices")
+                   ->value()[std::size_t(choice->value())] });
+    action->add ({ "sync" });
     dialog->next(choice->value());
     remove("dialog:choice");
   }
@@ -380,31 +385,26 @@ void Logic::action_dialog (C::Action::Step step)
     dialog->next();
 
   if (dialog->is_over())
-  {
-    std::cerr << "Over" << std::endl;
     get<C::Status>(GAME__STATUS)->pop();
-  }
   else if (dialog->is_line())
   {
-    std::cerr << "Line" << std::endl;
-    auto action = set<C::Action>("dialog:action");
     std::string character;
     std::string line;
     std::tie (character, line) = dialog->line();
     action->add ({ "comment", character, line });
     action->add ({ "sync" });
     action->add ({ "dialog", step.get(1), "continue" });
-    m_current_action = action;
-    m_next_step = 0;
   }
   else
   {
-    std::cerr << "Choice" << std::endl;
     get<C::Status>(GAME__STATUS)->push(DIALOG_CHOICE);
     auto choices = set<C::Vector<std::string> >("dialog:choices");
     dialog->get_choices (*choices);
-    auto action = set<C::Action>("dialog:action");
     action->add ({ "dialog", step.get(1), "continue" });
+  }
+
+  if (action->size() != 0)
+  {
     m_current_action = action;
     m_next_step = 0;
   }

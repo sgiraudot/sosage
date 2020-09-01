@@ -32,21 +32,19 @@ namespace Sosage::Component
 Dialog::Dialog (const std::string& id)
   : Base(id)
 {
-  m_vin = m_graph.add_vertex();
-  m_vout = m_graph.add_vertex();
+  m_vin = m_graph.add_vertex(Vertex("", "IN"));
+  m_vout = m_graph.add_vertex(Vertex("","OUT"));
 }
 
 Dialog::GVertex Dialog::add_vertex (const std::string& character, const std::string& line)
 {
   GVertex out = m_graph.add_vertex (Vertex(character, line));
-  std::cerr << "New vertex " << out << ": \"" << line << "\"" << std::endl;
   return out;
 }
 
 Dialog::GEdge Dialog::add_edge (Dialog::GVertex source, Dialog::GVertex target,
                                 bool once, const std::string& line)
 {
-  std::cerr << "New edge from " << source << " to " << target << std::endl;
   return m_graph.add_edge (source, target, Edge (once, line));
 }
 
