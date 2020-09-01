@@ -33,7 +33,6 @@
 * Changement de musique
 * Chargement des sons
 * Tremblement de caméra
-* Dialogues
 * Cutscenes
 * Menus
 * Indices

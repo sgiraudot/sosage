@@ -179,11 +179,14 @@ void Interface::dialog_clicked ()
 
   set<C::Int>("dialog:choice", choice);
 
+  // Clean up
   for (int c = choices.size() - 1; c >= 0; -- c)
   {
     std::string entity = "dialog_choice_" + std::to_string(c);
-    remove(entity + ":image");
-    remove(entity + ":position");
+    remove(entity + "_off:image");
+    remove(entity + "_off:position");
+    remove(entity + "_on:image");
+    remove(entity + "_on:position");
   }
   remove("dialog_choice_background:image");
   remove("dialog_choice_background:position");
@@ -590,61 +593,73 @@ void Interface::update_dialog_choices()
   if (get<C::Status>(GAME__STATUS)->value() != DIALOG_CHOICE)
     return;
 
-  auto cursor = get<C::Position>(CURSOR__POSITION);
-
   const std::vector<std::string>& choices
       = get<C::Vector<std::string> >("dialog:choices")->value();
 
-  auto interface_font = get<C::Font> ("interface:font");
+  // Generate images if not done yet
+  if (!request<C::Image>("dialog_choice_background:image"))
+  {
+    auto interface_font = get<C::Font> ("interface:font");
+    const std::string& player = get<C::String>("player:name")->value();
 
-  int bottom
-      = std::max(get<C::Position>("interface_action:position")->value().y()
-                 + get<C::Image>("interface_action:image")->height(),
-                 get<C::Position>("interface_verbs:position")->value().y()
-                 + get<C::Image>("interface_verbs:image")->height());
-  int y = bottom - 10;
+    int bottom
+        = std::max(get<C::Position>("interface_action:position")->value().y()
+                   + get<C::Image>("interface_action:image")->height(),
+                   get<C::Position>("interface_verbs:position")->value().y()
+                   + get<C::Image>("interface_verbs:image")->height());
+    int y = bottom - 10;
+
+    for (int c = choices.size() - 1; c >= 0; -- c)
+    {
+      std::string entity = "dialog_choice_" + std::to_string(c);
+      auto img_off
+        = set<C::Image>(entity + "_off:image", interface_font, "FFFFFF",
+                        choices[std::size_t(c)]);
+      img_off->z() = Config::dialog_depth;
+      img_off->set_scale(0.75);
+      img_off->set_relative_origin(0., 1.);
+
+      auto img_on
+        = set<C::Image>(entity + "_on:image", interface_font,
+                        get<C::String>(player + ":color")->value(),
+                        choices[std::size_t(c)]);
+      img_on->z() = Config::dialog_depth;
+      img_on->set_scale(0.75);
+      img_on->set_relative_origin(0., 1.);
+
+      Point p (10, y);
+      set<C::Position>(entity + "_off:position", p);
+      set<C::Position>(entity + "_on:position", p);
+
+      y -= img_off->height() * 0.75;
+    }
+
+    auto background = set<C::Image> ("dialog_choice_background:image",
+                                     Config::world_width, bottom - y + 20, 0, 0, 0);
+    background->set_relative_origin(0., 1.);
+    set<C::Position>("dialog_choice_background:position", Point(0,bottom));
+  }
+
+  auto cursor = get<C::Position>(CURSOR__POSITION);
 
   for (int c = choices.size() - 1; c >= 0; -- c)
   {
     std::string entity = "dialog_choice_" + std::to_string(c);
-    auto img
-      = set<C::Image>(entity + ":image",
-                      get<C::Font>("interface:font"), "FFFFFF",
-                      choices[std::size_t(c)]);
-    img->z() = Config::dialog_depth;
-    img->set_scale(0.75);
-    img->set_relative_origin(0., 1.);
+    auto img_off = get<C::Image>(entity + "_off:image");
+    auto img_on = get<C::Image>(entity + "_on:image");
+    const Point& p = get<C::Position>(entity + "_off:position")->value();
 
-    Point p (10, y);
-    set<C::Position>(entity + ":position", p);
-
-    Point screen_position = p - img->core().scaling * Vector(img->origin());
+    Point screen_position = p - img_off->core().scaling * Vector(img_off->origin());
     int xmin = screen_position.x();
     int ymin = screen_position.y();
-    int xmax = xmin + (img->core().scaling * (img->xmax() - img->xmin()));
-    int ymax = ymin + (img->core().scaling * (img->ymax() - img->ymin()));
+    int xmax = xmin + (img_off->core().scaling * (img_off->xmax() - img_off->xmin()));
+    int ymax = ymin + (img_off->core().scaling * (img_off->ymax() - img_off->ymin()));
 
-    if (xmin <= cursor->value().x() && cursor->value().x() <= xmax &&
-        ymin <= cursor->value().y() && cursor->value().y() <= ymax)
-    {
-      auto img
-        = set<C::Image>(entity + ":image",
-                        get<C::Font>("interface:font"),
-                        get<C::String>(get<C::String>("player:name")->value()
-                                       + ":color")->value(),
-                        choices[std::size_t(c)]);
-      img->z() = Config::dialog_depth;
-      img->set_scale(0.75);
-      img->set_relative_origin(0., 1.);
-    }
-
-    y -= img->height() * 0.75;
+    bool on = (xmin <= cursor->value().x() && cursor->value().x() <= xmax &&
+               ymin <= cursor->value().y() && cursor->value().y() <= ymax);
+    img_off->on() = !on;
+    img_on->on() = on;
   }
-
-  auto background = set<C::Image> ("dialog_choice_background:image",
-                                   Config::world_width, bottom - y + 20, 0, 0, 0);
-  background->set_relative_origin(0., 1.);
-  set<C::Position>("dialog_choice_background:position", Point(0,bottom));
 }
 
 

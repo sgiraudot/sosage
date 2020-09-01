@@ -27,10 +27,7 @@ History of versions and modifications of the SOSAGE engine.
 - Room changing while keeping inventory, etc.
 - Integer objects + triggers
 - Default action with right click
-
-### Content
-
-- Second room in progress
+- Dialogs
 
 ## `v0.1.0 (alpha1)` - 2020-04-25
 
@@ -48,12 +45,6 @@ History of versions and modifications of the SOSAGE engine.
 
 - Most of the game mechanisms except for interactions with NPC
   (dialogs, giving objects, etc.) and changing room
-- First room (bureau) working entirely
-
-### Content
-
-- Full first room (bureau), although sounds are still from stock (this
-  will be changed) and most graphics are missing shading
 
 ## `beginning` - 2019-10-20
 
