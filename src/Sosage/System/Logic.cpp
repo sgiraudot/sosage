@@ -505,6 +505,7 @@ void Logic::action_set_state (C::Action::Step step)
       = get<C::Image>(target + ":image");
     img->set_relative_origin(0.5, 0.5);
     img->z() = Config::inventory_back_depth;
+    img->on() = false;
   }
 }
 

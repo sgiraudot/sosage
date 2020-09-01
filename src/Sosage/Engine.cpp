@@ -86,28 +86,33 @@ int Engine::run (const std::string& folder_name)
   m_content.set<Component::Double>("camera:target", 0.0);
   m_content.set<Component::Inventory>("game:inventory");
 
-  // Raise exception now if folder does not exit
   std::shared_ptr<System::File_IO>
     file_io = System::make_handle<System::File_IO>(m_content);
+  // Raise exception now if folder does not exit
   file_io->test_init_folder (folder_name);
+
+  std::shared_ptr<System::Graphic>
+    graphic = System::make_handle<System::Graphic>(m_content);
+  std::shared_ptr<System::Interface>
+    interface = System::make_handle<System::Interface>(m_content);
 
   // Create all systems
   m_systems.push_back (file_io);
-  m_systems.push_back (System::make_handle<System::Graphic>(m_content));
   m_systems.push_back (System::make_handle<System::Input>(m_content));
+  m_systems.push_back (interface);
   m_systems.push_back (System::make_handle<System::Logic>(m_content));
-  m_systems.push_back (System::make_handle<System::Interface>(m_content));
   m_systems.push_back (System::make_handle<System::Animation>(m_content));
   m_systems.push_back (System::make_handle<System::Sound>(m_content));
+  m_systems.push_back (graphic);
   m_systems.push_back (System::make_handle<System::Time>(m_content));
 
   file_io->read_config();
 
-  m_systems[1]->init(); // init graphics
+  graphic->init(); // init graphics
 
   file_io->read_init (folder_name);
 
-  m_systems[4]->init(); // init interface
+  interface->init(); // init interface
 
   m_content.set<Component::Event>("window:rescaled");
 
