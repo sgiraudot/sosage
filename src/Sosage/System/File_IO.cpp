@@ -244,7 +244,7 @@ void File_IO::read_init (const std::string& folder_name)
   loading_spin_img->on() = false;
   loading_spin_img->set_relative_origin(0.5, 0.5);
   set_fac<C::Position> (LOADING_SPIN__POSITION, "loading_spin:position", Point(Config::world_width / 2,
-                                                                                                 Config::world_height / 2));
+                                                                               Config::world_height / 2));
 #endif
 
   set<C::Conditional>

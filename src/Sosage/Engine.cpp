@@ -116,6 +116,8 @@ int Engine::run (const std::string& folder_name)
 
   m_content.set<Component::Event>("window:rescaled");
 
+  graphic->run(); // Run graphic once to update view
+
   debug("Init done, entering main loop");
 
 #ifdef SOSAGE_EMSCRIPTEN
