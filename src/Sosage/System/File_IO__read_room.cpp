@@ -135,6 +135,7 @@ void File_IO::read_room (const std::string& file_name)
     force_keep.insert (entity);
 
   const std::string& player = get<C::String>("player:name")->value();
+  force_keep.insert (player);
   force_keep.insert (player + "_body");
   force_keep.insert (player + "_head");
   force_keep.insert (player + "_mouth");

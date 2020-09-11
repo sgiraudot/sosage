@@ -27,6 +27,7 @@
 
 #include <Sosage/Component/Debug.h>
 #include <Sosage/System/Time.h>
+#include <Sosage/Utils/profiling.h>
 
 namespace Sosage::System
 {
@@ -43,9 +44,11 @@ Time::Time (Content& content)
 
 void Time::run()
 {
+  SOSAGE_TIMER_START(System_Time__run);
   m_clock.wait(true);
   get<C::Int> (CLOCK__FRAME_ID)->set(m_clock.frame_id());
   get<C::Double> (CLOCK__FRAME_TIME)->set(m_clock.frame_time());
+  SOSAGE_TIMER_STOP(System_Time__run);
 }
 
 } // namespace Sosage::System

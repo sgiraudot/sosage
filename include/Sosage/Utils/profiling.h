@@ -32,6 +32,8 @@
 #include <algorithm>
 #include <cmath>
 
+#define SOSAGE_PROFILE
+#define SOSAGE_PROFILE_FINELY
 #ifdef SOSAGE_PROFILE
 #  define SOSAGE_TIMER_START(x) static Timer x(#x); x.start()
 #  define SOSAGE_TIMER_RESTART(x) x.start()
@@ -52,13 +54,19 @@ class Timer
 {
   std::string m_id;
   Time::Unit m_start;
+
+#ifdef SOSAGE_PROFILE_FINELY
+  std::vector<Time::Duration> m_duration;
+#else
   Time::Duration m_duration;
-  unsigned int m_nb;
+  unsigned int m_nb = 0;
+#endif
+
   bool m_master;
 
 public:
 
-  Timer (const std::string& id, bool master = true) : m_id (id), m_nb(0), m_master(master) { }
+  Timer (const std::string& id, bool master = true) : m_id (id), m_master(master) { }
 
   ~Timer()
   {
@@ -73,15 +81,32 @@ public:
   void start()
   {
     m_start = Time::now();
+#ifndef SOSAGE_PROFILE_FINELY
     ++ m_nb;
+#endif
   }
 
 
   void stop()
   {
+#ifdef SOSAGE_PROFILE_FINELY
+    m_duration.push_back(Time::now() - m_start);
+#else
     m_duration += Time::now() - m_start;
+#endif
   }
 
+#ifdef SOSAGE_PROFILE_FINELY
+  void display()
+  {
+    std::sort(m_duration.begin(), m_duration.end());
+    std::cerr << "Min = " << to_string(m_duration.front())
+              << ", 10% = " << to_string(m_duration[m_duration.size() / 10])
+              << ", median = " << to_string(m_duration[m_duration.size() / 2])
+              << ", 90% = " << to_string(m_duration[9 * m_duration.size() / 10])
+              << ", ma x= " << to_string(m_duration.back());
+  }
+#else
   double mean_duration() const { return m_duration / double(m_nb); }
 
   void display() const
@@ -92,6 +117,7 @@ public:
                 << to_string(mean_duration())
                 << " per iteration, " << m_nb << " iterations)";
   }
+#endif
 
   std::string to_string (double d) const
   {

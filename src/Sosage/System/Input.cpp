@@ -160,7 +160,7 @@ void Input::run()
         if (!m_virtual_cursor.has_moved &&
             distance(pos->value().x(), pos->value().y(),
                      m_virtual_cursor.cursor_x,
-                     m_virtual_cursor.cursor_y) < Config::virtual_cursor_sensitivity)
+                     m_virtual_cursor.cursor_y) > Config::virtual_cursor_sensitivity)
           m_virtual_cursor.has_moved = true;
       }
 
