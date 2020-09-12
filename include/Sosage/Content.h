@@ -68,7 +68,14 @@ public:
     Component::Handle_set new_set;
     for (Component::Handle c : m_data)
       if (!filter(c))
+      {
+        debug("Keeping " + c->id());
         new_set.insert(c);
+      }
+      else
+      {
+        debug("Deleting " + c->id());
+      }
     m_data.swap (new_set);
   }
 
@@ -112,11 +119,11 @@ public:
 #ifdef SOSAGE_DEBUG
     if (out == std::shared_ptr<T>())
     {
-      std::cerr << "Candidate are:" << std::endl;
+      debug("Candidate are:");
       std::string entity (key.begin(), key.begin() + key.find_first_of(':'));
       for (Component::Handle h : m_data)
         if (h->entity() == entity)
-          std::cerr << " * " << h->id() << std::endl;
+          debug (" * " + h->id());
     }
 #endif
     check (out != std::shared_ptr<T>(), "Cannot find " + key);
@@ -164,10 +171,10 @@ public:
                {
                  return a.second > b.second;
                });
-    std::cerr << "[Profiling component access count (10 first)]" << std::endl;
+    debug ("[Profiling component access count (10 first)]");
     for (std::size_t i = 0; i < 10; ++ i)
-      std::cerr << " * " << sorted[i].first << " (accessed "
-                << sorted[i].second << " times)" << std::endl;
+      debug (" * " + sorted[i].first + " (accessed "
+             +  std::to_string(sorted[i].second) + " times)");
   }
 #else
   inline void count_access (const std::string&) { }

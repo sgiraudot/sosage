@@ -30,7 +30,7 @@
 #include <Sosage/Config/platform.h>
 #include <memory>
 
-#if !defined(SOSAGE_EMSCRIPTEN) && !defined(SOSAGE_WINDOWS)
+#if !defined(SOSAGE_EMSCRIPTEN)
 #define SOSAGE_THREADS_ENABLED
 #endif
 

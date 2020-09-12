@@ -151,10 +151,7 @@ void Interface::code_clicked (C::Position_handle cursor)
     Point p = cursor->value() - Vector(position->value()) + Vector (0.5  * window->width(),
                                                                     0.5 * window->height());
     if (code->click(p.x(), p.y()))
-    {
       set<C::Event>("code:button_clicked");
-      std::cerr << "Clicked!" << std::endl;
-    }
   }
 
   remove("cursor:clicked");
@@ -385,11 +382,14 @@ void Interface::detect_collision (C::Position_handle cursor)
   m_collision = C::Image_handle();
   double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
+  const std::string& player = get<C::String>("player:name")->value();
+
   for (const auto& e : m_content)
     if (auto img = C::cast<C::Image>(e))
     {
       if (!img->on() ||
           img->collision() == UNCLICKABLE ||
+          img->character_entity() == player ||
           img->id().find("debug") == 0 ||
           img->id().find("chosen_verb") == 0 ||
           img->id().find("interface_") == 0)

@@ -59,7 +59,7 @@ namespace Sosage
 #if defined(SOSAGE_ANDROID)
 inline void check_impl (const char* file, int line, const std::string& str)
 {
-  __android_log_print (ANDROID_LOG_ERROR, "error", "%s [%s:%i]", str.c_str(), file, line);
+  __android_log_print (ANDROID_LOG_ERROR, "Sosage Error", "%s [%s:%i]", str.c_str(), file, line);
   exit(EXIT_FAILURE);
 }
 #elif defined(SOSAGE_EMSCRIPTEN)
@@ -84,7 +84,7 @@ inline void check_impl (const char* file, int line, const std::string& str)
 #if defined(SOSAGE_ANDROID)
 inline void debug (const std::string& str)
 {
-  __android_log_print (ANDROID_LOG_INFO, "Info", "%s", str.c_str());
+  __android_log_print (ANDROID_LOG_INFO, "Sosage Info", "%s", str.c_str());
 }
 #elif defined(SOSAGE_EMSCRIPTEN)
 inline void debug (const std::string& str)

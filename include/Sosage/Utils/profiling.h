@@ -72,9 +72,8 @@ public:
   {
     if (m_master)
     {
-      std::cerr << "[Profiling " << m_id << "] ";
+      debug ("[Profiling " + m_id + "] ");
       display();
-      std::cerr << std::endl;
     }
   }
 
@@ -100,22 +99,21 @@ public:
   void display()
   {
     std::sort(m_duration.begin(), m_duration.end());
-    std::cerr << "Min = " << to_string(m_duration.front())
-              << ", 10% = " << to_string(m_duration[m_duration.size() / 10])
-              << ", median = " << to_string(m_duration[m_duration.size() / 2])
-              << ", 90% = " << to_string(m_duration[9 * m_duration.size() / 10])
-              << ", ma x= " << to_string(m_duration.back());
+    debug ("Min = " + to_string(m_duration.front())
+           + ", 10% = " + to_string(m_duration[m_duration.size() / 10])
+        + ", median = " + to_string(m_duration[m_duration.size() / 2])
+        + ", 90% = " + to_string(m_duration[9 * m_duration.size() / 10])
+        + ", ma x= " + to_string(m_duration.back()));;
   }
 #else
   double mean_duration() const { return m_duration / double(m_nb); }
 
   void display() const
   {
-    std::cerr << to_string(m_duration);
-    if (m_nb > 1)
-      std::cerr << " ("
-                << to_string(mean_duration())
-                << " per iteration, " << m_nb << " iterations)";
+    debug(to_string(m_duration)
+          + ((m_nb > 1)
+             ? " (" + to_string(mean_duration()) + " per iteration, " + m_nb + " iterations)"
+             : "");
   }
 #endif
 
@@ -137,8 +135,7 @@ public:
   Counter (const std::string& id) : m_id (id), m_nb(0) { }
   ~Counter ()
   {
-    std::cerr << "[Profiling " << m_id << "] "
-              << m_nb << " iteration(s)" << std::endl;
+    debug ("[Profiling " + m_id + "] " + std::to_string(m_nb) + " iteration(s)");
   }
 
   void increment() { ++ m_nb; }

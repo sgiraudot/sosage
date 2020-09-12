@@ -127,11 +127,7 @@ public:
   {
     for (GEdge e : m_graph.incident_edges(m_current))
       if (m_graph[e].status != DISABLED)
-      {
-        std::cerr << "Pushing " << m_graph[e].line << std::endl;
         choices.push_back (m_graph[e].line);
-      }
-
   }
 
 };

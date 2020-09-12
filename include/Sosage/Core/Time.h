@@ -29,9 +29,36 @@
 
 #include <Sosage/Third_party/SDL_time.h>
 
+#include <chrono>
+#include <thread>
+
 namespace Sosage::Core
 {
+
+#if 0
 typedef Third_party::SDL_time Time;
+#else
+class Time
+{
+public:
+
+  typedef std::chrono::steady_clock::time_point::rep Unit;
+  typedef std::chrono::steady_clock::duration::rep Duration;
+
+  static Unit now()
+  {
+    return std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::steady_clock::now().time_since_epoch()).count();
+  }
+
+  static void wait (const Duration& d)
+  {
+    std::this_thread::sleep_for
+        (std::chrono::steady_clock::duration
+         (std::chrono::milliseconds { d }));
+  }
+};
+#endif
 }
 
 #endif

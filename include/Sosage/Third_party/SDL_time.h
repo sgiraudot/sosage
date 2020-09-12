@@ -42,7 +42,12 @@ public:
   typedef Uint32 Unit;
   typedef Uint32 Duration;
 
-  static Unit now() { return SDL_GetTicks(); }
+  static Unit now()
+  {
+    Unit out = SDL_GetTicks();
+    debug("Ticks = " + std::to_string(out));
+    return out;
+  }
 
   static void wait (const Duration& d) { SDL_Delay (d); }
 };

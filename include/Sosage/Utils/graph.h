@@ -276,9 +276,13 @@ public:
       {
         Edge e = incident_edge(v, i);
         if (Directed)
+        {
           check (source(e), "Ill-formed edge");
+        }
         else
+        {
           check (source(e) == v || target(e) == v, "Ill-formed edge");
+        }
       }
     }
   }

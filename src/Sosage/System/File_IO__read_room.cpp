@@ -431,7 +431,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
   auto state_handle = get<C::String>(id + ":state");
   if (state_handle->value() == "inventory")
   {
-    std::cerr << "Skipping " << id << std::endl;
+    debug ("Skipping " + id);
     return;
   }
 
@@ -547,6 +547,8 @@ void File_IO::read_actions (const Core::File_IO::Node& node, const std::string& 
         look_found = true;
 
       C::Action_handle action;
+
+      debug("Read action " + corrected_id + ":" + a_id);
 
       if (iaction.has("state"))
       {
