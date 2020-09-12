@@ -535,12 +535,12 @@ void File_IO::read_actions (const Core::File_IO::Node& node, const std::string& 
         break;
       }
 
-      std::string corrected_id = id;
+      std::string target_id = id;
 
       if (iaction.has("target"))
       {
-        a_id = a_id + "_" + id;
-        corrected_id = iaction["target"].string();
+        target_id = iaction["target"].string();
+        a_id = a_id + "_" + target_id;
       }
 
       if (a_id == "look")
@@ -548,27 +548,27 @@ void File_IO::read_actions (const Core::File_IO::Node& node, const std::string& 
 
       C::Action_handle action;
 
-      debug("Read action " + corrected_id + ":" + a_id);
+      debug("Read action " + id + ":" + a_id);
 
       if (iaction.has("state"))
       {
         std::string state = iaction["state"].string();
         auto conditional_handle
-          = request<C::String_conditional>(corrected_id + ":" + a_id);
+          = request<C::String_conditional>(id + ":" + a_id);
 
         if (!conditional_handle)
         {
           auto state_handle
-            = get<C::String>(corrected_id + ":state");
+            = get<C::String>(target_id + ":state");
           conditional_handle
-            = set<C::String_conditional>(corrected_id + ":" + a_id, state_handle);
+            = set<C::String_conditional>(id + ":" + a_id, state_handle);
         }
 
-        action = C::make_handle<C::Action>(corrected_id + ":" + a_id + ":" + state);
+        action = C::make_handle<C::Action>(id + ":" + a_id + ":" + state);
         conditional_handle->add (state, action);
       }
       else
-        action = set<C::Action>(corrected_id + ":" + a_id);
+        action = set<C::Action>(id + ":" + a_id);
 
 
       for (std::size_t k = 0; k < iaction["effect"].size(); ++ k)

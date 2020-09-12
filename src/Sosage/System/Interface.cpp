@@ -235,8 +235,8 @@ void Interface::action_clicked(const std::string& verb)
 
         // Find binary action
         auto action
-          = request<C::Action> (entity + ":use_"
-                                                  + source->value());
+          = request<C::Action> (source->value() + ":use_" + entity);
+        debug("Request " + source->value() + ":use_" + entity);
         if (action)
         {
           set<C::Variable>("character:action", action);
