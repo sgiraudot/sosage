@@ -273,7 +273,7 @@ bool Logic::compute_path_from_target (C::Position_handle target)
   ground_map->find_path (origin, t, path);
 
   // Check if character is already at target
-  if ((path.size() == 1) && (path[0] == origin))
+  if (path.empty() || ((path.size() == 1) && (path[0] == origin)))
     return false;
 
   set<C::Path>(id + ":path", path);

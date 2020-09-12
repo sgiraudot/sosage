@@ -47,8 +47,16 @@ public:
   Path (const std::string& id, std::vector<Point>& steps);
   virtual std::string str() const;
   std::size_t size() const { return m_steps.size(); }
-  const Point& operator[] (const std::size_t& idx) const { return m_steps[idx]; }
-  Point& operator[] (const std::size_t& idx) { return m_steps[idx]; }
+  const Point& operator[] (const std::size_t& idx) const
+  {
+    dbg_check(idx < m_steps.size(), "Accessing index " + std::to_string(idx) + " in path of size " + std::to_string(m_steps.size()));
+    return m_steps[idx];
+  }
+  Point& operator[] (const std::size_t& idx)
+  {
+    dbg_check(idx < m_steps.size(), "Accessing index " + std::to_string(idx) + " in path of size " + std::to_string(m_steps.size()));
+    return m_steps[idx];
+  }
   const std::size_t& current() const { return m_current; }
   std::size_t& current() { return m_current; }
 
