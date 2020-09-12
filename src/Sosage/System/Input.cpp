@@ -155,8 +155,8 @@ void Input::run()
           ev.type() == CURSOR_MOVE)
       {
         auto pos = get<C::Position>(CURSOR__POSITION);
-        pos->set(Point(m_virtual_cursor.cursor_x + ev.x() - m_virtual_cursor.x,
-                       m_virtual_cursor.cursor_y + ev.y() - m_virtual_cursor.y));
+        pos->set(Point(m_virtual_cursor.cursor_x + Config::virtual_cursor_speed * (ev.x() - m_virtual_cursor.x),
+                       m_virtual_cursor.cursor_y + Config::virtual_cursor_speed * (ev.y() - m_virtual_cursor.y)));
         if (!m_virtual_cursor.has_moved &&
             distance(pos->value().x(), pos->value().y(),
                      m_virtual_cursor.cursor_x,

@@ -222,7 +222,9 @@ void File_IO::read_init (const std::string& folder_name)
          cursor_img);
   }
 
-  set_fac<C::Position> (CURSOR__POSITION, "cursor:position", Point(0,0));
+  set_fac<C::Position> (CURSOR__POSITION, "cursor:position",
+                        (get<C::Boolean>("interface:virtual_cursor")->value()
+                        ? Point(Config::world_width / 2, Config::world_height / 2) : Point(0,0)));
 
   std::string turnicon = input["turnicon"].string("images", "interface", "png");
   auto turnicon_img
