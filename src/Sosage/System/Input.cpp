@@ -52,6 +52,8 @@ void Input::run()
          (get<C::Int>("interface:width")->value(),
           get<C::Int>("interface:height")->value()))
   {
+    //debug("New event " + ev.to_string());
+
     // Quit on: interface X-cross / Escape key / Q key
     if (ev == Event(WINDOW, QUIT) ||
         ev == Event(KEY_UP, EXIT) ||

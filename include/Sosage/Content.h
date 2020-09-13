@@ -57,7 +57,13 @@ public:
     display_access();
   }
 
-  void clear() { m_data.clear(); }
+  void clear()
+  {
+    for (std::size_t i = 0; i < NUMBER_OF_KEYS; ++ i)
+      m_fast_access_components[i] = nullptr;
+    m_data.clear();
+
+  }
   std::size_t size() const { return m_data.size(); }
   Component::Handle_set::const_iterator begin() const { return m_data.begin(); }
   Component::Handle_set::const_iterator end() const { return m_data.end(); }

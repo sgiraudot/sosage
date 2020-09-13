@@ -27,6 +27,8 @@
 #ifndef SOSAGE_COMPONENT_HANDLE_H
 #define SOSAGE_COMPONENT_HANDLE_H
 
+#include <Sosage/Utils/error.h>
+
 #include <memory>
 #include <string>
 #include <unordered_set>

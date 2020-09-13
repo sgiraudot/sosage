@@ -28,8 +28,10 @@
 #define SOSAGE_UTILS_EVENT_H
 
 #include <Sosage/Utils/enum.h>
+#include <Sosage/Utils/error.h>
 
 #include <iostream>
+#include <sstream>
 
 namespace Sosage
 {
@@ -112,6 +114,13 @@ public:
     return (m_type != EMPTY);
   }
 
+  std::string to_string() const
+  {
+    std::ostringstream oss;
+    oss << *this;
+    return oss.str();
+  }
+
   friend std::ostream& operator<< (std::ostream& os, const Event& ev)
   {
     if (ev == Event())
@@ -120,7 +129,7 @@ public:
       return os;
     }
     os << "Event(" << ev.type() << ", " << ev.value()
-       << ", " << ev.x() << ", " << ev.y() << ")" << std::endl;
+       << ", " << ev.x() << ", " << ev.y() << ")";
     return os;
   }
 

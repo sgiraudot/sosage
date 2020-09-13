@@ -14,7 +14,7 @@ SRC_PATH := ../../../../../
 LOCAL_CPPFLAGS := -DSOSAGE_DATA_FOLDER=\"data/\" -std=c++17 \
   -frtti \
   -DSOSAGE_LINKED_WITH_SDL_MIXER \
-	-O3
+	-O3 -DNDEBUG
 
 LOCAL_C_INCLUDES := \
   $(LOCAL_PATH)/$(SRC_PATH)/include \

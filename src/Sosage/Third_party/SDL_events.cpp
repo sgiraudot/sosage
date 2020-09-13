@@ -98,6 +98,11 @@ Event SDL_events::next_event (int interface_width, int interface_height)
 
   if (is_mouse)
   {
+    // For some reason, SDL generates fake mouse events that duplicate finger events and that
+    // mess up everything, so let's just ignore mouse events on Android…
+    if constexpr (Config::android)
+      return Event();
+
     if (ev.button.button == SDL_BUTTON_LEFT)
       value = LEFT;
     else if (ev.button.button == SDL_BUTTON_RIGHT)
@@ -109,9 +114,11 @@ Event SDL_events::next_event (int interface_width, int interface_height)
   }
 
   if (is_finger)
+  {
     return Event (type, LEFT,
                   ev.tfinger.x * (Config::world_width + interface_width),
                   ev.tfinger.y * (Config::world_height + interface_height));
+  }
 
   // Keys
   if (ev.type == SDL_KEYDOWN)
