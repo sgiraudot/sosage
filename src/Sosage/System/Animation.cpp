@@ -96,18 +96,14 @@ void Animation::run_one_frame()
   }
 
   std::vector<std::string> to_remove;
-  std::unordered_set<std::string> characters_talking;
   std::vector<C::Animation_handle> animations;
 
+  // First check if some character should change looking direction
   for (auto c : m_content)
   {
-    if (auto path = C::cast<C::Path>(c))
+    if (c->component() == "lookat")
     {
-      if (!compute_movement_from_path(path))
-        to_remove.push_back(c->id());
-    }
-    else if (c->component() == "lookat")
-    {
+      debug("lookat");
       std::string id = c->entity();
       auto lookat = C::cast<C::Position>(c);
       auto abody = get<C::Animation>(id + "_idle:image");
@@ -135,12 +131,17 @@ void Animation::run_one_frame()
       }
 
       generate_random_idle_animation (id, looking_right);
-
-      // Avoid canceling mouth animation if character also starts talking now
-      if (characters_talking.find(id) != characters_talking.end())
-        generate_random_mouth_animation(id);
-
       to_remove.push_back (c->id());
+    }
+  }
+
+  // Then check all other cases
+  for (auto c : m_content)
+  {
+    if (auto path = C::cast<C::Path>(c))
+    {
+      if (!compute_movement_from_path(path))
+        to_remove.push_back(c->id());
     }
     else if (C::cast<C::Event>(c))
     {
@@ -148,7 +149,6 @@ void Animation::run_one_frame()
       if (c->component() == "start_talking")
       {
         generate_random_mouth_animation (id);
-        characters_talking.insert (id);
         to_remove.push_back(c->id());
       }
       else if (c->component() == "stop_talking")
@@ -160,6 +160,7 @@ void Animation::run_one_frame()
       }
       else if (c->component() == "stop_animation")
       {
+        debug("stop_animation");
         generate_random_idle_body_animation (id,
                                              get<C::Animation>(id + "_head:image")
                                              ->frames().front().y == 0);
@@ -170,6 +171,7 @@ void Animation::run_one_frame()
     {
       auto anim = C::cast<C::String>(c);
       std::string id = c->entity();
+      debug("start_animation");
       generate_animation (id, anim->value());
       to_remove.push_back (c->id());
     }
@@ -328,6 +330,8 @@ void Animation::generate_random_idle_animation (const std::string& id, bool look
 
 void Animation::generate_random_idle_head_animation (const std::string& id, bool looking_right)
 {
+  debug ("Generate random idle head animation for character \"" + id + "\"");
+
   auto head = get<C::Animation>(id + "_head:image");
   auto mouth = get<C::Animation>(id + "_mouth:image");
 
@@ -406,6 +410,8 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
 
 void Animation::generate_random_idle_body_animation (const std::string& id, bool looking_right)
 {
+  debug ("Generate random idle body animation for character \"" + id + "\"");
+
   auto image = get<C::Animation>(id + "_idle:image");
   get<C::Animation>(id + "_walking:image")->on() = false;
 
@@ -487,6 +493,7 @@ void Animation::generate_random_mouth_animation (const std::string& id)
 
 void Animation::generate_animation (const std::string& id, const std::string& anim)
 {
+  debug ("Generate animation \"" + anim + "\" for character \"" + id + "\"");
   auto image = get<C::Animation>(id + "_idle:image");
   const std::vector<std::string>& positions
     = get<C::Vector<std::string> >(id + "_idle:values")->value();
