@@ -196,37 +196,8 @@ void Logic::run ()
         {
           const C::Action::Step& s = (*m_current_action)[m_next_step ++];
 
-          if (s.get(0) == "animate")
-            action_animate (s);
-          else if (s.get(0) == "comment")
-            action_comment (s);
-          else if (s.get(0) == "dialog")
-          {
-            action_dialog (s);
-            break; // action dialog replaces current action
-          }
-          else if (s.get(0) == "goto")
-            action_goto (m_current_action->entity());
-          else if (s.get(0) == "load")
-            action_load (s);
-          else if (s.get(0) == "look")
-            action_look (m_current_action->entity());
-          else if (s.get(0) == "move")
-            action_move (s);
-          else if (s.get(0) == "play")
-            action_play (s);
-          else if (s.get(0) == "lock")
-            status->push(LOCKED);
-          else if (s.get(0) == "set_state")
-            action_set_state (s);
-          else if (s.get(0) == "set_coordinates")
-            action_set_coordinates (s);
-          else if (s.get(0) == "show")
-            action_show (s);
-          else if (s.get(0) == "sync")
+          if (!apply_step(s))
             break;
-          else if (s.get(0) == "unlock")
-            status->pop();
         }
     }
   }
@@ -308,6 +279,47 @@ void Logic::update_debug_info (C::Debug_handle debug_info)
 
   }
 
+}
+
+bool Logic::apply_step (C::Action::Step s)
+{
+  if (s.get(0) == "animate")
+    action_animate (s);
+  else if (s.get(0) == "comment")
+    action_comment (s);
+  else if (s.get(0) == "dialog")
+  {
+    action_dialog (s);
+    return false; // action dialog replaces current action
+  }
+  else if (s.get(0) == "goto")
+    action_goto (m_current_action->entity());
+  else if (s.get(0) == "increment")
+    action_modify (s.get(1), 1);
+  else if (s.get(0) == "decrement")
+    action_modify (s.get(1), -1);
+  else if (s.get(0) == "load")
+    action_load (s);
+  else if (s.get(0) == "look")
+    action_look (m_current_action->entity());
+  else if (s.get(0) == "move")
+    action_move (s);
+  else if (s.get(0) == "play")
+    action_play (s);
+  else if (s.get(0) == "lock")
+    get<C::Status>(GAME__STATUS)->push(LOCKED);
+  else if (s.get(0) == "set_state")
+    action_set_state (s);
+  else if (s.get(0) == "set_coordinates")
+    action_set_coordinates (s);
+  else if (s.get(0) == "show")
+    action_show (s);
+  else if (s.get(0) == "sync")
+    return false;
+  else if (s.get(0) == "unlock")
+    get<C::Status>(GAME__STATUS)->pop();
+
+  return true;
 }
 
 void Logic::action_comment (C::Action::Step step)
@@ -440,6 +452,20 @@ void Logic::action_look (const std::string& target)
                                          get<C::Position>(target + ":position")->value());
   }
 }
+
+void Logic::action_modify (const std::string& id, int diff)
+{
+  auto integer = get<C::Int>(id + ":value");
+  integer->set (integer->value() + diff);
+
+  auto action = request<C::Action>(id + ":" + std::to_string(integer->value()));
+  if (!action)
+    action = get<C::Action>(id + ":default");
+
+  for (std::size_t i = 0; i < action->size(); ++ i)
+    apply_step ((*action)[i]);
+}
+
 
 void Logic::action_move (C::Action::Step step)
 {

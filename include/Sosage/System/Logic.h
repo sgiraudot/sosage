@@ -64,11 +64,13 @@ private:
   void update_camera();
   void update_debug_info (Component::Debug_handle debug_info);
 
+  bool apply_step (Component::Action::Step step);
   void action_comment (Component::Action::Step step);
   void action_dialog (Component::Action::Step step);
   void action_goto (const std::string& target);
   void action_load (Component::Action::Step step);
   void action_look (const std::string& target);
+  void action_modify (const std::string& id, int diff);
   void action_move (Component::Action::Step step);
   void action_play (Component::Action::Step step);
   void action_animate (Component::Action::Step step);

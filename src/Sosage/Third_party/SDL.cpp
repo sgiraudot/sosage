@@ -34,10 +34,20 @@
 namespace Sosage::Third_party
 {
 
+void delete_texture (SDL_Texture* texture)
+{
+  //debug("Deleting " + std::to_string((std::size_t)(int*)(texture)));
+  SDL_DestroyTexture(texture);
+  //debug("done");
+}
+
+
+
 SDL_Window* SDL::m_window = nullptr;
 SDL_Renderer* SDL::m_renderer = nullptr;
 SDL::Surface_manager SDL::m_surfaces (SDL_FreeSurface);
-SDL::Texture_manager SDL::m_textures (SDL_DestroyTexture);
+//SDL::Texture_manager SDL::m_textures (SDL_DestroyTexture);
+SDL::Texture_manager SDL::m_textures (delete_texture);
 SDL::Font_manager SDL::m_fonts (TTF_CloseFont);
 
 SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)

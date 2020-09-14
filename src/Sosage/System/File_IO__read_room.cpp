@@ -214,6 +214,8 @@ void File_IO::read_room (const std::string& file_name)
       read_code (node, id);
     else if (type == "dialog")
       read_dialog (node, id);
+    else if (type == "integer")
+      read_integer (node, id);
     else if (type == "object")
       read_object (node, id);
     else if (type == "origin")
@@ -425,6 +427,24 @@ void File_IO::read_dialog (const Core::File_IO::Node& node, const std::string& i
   }
 }
 
+void File_IO::read_integer (const Core::File_IO::Node& node, const std::string& id)
+{
+  int value = node["value"].integer();
+  auto integer = set<C::Int>(id + ":value", value);
+
+  for (std::size_t i = 0; i < node["triggers"].size(); ++ i)
+  {
+    const Core::File_IO::Node& itrigger = node["triggers"][i];
+
+    std::string value = itrigger["value"].string();
+
+    auto action = set<C::Action>(id + ":" + value);
+
+    for (std::size_t k = 0; k < itrigger["effect"].size(); ++ k)
+      action->add (itrigger["effect"][k].string_array());
+  }
+}
+
 void File_IO::read_object (const Core::File_IO::Node& node, const std::string& id)
 {
   // First, check if object already exists in inventory (if so, skip)
@@ -622,6 +642,8 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
       std::string skin = istate["skin"].string("images", "scenery", "png");
       auto img = C::make_handle<C::Image>(id + ":conditional_image",
                                                           local_file_name(skin), z);
+      img->collision() = UNCLICKABLE;
+      img->set_relative_origin(0.5, 1.0);
       conditional_handle->add (state, img);
     }
   }
