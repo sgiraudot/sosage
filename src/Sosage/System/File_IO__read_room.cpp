@@ -584,7 +584,7 @@ void File_IO::read_actions (const Core::File_IO::Node& node, const std::string& 
             = set<C::String_conditional>(id + ":" + a_id, state_handle);
         }
 
-        action = C::make_handle<C::Action>(id + ":" + a_id + ":" + state);
+        action = C::make_handle<C::Action>(id + ":" + a_id);
         conditional_handle->add (state, action);
       }
       else

@@ -104,6 +104,11 @@ public:
 
   Box box() const { return Box(m_x, m_y, m_x, m_y); }
 
+  friend std::string to_string(const Point& p)
+  {
+    return "Point(" + std::to_string(p.m_x) + ";" + std::to_string(p.m_y) + ")";
+  }
+
   friend std::ostream& operator<< (std::ostream& os, const Point& c)
   {
     os << "Point(" << c.m_x << ";" << c.m_y << ")";

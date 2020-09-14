@@ -237,9 +237,15 @@ bool Logic::compute_path_from_target (C::Position_handle target)
   Point origin = position->value();
   Point t = target->value();
 
-  if (target->component() != "view")
-    t = t + Vector (get<C::Double>(CAMERA__POSITION)->value(), 0);
+  debug("Target = " + to_string(t));
 
+  if (target->component() != "view")
+  {
+    debug ("Camera position = " + std::to_string(get<C::Double>(CAMERA__POSITION)->value()));
+    t = t + Vector (get<C::Double>(CAMERA__POSITION)->value(), 0);
+  }
+
+  debug("Computing path from " + to_string(origin) + " to " + to_string(t));
   std::vector<Point> path;
   ground_map->find_path (origin, t, path);
 
@@ -293,7 +299,7 @@ bool Logic::apply_step (C::Action::Step s)
     return false; // action dialog replaces current action
   }
   else if (s.get(0) == "goto")
-    action_goto (m_current_action->entity());
+    action_goto (m_current_action->target_entity());
   else if (s.get(0) == "increment")
     action_modify (s.get(1), 1);
   else if (s.get(0) == "decrement")
@@ -301,7 +307,7 @@ bool Logic::apply_step (C::Action::Step s)
   else if (s.get(0) == "load")
     action_load (s);
   else if (s.get(0) == "look")
-    action_look (m_current_action->entity());
+    action_look (m_current_action->target_entity());
   else if (s.get(0) == "move")
     action_move (s);
   else if (s.get(0) == "play")
@@ -424,6 +430,7 @@ void Logic::action_dialog (C::Action::Step step)
 
 void Logic::action_goto (const std::string& target)
 {
+  debug ("action_goto " + target);
   const std::string& id = get<C::String>("player:name")->value();
 
   auto position = request<C::Position>(target + ":view");
@@ -439,6 +446,7 @@ void Logic::action_load (C::Action::Step step)
 
 void Logic::action_look (const std::string& target)
 {
+  debug ("action_look " + target);
   const std::string& id = get<C::String>("player:name")->value();
 
   if (target == "default" || !request<C::Position>(target + ":position"))

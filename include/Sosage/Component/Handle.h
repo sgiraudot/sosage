@@ -51,6 +51,7 @@ public:
     return std::string (m_id.begin(), m_id.begin() + m_id.find_first_of(':'));
   }
 
+  // Special handling of entity for characters
   std::string character_entity() const
   {
     for (const std::string& postfix : { "_body", "_head", "_idle", "_mouth", "_walking" })
@@ -58,6 +59,18 @@ public:
       std::size_t pos = m_id.find(postfix);
       if (pos != std::string::npos)
         return std::string (m_id.begin(), m_id.begin() + pos);
+    }
+    return std::string (m_id.begin(), m_id.begin() + m_id.find_first_of(':'));
+  }
+
+  // Special handling of entity for binary actions
+  std::string target_entity() const
+  {
+    for (const std::string& prefix : { ":use_" })
+    {
+      std::size_t pos = m_id.find(prefix);
+      if (pos != std::string::npos)
+        return std::string (m_id.begin() + pos + prefix.size(), m_id.end());
     }
     return std::string (m_id.begin(), m_id.begin() + m_id.find_first_of(':'));
   }
