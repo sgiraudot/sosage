@@ -491,7 +491,6 @@ void Logic::action_play (C::Action::Step step)
   std::string target = step.get(1);
 
   auto animation = get<C::Animation>(target + ":image");
-  animation->reset (true, 1);
   animation->on() = true;
 }
 

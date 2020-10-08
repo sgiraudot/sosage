@@ -1,13 +1,11 @@
 # TODO list
 
-### Bugs
-
-* bugs aléatoires de la ground map
-
 ### Graphique
 
 * Animations Superflu
+* Ouverture sas
 * Câble
+* Éclairs / explosions
 * Sophie électrique
 * Choix du mode de curseur
 * Page tuto clics/curseur virtuel
@@ -26,6 +24,7 @@
 * Clef voiture
 * Musique intro
 * Musique flug 2
+* Musique Harpagon
 
 ### Code
 
@@ -33,6 +32,7 @@
 * Changement de musique
 * Chargement des sons
 * Tremblement de caméra
+* Fadein / fadeout
 * Cutscenes
 * Menus
 * Indices

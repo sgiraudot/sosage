@@ -269,11 +269,36 @@ void File_IO::read_animation (const Core::File_IO::Node& node, const std::string
   int y = node["coordinates"][1].integer();
   int z = node["coordinates"][2].integer();
   std::string skin = node["skin"].string("images", "animations", "png");
-  int length = node["length"].integer();
+
+  int width, height;
+  if (node["length"].size() == 0)
+  {
+    width = node["length"].integer();
+    height = 1;
+  }
+  else
+  {
+    width = node["length"][0].integer();
+    height = node["length"][1].integer();
+  }
 
   auto pos = set<C::Position>(id + ":position", Point(x,y), false);
   auto img = set<C::Animation>(id + ":image", local_file_name(skin), z,
-                                                 length, 1, false);
+                               width, height, node["loop"].boolean());
+
+  if (node.has("frames"))
+  {
+    std::cerr << "Frames! " << node["frames"].size() << std::endl;
+    img->frames().clear();
+    for (std::size_t i = 0; i < node["frames"].size(); ++ i)
+    {
+      int idx = node["frames"][i].integer();
+      int x = idx % width;
+      int y = idx / width;
+      img->frames().emplace_back (x, y);
+    }
+  }
+
   img->on() = false;
   img->set_relative_origin(0.5, 1.0);
   debug("Animation " + id + " at position " + std::to_string(img->z()));
