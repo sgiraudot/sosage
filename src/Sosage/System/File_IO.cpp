@@ -233,7 +233,7 @@ void File_IO::read_init (const std::string& folder_name)
 
   std::string loading = input["loading"].string("images", "interface", "png");
   auto loading_img = C::make_handle<C::Image> ("loading:image", local_file_name(loading),
-                                                               Config::cursor_depth);
+                                                               Config::loading_depth);
   loading_img->set_relative_origin(0.5, 0.5);
   set<C::Position> ("loading:position", Point(Config::world_width / 2,
                                                                 Config::world_height / 2));
@@ -242,7 +242,7 @@ void File_IO::read_init (const std::string& folder_name)
   std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
   int nb_img = input["loading_spin"][1].integer();
   auto loading_spin_img = set_fac<C::Animation> (LOADING_SPIN__IMAGE, "loading_spin:image", local_file_name(loading_spin),
-                                                                   Config::cursor_depth, nb_img, 1, true);
+                                                                   Config::loading_depth, nb_img, 1, true);
   loading_spin_img->on() = false;
   loading_spin_img->set_relative_origin(0.5, 0.5);
   set_fac<C::Position> (LOADING_SPIN__POSITION, "loading_spin:position", Point(Config::world_width / 2,

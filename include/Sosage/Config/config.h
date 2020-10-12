@@ -50,12 +50,17 @@ constexpr int camera_limit_left = world_width / 4;
 constexpr int camera_limit_right = (3 * world_width) / 4;
 constexpr double camera_speed = 0.1;
 
-constexpr int interface_depth = 1000000;
-constexpr int inventory_back_depth = interface_depth + 1;
-constexpr int inventory_front_depth = inventory_back_depth + 1;
-constexpr int inventory_over_depth = inventory_front_depth + 1;
-constexpr int dialog_depth = inventory_over_depth + 1;
-constexpr int cursor_depth = dialog_depth + 1;
+enum Depth
+{
+  interface_depth = 1000000,
+  inventory_back_depth,
+  inventory_front_depth,
+  inventory_over_depth,
+  dialog_depth,
+  cursor_depth,
+  overlay_depth,
+  loading_depth
+};
 
 enum Layout { AUTO, WIDESCREEN, STANDARD, SQUARE, PORTRAIT };
 

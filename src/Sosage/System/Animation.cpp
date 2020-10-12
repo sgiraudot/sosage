@@ -40,7 +40,7 @@ namespace Sosage::System
 namespace C = ::Sosage::Component;
 
 Animation::Animation (Content& content)
-  : Base (content), m_frame_id(0)
+  : Base (content), m_frame_id(0), m_fade_to_remove(false)
 {
 }
 
@@ -182,6 +182,17 @@ void Animation::run_one_frame()
 
   for (const std::string& c : to_remove)
     remove(c);
+
+  if (auto fadein = request<C::Boolean>("fade:in"))
+  {
+    fade (get<C::Double>("fade:begin")->value(), get<C::Double>("fade:end")->value(), fadein->value());
+    m_fade_to_remove = fadein->value();
+  }
+  else if (m_fade_to_remove)
+  {
+    remove("fade:image");
+    m_fade_to_remove = false;
+  }
 
   update_camera_target();
 
@@ -515,6 +526,25 @@ void Animation::generate_animation (const std::string& id, const std::string& an
   check (index != -1, "No " + anim + " skin found for " + id);
 
   image->frames().push_back (C::Animation::Frame (index, row_index, 1));
+}
+
+void Animation::fade (double begin_time, double end_time, bool fadein)
+{
+  double current_time = get<C::Double> (CLOCK__FRAME_TIME)->value();
+
+  if (current_time > end_time)
+    return;
+
+  double alpha = (fadein ? (end_time - current_time) / (end_time - begin_time)
+                         : (current_time - begin_time) / (end_time - begin_time));
+
+  auto img = set<C::Image>("fade:image",
+                           Config::world_width + get<C::Int>("interface:width")->value(),
+                           Config::world_height + get<C::Int>("interface:height")->value(),
+                           0, 0, 0, int(255. * alpha));
+  img->z() = Config::overlay_depth;
+  img->collision() = UNCLICKABLE;
+  set<C::Position>("fade:position", Point(0,0));
 }
 
 void Animation::update_camera_target ()

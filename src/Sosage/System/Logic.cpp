@@ -174,6 +174,13 @@ void Logic::run ()
     remove("code:quit");
   }
 
+  if (auto new_room_origin = request<C::String>("game:new_room_origin"))
+  {
+    m_current_action = get<C::Action>(new_room_origin->value() + ":action");
+    m_next_step = 0;
+    remove ("game:new_room_origin");
+  }
+
   auto action = request<C::Action>("character:action");
   if (action && action != m_current_action)
   {
@@ -298,8 +305,12 @@ bool Logic::apply_step (C::Action::Step s)
     action_dialog (s);
     return false; // action dialog replaces current action
   }
+  else if (s.get(0) == "fadein")
+    action_fade(s, true);
+  else if (s.get(0) == "fadeout")
+    action_fade(s, false);
   else if (s.get(0) == "goto")
-    action_goto (m_current_action->target_entity());
+    action_goto (s);
   else if (s.get(0) == "increment")
     action_modify (s.get(1), 1);
   else if (s.get(0) == "decrement")
@@ -428,14 +439,35 @@ void Logic::action_dialog (C::Action::Step step)
   }
 }
 
-void Logic::action_goto (const std::string& target)
+void Logic::action_fade (C::Action::Step step, bool fadein)
 {
-  debug ("action_goto " + target);
-  const std::string& id = get<C::String>("player:name")->value();
+  double duration = step.get_double(1);
 
-  auto position = request<C::Position>(target + ":view");
-  if (compute_path_from_target(position))
-    m_timed.insert (std::make_pair (0, get<C::Path>(id + ":path")));
+  auto begin = set<C::Double> ("fade:begin", m_current_time);
+  auto end = set<C::Double> ("fade:end", m_current_time + duration);
+  auto out = set<C::Boolean> ("fade:in", fadein);
+  m_timed.insert (std::make_pair (m_current_time + duration, begin));
+  m_timed.insert (std::make_pair (m_current_time + duration, end));
+  m_timed.insert (std::make_pair (m_current_time + duration, out));
+}
+
+void Logic::action_goto (C::Action::Step step)
+{
+  const std::string& id = get<C::String>("player:name")->value();
+  if (step.size() == 1)
+  {
+    std::string target = m_current_action->target_entity();
+    debug ("action_goto " + target);
+
+    auto position = request<C::Position>(target + ":view");
+    if (compute_path_from_target(position))
+      m_timed.insert (std::make_pair (0, get<C::Path>(id + ":path")));
+  }
+  else
+  {
+    if (compute_path_from_target(C::make_handle<C::Position>("goto:target", Point (step.get_int(1), step.get_int(2)))))
+      m_timed.insert (std::make_pair (0, get<C::Path>(id + ":path")));
+  }
 }
 
 void Logic::action_load (C::Action::Step step)

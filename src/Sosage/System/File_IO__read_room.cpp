@@ -253,7 +253,6 @@ void File_IO::read_room (const std::string& file_name)
   set<C::Boolean>("game:in_new_room", origin_looking->value());
 
   remove ("game:new_room");
-  remove ("game:new_room_origin");
 
   set<C::Event>("music:start");
   get<C::Status>(GAME__STATUS)->pop();
@@ -635,6 +634,10 @@ void File_IO::read_origin(const Core::File_IO::Node& node, const std::string& id
 
   set<C::Position>(id + ":position", Point(x, y));
   set<C::Boolean>(id + ":looking_right", looking_right);
+
+  auto action = set<C::Action>(id + ":action");
+  for (std::size_t k = 0; k < node["action"].size(); ++ k)
+      action->add (node["action"][k].string_array());
 }
 
 void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& id)

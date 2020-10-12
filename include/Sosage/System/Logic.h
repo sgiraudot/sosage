@@ -67,7 +67,9 @@ private:
   bool apply_step (Component::Action::Step step);
   void action_comment (Component::Action::Step step);
   void action_dialog (Component::Action::Step step);
-  void action_goto (const std::string& target);
+  void action_fade (Component::Action::Step step, bool fadein);
+  void action_fadeout (Component::Action::Step step);
+  void action_goto (Component::Action::Step step);
   void action_load (Component::Action::Step step);
   void action_look (const std::string& target);
   void action_modify (const std::string& id, int diff);
