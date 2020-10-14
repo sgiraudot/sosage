@@ -135,6 +135,29 @@ void Animation::run_one_frame()
     }
   }
 
+
+  // Then check animations stopping
+  for (auto c : m_content)
+    if (C::cast<C::Event>(c))
+    {
+      std::string id = c->entity();
+      if (c->component() == "stop_talking")
+      {
+        generate_random_idle_head_animation (id,
+                                             get<C::Animation>(id + "_head:image")
+                                             ->frames().front().y == 0);
+        to_remove.push_back (c->id());
+      }
+      else if (c->component() == "stop_animation")
+      {
+        debug("stop_animation");
+        generate_random_idle_body_animation (id,
+                                             get<C::Animation>(id + "_head:image")
+                                             ->frames().front().y == 0);
+        to_remove.push_back (c->id());
+      }
+    }
+
   // Then check all other cases
   for (auto c : m_content)
   {
@@ -150,21 +173,6 @@ void Animation::run_one_frame()
       {
         generate_random_mouth_animation (id);
         to_remove.push_back(c->id());
-      }
-      else if (c->component() == "stop_talking")
-      {
-        generate_random_idle_head_animation (id,
-                                             get<C::Animation>(id + "_head:image")
-                                             ->frames().front().y == 0);
-        to_remove.push_back (c->id());
-      }
-      else if (c->component() == "stop_animation")
-      {
-        debug("stop_animation");
-        generate_random_idle_body_animation (id,
-                                             get<C::Animation>(id + "_head:image")
-                                             ->frames().front().y == 0);
-        to_remove.push_back (c->id());
       }
     }
     else if (c->component() == "start_animation")
