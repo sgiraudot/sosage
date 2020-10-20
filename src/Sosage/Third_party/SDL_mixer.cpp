@@ -24,6 +24,7 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
+#include <Sosage/Config/config.h>
 #include <Sosage/Third_party/SDL_mixer.h>
 #include <Sosage/Utils/error.h>
 
@@ -71,18 +72,24 @@ void SDL_mixer::delete_sound (const SDL_mixer::Sound& sound)
 
 void SDL_mixer::start_music (const SDL_mixer::Music& music)
 {
+  Mix_VolumeMusic(Config::max_music_volume / 2);
   Mix_PlayMusic (music, -1);
+}
+
+void SDL_mixer::set_volume (double percentage)
+{
+  Mix_VolumeMusic(int(percentage * Config::max_music_volume));
 }
 
 void SDL_mixer::pause_music (const SDL_mixer::Music&)
 {
-  Mix_VolumeMusic(10);
+  Mix_VolumeMusic(Config::max_music_volume / 6);
 //  Mix_PauseMusic();
 }
 
 void SDL_mixer::resume_music (const SDL_mixer::Music&)
 {
-  Mix_VolumeMusic(64);
+  Mix_VolumeMusic(Config::max_music_volume / 2);
 //  Mix_ResumeMusic();
 }
 

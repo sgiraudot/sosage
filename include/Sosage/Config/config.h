@@ -78,6 +78,7 @@ constexpr double button_click_duration = 0.1;
 constexpr double virtual_cursor_sensitivity = 5;
 constexpr double virtual_cursor_speed = 2.0;
 
+constexpr int max_music_volume = 128;
 
 } // namespace Config
 

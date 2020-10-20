@@ -39,10 +39,10 @@ namespace Sosage::Third_party
 class SDL_mixer
 {
 public:
-  
+
   typedef Mix_Music* Music;
   typedef Mix_Chunk* Sound;
-  
+
 private:
 
 public:
@@ -56,6 +56,7 @@ public:
   static void delete_music (const Music& music);
   static void delete_sound (const Sound& sound);
 
+  void set_volume (double percentage);
   void start_music (const Music& music);
   void pause_music (const Music& music);
   void resume_music (const Music& music);

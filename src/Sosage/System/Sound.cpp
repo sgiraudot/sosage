@@ -62,6 +62,19 @@ void Sound::run()
     m_content.remove ("music:start");
   }
 
+  if (auto fadein = request<C::Boolean>("fade:in"))
+  {
+    double current_time = get<C::Double> (CLOCK__FRAME_TIME)->value();
+    double begin_time = get<C::Double>("fade:begin")->value();
+    double end_time = get<C::Double>("fade:end")->value();
+    double alpha = (fadein->value() ? (current_time - begin_time) / (end_time - begin_time)
+                                    : (end_time - current_time) / (end_time - begin_time));
+    if (fadein && current_time > end_time)
+      alpha = 1.0;
+
+    m_core.set_volume(alpha);
+  }
+
   bool paused = (status->value() == PAUSED);
   if (paused && music->on())
   {
