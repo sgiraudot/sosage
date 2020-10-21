@@ -163,8 +163,6 @@ void File_IO::read_room (const std::string& file_name)
   input.parse();
 
   std::string name = input["name"].string();
-  std::string music = input["music"].string("sounds", "musics", "ogg");
-  set<C::Music>("game:music", local_file_name(music));
 
   std::string background = input["background"].string("images", "backgrounds", "png");
   std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
@@ -216,6 +214,8 @@ void File_IO::read_room (const std::string& file_name)
       read_dialog (node, id);
     else if (type == "integer")
       read_integer (node, id);
+    else if (type == "music")
+      read_music (node, id);
     else if (type == "object")
       read_object (node, id);
     else if (type == "origin")
@@ -254,7 +254,6 @@ void File_IO::read_room (const std::string& file_name)
 
   remove ("game:new_room");
 
-  set<C::Event>("music:start");
   get<C::Status>(GAME__STATUS)->pop();
 
   m_thread.notify();
@@ -625,6 +624,39 @@ void File_IO::read_actions (const Core::File_IO::Node& node, const std::string& 
 
   check (look_found, "Object " + id + " has no \"look\" action");
 }
+
+void File_IO::read_music(const Core::File_IO::Node& node, const std::string& id)
+{
+  if (auto state_handle = request<C::String>(id + ":state"))
+  {
+    C::String_conditional_handle conditional_handle;
+    for (std::size_t j = 0; j < node["states"].size(); ++ j)
+    {
+      const Core::File_IO::Node& istate = node["states"][j];
+
+      std::string state = istate["id"].string();
+
+      // init with first state found
+      if (j == 0)
+      {
+        if (state_handle->value() == "")
+          state_handle->set(state);
+        conditional_handle = set<C::String_conditional>(id + ":music", state_handle);
+      }
+      else
+        conditional_handle = get<C::String_conditional>(id + ":music");
+
+      std::string music = istate["sound"].string("sounds", "musics", "ogg");
+      conditional_handle->add(state, C::make_handle<C::Music>(id + ":music", local_file_name(music)));
+    }
+  }
+  else
+  {
+    std::string music = node["sound"].string("sounds", "musics", "ogg");
+    set<C::Music>(id + ":music", local_file_name(music));
+  }
+}
+
 
 void File_IO::read_origin(const Core::File_IO::Node& node, const std::string& id)
 {

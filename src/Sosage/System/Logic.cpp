@@ -35,6 +35,7 @@
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Inventory.h>
+#include <Sosage/Component/Music.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
@@ -331,6 +332,10 @@ bool Logic::apply_step (C::Action::Step s)
     action_set_coordinates (s);
   else if (s.get(0) == "show")
     action_show (s);
+  else if (s.get(0) == "start_music")
+    action_start_music (s.get(1));
+  else if (s.get(0) == "stop_music")
+    action_stop_music();
   else if (s.get(0) == "sync")
     return false;
   else if (s.get(0) == "unlock")
@@ -602,6 +607,18 @@ void Logic::action_show (C::Action::Step step)
   }
   else
     get<C::Status>(GAME__STATUS)->push (IN_WINDOW);
+}
+
+void Logic::action_start_music (const std::string& target)
+{
+  set<C::Variable>("game:music", get<C::Music>(target + ":music"));
+  set<C::Event>("music:start");
+}
+
+void Logic::action_stop_music ()
+{
+  remove("game:music");
+  set<C::Event>("music:stop");
 }
 
 void Logic::create_dialog (const std::string& character,

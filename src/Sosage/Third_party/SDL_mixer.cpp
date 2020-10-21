@@ -76,6 +76,11 @@ void SDL_mixer::start_music (const SDL_mixer::Music& music)
   Mix_PlayMusic (music, -1);
 }
 
+void SDL_mixer::stop_music()
+{
+  Mix_HaltMusic();
+}
+
 void SDL_mixer::set_volume (double percentage)
 {
   Mix_VolumeMusic(int(percentage * Config::max_music_volume));

@@ -79,6 +79,8 @@ private:
   void action_set_state (Component::Action::Step step);
   void action_set_coordinates (Component::Action::Step step);
   void action_show (Component::Action::Step step);
+  void action_start_music (const std::string& target);
+  void action_stop_music();
 
   void create_dialog (const std::string& character,
                       const std::string& text,

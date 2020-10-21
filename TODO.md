@@ -32,7 +32,6 @@
 * Changement de musique
 * Chargement des sons
 * Tremblement de caméra
-* Fadein / fadeout
 * Cutscenes
 * Menus
 * Indices

@@ -51,19 +51,17 @@ void Sound::run()
 
   auto music = m_content.request<C::Music>("game:music");
 
-  if (m_content.request<C::String>("game:new_room"))
-    music->on() = false;
-
-  auto start = m_content.request<C::Event>("music:start");
-  if (start)
+  if (request<C::Event>("music:start"))
   {
+    check (music, "No music to start");
     m_core.start_music (music->core());
     music->on() = true;
-    m_content.remove ("music:start");
+    remove("music:start");
   }
 
   if (auto fadein = request<C::Boolean>("fade:in"))
   {
+    check (music, "No music to fade");
     double current_time = get<C::Double> (CLOCK__FRAME_TIME)->value();
     double begin_time = get<C::Double>("fade:begin")->value();
     double end_time = get<C::Double>("fade:end")->value();
@@ -75,18 +73,26 @@ void Sound::run()
     m_core.set_volume(alpha);
   }
 
-  bool paused = (status->value() == PAUSED);
-  if (paused && music->on())
+  if (request<C::Event>("music:stop"))
   {
-    m_core.pause_music (music->core());
-    music->on() = false;
-  }
-  else if (!paused && !music->on())
-  {
-    m_core.resume_music (music->core());
-    music->on() = true;
+    m_core.stop_music();
+    remove ("music:stop");
   }
 
+  if (music)
+  {
+    bool paused = (status->value() == PAUSED);
+    if (paused && music->on())
+    {
+      m_core.pause_music (music->core());
+      music->on() = false;
+    }
+    else if (!paused && !music->on())
+    {
+      m_core.resume_music (music->core());
+      music->on() = true;
+    }
+  }
 
   if (auto clicked = m_content.request<C::Event>("game:verb_clicked"))
   {
