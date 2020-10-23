@@ -64,6 +64,7 @@ public:
              int width_subdiv, int height_subdiv, bool loop);
   const std::vector<Frame>& frames() const { return m_frames; }
   std::vector<Frame>& frames() { return m_frames; }
+  bool loop() const { return m_loop; }
   int reset(bool all_frames = true, int duration = 1);
   virtual int xmin() const;
   virtual int xmax() const;

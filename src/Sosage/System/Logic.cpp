@@ -338,6 +338,8 @@ bool Logic::apply_step (C::Action::Step s)
     action_stop_music();
   else if (s.get(0) == "sync")
     return false;
+  else if (s.get(0) == "trigger")
+    action_trigger (s.get(1));
   else if (s.get(0) == "unlock")
     get<C::Status>(GAME__STATUS)->pop();
 
@@ -529,6 +531,17 @@ void Logic::action_play (C::Action::Step step)
 
   auto animation = get<C::Animation>(target + ":image");
   animation->on() = true;
+
+  // If animation does not loop, insert dummy timed Event
+  // so that sync waits for the end of the animation
+  if (!animation->loop())
+  {
+    std::size_t nb_frames = 0;
+    for (const auto& f : animation->frames())
+      nb_frames += f.duration;
+    m_timed.insert (std::make_pair (m_current_time + nb_frames / double(Config::animation_fps),
+                                    C::make_handle<C::Event>("dummy:event")));
+  }
 }
 
 void Logic::action_animate (C::Action::Step step)
@@ -619,6 +632,12 @@ void Logic::action_stop_music ()
 {
   remove("game:music");
   set<C::Event>("music:stop");
+}
+
+void Logic::action_trigger (const std::string& id)
+{
+  m_current_action = get<C::Action>(id + ":action");
+  m_next_step = 0;
 }
 
 void Logic::create_dialog (const std::string& character,

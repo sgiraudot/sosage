@@ -48,10 +48,10 @@ int Animation::reset (bool all_frames, int duration)
   
   m_frames.clear();
   if (all_frames)
-    for (int i = 0; i < m_width_subdiv; ++ i)
-      for (int j = 0; j < m_height_subdiv; ++ j)
+    for (int i = 0; i < m_height_subdiv; ++ i)
+      for (int j = 0; j < m_width_subdiv; ++ j)
       {
-        m_frames.push_back (Frame(i,j,duration));
+        m_frames.push_back (Frame(j,i,duration));
         out += 1;
       }
   else
@@ -99,10 +99,9 @@ bool Animation::next_frame()
     m_frames[m_current].ellapsed = 0;
     if (++ m_current == m_frames.size())
     {
+      m_current = 0;
       if (!m_loop)
         return false;
-      else
-        m_current = 0;
     }
   }
   return true;

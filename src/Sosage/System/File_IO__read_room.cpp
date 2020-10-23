@@ -204,7 +204,9 @@ void File_IO::read_room (const std::string& file_name)
     std::string id = node["id"].string();
     std::string type = node["type"].string();
 
-    if (type == "animation")
+    if (type == "action")
+      read_action (node, id);
+    else if (type == "animation")
       read_animation (node, id);
     else if (type == "character")
       read_character (node, id);
@@ -558,6 +560,28 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
 
 }
 
+void File_IO::read_action (const Core::File_IO::Node& node, const std::string& id)
+{
+  auto state_handle = get<C::String>(id + ":state");
+  auto conditional_handle = set<C::String_conditional>(id + ":action", state_handle);
+
+  for (std::size_t i = 0; i < node["states"].size(); ++ i)
+  {
+    const Core::File_IO::Node& istate = node["states"][i];
+
+    std::string state = istate["id"].string();
+    if (i == 0 && state_handle->value() == "")
+        state_handle->set(state);
+
+    auto action = C::make_handle<C::Action>(id + ":action");
+
+    for (std::size_t k = 0; k < istate["effect"].size(); ++ k)
+      action->add (istate["effect"][k].string_array());
+
+    conditional_handle->add(state, action);
+  }
+  std::cerr << "Read " << id + ":action" << std::endl;
+}
 
 void File_IO::read_actions (const Core::File_IO::Node& node, const std::string& id)
 {

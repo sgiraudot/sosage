@@ -71,6 +71,7 @@ public:
   void read_room (const std::string& file_name);
 private:
 
+  void read_action (const Core::File_IO::Node& node, const std::string& id);
   void read_actions (const Core::File_IO::Node& node, const std::string& id);
   void read_animation (const Core::File_IO::Node& node, const std::string& id);
   void read_character (const Core::File_IO::Node& node, const std::string& id);
