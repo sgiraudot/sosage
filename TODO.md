@@ -5,7 +5,6 @@
 * Animations Superflu
 * Ouverture sas
 * Câble
-* Éclairs / explosions
 * Sophie électrique
 * Choix du mode de curseur
 * Page tuto clics/curseur virtuel

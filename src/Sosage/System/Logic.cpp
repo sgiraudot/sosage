@@ -73,6 +73,9 @@ void Logic::run ()
 
   std::set<Timed_handle> new_timed_handle;
 
+  bool still_waiting // for this world to stop hating
+      = true;
+
   for (const Timed_handle& th : m_timed)
     if (th.first == 0) // special case for Path
     {
@@ -86,6 +89,8 @@ void Logic::run ()
     {
       if (C::cast<C::Event>(th.second))
         set (th.second);
+      else if (th.second->id() == "wait")
+        still_waiting = false;
       else
         remove (th.second->id());
     }
@@ -193,7 +198,7 @@ void Logic::run ()
 
   if (m_current_action)
   {
-    if (m_timed.empty())
+    if (!still_waiting || m_timed.empty())
     {
       if (m_next_step == m_current_action->size())
       {
@@ -342,6 +347,11 @@ bool Logic::apply_step (C::Action::Step s)
     action_trigger (s.get(1));
   else if (s.get(0) == "unlock")
     get<C::Status>(GAME__STATUS)->pop();
+  else if (s.get(0) == "wait")
+  {
+    action_wait (s.get_double(1));
+    return false;
+  }
 
   return true;
 }
@@ -638,6 +648,11 @@ void Logic::action_trigger (const std::string& id)
 {
   m_current_action = get<C::Action>(id + ":action");
   m_next_step = 0;
+}
+
+void Logic::action_wait (double time)
+{
+  m_timed.insert (std::make_pair (m_current_time + time, C::make_handle<C::Base>("wait")));
 }
 
 void Logic::create_dialog (const std::string& character,

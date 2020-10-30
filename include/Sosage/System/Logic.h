@@ -82,6 +82,7 @@ private:
   void action_start_music (const std::string& target);
   void action_stop_music();
   void action_trigger (const std::string& target);
+  void action_wait (double time);
 
   void create_dialog (const std::string& character,
                       const std::string& text,

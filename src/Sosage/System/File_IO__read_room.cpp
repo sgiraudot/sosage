@@ -260,6 +260,32 @@ void File_IO::read_room (const std::string& file_name)
 
   m_thread.notify();
 
+#ifdef SOSAGE_DEBUG
+  // Display layers of images for easy room creation
+  std::vector<C::Image_handle> images;
+  for (C::Handle h : m_content)
+    if (auto img = C::cast<C::Image>(h))
+      images.push_back(img);
+
+  std::sort (images.begin(), images.end(),
+             [](const C::Image_handle& a, const C::Image_handle& b) -> bool
+             { return a->z() < b->z(); });
+
+  int current_depth = -Config::cursor_depth;
+
+  std::cerr << "[LAYERS BEGIN]" << std::endl;
+  for (C::Image_handle img : images)
+  {
+    if (img->z() != current_depth)
+    {
+      current_depth = img->z();
+      std::cerr << "# Depth " << current_depth << ":" << std::endl;
+    }
+    std::cerr << "  * " << img->id() << std::endl;
+  }
+  std::cerr << "[LAYERS END]" << std::endl;
+#endif
+
   SOSAGE_TIMER_STOP(File_IO__read_room);
 }
 
@@ -286,18 +312,21 @@ void File_IO::read_animation (const Core::File_IO::Node& node, const std::string
   auto img = set<C::Animation>(id + ":image", local_file_name(skin), z,
                                width, height, node["loop"].boolean());
 
+  int duration = (node.has("duration") ? node["duration"].integer() : 1);
+
   if (node.has("frames"))
   {
-    std::cerr << "Frames! " << node["frames"].size() << std::endl;
     img->frames().clear();
     for (std::size_t i = 0; i < node["frames"].size(); ++ i)
     {
       int idx = node["frames"][i].integer();
       int x = idx % width;
       int y = idx / width;
-      img->frames().emplace_back (x, y);
+      img->frames().emplace_back (x, y, duration);
     }
   }
+  else
+    img->reset(true, duration);
 
   img->on() = false;
   img->set_relative_origin(0.5, 1.0);
