@@ -272,12 +272,30 @@ bool Logic::compute_path_from_target (C::Position_handle target)
 
 void Logic::update_camera()
 {
-  auto position = get<C::Double>(CAMERA__POSITION);
-  auto target = get<C::Double>("camera:target");
+  if (auto i = request<C::Double>("shake:intensity"))
+  {
+    double begin = get<C::Double>("shake:begin")->value();
+    double end = get<C::Double>("shake:end")->value();
+    double intensity = i->value();
+    double x_start = get<C::Double>("camera:saved_position")->value();
 
-  double dir = target->value() - position->value();
-  dir *= Config::camera_speed;
-  position->set (position->value() + dir);
+    double current_intensity = intensity * (end - m_current_time) / (end - begin);
+
+    constexpr double period = 0.0001;
+
+    double shift = std::sin ((m_current_time - begin) / period);
+
+    get<C::Double>(CAMERA__POSITION)->set (x_start + shift * current_intensity);
+  }
+  else
+  {
+    auto position = get<C::Double>(CAMERA__POSITION);
+    auto target = get<C::Double>("camera:target");
+
+    double dir = target->value() - position->value();
+    dir *= Config::camera_speed;
+    position->set (position->value() + dir);
+  }
 }
 
 void Logic::update_debug_info (C::Debug_handle debug_info)
@@ -335,6 +353,8 @@ bool Logic::apply_step (C::Action::Step s)
     action_set_state (s);
   else if (s.get(0) == "set_coordinates")
     action_set_coordinates (s);
+  else if (s.get(0) == "shake")
+    action_shake (s);
   else if (s.get(0) == "show")
     action_show (s);
   else if (s.get(0) == "start_music")
@@ -611,6 +631,21 @@ void Logic::action_set_coordinates (C::Action::Step step)
 
   get<C::Position>(target + ":position")->set (Point(x, y));
   get<C::Image>(target + ":image")->z() = z;
+}
+
+void Logic::action_shake (C::Action::Step step)
+{
+  double intensity  = step.get_double(1);
+  double duration = step.get_double(2);
+
+  auto begin = set<C::Double> ("shake:begin", m_current_time);
+  auto end = set<C::Double> ("shake:end", m_current_time + duration);
+  auto intens = set<C::Double> ("shake:intensity", intensity);
+  auto camera = set<C::Double> ("camera:saved_position", get<C::Double>(CAMERA__POSITION)->value());
+  m_timed.insert (std::make_pair (m_current_time + duration, begin));
+  m_timed.insert (std::make_pair (m_current_time + duration, end));
+  m_timed.insert (std::make_pair (m_current_time + duration, intens));
+  m_timed.insert (std::make_pair (m_current_time + duration, camera));
 }
 
 void Logic::action_show (C::Action::Step step)

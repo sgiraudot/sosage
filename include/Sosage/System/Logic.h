@@ -78,6 +78,7 @@ private:
   void action_animate (Component::Action::Step step);
   void action_set_state (Component::Action::Step step);
   void action_set_coordinates (Component::Action::Step step);
+  void action_shake (Component::Action::Step step);
   void action_show (Component::Action::Step step);
   void action_start_music (const std::string& target);
   void action_stop_music();
@@ -87,6 +88,7 @@ private:
   void create_dialog (const std::string& character,
                       const std::string& text,
                       std::vector<Component::Image_handle>& dialog);
+
 };
 
 } // namespace Sosage::System
