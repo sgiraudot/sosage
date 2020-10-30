@@ -224,6 +224,8 @@ void File_IO::read_room (const std::string& file_name)
       read_origin (node, id);
     else if (type == "scenery")
       read_scenery (node, id);
+    else if (type == "sound")
+      read_sound (node, id);
     else if (type == "window")
       read_window (node, id);
     else
@@ -769,6 +771,12 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
     img->set_relative_origin(0.5, 1.0);
     debug("Scenery " + id + " at position " + std::to_string(img->z()));
   }
+}
+
+void File_IO::read_sound (const Core::File_IO::Node& node, const std::string& id)
+{
+  std::string sound = node["sound"].string("sounds", "effects", "wav");
+  set<C::Sound>(id + ":sound", local_file_name(sound));
 }
 
 void File_IO::read_window (const Core::File_IO::Node& node, const std::string& id)

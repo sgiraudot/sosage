@@ -122,6 +122,17 @@ void Sound::run()
     m_content.remove ("code:play_click");
   }
 
+  std::vector<std::string> to_remove;
+  for (C::Handle h : m_content)
+    if (auto ev = C::cast<C::Event>(h))
+      if (ev->entity() == "play_sound")
+      {
+        m_core.play_sound (m_content.get<C::Sound> (ev->component() + ":sound")->core());
+        to_remove.push_back (ev->id());
+      }
+
+  for (const std::string& id : to_remove)
+    remove (id);
 }
 
 } // namespace Sosage::System

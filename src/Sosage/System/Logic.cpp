@@ -357,6 +357,8 @@ bool Logic::apply_step (C::Action::Step s)
     action_shake (s);
   else if (s.get(0) == "show")
     action_show (s);
+  else if (s.get(0) == "sound")
+    action_sound (s.get(1));
   else if (s.get(0) == "start_music")
     action_start_music (s.get(1));
   else if (s.get(0) == "stop_music")
@@ -665,6 +667,11 @@ void Logic::action_show (C::Action::Step step)
   }
   else
     get<C::Status>(GAME__STATUS)->push (IN_WINDOW);
+}
+
+void Logic::action_sound (const std::string& target)
+{
+  set<C::Event>("play_sound:" + target);
 }
 
 void Logic::action_start_music (const std::string& target)
