@@ -87,7 +87,7 @@ void File_IO::read_config()
   int layout = int(Config::AUTO);
   bool virtual_cursor = Config::android;
 
-  double char_per_second = 12.0;
+  double dialog_speed = 1.;
   double dialog_size = 0.75;
 
   int music_volume = 64;
@@ -114,7 +114,7 @@ void File_IO::read_config()
     fullscreen = input["fullscreen"].boolean();
     layout = input["layout"].integer();
     virtual_cursor = input["virtual_cursor"].boolean();
-    char_per_second = input["char_per_second"].floating();
+    dialog_speed = input["dialog_speed"].floating();
     dialog_size = input["dialog_size"].floating();
     music_volume = input["music_volume"].integer();
     sounds_volume = input["sounds_volume"].integer();
@@ -134,7 +134,7 @@ void File_IO::read_config()
   set<C::Int>("interface:layout", layout);
   set<C::Boolean>("interface:virtual_cursor", virtual_cursor);
 
-  set<C::Double>("text:char_per_second", char_per_second);
+  set<C::Double>("text:dialog_speed", dialog_speed);
   set<C::Double>("text:dialog_size", dialog_size);
 
   set<C::Int>("music:volume", music_volume);
@@ -157,7 +157,7 @@ void File_IO::write_config()
   output.write ("layout", get<C::Int>("interface:layout")->value());
   output.write ("virtual_cursor", get<C::Boolean>("interface:virtual_cursor")->value());
 
-  output.write ("char_per_second", get<C::Double>("text:char_per_second")->value());
+  output.write ("dialog_speed", get<C::Double>("text:dialog_speed")->value());
   output.write ("dialog_size", get<C::Double>("text:dialog_size")->value());
 
   output.write ("music_volume", get<C::Int>("music:volume")->value());

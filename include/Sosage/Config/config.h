@@ -30,7 +30,7 @@
 #include <Sosage/Config/platform.h>
 #include <memory>
 
-#if !defined(SOSAGE_EMSCRIPTEN)
+#if !defined(SOSAGE_EMSCRIPTEN) && !defined(SOSAGE_WINDOWS)
 #define SOSAGE_THREADS_ENABLED
 #endif
 
@@ -49,6 +49,9 @@ constexpr int world_depth = 3240;
 constexpr int camera_limit_left = world_width / 4;
 constexpr int camera_limit_right = (3 * world_width) / 4;
 constexpr double camera_speed = 0.1;
+
+constexpr double char_spoken_time = 0.05;
+constexpr double min_reading_time = 1.5;
 
 enum Depth
 {

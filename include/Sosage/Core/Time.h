@@ -35,7 +35,7 @@
 namespace Sosage::Core
 {
 
-#if 0
+#ifndef SOSAGE_THREADS_ENABLED
 typedef Third_party::SDL_time Time;
 #else
 class Time
@@ -62,4 +62,3 @@ public:
 }
 
 #endif
-

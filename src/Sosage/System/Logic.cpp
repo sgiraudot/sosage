@@ -400,7 +400,10 @@ void Logic::action_comment (C::Action::Step step)
   create_dialog (id, text, dialog);
 
   int nb_char = int(text.size());
-  double nb_seconds = nb_char / get<C::Double>("text:char_per_second")->value();
+  double nb_seconds_read
+      = get<C::Double>("text:dialog_speed")->value()
+      * (Config::min_reading_time + nb_char * Config::char_spoken_time);
+  double nb_seconds_lips_moving = nb_char * Config::char_spoken_time;
 
   int y = 100;
   int x = get<C::Position>(id + "_body:position")->value().x()
@@ -418,13 +421,13 @@ void Logic::action_comment (C::Action::Step step)
     auto pos = set<C::Position> (img->entity() + ":position", Point(x,y));
     y += img->height() * 1.1 * 0.75;
 
-    m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds), img));
-    m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds), pos));
+    m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), img));
+    m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), pos));
   }
 
   set<C::Event>(id + ":start_talking");
 
-  m_timed.insert (std::make_pair (m_current_time + nb_seconds,
+  m_timed.insert (std::make_pair (m_current_time + nb_seconds_lips_moving,
                                   C::make_handle<C::Event>
                                   (id + ":stop_talking")));
 }
