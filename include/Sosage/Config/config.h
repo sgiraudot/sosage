@@ -30,10 +30,6 @@
 #include <Sosage/Config/platform.h>
 #include <memory>
 
-#if !defined(SOSAGE_EMSCRIPTEN) && !defined(SOSAGE_WINDOWS)
-#define SOSAGE_THREADS_ENABLED
-#endif
-
 namespace Sosage
 {
 

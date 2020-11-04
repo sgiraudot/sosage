@@ -5,6 +5,21 @@ project (sosage)
 set(CMAKE_CXX_STANDARD 17)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+## OPTIONS
+function(sosage_option name description value)
+  option(${name} ${description} ${value})
+  if(${name})
+    add_definitions(-D${name})
+  endif()
+endfunction()
+
+sosage_option(SOSAGE_CFG_USE_THREADS  "Allow multithreading for some tasks" ON)
+sosage_option(SOSAGE_CFG_DISPLAY_DEBUG_INFO "Force displaying debug info even in Release mode" OFF)
+sosage_option(SOSAGE_CFG_PROFILE "Profile and display timing info (requires debug info ON)" OFF)
+sosage_option(SOSAGE_CFG_USE_SDL_TIME "Use SDL clock instead of STL clock" OFF)
+sosage_option(SOSAGE_CFG_ASSERTIONS_AS_EXCEPTIONS "Assertions treated as exceptions instead of triggering exit()" ON)
+sosage_option(SOSAGE_COMPILE_TESTS "Compile test executables" OFF)
+
 ## Check all dependencies
 
 set(SOSAGE_DEPENDENCIES_OKAY true)
@@ -83,9 +98,6 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 endif()
 
 include(CPack)
-
-# Activate concurrency?
-option(SOSAGE_COMPILE_TESTS "Compile Sosage tests" OFF)
 
 if(SOSAGE_COMPILE_TESTS)
 

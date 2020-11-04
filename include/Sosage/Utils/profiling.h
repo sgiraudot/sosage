@@ -27,13 +27,12 @@
 #ifndef SOSAGE_UTILS_PROFILING_H
 #define SOSAGE_UTILS_PROFILING_H
 
+#include <Sosage/Config/options.h>
 #include <Sosage/Core/Time.h>
 
 #include <algorithm>
 #include <cmath>
 
-#define SOSAGE_PROFILE
-#define SOSAGE_PROFILE_FINELY
 #ifdef SOSAGE_PROFILE
 #  define SOSAGE_TIMER_START(x) static Timer x(#x); x.start()
 #  define SOSAGE_TIMER_RESTART(x) x.start()
@@ -44,6 +43,11 @@
 #  define SOSAGE_TIMER_RESTART(x)
 #  define SOSAGE_TIMER_STOP(x)
 #  define SOSAGE_COUNT(x)
+#endif
+
+#ifdef SOSAGE_PROFILE_FINELY
+#include <fstream>
+#include <vector>
 #endif
 
 namespace Sosage
@@ -98,6 +102,13 @@ public:
 #ifdef SOSAGE_PROFILE_FINELY
   void display()
   {
+    if (m_id == "CPU_idle")
+    {
+      std::ofstream ofile ("cpu_idle.plot");
+      for (const auto& t : m_duration)
+        ofile << t << std::endl;
+    }
+
     std::sort(m_duration.begin(), m_duration.end());
     debug ("Min = " + to_string(m_duration.front())
            + ", 10% = " + to_string(m_duration[m_duration.size() / 10])
@@ -112,8 +123,8 @@ public:
   {
     debug(to_string(m_duration)
           + ((m_nb > 1)
-             ? " (" + to_string(mean_duration()) + " per iteration, " + m_nb + " iterations)"
-             : "");
+             ? " (" + to_string(mean_duration()) + " per iteration, " + std::to_string(m_nb) + " iterations)"
+             : ""));
   }
 #endif
 

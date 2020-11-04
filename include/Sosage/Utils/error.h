@@ -27,9 +27,8 @@
 #ifndef SOSAGE_UTILS_ERROR_H
 #define SOSAGE_UTILS_ERROR_H
 
+#include <Sosage/Config/options.h>
 #include <Sosage/Config/platform.h>
-
-#define SOSAGE_ASSERTIONS_AS_EXCEPTIONS
 
 #ifdef SOSAGE_ANDROID
 #include <android/log.h>
@@ -37,10 +36,6 @@
 
 #ifdef SOSAGE_EMSCRIPTEN
 #include <SDL.h>
-#endif
-
-#if !defined(NDEBUG) && !defined(SOSAGE_DEBUG)
-#define SOSAGE_DEBUG
 #endif
 
 #include <iostream>

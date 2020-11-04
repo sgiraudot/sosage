@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/Core/Time.h]
-  Abstraction file for third party library handling time.
+  [include/Sosage/Config/options.h]
+  Compile-time options passed by CMake.
 
   =====================================================================
 
@@ -24,41 +24,28 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_CORE_TIME_H
-#define SOSAGE_CORE_TIME_H
+#ifndef SOSAGE_CONFIG_OPTIONS_H
+#define SOSAGE_CONFIG_OPTIONS_H
 
-#include <Sosage/Third_party/SDL_time.h>
-
-#include <chrono>
-#include <thread>
-
-namespace Sosage::Core
-{
-
-#ifdef SOSAGE_SDL_TIME
-typedef Third_party::SDL_time Time;
-#else
-class Time
-{
-public:
-
-  typedef std::chrono::steady_clock::time_point::rep Unit;
-  typedef std::chrono::steady_clock::duration::rep Duration;
-
-  static Unit now()
-  {
-    return std::chrono::duration_cast<std::chrono::milliseconds>
-        (std::chrono::steady_clock::now().time_since_epoch()).count();
-  }
-
-  static void wait (const Duration& d)
-  {
-    std::this_thread::sleep_for
-        (std::chrono::steady_clock::duration
-         (std::chrono::milliseconds { d }));
-  }
-};
+#ifdef SOSAGE_CFG_USE_THREADS
+#define SOSAGE_THREADS_ENABLED
 #endif
-}
 
+#if !defined(DNEBUG) || defined(SOSAGE_CFG_DISPLAY_DEBUG_INFO)
+#define SOSAGE_DEBUG
 #endif
+
+#ifdef SOSAGE_CFG_PROFILE
+#define SOSAGE_PROFILE
+#define SOSAGE_PROFILE_FINELY
+#endif
+
+#ifdef SOSAGE_CFG_USE_SDL_TIME
+#define SOSAGE_SDL_TIME
+#endif
+
+#ifdef SOSAGE_CFG_ASSERTIONS_AS_EXCEPTIONS
+#define SOSAGE_ASSERTIONS_AS_EXCEPTIONS
+#endif
+
+#endif // SOSAGE_CONFIG_OPTIONS_H
