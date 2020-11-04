@@ -72,21 +72,26 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   std::string color = input["color"].string();
   set<C::String> (id + ":color", color);
 
+  auto visible = set<C::Boolean>(id + ":visible", true);
+
   std::string mouth = input["mouth"]["skin"].string("images", "characters", "png");
   auto amouth
-    = set<C::Animation>(id + "_mouth:image", local_file_name(mouth),
+    = C::make_handle<C::Animation>(id + "_mouth:image", local_file_name(mouth),
                                           0, 11, 2, true);
+  set<C::Conditional>(amouth->id(), visible, amouth);
   amouth->set_relative_origin(0.5, 1.0);
 
   std::string head = input["head"]["skin"].string("images", "characters", "png");
   auto ahead
-    = set<C::Animation>(id + "_head:image", local_file_name(head),
-                                          0, 7, 2, true);
+    = C::make_handle<C::Animation>(id + "_head:image", local_file_name(head),
+                                   0, 7, 2, true);
+  set<C::Conditional>(ahead->id(), visible, ahead);
   ahead->set_relative_origin(0.5, 1.0);
 
   std::string walk = input["walk"]["skin"].string("images", "characters", "png");
-  auto awalk = set<C::Animation>(id + "_walking:image", local_file_name(walk),
-                                                   0, 8, 4, true);
+  auto awalk = C::make_handle<C::Animation>(id + "_walking:image", local_file_name(walk),
+                                            0, 8, 4, true);
+  set<C::Conditional>(awalk->id(), visible, awalk);
   awalk->set_relative_origin(0.5, 0.95);
   awalk->on() = false;
 
@@ -97,8 +102,9 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
 
   set<C::Vector<std::string> >(id + "_idle:values", positions);
 
-  auto aidle = set<C::Animation>(id + "_idle:image", local_file_name(idle),
-                                                   0, positions.size(), 2, true);
+  auto aidle = C::make_handle<C::Animation>(id + "_idle:image", local_file_name(idle),
+                                            0, positions.size(), 2, true);
+  set<C::Conditional>(aidle->id(), visible, aidle);
   aidle->set_relative_origin(0.5, 0.95);
 
   auto pbody = set<C::Position>(id + "_body:position", Point(x, y), false);

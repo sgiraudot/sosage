@@ -27,6 +27,8 @@
 #ifndef SOSAGE_UTILS_RANDOM_H
 #define SOSAGE_UTILS_RANDOM_H
 
+#include <cstdlib>
+
 namespace Sosage
 {
 

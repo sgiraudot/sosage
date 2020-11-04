@@ -81,8 +81,12 @@ void Animation::run_one_frame()
   {
     for (const auto& nc : new_char->value())
     {
+      auto visible = get<C::Boolean>(nc.first + ":visible");
+      bool was_visible = visible->value();
+      visible->set(true);
       place_and_scale_character (nc.first, nc.second);
       generate_random_idle_animation (nc.first, nc.second);
+      visible->set(was_visible);
     }
     remove("game:new_characters");
   }
@@ -143,9 +147,10 @@ void Animation::run_one_frame()
       std::string id = c->entity();
       if (c->component() == "stop_talking")
       {
-        generate_random_idle_head_animation (id,
-                                             get<C::Animation>(id + "_head:image")
-                                             ->frames().front().y == 0);
+        if (get<C::Boolean>(id + ":visible")->value())
+          generate_random_idle_head_animation (id,
+                                               get<C::Animation>(id + "_head:image")
+                                               ->frames().front().y == 0);
         to_remove.push_back (c->id());
       }
       else if (c->component() == "stop_animation")
@@ -171,7 +176,8 @@ void Animation::run_one_frame()
       std::string id = c->entity();
       if (c->component() == "start_talking")
       {
-        generate_random_mouth_animation (id);
+        if (get<C::Boolean>(id + ":visible")->value())
+          generate_random_mouth_animation (id);
         to_remove.push_back(c->id());
       }
     }

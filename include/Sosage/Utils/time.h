@@ -30,6 +30,7 @@
 #include <Sosage/Config/config.h>
 
 #include <Sosage/Core/Time.h>
+#include <Sosage/Utils/profiling.h>
 
 namespace Sosage
 {
@@ -71,9 +72,18 @@ public:
     Uint32 now = Time::now();
     Uint32 duration = now - m_latest;
 
+    if (duration > m_gui_refresh_time)
+    {
+      debug("Warning: frame lasted " + std::to_string(duration) + " (max is " + std::to_string(m_gui_refresh_time) + ")");
+    }
+
     if constexpr (!Config::emscripten)
+    {
+      SOSAGE_TIMER_START(CPU_idle);
       if (duration < m_gui_refresh_time)
         Time::wait (m_gui_refresh_time - duration);
+      SOSAGE_TIMER_STOP(CPU_idle);
+    }
 
     now = Time::now();
     if (verbose)

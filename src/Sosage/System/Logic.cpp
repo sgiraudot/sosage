@@ -335,6 +335,10 @@ bool Logic::apply_step (C::Action::Step s)
     action_fade(s, false);
   else if (s.get(0) == "goto")
     action_goto (s);
+  else if (s.get(0) == "hide")
+    action_show (s.get(1), false);
+  else if (s.get(0) == "unhide")
+    action_show (s.get(1), true);
   else if (s.get(0) == "increment")
     action_modify (s.get(1), 1);
   else if (s.get(0) == "decrement")
@@ -672,6 +676,12 @@ void Logic::action_show (C::Action::Step step)
     get<C::Status>(GAME__STATUS)->push (IN_WINDOW);
 }
 
+void Logic::action_show (const std::string& target, bool on)
+{
+  get<C::Boolean>(target + ":visible")->set(on);
+}
+
+
 void Logic::action_sound (const std::string& target)
 {
   set<C::Event>("play_sound:" + target);
@@ -704,7 +714,7 @@ void Logic::create_dialog (const std::string& character,
                            const std::string& text,
                            std::vector<C::Image_handle>& dialog)
 {
-  static const int width_max = int(0.95 * Config::world_width);
+  static const int width_max = int(0.6 * Config::world_width);
 
   auto interface_font = get<C::Font> ("interface:font");
   const std::string& color = get<C::String> (character + ":color")->value();

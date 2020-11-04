@@ -80,6 +80,7 @@ private:
   void action_set_coordinates (Component::Action::Step step);
   void action_shake (Component::Action::Step step);
   void action_show (Component::Action::Step step);
+  void action_show (const std::string& target, bool on);
   void action_sound (const std::string& target);
   void action_start_music (const std::string& target);
   void action_stop_music();
