@@ -258,7 +258,7 @@ void File_IO::read_room (const std::string& file_name)
 
   remove ("game:new_room");
 
-  get<C::Status>(GAME__STATUS)->pop();
+  set<C::Event>("game:loading_done");
 
   m_thread.notify();
 

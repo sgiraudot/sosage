@@ -343,6 +343,13 @@ void SDL::begin ()
   SDL_RenderClear (m_renderer);
 }
 
+void SDL::create_texture (const Image& image)
+{
+  if (!image.texture)
+    const_cast<Image&>(image).texture
+      = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, image.surface.get());
+}
+
 void SDL::draw (const Image& image,
                 const int xsource, const int ysource,
                 const int wsource, const int hsource,

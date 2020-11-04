@@ -66,6 +66,16 @@ void Graphic::run()
     m_core.begin();
     display_spin_loading();
     m_core.end();
+
+    if (request<C::Event>("game:loading_done"))
+    {
+      for (const auto& e : m_content)
+        if (auto img = C::cast<C::Image>(e))
+          m_core.create_texture (img->core());
+      remove ("game:loading_done");
+      get<C::Status>(GAME__STATUS)->pop();
+    }
+
     return;
   }
 #endif
@@ -87,7 +97,6 @@ void Graphic::run()
     m_core.toggle_fullscreen (get<C::Boolean>("window:fullscreen")->value());
     remove ("window:toggle_fullscreen");
   }
-
 
   std::vector<C::Image_handle> images;
 
