@@ -82,9 +82,10 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   amouth->set_relative_origin(0.5, 1.0);
 
   std::string head = input["head"]["skin"].string("images", "characters", "png");
+  int head_size = input["head"]["size"].integer();
   auto ahead
     = C::make_handle<C::Animation>(id + "_head:image", local_file_name(head),
-                                   0, 7, 2, true);
+                                   0, head_size, 2, true);
   set<C::Conditional>(ahead->id(), visible, ahead);
   ahead->set_relative_origin(0.5, 1.0);
 
@@ -555,11 +556,14 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
       conditional_handle->add(state, nullptr);
     else
     {
-      std::string skin;
-      if (state == "inventory")
-        skin = istate["skin"].string("images", "inventory", "png");
-      else
-        skin = istate["skin"].string("images", "objects", "png");
+      std::string skin = "";
+      if (istate.has("skin"))
+      {
+        if (state == "inventory")
+          skin = istate["skin"].string("images", "inventory", "png");
+        else
+          skin = istate["skin"].string("images", "objects", "png");
+      }
 
       C::Image_handle img;
       if (istate.has("frames")) // Animation
@@ -573,7 +577,17 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
         img = anim;
       }
       else
-        img = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin), z);
+      {
+        if (skin == "") // No skin, just an empty rectangle
+        {
+          int width = istate["size"][0].integer();
+          int height = istate["size"][1].integer();
+          img = C::make_handle<C::Image>(id + ":conditional_image",
+                                         width, height, 0, 0, 0, 0);
+        }
+        else
+          img = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin), z);
+      }
 
       img->set_relative_origin(0.5, 1.0);
       img->collision() = (box_collision ? BOX : PIXEL_PERFECT);
@@ -760,12 +774,17 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
       else
         conditional_handle = get<C::String_conditional>(id + ":image");
 
-      std::string skin = istate["skin"].string("images", "scenery", "png");
-      auto img = C::make_handle<C::Image>(id + ":conditional_image",
-                                                          local_file_name(skin), z);
-      img->collision() = UNCLICKABLE;
-      img->set_relative_origin(0.5, 1.0);
-      conditional_handle->add (state, img);
+      if (state == "none")
+        conditional_handle->add(state, nullptr);
+      else
+      {
+        std::string skin = istate["skin"].string("images", "scenery", "png");
+        auto img = C::make_handle<C::Image>(id + ":conditional_image",
+                                            local_file_name(skin), z);
+        img->collision() = UNCLICKABLE;
+        img->set_relative_origin(0.5, 1.0);
+        conditional_handle->add (state, img);
+      }
     }
   }
   else

@@ -81,6 +81,14 @@ void SDL_mixer::stop_music()
   Mix_HaltMusic();
 }
 
+void SDL_mixer::fade (const SDL_mixer::Music& music, double time, bool in)
+{
+  if (in)
+    Mix_FadeInMusic(music, -1, 1000 * time);
+  else
+    Mix_FadeOutMusic(1000 * time);
+}
+
 void SDL_mixer::set_volume (double percentage)
 {
   Mix_VolumeMusic(int(percentage * Config::max_music_volume));

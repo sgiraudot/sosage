@@ -59,18 +59,15 @@ void Sound::run()
     remove("music:start");
   }
 
-  if (auto fadein = request<C::Boolean>("fade:in"))
+  if (request<C::Event>("music:fade"))
   {
     check (music, "No music to fade");
+    m_core.stop_music();
+    auto fadein = request<C::Boolean>("fade:in");
     double current_time = get<C::Double> (CLOCK__FRAME_TIME)->value();
-    double begin_time = get<C::Double>("fade:begin")->value();
     double end_time = get<C::Double>("fade:end")->value();
-    double alpha = (fadein->value() ? (current_time - begin_time) / (end_time - begin_time)
-                                    : (end_time - current_time) / (end_time - begin_time));
-    if (fadein && current_time > end_time)
-      alpha = 1.0;
-
-    m_core.set_volume(alpha);
+    m_core.fade(music->core(), end_time - current_time, fadein->value());
+    remove ("music:fade");
   }
 
   if (request<C::Event>("music:stop"))

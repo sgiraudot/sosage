@@ -58,6 +58,7 @@ public:
 
   void start_music (const Music& music);
   void stop_music();
+  void fade (const Music& music, double time, bool in);
   void set_volume (double percentage);
   void pause_music (const Music& music);
   void resume_music (const Music& music);

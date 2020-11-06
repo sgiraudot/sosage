@@ -71,13 +71,14 @@ private:
   void action_fadeout (Component::Action::Step step);
   void action_goto (Component::Action::Step step);
   void action_load (Component::Action::Step step);
-  void action_look (const std::string& target);
+  void action_look (Component::Action::Step step);
   void action_modify (const std::string& id, int diff);
   void action_move (Component::Action::Step step);
   void action_play (Component::Action::Step step);
   void action_animate (Component::Action::Step step);
   void action_set_state (Component::Action::Step step);
   void action_set_coordinates (Component::Action::Step step);
+  void action_set_camera_target (int position);
   void action_shake (Component::Action::Step step);
   void action_show (Component::Action::Step step);
   void action_show (const std::string& target, bool on);

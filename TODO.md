@@ -4,12 +4,13 @@
 
 * Animations Superflu
 * Ouverture sas
-* Câble
 * Sophie électrique
+
+* Intro
+
 * Choix du mode de curseur
 * Page tuto clics/curseur virtuel
 * Menus
-* Intro
 
 ### Sons
 
@@ -28,9 +29,6 @@
 ### Code
 
 * Animation d'intro
-* Changement de musique
-* Chargement des sons
-* Tremblement de caméra
 * Cutscenes
 * Menus
 * Indices

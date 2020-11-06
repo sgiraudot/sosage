@@ -346,7 +346,7 @@ bool Logic::apply_step (C::Action::Step s)
   else if (s.get(0) == "load")
     action_load (s);
   else if (s.get(0) == "look")
-    action_look (m_current_action->target_entity());
+    action_look (s);
   else if (s.get(0) == "move")
     action_move (s);
   else if (s.get(0) == "play")
@@ -357,6 +357,8 @@ bool Logic::apply_step (C::Action::Step s)
     action_set_state (s);
   else if (s.get(0) == "set_coordinates")
     action_set_coordinates (s);
+  else if (s.get(0) == "set_camera_target")
+    action_set_camera_target (s.get_int(1));
   else if (s.get(0) == "shake")
     action_shake (s);
   else if (s.get(0) == "show")
@@ -492,6 +494,7 @@ void Logic::action_fade (C::Action::Step step, bool fadein)
   auto begin = set<C::Double> ("fade:begin", m_current_time);
   auto end = set<C::Double> ("fade:end", m_current_time + duration);
   auto out = set<C::Boolean> ("fade:in", fadein);
+  set<C::Event>("music:fade");
   m_timed.insert (std::make_pair (m_current_time + duration, begin));
   m_timed.insert (std::make_pair (m_current_time + duration, end));
   m_timed.insert (std::make_pair (m_current_time + duration, out));
@@ -500,18 +503,22 @@ void Logic::action_fade (C::Action::Step step, bool fadein)
 void Logic::action_goto (C::Action::Step step)
 {
   const std::string& id = get<C::String>("player:name")->value();
-  if (step.size() == 1)
-  {
-    std::string target = m_current_action->target_entity();
-    debug ("action_goto " + target);
 
-    auto position = request<C::Position>(target + ":view");
-    if (compute_path_from_target(position))
+  check (step.size() <= 3, "Wrong number of arguments for \"goto\".");
+
+  if (step.size() == 3)
+  {
+    if (compute_path_from_target(C::make_handle<C::Position>("goto:target", Point (step.get_int(1), step.get_int(2)))))
       m_timed.insert (std::make_pair (0, get<C::Path>(id + ":path")));
   }
   else
   {
-    if (compute_path_from_target(C::make_handle<C::Position>("goto:target", Point (step.get_int(1), step.get_int(2)))))
+    std::string target
+        = (step.size() == 1 ? m_current_action->target_entity() : step.get(1));
+    debug ("action_goto " + target);
+
+    auto position = request<C::Position>(target + ":view");
+    if (compute_path_from_target(position))
       m_timed.insert (std::make_pair (0, get<C::Path>(id + ":path")));
   }
 }
@@ -522,8 +529,14 @@ void Logic::action_load (C::Action::Step step)
   set<C::String>("game:new_room_origin", step.get(2));
 }
 
-void Logic::action_look (const std::string& target)
+void Logic::action_look (C::Action::Step step)
 {
+  std::string target = "";
+  if (step.size() == 2)
+    target = step.get(1);
+  else
+    target = m_current_action->target_entity();
+
   debug ("action_look " + target);
   const std::string& id = get<C::String>("player:name")->value();
 
@@ -578,6 +591,7 @@ void Logic::action_play (C::Action::Step step)
     std::size_t nb_frames = 0;
     for (const auto& f : animation->frames())
       nb_frames += f.duration;
+    nb_frames --; // Avoid blinking if 2 animations follow each other
     m_timed.insert (std::make_pair (m_current_time + nb_frames / double(Config::animation_fps),
                                     C::make_handle<C::Event>("dummy:event")));
   }
@@ -640,6 +654,11 @@ void Logic::action_set_coordinates (C::Action::Step step)
 
   get<C::Position>(target + ":position")->set (Point(x, y));
   get<C::Image>(target + ":image")->z() = z;
+}
+
+void Logic::action_set_camera_target (int position)
+{
+  get<C::Double>("camera:target")->set (position);
 }
 
 void Logic::action_shake (C::Action::Step step)

@@ -77,16 +77,17 @@ void Animation::run()
 
 void Animation::run_one_frame()
 {
+  for (auto c : m_content)
+    if (auto b = C::cast<C::Boolean>(c))
+      if (b->component() == "visible")
+        b->begin_temporary_true();
+
   if (auto new_char = request<C::Vector<std::pair<std::string, bool> > >("game:new_characters"))
   {
     for (const auto& nc : new_char->value())
     {
-      auto visible = get<C::Boolean>(nc.first + ":visible");
-      bool was_visible = visible->value();
-      visible->set(true);
       place_and_scale_character (nc.first, nc.second);
       generate_random_idle_animation (nc.first, nc.second);
-      visible->set(was_visible);
     }
     remove("game:new_characters");
   }
@@ -147,10 +148,9 @@ void Animation::run_one_frame()
       std::string id = c->entity();
       if (c->component() == "stop_talking")
       {
-        if (get<C::Boolean>(id + ":visible")->value())
-          generate_random_idle_head_animation (id,
-                                               get<C::Animation>(id + "_head:image")
-                                               ->frames().front().y == 0);
+        generate_random_idle_head_animation (id,
+                                             get<C::Animation>(id + "_head:image")
+                                             ->frames().front().y == 0);
         to_remove.push_back (c->id());
       }
       else if (c->component() == "stop_animation")
@@ -163,6 +163,8 @@ void Animation::run_one_frame()
       }
     }
 
+  bool has_moved = false;
+
   // Then check all other cases
   for (auto c : m_content)
   {
@@ -170,6 +172,8 @@ void Animation::run_one_frame()
     {
       if (!compute_movement_from_path(path))
         to_remove.push_back(c->id());
+      else
+        has_moved = true;
     }
     else if (C::cast<C::Event>(c))
     {
@@ -208,15 +212,25 @@ void Animation::run_one_frame()
     m_fade_to_remove = false;
   }
 
-  update_camera_target();
+  if (has_moved)
+    update_camera_target();
 
   for (const auto& animation : animations)
     if (!animation->next_frame())
       animation->on() = false;
+
+  for (auto c : m_content)
+    if (auto b = C::cast<C::Boolean>(c))
+      if (b->component() == "visible")
+        b->end_temporary_true();
+
 }
 
 void Animation::place_and_scale_character(const std::string& id, bool looking_right)
 {
+  auto visible = get<C::Boolean>(id + ":visible");
+  bool was_visible = visible->value();
+  visible->set(true);
   auto abody = get<C::Animation>(id + "_walking:image");
   auto aidle = get<C::Animation>(id + "_idle:image");
   auto ahead = get<C::Animation>(id + "_head:image");
@@ -248,6 +262,7 @@ void Animation::place_and_scale_character(const std::string& id, bool looking_ri
     pmouth->set (phead->value() - ahead->core().scaling
                 * Vector(get<C::Position>(id + "_mouth:gap_left")->value()));
   }
+  visible->set(was_visible);
 }
 
 bool Animation::compute_movement_from_path (C::Path_handle path)
@@ -430,7 +445,6 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
       row_index = (row_index == 1 ? 0 : 1);
 #endif
   }
-
 }
 
 void Animation::generate_random_idle_body_animation (const std::string& id, bool looking_right)

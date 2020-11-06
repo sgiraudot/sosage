@@ -46,13 +46,17 @@ typedef std::shared_ptr<Condition> Condition_handle;
 class Boolean : public Condition
 {
   bool m_value;
+  bool m_memory;
 public:
 
   Boolean (const std::string& id, const bool& value)
-    : Condition(id), m_value(value) { }
+    : Condition(id), m_value(value), m_memory(value) { }
   void set(const bool& value) { m_value = value; }
   void toggle() { m_value = !m_value; }
   virtual bool value() const { return m_value; }
+
+  void begin_temporary_true() { m_memory = m_value; m_value = true; }
+  void end_temporary_true() { m_value = m_memory; }
 };
 
 typedef std::shared_ptr<Boolean> Boolean_handle;
