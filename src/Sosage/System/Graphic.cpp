@@ -71,7 +71,6 @@ void Graphic::run()
       for (const auto& e : m_content)
         if (auto img = C::cast<C::Image>(e))
           m_core.create_texture (img->core());
-      remove ("game:loading_done");
       get<C::Status>(GAME__STATUS)->pop();
     }
 
@@ -86,16 +85,10 @@ void Graphic::run()
   }
 
   if (receive ("window:rescaled"))
-  {
     m_core.update_view (get<C::Int>("interface:width")->value(),
                         get<C::Int>("interface:height")->value());
-    remove ("window:rescaled");
-  }
   if (receive ("window:toggle_fullscreen"))
-  {
     m_core.toggle_fullscreen (get<C::Boolean>("window:fullscreen")->value());
-    remove ("window:toggle_fullscreen");
-  }
 
   std::vector<C::Image_handle> images;
 

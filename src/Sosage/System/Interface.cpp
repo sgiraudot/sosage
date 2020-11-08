@@ -52,15 +52,17 @@ void Interface::run()
     return;
 
   if (receive ("window:rescaled"))
+  {
     update_layout();
+    emit ("window:rescaled"); // re-emit for Graphics
+  }
 
   auto cursor = get<C::Position>(CURSOR__POSITION);
   detect_collision (cursor);
 
-  auto clicked
-    = receive ("cursor:clicked");
-  if (clicked && m_collision)
+  if (m_collision && receive ("cursor:clicked"))
   {
+
     if (status->value() == IN_WINDOW)
       window_clicked();
     else if (status->value() == IN_CODE)
@@ -129,7 +131,6 @@ void Interface::window_clicked()
   auto window = get<C::Image>("game:window");
   window->on() = false;
   get<C::Status>(GAME__STATUS)->pop();
-  remove("cursor:clicked");
 }
 
 void Interface::code_clicked (C::Position_handle cursor)
@@ -152,17 +153,12 @@ void Interface::code_clicked (C::Position_handle cursor)
     if (code->click(p.x(), p.y()))
       emit ("code:button_clicked");
   }
-
-  remove("cursor:clicked");
 }
 
 void Interface::dialog_clicked ()
 {
   if (m_collision->entity().find("dialog_choice_") == std::string::npos)
-  {
-    remove("cursor:clicked");
     return;
-  }
 
   const std::vector<std::string>& choices
       = get<C::Vector<std::string> >("dialog:choices")->value();
@@ -188,8 +184,6 @@ void Interface::dialog_clicked ()
   remove("dialog_choice_background:position");
 
   get<C::Status>(GAME__STATUS)->pop();
-
-  remove("cursor:clicked");
 }
 
 void Interface::verb_clicked()
@@ -197,7 +191,6 @@ void Interface::verb_clicked()
   get<C::Variable> ("chosen_verb:text")
     ->set(get<C::String>(m_collision->entity() + ":text"));
   emit ("game:verb_clicked");
-  remove("cursor:clicked");
   remove ("action:source", true);
 }
 
@@ -208,7 +201,6 @@ void Interface::arrow_clicked()
     get<C::Inventory>("game:inventory")->prev();
   else
     get<C::Inventory>("game:inventory")->next();
-  remove("cursor:clicked");
 }
 
 void Interface::action_clicked(const std::string& verb)
@@ -227,10 +219,7 @@ void Interface::action_clicked(const std::string& verb)
       {
         // Don't use source on source
         if (source->value() == entity)
-        {
-          remove("cursor:clicked");
           return;
-        }
 
         // Find binary action
         auto action
@@ -258,7 +247,6 @@ void Interface::action_clicked(const std::string& verb)
           else // Set object as source
           {
             set<C::String>("action:source", entity);
-            remove("cursor:clicked");
             return;
           }
         }
@@ -288,13 +276,13 @@ void Interface::action_clicked(const std::string& verb)
         auto state = request<C::String>(entity + ":state");
         if ((state && (state->value() == "inventory")) ||
             !get<C::Boolean>("click:left")->value())
-        {
           set<C::Variable>("character:action", request<C::Action> (entity + ":look"));
-          remove("cursor:clicked");
-        }
         // Else, goto
         else
+        {
           set<C::Variable>("cursor:target", m_collision);
+          emit ("cursor:clicked"); // Logic handles this click
+        }
         return;
       }
       // If no action found, use default
@@ -310,14 +298,13 @@ void Interface::action_clicked(const std::string& verb)
     if (verb == "goto")
     {
       set<C::Variable>("cursor:target", m_collision);
+      emit ("cursor:clicked"); // Logic handles this click
       return;
     }
   }
 
   get<C::Variable> ("chosen_verb:text")
     ->set(get<C::String>("verb_goto:text"));
-
-  remove("cursor:clicked");
 }
 
 

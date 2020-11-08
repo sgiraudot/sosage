@@ -55,7 +55,6 @@ void Sound::run()
     check (music, "No music to start");
     m_core.start_music (music->core());
     music->on() = true;
-    remove("music:start");
   }
 
   if (receive("music:fade"))
@@ -66,14 +65,10 @@ void Sound::run()
     double current_time = get<C::Double> (CLOCK__FRAME_TIME)->value();
     double end_time = get<C::Double>("fade:end")->value();
     m_core.fade(music->core(), end_time - current_time, fadein->value());
-    remove ("music:fade");
   }
 
   if (receive("music:stop"))
-  {
     m_core.stop_music();
-    remove ("music:stop");
-  }
 
   if (music)
   {
@@ -90,33 +85,21 @@ void Sound::run()
     }
   }
 
-  if (auto clicked = receive ("game:verb_clicked"))
-  {
+  if (receive ("game:verb_clicked"))
     m_core.play_sound (m_content.get<C::Sound>("click:sound")->core());
-    m_content.remove ("game:verb_clicked");
-  }
 
-  if (auto failure = receive ("code:play_failure"))
-  {
+  if (receive ("code:play_failure"))
     m_core.play_sound
       (m_content.get<C::Sound>
        (m_content.get<C::Code>("game:code")->entity() +"_button:sound")->core());
-    m_content.remove ("code:play_failure");
-  }
-  else if (auto success = receive ("code:play_success"))
-  {
+  else if (receive ("code:play_success"))
     m_core.play_sound
       (m_content.get<C::Sound>
        (m_content.get<C::Code>("game:code")->entity() +"_success:sound")->core());
-    m_content.remove ("code:play_success");
-  }
-  else if (auto button = receive ("code:play_click"))
-  {
+  else if (receive ("code:play_click"))
     m_core.play_sound
       (m_content.get<C::Sound>
        (m_content.get<C::Code>("game:code")->entity() +"_failure:sound")->core());
-    m_content.remove ("code:play_click");
-  }
 
   std::vector<std::string> to_remove;
   for (C::Handle h : m_content)

@@ -113,8 +113,7 @@ void Logic::run ()
   m_timed.swap(new_timed_handle);
 
   auto collision = request<C::Image> ("cursor:target");
-  auto clicked = receive ("cursor:clicked");
-  if (clicked && collision)
+  if (collision && receive ("cursor:clicked"))
   {
     if (auto name = request<C::String>(collision->entity() + ":name"))
     {
@@ -124,7 +123,6 @@ void Logic::run ()
     else
       compute_path_from_target(get<C::Position>(CURSOR__POSITION));
 
-    remove("cursor:clicked");
     remove("cursor:target");
 
     // Cancel current action
@@ -132,7 +130,7 @@ void Logic::run ()
     m_current_action = nullptr;
   }
 
-  if (auto code_clicked = receive ("code:button_clicked"))
+  if (receive ("code:button_clicked"))
   {
     auto code = get<C::Code>("game:code");
     auto window = get<C::Image>("game:window");
@@ -166,20 +164,17 @@ void Logic::run ()
     }
     else
       emit ("code:play_click");
-
-    remove("code:button_clicked");
   }
 
-  if (auto stop_flashing = receive ("code:stop_flashing"))
+  if (receive ("code:stop_flashing"))
   {
     auto window = get<C::Image>("game:window");
     auto cropped
       = get<C::Cropped>(window->entity() + "_button:image");
     cropped->on() = false;
-    remove("code:stop_flashing");
   }
 
-  if (auto code_quit = receive ("code:quit"))
+  if (receive ("code:quit"))
   {
     auto code = get<C::Code>("game:code");
     auto window = get<C::Image>("game:window");
@@ -190,8 +185,6 @@ void Logic::run ()
     m_current_action = get<C::Action>
       (get<C::Code>("game:code")->entity() + ":action");
     m_next_step = 0;
-
-    remove("code:quit");
   }
 
   if (auto new_room_origin = request<C::String>("game:new_room_origin"))

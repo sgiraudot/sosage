@@ -159,7 +159,16 @@ public:
 
   bool receive (const std::string& signal)
   {
-    return request<Component::Signal>(signal) != nullptr;
+    count_access(signal);
+    count_request();
+    Component::Handle_set::iterator iter
+        = m_data.find(std::make_shared<Component::Base>(signal));
+    if (iter == m_data.end())
+      return false;
+    if (!Component::cast<Component::Signal>(*iter))
+      return false;
+    m_data.erase (iter);
+    return true;
   }
 
 private:
