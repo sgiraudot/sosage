@@ -521,7 +521,7 @@ bool Logic::function_play (const std::vector<std::string>& args)
     else
     {
       auto animation = get<C::Animation>(target + ":image");
-      animation->on() = true;
+      auto ev = set<C::Event>(target + ":start_animation");
 
       // If animation does not loop, insert dummy timed Event
       // so that sync waits for the end of the animation
@@ -530,6 +530,7 @@ bool Logic::function_play (const std::vector<std::string>& args)
         std::size_t nb_frames = 0;
         for (const auto& f : animation->frames())
           nb_frames += f.duration;
+        -- nb_frames;
         m_timed.insert (std::make_pair (m_current_time + nb_frames / double(Config::animation_fps),
                                         C::make_handle<C::Event>("dummy:event")));
       }
@@ -592,7 +593,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
   else if (option == "visible")
   {
     if (auto boolean = request<C::Boolean>(target + ":visible"))
-      boolean->set(true);
+      set<C::Event>(target + ":set_visible");
     else
     {
       auto image = get<C::Image>(target + ":image");
@@ -611,7 +612,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
     }
   }
   else if (option == "hidden")
-    get<C::Boolean>(target + ":visible")->set(false);
+    set<C::Event>(target + ":set_hidden");
 
   return true;
 }
@@ -622,7 +623,7 @@ bool Logic::function_stop (const std::vector<std::string>& args)
   if (option == "animation")
   {
     std::string target = args[1];
-    get<C::Image>(target + ":image")->on() = false;
+    set<C::Event>(target + ":stop_animation");
   }
   else if (option == "music")
   {

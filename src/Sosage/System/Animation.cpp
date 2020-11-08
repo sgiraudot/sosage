@@ -156,14 +156,17 @@ void Animation::run_one_frame()
       else if (c->component() == "stop_animation")
       {
         debug("stop_animation");
-        generate_random_idle_body_animation (id,
-                                             get<C::Animation>(id + "_head:image")
-                                             ->frames().front().y == 0);
+        if (auto head = request<C::Animation>(id + "_head:image"))
+          generate_random_idle_body_animation (id, head->frames().front().y == 0);
+        else
+          get<C::Image>(id + ":image")->on() = false;
         to_remove.push_back (c->id());
       }
     }
 
   bool has_moved = false;
+
+  std::unordered_set<std::string> just_started;
 
   // Then check all other cases
   for (auto c : m_content)
@@ -182,6 +185,28 @@ void Animation::run_one_frame()
       {
         if (get<C::Boolean>(id + ":visible")->value())
           generate_random_mouth_animation (id);
+        to_remove.push_back(c->id());
+      }
+      else if (c->component() == "start_animation")
+      {
+        get<C::Animation>(id + ":image")->on() = true;
+        just_started.insert (id);
+        to_remove.push_back(c->id());
+      }
+      else if (c->component() == "set_visible")
+      {
+        auto b = get<C::Boolean>(id + ":visible");
+        b->end_temporary_true();
+        b->set (true);
+        b->begin_temporary_true();
+        to_remove.push_back(c->id());
+      }
+      else if (c->component() == "set_hidden")
+      {
+        auto b = get<C::Boolean>(id + ":visible");
+        b->end_temporary_true();
+        b->set (false);
+        b->begin_temporary_true();
         to_remove.push_back(c->id());
       }
     }
@@ -216,8 +241,9 @@ void Animation::run_one_frame()
     update_camera_target();
 
   for (const auto& animation : animations)
-    if (!animation->next_frame())
-      animation->on() = false;
+    if (just_started.find(animation->entity()) == just_started.end())
+      if (!animation->next_frame())
+        animation->on() = false;
 
   for (auto c : m_content)
     if (auto b = C::cast<C::Boolean>(c))

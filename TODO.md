@@ -34,36 +34,10 @@
 * Indices
 * Choix du mode de curseur Android
 
-### Améliorer noms
+### Events
 
-play
-stop
-
-
-
-- animate                   play animation
-- play                      play animation
-- sound                     play sound
-- start_music / stop_music  stop music
-
-- comment                   talk
-- goto                      goto
-- look                      look
-
-- fadein / fadeout          camera fade
-- set_camera_target         camera target
-- shake                     camera shake
-
-- dialog                    trigger
-
-- show                      set visible
-- hide / unhide             set visible
-- move                      set coordinates
-- set_state                 set state
-- increment / decrement     add 
-
-- load                      load
-- lock / unlock             lock / unlock
-- sync                      wait
-- trigger                   trigger
-- wait                      wait sec
+Interface_events
+Graphic_events
+Sound_events
+Logic_events
+Animation_events
