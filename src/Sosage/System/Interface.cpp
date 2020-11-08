@@ -26,7 +26,6 @@
 
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Code.h>
-#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
@@ -52,14 +51,14 @@ void Interface::run()
   if (status->value() == PAUSED || status->value() == LOADING)
     return;
 
-  if (request<C::Event>("window:rescaled"))
+  if (receive ("window:rescaled"))
     update_layout();
 
   auto cursor = get<C::Position>(CURSOR__POSITION);
   detect_collision (cursor);
 
   auto clicked
-    = request<C::Event>("cursor:clicked");
+    = receive ("cursor:clicked");
   if (clicked && m_collision)
   {
     if (status->value() == IN_WINDOW)
@@ -151,7 +150,7 @@ void Interface::code_clicked (C::Position_handle cursor)
     Point p = cursor->value() - Vector(position->value()) + Vector (0.5  * window->width(),
                                                                     0.5 * window->height());
     if (code->click(p.x(), p.y()))
-      set<C::Event>("code:button_clicked");
+      emit ("code:button_clicked");
   }
 
   remove("cursor:clicked");
@@ -197,7 +196,7 @@ void Interface::verb_clicked()
 {
   get<C::Variable> ("chosen_verb:text")
     ->set(get<C::String>(m_collision->entity() + ":text"));
-  set<C::Event>("game:verb_clicked");
+  emit ("game:verb_clicked");
   remove("cursor:clicked");
   remove ("action:source", true);
 }

@@ -29,7 +29,6 @@
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Cropped.h>
 #include <Sosage/Component/Dialog.h>
-#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Hints.h>
@@ -265,7 +264,7 @@ void File_IO::read_room (const std::string& file_name)
 
   remove ("game:new_room");
 
-  set<C::Event>("game:loading_done");
+  emit ("game:loading_done");
 
   m_thread.notify();
 

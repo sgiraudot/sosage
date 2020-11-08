@@ -26,7 +26,6 @@
 
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Code.h>
-#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>

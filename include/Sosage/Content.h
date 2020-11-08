@@ -28,6 +28,7 @@
 #define SOSAGE_CONTENT_H
 
 #include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Signal.h>
 #include <Sosage/Component/cast.h>
 #include <Sosage/Utils/enum.h>
 #include <Sosage/Utils/error.h>
@@ -151,7 +152,17 @@ public:
     return Component::cast<T>(m_fast_access_components[std::size_t(fac)]);
   }
 
-  private:
+  void emit (const std::string& signal)
+  {
+    set<Component::Signal>(signal);
+  }
+
+  bool receive (const std::string& signal)
+  {
+    return request<Component::Signal>(signal) != nullptr;
+  }
+
+private:
 
   inline void count_set_ptr() { SOSAGE_COUNT (Content__set_ptr); }
   inline void count_set_args() { SOSAGE_COUNT (Content__set_args); }

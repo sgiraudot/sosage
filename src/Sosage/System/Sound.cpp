@@ -25,7 +25,6 @@
 */
 
 #include <Sosage/Component/Code.h>
-#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Music.h>
 #include <Sosage/Component/Sound.h>
 #include <Sosage/Component/Status.h>
@@ -51,7 +50,7 @@ void Sound::run()
 
   auto music = m_content.request<C::Music>("game:music");
 
-  if (request<C::Event>("music:start"))
+  if (receive("music:start"))
   {
     check (music, "No music to start");
     m_core.start_music (music->core());
@@ -59,7 +58,7 @@ void Sound::run()
     remove("music:start");
   }
 
-  if (request<C::Event>("music:fade"))
+  if (receive("music:fade"))
   {
     check (music, "No music to fade");
     m_core.stop_music();
@@ -70,7 +69,7 @@ void Sound::run()
     remove ("music:fade");
   }
 
-  if (request<C::Event>("music:stop"))
+  if (receive("music:stop"))
   {
     m_core.stop_music();
     remove ("music:stop");
@@ -91,27 +90,27 @@ void Sound::run()
     }
   }
 
-  if (auto clicked = m_content.request<C::Event>("game:verb_clicked"))
+  if (auto clicked = receive ("game:verb_clicked"))
   {
     m_core.play_sound (m_content.get<C::Sound>("click:sound")->core());
     m_content.remove ("game:verb_clicked");
   }
 
-  if (auto failure = m_content.request<C::Event>("code:play_failure"))
+  if (auto failure = receive ("code:play_failure"))
   {
     m_core.play_sound
       (m_content.get<C::Sound>
        (m_content.get<C::Code>("game:code")->entity() +"_button:sound")->core());
     m_content.remove ("code:play_failure");
   }
-  else if (auto success = m_content.request<C::Event>("code:play_success"))
+  else if (auto success = receive ("code:play_success"))
   {
     m_core.play_sound
       (m_content.get<C::Sound>
        (m_content.get<C::Code>("game:code")->entity() +"_success:sound")->core());
     m_content.remove ("code:play_success");
   }
-  else if (auto button = m_content.request<C::Event>("code:play_click"))
+  else if (auto button = receive ("code:play_click"))
   {
     m_core.play_sound
       (m_content.get<C::Sound>
@@ -121,7 +120,7 @@ void Sound::run()
 
   std::vector<std::string> to_remove;
   for (C::Handle h : m_content)
-    if (auto ev = C::cast<C::Event>(h))
+    if (auto ev = C::cast<C::Signal>(h))
       if (ev->entity() == "play_sound")
       {
         m_core.play_sound (m_content.get<C::Sound> (ev->component() + ":sound")->core());

@@ -25,7 +25,6 @@
 */
 
 
-#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Path.h>
@@ -67,7 +66,7 @@ void Graphic::run()
     display_spin_loading();
     m_core.end();
 
-    if (request<C::Event>("game:loading_done"))
+    if (receive ("game:loading_done"))
     {
       for (const auto& e : m_content)
         if (auto img = C::cast<C::Image>(e))
@@ -86,13 +85,13 @@ void Graphic::run()
     remove ("game:name");
   }
 
-  if (request<C::Event>("window:rescaled"))
+  if (receive ("window:rescaled"))
   {
     m_core.update_view (get<C::Int>("interface:width")->value(),
                         get<C::Int>("interface:height")->value());
     remove ("window:rescaled");
   }
-  if (request<C::Event>("window:toggle_fullscreen"))
+  if (receive ("window:toggle_fullscreen"))
   {
     m_core.toggle_fullscreen (get<C::Boolean>("window:fullscreen")->value());
     remove ("window:toggle_fullscreen");

@@ -25,7 +25,6 @@
 */
 
 #include <Sosage/Component/Animation.h>
-#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
@@ -143,7 +142,7 @@ void Animation::run_one_frame()
 
   // Then check animations stopping
   for (auto c : m_content)
-    if (C::cast<C::Event>(c))
+    if (C::cast<C::Signal>(c))
     {
       std::string id = c->entity();
       if (c->component() == "stop_talking")
@@ -178,7 +177,7 @@ void Animation::run_one_frame()
       else
         has_moved = true;
     }
-    else if (C::cast<C::Event>(c))
+    else if (C::cast<C::Signal>(c))
     {
       std::string id = c->entity();
       if (c->component() == "start_talking")

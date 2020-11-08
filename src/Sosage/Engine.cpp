@@ -25,7 +25,6 @@
 */
 
 #include <Sosage/Component/Animation.h>
-#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Position.h>
@@ -114,7 +113,7 @@ int Engine::run (const std::string& folder_name)
 
   interface->init(); // init interface
 
-  m_content.set<Component::Event>("window:rescaled");
+  m_content.emit ("window:rescaled");
 
   graphic->run(); // Run graphic once to update view
 
@@ -136,7 +135,7 @@ bool Engine::run()
 {
   for (System::Handle system : m_systems)
     system->run();
-  return !m_content.request<Component::Event>("game:exit");
+  return !m_content.receive("game:exit");
 }
 
 

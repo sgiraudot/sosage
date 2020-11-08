@@ -30,7 +30,6 @@
 #include <Sosage/Component/Condition.h>
 #include <Sosage/Component/Cropped.h>
 #include <Sosage/Component/Dialog.h>
-#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Image.h>
@@ -102,7 +101,7 @@ void Logic::run ()
     }
     else if (th.first <= m_current_time)
     {
-      if (C::cast<C::Event>(th.second))
+      if (C::cast<C::Signal>(th.second))
         set (th.second);
       else if (th.second->id() == "wait")
         still_waiting = false;
@@ -114,7 +113,7 @@ void Logic::run ()
   m_timed.swap(new_timed_handle);
 
   auto collision = request<C::Image> ("cursor:target");
-  auto clicked = request<C::Event>("cursor:clicked");
+  auto clicked = receive ("cursor:clicked");
   if (clicked && collision)
   {
     if (auto name = request<C::String>(collision->entity() + ":name"))
@@ -133,7 +132,7 @@ void Logic::run ()
     m_current_action = nullptr;
   }
 
-  if (auto code_clicked = request<C::Event>("code:button_clicked"))
+  if (auto code_clicked = receive ("code:button_clicked"))
   {
     auto code = get<C::Code>("game:code");
     auto window = get<C::Image>("game:window");
@@ -149,29 +148,29 @@ void Logic::run ()
     cropped->on() = true;
 
     m_timed.insert (std::make_pair (m_current_time + Config::button_click_duration,
-                                    C::make_handle<C::Event>
+                                    C::make_handle<C::Signal>
                                     ("code:stop_flashing")));
 
     if (code->failure())
     {
       code->reset();
-      set<C::Event>("code:play_failure");
+      emit ("code:play_failure");
     }
     else if (code->success())
     {
       code->reset();
-      set<C::Event>("code:play_success");
+      emit ("code:play_success");
       m_timed.insert (std::make_pair (m_current_time + Config::button_click_duration,
-                                      C::make_handle<C::Event>
+                                      C::make_handle<C::Signal>
                                       ("code:quit")));
     }
     else
-      set<C::Event>("code:play_click");
+      emit ("code:play_click");
 
     remove("code:button_clicked");
   }
 
-  if (auto stop_flashing = request<C::Event>("code:stop_flashing"))
+  if (auto stop_flashing = receive ("code:stop_flashing"))
   {
     auto window = get<C::Image>("game:window");
     auto cropped
@@ -180,7 +179,7 @@ void Logic::run ()
     remove("code:stop_flashing");
   }
 
-  if (auto code_quit = request<C::Event>("code:quit"))
+  if (auto code_quit = receive ("code:quit"))
   {
     auto code = get<C::Code>("game:code");
     auto window = get<C::Image>("game:window");
@@ -247,7 +246,7 @@ void Logic::clear_timed(bool action_goto)
     }
     else
     {
-      if (C::cast<C::Event>(th.second))
+      if (C::cast<C::Signal>(th.second))
         set (th.second);
       else
         remove (th.second->id());
@@ -368,7 +367,7 @@ bool Logic::function_camera (const std::vector<std::string>& args)
     auto begin = set<C::Double> ("fade:begin", m_current_time);
     auto end = set<C::Double> ("fade:end", m_current_time + duration);
     auto out = set<C::Boolean> ("fade:in", fadein);
-    set<C::Event>("music:fade");
+    emit ("music:fade");
     m_timed.insert (std::make_pair (m_current_time + duration, begin));
     m_timed.insert (std::make_pair (m_current_time + duration, end));
     m_timed.insert (std::make_pair (m_current_time + duration, out));
@@ -515,13 +514,13 @@ bool Logic::function_play (const std::vector<std::string>& args)
       set<C::String>(character + ":start_animation", target);
 
       m_timed.insert (std::make_pair (m_current_time + duration,
-                                      C::make_handle<C::Event>
+                                      C::make_handle<C::Signal>
                                       (character + ":stop_animation")));
     }
     else
     {
       auto animation = get<C::Animation>(target + ":image");
-      auto ev = set<C::Event>(target + ":start_animation");
+      emit (target + ":start_animation");
 
       // If animation does not loop, insert dummy timed Event
       // so that sync waits for the end of the animation
@@ -532,16 +531,16 @@ bool Logic::function_play (const std::vector<std::string>& args)
           nb_frames += f.duration;
         -- nb_frames;
         m_timed.insert (std::make_pair (m_current_time + nb_frames / double(Config::animation_fps),
-                                        C::make_handle<C::Event>("dummy:event")));
+                                        C::make_handle<C::Signal>("dummy:event")));
       }
     }
   }
   else if (option == "sound")
-    set<C::Event>("play_sound:" + target);
+    emit ("play_sound:" + target);
   else if (option == "music")
   {
     set<C::Variable>("game:music", get<C::Music>(target + ":music"));
-    set<C::Event>("music:start");
+    emit ("music:start");
   }
   return true;
 }
@@ -593,7 +592,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
   else if (option == "visible")
   {
     if (auto boolean = request<C::Boolean>(target + ":visible"))
-      set<C::Event>(target + ":set_visible");
+      emit (target + ":set_visible");
     else
     {
       auto image = get<C::Image>(target + ":image");
@@ -612,7 +611,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
     }
   }
   else if (option == "hidden")
-    set<C::Event>(target + ":set_hidden");
+    emit (target + ":set_hidden");
 
   return true;
 }
@@ -623,12 +622,12 @@ bool Logic::function_stop (const std::vector<std::string>& args)
   if (option == "animation")
   {
     std::string target = args[1];
-    set<C::Event>(target + ":stop_animation");
+    emit (target + ":stop_animation");
   }
   else if (option == "music")
   {
     remove("game:music");
-    set<C::Event>("music:stop");
+    emit ("music:stop");
   }
   return true;
 }
@@ -710,10 +709,10 @@ bool Logic::function_talk (const std::vector<std::string>& args)
     m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), pos));
   }
 
-  set<C::Event>(id + ":start_talking");
+  emit (id + ":start_talking");
 
   m_timed.insert (std::make_pair (m_current_time + nb_seconds_lips_moving,
-                                  C::make_handle<C::Event>
+                                  C::make_handle<C::Signal>
                                   (id + ":stop_talking")));
   return true;
 }

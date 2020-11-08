@@ -25,7 +25,6 @@
 */
 
 #include <Sosage/Component/Condition.h>
-#include <Sosage/Component/Event.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Status.h>
 #include <Sosage/System/Input.h>
@@ -59,7 +58,7 @@ void Input::run()
         ev == Event(KEY_UP, EXIT) ||
         ev == Event(KEY_UP, Q) ||
         ev == Event(KEY_UP, ANDROID_BACK))
-      set<C::Event>("game:exit");
+      emit ("game:exit");
 
 
     if (ev == Event(KEY_UP, SPACE))
@@ -84,27 +83,27 @@ void Input::run()
     if (ev == Event(KEY_UP, F1))
     {
       get<C::Int>("interface:layout")->set(Config::AUTO);
-      set<C::Event>("window:rescaled");
+      emit ("window:rescaled");
     }
     else if (ev == Event(KEY_UP, F2))
     {
       get<C::Int>("interface:layout")->set(Config::WIDESCREEN);
-      set<C::Event>("window:rescaled");
+      emit ("window:rescaled");
     }
     else if (ev == Event(KEY_UP, F3))
     {
       get<C::Int>("interface:layout")->set(Config::STANDARD);
-      set<C::Event>("window:rescaled");
+      emit ("window:rescaled");
     }
     else if (ev == Event(KEY_UP, F4))
     {
       get<C::Int>("interface:layout")->set(Config::SQUARE);
-      set<C::Event>("window:rescaled");
+      emit ("window:rescaled");
     }
     else if (ev == Event(KEY_UP, F5))
     {
       get<C::Int>("interface:layout")->set(Config::PORTRAIT);
-      set<C::Event>("window:rescaled");
+      emit ("window:rescaled");
     }
     else if (ev == Event(KEY_DOWN, ALT))
       m_alt = true;
@@ -113,14 +112,14 @@ void Input::run()
     else if (ev == Event(KEY_UP, ENTER) && m_alt)
     {
       get<C::Boolean>("window:fullscreen")->toggle();
-      set<C::Event>("window:toggle_fullscreen");
+      emit ("window:toggle_fullscreen");
     }
 
     if (ev == Event(WINDOW, RESIZED))
     {
       get<C::Int>("window:width")->set(ev.x());
       get<C::Int>("window:height")->set(ev.y());
-      set<C::Event>("window:rescaled");
+      emit ("window:rescaled");
     }
 
     // If paused, ignore mouse events
@@ -148,7 +147,7 @@ void Input::run()
 
         if (!m_virtual_cursor.has_moved)
         {
-          set<C::Event>("cursor:clicked");
+          emit ("cursor:clicked");
           set<C::Boolean>("click:left", true);
         }
       }
@@ -177,14 +176,14 @@ void Input::run()
       {
         get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-        set<C::Event>("cursor:clicked");
+        emit ("cursor:clicked");
         set<C::Boolean>("click:left", true);
       }
       if (ev == Event(CURSOR_DOWN, RIGHT))
       {
         get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-        set<C::Event>("cursor:clicked");
+        emit ("cursor:clicked");
         set<C::Boolean>("click:left", false);
       }
     }

@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/Component/Event.h]
-  Used to communicate string-based events between systems.
+  [include/Sosage/Component/Signal.h]
+  Used to communicate string-based signals between systems.
 
   =====================================================================
 
@@ -24,24 +24,24 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_COMPONENT_EVENT_H
-#define SOSAGE_COMPONENT_EVENT_H
+#ifndef SOSAGE_COMPONENT_SIGNAL_H
+#define SOSAGE_COMPONENT_SIGNAL_H
 
 #include <Sosage/Component/Handle.h>
 
 namespace Sosage::Component
 {
 
-class Event : public Base
+class Signal : public Base
 {
 public:
 
-  Event (const std::string& id) : Base(id) { }
+  Signal (const std::string& id) : Base(id) { }
   
 };
 
-typedef std::shared_ptr<Event> Event_handle;
+typedef std::shared_ptr<Signal> Signal_handle;
 
 } // namespace Sosage::Component
 
-#endif // SOSAGE_COMPONENT_CONDITION_H
+#endif // SOSAGE_COMPONENT_SIGNAL_H

@@ -63,6 +63,8 @@ public:
   std::shared_ptr<T> set_fac (const Fast_access_component& fac, Args&& ... args)
   { return m_content.set_fac<T>(fac, std::forward<Args>(args)...); }
   void remove (const std::string& key, bool optional = false) { m_content.remove(key, optional); }
+  void emit (const std::string& signal) { m_content.emit (signal); }
+  bool receive (const std::string& signal) { return m_content.receive(signal); }
 
 };
 
