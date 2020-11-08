@@ -27,6 +27,7 @@
 #ifndef SOSAGE_THIRD_YAML_H
 #define SOSAGE_THIRD_YAML_H
 
+#include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/file.h>
 
 #include <SDL.h>
@@ -86,7 +87,13 @@ public:
     {
       return value;
     }
-    
+
+    std::string nstring () const
+    {
+      check(map.size() == 1, "Checking for nstring in non-singular node");
+      return map.begin()->first;
+    }
+
     std::string string (const std::string& folder,
                         const std::string& extension) const
     {
@@ -102,17 +109,17 @@ public:
 
     int integer () const
     {
-      return std::atoi(value.c_str());
+      return to_int(value);
     }
 
     double floating () const
     {
-      return std::atof(value.c_str());
+      return to_double(value);
     }
 
     bool boolean() const
     {
-      return (value == "true");
+      return to_bool(value);
     }
 
     std::vector<std::string> string_array() const

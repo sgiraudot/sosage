@@ -33,9 +33,9 @@ Action::Action (const std::string& id)
   : Base (id)
 { }
 
-void Action::add (const std::vector<std::string>& content)
+void Action::add (const std::string& function, const std::vector<std::string>& args)
 {
-  m_steps.push_back (Step (content));
+  m_steps.push_back (Step ("function_" + function, args));
 }
 
 std::string Action::str() const
@@ -44,9 +44,9 @@ std::string Action::str() const
   
   for (const Step& s : m_steps)
   {
-    out += " * ";
-    for (std::size_t i = 0; i < s.size(); ++ i)
-      out += s.get(i) + " ";
+    out += " * " + s.function() + " ";
+    for (std::size_t i = 0; i < s.args().size(); ++ i)
+      out += s.args()[i] + " ";
     out += "\n";
   }
 

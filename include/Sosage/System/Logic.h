@@ -51,6 +51,9 @@ private:
   Component::Action_handle m_current_action;
   std::size_t m_next_step;
 
+  typedef std::function<bool(const std::vector<std::string>&)> Function;
+  std::map<std::string, Function> m_dispatcher;
+
 public:
 
   Logic (Content& content);
@@ -65,28 +68,18 @@ private:
   void update_debug_info (Component::Debug_handle debug_info);
 
   bool apply_step (Component::Action::Step step);
-  void action_comment (Component::Action::Step step);
-  void action_dialog (Component::Action::Step step);
-  void action_fade (Component::Action::Step step, bool fadein);
-  void action_fadeout (Component::Action::Step step);
-  void action_goto (Component::Action::Step step);
-  void action_load (Component::Action::Step step);
-  void action_look (Component::Action::Step step);
-  void action_modify (const std::string& id, int diff);
-  void action_move (Component::Action::Step step);
-  void action_play (Component::Action::Step step);
-  void action_animate (Component::Action::Step step);
-  void action_set_state (Component::Action::Step step);
-  void action_set_coordinates (Component::Action::Step step);
-  void action_set_camera_target (int position);
-  void action_shake (Component::Action::Step step);
-  void action_show (Component::Action::Step step);
-  void action_show (const std::string& target, bool on);
-  void action_sound (const std::string& target);
-  void action_start_music (const std::string& target);
-  void action_stop_music();
-  void action_trigger (const std::string& target);
-  void action_wait (double time);
+
+  bool function_add (const std::vector<std::string>& args);
+  bool function_camera (const std::vector<std::string>& args);
+  bool function_dialog (const std::vector<std::string>& args);
+  bool function_goto (const std::vector<std::string>& args);
+  bool function_look (const std::vector<std::string>& args);
+  bool function_play (const std::vector<std::string>& args);
+  bool function_set (const std::vector<std::string>& args);
+  bool function_stop (const std::vector<std::string>& args);
+  bool function_system (const std::vector<std::string>& args);
+  bool function_talk (const std::vector<std::string>& args);
+
 
   void create_dialog (const std::string& character,
                       const std::string& text,

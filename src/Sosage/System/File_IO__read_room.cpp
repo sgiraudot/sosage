@@ -425,7 +425,10 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
 
   auto action = set<C::Action> (id + ":action");
   for (std::size_t j = 0; j < node["on_success"].size(); ++ j)
-    action->add (node["on_success"][j].string_array());
+  {
+    std::string function = node["on_success"][j].nstring();
+    action->add (function, node["on_success"][j][function].string_array());
+  }
 }
 
 void File_IO::read_dialog (const Core::File_IO::Node& node, const std::string& id)
@@ -504,7 +507,10 @@ void File_IO::read_integer (const Core::File_IO::Node& node, const std::string& 
     auto action = set<C::Action>(id + ":" + value);
 
     for (std::size_t k = 0; k < itrigger["effect"].size(); ++ k)
-      action->add (itrigger["effect"][k].string_array());
+    {
+      std::string function = itrigger["effect"][k].nstring();
+      action->add (function, itrigger["effect"][k][function].string_array());
+    }
   }
 }
 
@@ -627,8 +633,10 @@ void File_IO::read_action (const Core::File_IO::Node& node, const std::string& i
     auto action = C::make_handle<C::Action>(id + ":action");
 
     for (std::size_t k = 0; k < istate["effect"].size(); ++ k)
-      action->add (istate["effect"][k].string_array());
-
+    {
+      std::string function = istate["effect"][k].nstring();
+      action->add (function, istate["effect"][k][function].string_array());
+    }
     conditional_handle->add(state, action);
   }
   std::cerr << "Read " << id + ":action" << std::endl;
@@ -690,8 +698,10 @@ void File_IO::read_actions (const Core::File_IO::Node& node, const std::string& 
 
 
       for (std::size_t k = 0; k < iaction["effect"].size(); ++ k)
-        action->add (iaction["effect"][k].string_array());
-
+      {
+        std::string function = iaction["effect"][k].nstring();
+        action->add (function, iaction["effect"][k][function].string_array());
+      }
       ++ j;
     }
     while (j < nb_actions);
@@ -744,7 +754,10 @@ void File_IO::read_origin(const Core::File_IO::Node& node, const std::string& id
 
   auto action = set<C::Action>(id + ":action");
   for (std::size_t k = 0; k < node["action"].size(); ++ k)
-      action->add (node["action"][k].string_array());
+  {
+    std::string function = node["action"][k].nstring();
+    action->add (function, node["action"][k][function].string_array());
+  }
 }
 
 void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& id)

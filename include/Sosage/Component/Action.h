@@ -43,20 +43,17 @@ public:
   {
   private:
 
-    std::vector<std::string> m_content;
+    std::string m_function;
+    std::vector<std::string> m_args;
 
   public:
 
-    Step (const std::vector<std::string>& content)
-      : m_content (content)
+    Step (const std::string& function, const std::vector<std::string>& args)
+      : m_function (function), m_args (args)
     { }
 
-    std::size_t size() const { return m_content.size(); }
-    const std::string& get (const std::size_t& i) const { return m_content[i]; }
-    int get_int (const std::size_t& i) const { return std::atoi(m_content[i].c_str()); }
-    double get_double (const std::size_t& i) const { return std::atof(m_content[i].c_str()); }
-    bool get_boolean (const std::size_t& i) const  { return m_content[i] == "true"; }
-
+    const std::string& function() const { return m_function; }
+    const std::vector<std::string>& args() const { return m_args; }
   };
 
 private:
@@ -66,7 +63,7 @@ private:
 public:
 
   Action (const std::string& id);
-  void add (const std::vector<std::string>& content);
+  void add (const std::string& function, const std::vector<std::string>& args);
   std::string str() const;
 
   std::size_t size() const { return m_steps.size(); }

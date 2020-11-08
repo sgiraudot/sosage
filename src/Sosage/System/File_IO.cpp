@@ -294,11 +294,12 @@ void File_IO::read_init (const std::string& folder_name)
     for (std::size_t j = 0; j < idefault["effect"].size(); ++ j)
     {
       const Core::File_IO::Node& iaction = idefault["effect"][j];
+      std::string function = iaction.nstring();
+
       auto rnd_action = C::make_handle<C::Action>
         ("default:" + id + "_" + std::to_string(j));
-      rnd_action->add ({ "look" });
-      rnd_action->add (iaction.string_array());
-
+      rnd_action->add ("look", {});
+      rnd_action->add (function, iaction[function].string_array());
       action->add (1.0, rnd_action);
     }
 
