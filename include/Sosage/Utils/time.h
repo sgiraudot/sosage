@@ -40,8 +40,7 @@ using namespace Core;
 class Clock
 {
   Time::Unit m_latest;
-  Time::Duration m_gui_refresh_time;
-  Time::Duration m_animation_refresh_time;
+  Time::Duration m_refresh_time;
 
   double m_mean;
   double m_active;
@@ -51,17 +50,16 @@ class Clock
   double m_cpu;
 
   Time::Unit m_start;
-  std::size_t m_frame_id;
+  double m_time;
 
   Clock (const Clock&) { }
 
 public:
 
   Clock()
-    : m_gui_refresh_time (1000. / double(Config::gui_fps))
-    , m_animation_refresh_time (1000. / double(Config::animation_fps))
+    : m_refresh_time (1000. / double(Config::gui_fps))
     , m_mean(0), m_active(0), m_nb(0), m_fps(Config::gui_fps), m_cpu(0)
-    , m_frame_id(0)
+    , m_time(0)
   {
     m_start = Time::now();
     m_latest = m_start;
@@ -72,16 +70,16 @@ public:
     Uint32 now = Time::now();
     Uint32 duration = now - m_latest;
 
-    if (duration > m_gui_refresh_time)
+    if (duration > m_refresh_time)
     {
-      debug("Warning: frame lasted " + std::to_string(duration) + " (max is " + std::to_string(m_gui_refresh_time) + ")");
+      debug("Warning: frame lasted " + std::to_string(duration) + " (max is " + std::to_string(m_refresh_time) + ")");
     }
 
     if constexpr (!Config::emscripten)
     {
       SOSAGE_TIMER_START(CPU_idle);
-      if (duration < m_gui_refresh_time)
-        Time::wait (m_gui_refresh_time - duration);
+      if (duration < m_refresh_time)
+        Time::wait (m_refresh_time - duration);
       SOSAGE_TIMER_STOP(CPU_idle);
     }
 
@@ -94,7 +92,7 @@ public:
       if (m_nb == 20)
       {
         m_fps = 1000. / (m_mean / m_nb);
-        m_cpu = 100. * (m_active / (m_nb * m_gui_refresh_time));
+        m_cpu = 100. * (m_active / (m_nb * m_refresh_time));
         m_mean = 0.;
         m_active = 0.;
         m_nb = 0;
@@ -102,16 +100,23 @@ public:
     }
     m_latest = now;
 
-    m_frame_id = std::size_t((m_latest - m_start) / m_animation_refresh_time);
+    m_time = (m_latest - m_start) / 1000.;
   }
 
   double fps() const { return m_fps; }
   double cpu() const { return m_cpu; }
-
-  std::size_t frame_id() const { return m_frame_id; }
-  double frame_time() const { return m_frame_id / double(Config::animation_fps); }
-
+  double time() const { return m_time; }
 };
+
+inline std::size_t frame_id (const double& time)
+{
+  return std::size_t(time * Config::animation_fps);
+}
+
+inline double frame_time (const double& time)
+{
+  return frame_id(time) / double(Config::animation_fps);
+}
 
 } // namespace Sosage
 

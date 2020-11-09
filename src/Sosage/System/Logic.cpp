@@ -81,7 +81,7 @@ void Logic::run ()
       || status->value() == DIALOG_CHOICE)
     return;
 
-  double current_time = get<C::Double> (CLOCK__FRAME_TIME)->value();
+  double current_time = get<C::Double> (CLOCK__TIME)->value();
 
   m_current_time = current_time;
 
@@ -288,7 +288,7 @@ void Logic::update_camera()
 
     double current_intensity = intensity * (end - m_current_time) / (end - begin);
 
-    constexpr double period = 0.0001;
+    constexpr double period = 0.02;
 
     double shift = std::sin ((m_current_time - begin) / period);
 
@@ -522,9 +522,10 @@ bool Logic::function_play (const std::vector<std::string>& args)
         std::size_t nb_frames = 0;
         for (const auto& f : animation->frames())
           nb_frames += f.duration;
-        -- nb_frames;
-        m_timed.insert (std::make_pair (m_current_time + nb_frames / double(Config::animation_fps),
-                                        C::make_handle<C::Signal>("dummy:event")));
+        double latest_frame_time = frame_time(m_current_time);
+        double end_time = latest_frame_time + (nb_frames + 0.5) / double(Config::animation_fps);
+
+        m_timed.insert (std::make_pair (end_time, C::make_handle<C::Signal>("dummy:event")));
       }
     }
   }
@@ -554,8 +555,8 @@ bool Logic::function_set (const std::vector<std::string>& args)
   else if (option == "state")
   {
     auto current_state = get<C::String>(target + ":state");
-
     std::string state;
+
     if (args.size() == 3)
       state = args[2];
     else // if (step.size() == 4)

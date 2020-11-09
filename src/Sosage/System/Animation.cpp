@@ -45,7 +45,7 @@ Animation::Animation (Content& content)
 
 void Animation::run()
 {
-  std::size_t new_frame_id = get<C::Int>(CLOCK__FRAME_ID)->value();
+  std::size_t new_frame_id = frame_id(get<C::Double>(CLOCK__TIME)->value());
 
   auto status = get<C::Status>(GAME__STATUS);
   if (status->value() == LOADING)
@@ -583,7 +583,7 @@ void Animation::generate_animation (const std::string& id, const std::string& an
 
 void Animation::fade (double begin_time, double end_time, bool fadein)
 {
-  double current_time = get<C::Double> (CLOCK__FRAME_TIME)->value();
+  double current_time = frame_time(get<C::Double>(CLOCK__TIME)->value());
 
   if (current_time > end_time)
     return;

@@ -38,16 +38,14 @@ Time::Time (Content& content)
   : Base (content)
 {
   set_fac<C::Debug>(GAME__DEBUG, "game:debug", m_content, m_clock);
-  set_fac<C::Int> (CLOCK__FRAME_ID, "clock:frame_id", 0);
-  set_fac<C::Double> (CLOCK__FRAME_TIME, "clock:frame_time", 0.);
+  set_fac<C::Double> (CLOCK__TIME, "clock:time", 0.);
 }
 
 void Time::run()
 {
   SOSAGE_TIMER_START(System_Time__run);
   m_clock.wait(true);
-  get<C::Int> (CLOCK__FRAME_ID)->set(m_clock.frame_id());
-  get<C::Double> (CLOCK__FRAME_TIME)->set(m_clock.frame_time());
+  get<C::Double> (CLOCK__TIME)->set(m_clock.time());
   SOSAGE_TIMER_STOP(System_Time__run);
 }
 
