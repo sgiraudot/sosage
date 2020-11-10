@@ -69,7 +69,7 @@ public:
   int height() const { return ymax() - ymin(); }
   const int& z() const { return m_z; }
   int& z() { return m_z; }
-  void rescale (int z);
+  void rescale (double z);
   void set_scale (double scale);
   bool is_target_inside (int x, int y) const;
 };

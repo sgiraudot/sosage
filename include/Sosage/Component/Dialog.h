@@ -95,9 +95,9 @@ public:
     m_current = m_graph.incident_vertex(m_current, 0);
   }
 
-  void next (std::size_t choice)
+  void next (int choice)
   {
-    std::size_t i = 0;
+    int i = 0;
     for (GEdge e : m_graph.incident_edges(m_current))
       if (m_graph[e].status != DISABLED)
       {

@@ -68,7 +68,7 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
   Surface surf = m_surfaces.make_single(SDL_CreateRGBSurface, 0, w, h, 32, rmask, gmask, bmask, amask);
   check (surf != Surface(), "Cannot create rectangle surface");
 
-  SDL_FillRect(surf.get(), nullptr, SDL_MapRGBA(surf->format, r, g, b, a));
+  SDL_FillRect(surf.get(), nullptr, SDL_MapRGBA(surf->format, Uint8(r), Uint8(g), Uint8(b), Uint8(a)));
 
   Texture out = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf.get());
   check (out != Texture(), "Cannot create rectangle texture");
@@ -191,9 +191,9 @@ std::array<unsigned char, 3> SDL::get_color (SDL::Surface image, int x, int y)
 
     case 3:
       if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-        data = p[0] << 16 | p[1] << 8 | p[2];
+        data = Uint32(p[0] << 16 | p[1] << 8 | p[2]);
       else
-        data = p[0] | p[1] << 8 | p[2] << 16;
+        data = Uint32(p[0] | p[1] << 8 | p[2] << 16);
       break;
 
     case 4:
@@ -228,9 +228,9 @@ bool SDL::is_inside_image (SDL::Image image, int x, int y)
 
     case 3:
       if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-        data = p[0] << 16 | p[1] << 8 | p[2];
+        data = Uint32(p[0] << 16 | p[1] << 8 | p[2]);
       else
-        data = p[0] | p[1] << 8 | p[2] << 16;
+        data = Uint32(p[0] | p[1] << 8 | p[2] << 16);
       break;
 
     case 4:
@@ -380,7 +380,7 @@ void SDL::draw (const Image& image,
 void SDL::draw_line (const int xa, const int ya, const int xb, const int yb,
                      unsigned int red, unsigned green, unsigned blue)
 {
-  SDL_SetRenderDrawColor(m_renderer, red, green, blue, 255);
+  SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), 255);
   SDL_RenderDrawLine (m_renderer, xa, ya, xb, yb);
 }
 
@@ -393,7 +393,7 @@ void SDL::draw_square (const int x, const int y, const int size,
   rect.w = size;
   rect.h = size;
 
-  SDL_SetRenderDrawColor(m_renderer, red, green, blue, 255);
+  SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), 255);
   SDL_RenderFillRect(m_renderer, &rect);
 }
 

@@ -299,7 +299,7 @@ void Ground_map::find_path (Point origin,
 
 double Ground_map::z_at_point (const Point& p) const
 {
-  std::array<unsigned char, 3> c = Core::Graphic::get_color (m_image, p.x(), p.y());
+  std::array<unsigned char, 3> c = Core::Graphic::get_color (m_image, p.X(), p.Y());
 
   unsigned char red = 0;
   if (c[0] == c[1] && c[0] == c[2])
@@ -315,9 +315,9 @@ double Ground_map::z_at_point (const Point& p) const
       double dsource = distance (query.point, m_graph[m_graph.source(query.edge)].point);
       double dtarget = distance (query.point, m_graph[m_graph.target(query.edge)].point);
 
-      red = (m_graph[m_graph.source(query.edge)].red * dtarget
-             + m_graph[m_graph.target(query.edge)].red * dsource)
-        / (dsource + dtarget);
+      red = static_cast<unsigned char>((m_graph[m_graph.source(query.edge)].red * dtarget
+                                       + m_graph[m_graph.target(query.edge)].red * dsource)
+                                       / (dsource + dtarget));
     }
   }
   
@@ -326,7 +326,7 @@ double Ground_map::z_at_point (const Point& p) const
 
 bool Ground_map::is_ground_point (const Point& p) const
 {
-  std::array<unsigned char, 3> c = Core::Graphic::get_color (m_image, p.x(), p.y());
+  std::array<unsigned char, 3> c = Core::Graphic::get_color (m_image, p.X(), p.Y());
   return (c[0] == c[1] && c[0] == c[2]);
 }
 

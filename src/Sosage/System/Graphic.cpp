@@ -145,8 +145,8 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
       m_core.draw (img->core(), xmin, ymin, (xmax - xmin), (ymax - ymin),
                    screen_position.X(), screen_position.Y(),
-                   img->core().scaling * (xmax - xmin),
-                   img->core().scaling * (ymax - ymin));
+                   int(img->core().scaling * (xmax - xmin)),
+                   int(img->core().scaling * (ymax - ymin)));
     }
   }
 
@@ -157,14 +157,14 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
     ground_map->for_each_vertex
       ([&](const Point& point)
        {
-         m_core.draw_square (point.x() - xcamera, point.y(), 10);
+         m_core.draw_square (int(point.x() - xcamera), point.Y(), 10);
        });
 
     ground_map->for_each_edge
       ([&](const Point& source, const Point& target, bool border)
        {
-         m_core.draw_line (source.x() - xcamera, source.y(),
-                           target.x() - xcamera, target.y(),
+         m_core.draw_line (int(source.x() - xcamera), source.Y(),
+                           int(target.x() - xcamera), target.Y(),
                            (border ? 255 : 0), 0, (border ? 0 : 255));
        });
 
@@ -173,14 +173,14 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
     if (path)
     {
       Point current = get<C::Position>(id + "_body:position")->value();
-      m_core.draw_square (current.x() - xcamera, current.y(), 10, 0, 255, 0);
+      m_core.draw_square (int(current.x() - xcamera), current.Y(), 10, 0, 255, 0);
 
       for (std::size_t p = path->current(); p < path->size(); ++ p)
       {
         Point next = (*path)[p];
-        m_core.draw_square (next.x() - xcamera, next.y(), 10, 0, 255, 0);
-        m_core.draw_line (current.x() - xcamera, current.y(),
-                          next.x() - xcamera, next.y(), 0, 255, 0);
+        m_core.draw_square (int(next.x() - xcamera), next.Y(), 10, 0, 255, 0);
+        m_core.draw_line (int(current.x() - xcamera), current.Y(),
+                          int(next.x() - xcamera), next.Y(), 0, 255, 0);
         current = next;
       }
 
@@ -203,8 +203,8 @@ void Graphic::display_spin_loading()
 
   m_core.draw (img->core(), xmin, ymin, (xmax - xmin), (ymax - ymin),
                screen_position.X(), screen_position.Y(),
-               img->core().scaling * (xmax - xmin),
-               img->core().scaling * (ymax - ymin));
+               int(img->core().scaling * (xmax - xmin)),
+               int(img->core().scaling * (ymax - ymin)));
 }
 
 } // namespace Sosage::System

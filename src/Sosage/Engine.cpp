@@ -64,7 +64,7 @@ void emscripten_main_loop()
 Engine::Engine ()
 {
   debug ("Running Sosage " + Sosage::Version::str());
-  srand(time(nullptr));
+  srand(static_cast<unsigned int>(time(nullptr)));
 
 #ifdef SOSAGE_EMSCRIPTEN
   emscripten_global_engine_ptr = this;

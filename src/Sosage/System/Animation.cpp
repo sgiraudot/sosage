@@ -364,7 +364,7 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
     mouth->reset();
     mouth->on() = false;
   }
-  std::size_t row_index = 0;
+  int row_index = 0;
 
   int angle = (int(180 * std::atan2 (direction.y(), direction.x()) / M_PI) + 360) % 360;
 
@@ -381,7 +381,7 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
   image->frames().resize(8);
   for (std::size_t i = 0; i < 8; ++ i)
   {
-    image->frames()[i].x = i;
+    image->frames()[i].x = int(i);
     image->frames()[i].y = row_index;
     image->frames()[i].duration = 1;
   }
@@ -410,7 +410,7 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
   mouth->frames().clear();
   mouth->on() = true;
 
-  std::size_t row_index = 0;
+  int row_index = 0;
   if (!looking_right)
     row_index = 1;
 
@@ -484,7 +484,7 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
   image->reset();
   image->frames().clear();
 
-  std::size_t row_index = 0;
+  int row_index = 0;
   if (!looking_right)
     row_index = 1;
 
@@ -497,7 +497,7 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
     if (positions[i] == "default")
     {
       possibles_values.push_back (int(i));
-      pose = i;
+      pose = int(i);
     }
     else if (positions[i] == "idle")
       possibles_values.push_back (int(i));
@@ -519,7 +519,7 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
     int new_pose;
     do
     {
-      new_pose = possibles_values[std::size_t(random_int(0, possibles_values.size()))];
+      new_pose = possibles_values[std::size_t(random_int(0, int(possibles_values.size())))];
     }
     while (new_pose == pose);
     pose = new_pose;
@@ -534,7 +534,7 @@ void Animation::generate_random_mouth_animation (const std::string& id)
   image->frames().clear();
   image->on() = true;
 
-  std::size_t row_index = (get<C::Animation>(id + "_head:image")->frames().front().y);
+  int row_index = (get<C::Animation>(id + "_head:image")->frames().front().y);
 
   // Generate 50 poses
   int pose = random_int(1,11);
@@ -562,7 +562,7 @@ void Animation::generate_animation (const std::string& id, const std::string& an
   const std::vector<std::string>& positions
     = get<C::Vector<std::string> >(id + "_idle:values")->value();
 
-  std::size_t row_index = image->frames().front().y;
+  int row_index = image->frames().front().y;
 
   // Reset all
   image->reset();
@@ -573,7 +573,7 @@ void Animation::generate_animation (const std::string& id, const std::string& an
   for (std::size_t i = 0; i < positions.size(); ++ i)
     if (positions[i] == anim)
     {
-      index = i;
+      index = int(i);
       break;
     }
   check (index != -1, "No " + anim + " skin found for " + id);
@@ -603,7 +603,7 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
 void Animation::update_camera_target ()
 {
   const std::string& id = get<C::String>("player:name")->value();
-  int xbody = get<C::Position>(id + "_body:position")->value().x();
+  int xbody = get<C::Position>(id + "_body:position")->value().X();
   double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
   if (xbody < xcamera + Config::camera_limit_left)

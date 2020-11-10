@@ -531,7 +531,7 @@ bool Logic::function_play (const std::vector<std::string>& args)
       // so that sync waits for the end of the animation
       if (!animation->loop())
       {
-        std::size_t nb_frames = 0;
+        int nb_frames = 0;
         for (const auto& f : animation->frames())
           nb_frames += f.duration;
         double latest_frame_time = frame_time(m_current_time);
@@ -696,14 +696,14 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   double nb_seconds_lips_moving = nb_char * Config::char_spoken_time;
 
   int y = 100;
-  int x = get<C::Position>(id + "_body:position")->value().x()
-          - get<C::Double>(CAMERA__POSITION)->value();
+  int x = int(get<C::Position>(id + "_body:position")->value().x()
+              - get<C::Double>(CAMERA__POSITION)->value());
 
   for (auto img : dialog)
     if (x + 0.75 * img->width() / 2 > int(0.95 * Config::world_width))
-      x = int(0.95 * Config::world_width) - 0.75 * img->width() / 2;
+      x = int(0.95 * Config::world_width - 0.75 * img->width() / 2);
     else if (x - 0.75 * img->width() / 2 < int(0.1 * Config::world_width))
-      x = int(0.1 * Config::world_width) + 0.75 * img->width() / 2;
+      x = int(0.1 * Config::world_width + 0.75 * img->width() / 2);
 
 
   for (auto img : dialog)
@@ -748,7 +748,7 @@ void Logic::create_dialog (const std::string& character,
     int nb_imgs = 1 + (img->width() / width_max);
 
     // Find space characters where to cut
-    std::vector<std::size_t> cuts (nb_imgs  - 1);
+    std::vector<std::size_t> cuts (std::size_t(nb_imgs  - 1));
 
     for (std::size_t i = 0; i < cuts.size(); ++ i)
     {
@@ -779,14 +779,14 @@ void Logic::create_dialog (const std::string& character,
 
     for (int i = 0; i < nb_imgs; ++ i)
     {
-      std::size_t begin = (i == 0 ? 0 : cuts[i-1] + 1);
-      std::size_t end = (i == nb_imgs - 1 ? text.size() : cuts[i]);
+      std::size_t begin = (i == 0 ? 0 : cuts[std::size_t(i-1)] + 1);
+      std::size_t end = (i == nb_imgs - 1 ? text.size() : cuts[std::size_t(i)]);
       auto img
         = set<C::Image> ("comment_" + std::to_string(i) + ":image",
                                            interface_font,
                                            color,
-                                           std::string(text.begin() + begin,
-                                                       text.begin() + end), true);
+                                           std::string(text.begin() + std::ptrdiff_t(begin),
+                                                       text.begin() + std::ptrdiff_t(end)), true);
       img->z() = Config::inventory_over_depth;
       img->set_scale(0.75);
       img->set_relative_origin(0.5, 0.5);

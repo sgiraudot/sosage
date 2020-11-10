@@ -246,7 +246,7 @@ void Interface::vertical_layout()
   {
     auto img = m_verbs[i];
 
-    int y = current_y + 0.5 * img->height() * min_scaling;
+    int y = current_y + int(0.5 * img->height() * min_scaling);
 
     set<C::Position>(img->entity() + ":position", Point(x, y));
 
@@ -378,11 +378,11 @@ void Interface::horizontal_layout()
     auto top = m_verbs[i];
     auto bottom = m_verbs[i+1];
 
-    int xtop = current_xtop + 0.5 * top->width() * min_scaling;
-    int xbottom = current_xbottom + 0.5 * bottom->width() * min_scaling;
+    int xtop = current_xtop + int(0.5 * top->width() * min_scaling);
+    int xbottom = current_xbottom + int(0.5 * bottom->width() * min_scaling);
 
-    int ytop = current_ytop + 0.5 * top->height() * min_scaling;
-    int ybottom = current_ybottom + 0.5 * bottom->height() * min_scaling;
+    int ytop = current_ytop + int(0.5 * top->height() * min_scaling);
+    int ybottom = current_ybottom + int(0.5 * bottom->height() * min_scaling);
 
     set<C::Position>(top->entity() + ":position", Point(xtop, ytop));
     set<C::Position>(bottom->entity() + ":position", Point(xbottom, ybottom));

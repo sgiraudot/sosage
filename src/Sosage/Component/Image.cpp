@@ -68,9 +68,9 @@ void Image::set_relative_origin (double ratio_x, double ratio_y)
 }
 
 
-void Image::rescale (int z)
+void Image::rescale (double z)
 {
-  m_z = z;
+  m_z = static_cast<int>(z);
   double scaling = z / double(Config::world_depth);
   Core::Graphic::rescale (m_core, scaling);
 }

@@ -71,9 +71,14 @@ public:
       return *(map.find(std::string(key))->second);
     }
 
-    const Node& operator[] (int idx) const
+    const Node& operator[] (std::size_t idx) const
     {
       return *vec[idx];
+    }
+
+    const Node& operator[] (int idx) const
+    {
+      return *vec[std::size_t(idx)];
     }
 
     bool has (const std::string& key) const

@@ -150,7 +150,7 @@ void Interface::code_clicked (C::Position_handle cursor)
 
     Point p = cursor->value() - Vector(position->value()) + Vector (0.5  * window->width(),
                                                                     0.5 * window->height());
-    if (code->click(p.x(), p.y()))
+    if (code->click(p.X(), p.Y()))
       emit ("code:button_clicked");
   }
 }
@@ -165,14 +165,14 @@ void Interface::dialog_clicked ()
 
   int choice
       = std::atoi(std::string(m_collision->id().begin() +
-                              std::string("dialog_choice_").size(),
+                              std::ptrdiff_t(std::string("dialog_choice_").size()),
                               m_collision->id().begin() +
-                              m_collision->id().find(':')).c_str());
+                              std::ptrdiff_t(m_collision->id().find(':'))).c_str());
 
   set<C::Int>("dialog:choice", choice);
 
   // Clean up
-  for (int c = choices.size() - 1; c >= 0; -- c)
+  for (int c = int(choices.size()) - 1; c >= 0; -- c)
   {
     std::string entity = "dialog_choice_" + std::to_string(c);
     remove(entity + "_off:image");
@@ -388,10 +388,10 @@ void Interface::detect_collision (C::Position_handle cursor)
         p = p + Vector (-xcamera, 0);
 
       Point screen_position = p - img->core().scaling * Vector(img->origin());
-      int xmin = screen_position.x();
-      int ymin = screen_position.y();
-      int xmax = xmin + (img->core().scaling * (img->xmax() - img->xmin()));
-      int ymax = ymin + (img->core().scaling * (img->ymax() - img->ymin()));
+      int xmin = screen_position.X();
+      int ymin = screen_position.Y();
+      int xmax = xmin + int(img->core().scaling * (img->xmax() - img->xmin()));
+      int ymax = ymin + int(img->core().scaling * (img->ymax() - img->ymin()));
 
       if (cursor->value().x() < xmin ||
           cursor->value().x() > xmax ||
@@ -401,8 +401,8 @@ void Interface::detect_collision (C::Position_handle cursor)
 
       if (img->collision() == PIXEL_PERFECT)
       {
-        int x_in_image = cursor->value().x() - xmin;
-        int y_in_image = cursor->value().y() - ymin;
+        int x_in_image = cursor->value().X() - xmin;
+        int y_in_image = cursor->value().Y() - ymin;
         if (!img->is_target_inside (x_in_image, y_in_image))
           continue;
       }
@@ -524,8 +524,8 @@ void Interface::update_inventory ()
 
         img->set_scale (factor * target_width / double(width));
 
-        x = inv_pos->value().x() + background->width() / 2;
-        y = inv_pos->value().y() + int(relative_pos * background->height());
+        x = inv_pos->value().X() + background->width() / 2;
+        y = inv_pos->value().Y() + int(relative_pos * background->height());
       }
       else
       {
@@ -535,8 +535,8 @@ void Interface::update_inventory ()
 
         img->set_scale (factor * target_height / double(height));
 
-        x = inv_pos->value().x() + int(relative_pos * background->width());
-        y = inv_pos->value().y() + background->height() / 2;
+        x = inv_pos->value().X() + int(relative_pos * background->width());
+        y = inv_pos->value().Y() + background->height() / 2;
       }
 
       set<C::Position>(inventory->get(i) + ":position", Point(x,y));
@@ -589,13 +589,13 @@ void Interface::update_dialog_choices()
     const std::string& player = get<C::String>("player:name")->value();
 
     int bottom
-        = std::max(get<C::Position>("interface_action:position")->value().y()
+        = std::max(get<C::Position>("interface_action:position")->value().Y()
                    + get<C::Image>("interface_action:image")->height(),
-                   get<C::Position>("interface_verbs:position")->value().y()
+                   get<C::Position>("interface_verbs:position")->value().Y()
                    + get<C::Image>("interface_verbs:image")->height());
     int y = bottom - 10;
 
-    for (int c = choices.size() - 1; c >= 0; -- c)
+    for (int c = int(choices.size()) - 1; c >= 0; -- c)
     {
       std::string entity = "dialog_choice_" + std::to_string(c);
       auto img_off
@@ -628,7 +628,7 @@ void Interface::update_dialog_choices()
 
   auto cursor = get<C::Position>(CURSOR__POSITION);
 
-  for (int c = choices.size() - 1; c >= 0; -- c)
+  for (int c = int(choices.size()) - 1; c >= 0; -- c)
   {
     std::string entity = "dialog_choice_" + std::to_string(c);
     auto img_off = get<C::Image>(entity + "_off:image");
@@ -636,10 +636,10 @@ void Interface::update_dialog_choices()
     const Point& p = get<C::Position>(entity + "_off:position")->value();
 
     Point screen_position = p - img_off->core().scaling * Vector(img_off->origin());
-    int xmin = screen_position.x();
-    int ymin = screen_position.y();
-    int xmax = xmin + (img_off->core().scaling * (img_off->xmax() - img_off->xmin()));
-    int ymax = ymin + (img_off->core().scaling * (img_off->ymax() - img_off->ymin()));
+    int xmin = screen_position.X();
+    int ymin = screen_position.Y();
+    int xmax = xmin + int(img_off->core().scaling * (img_off->xmax() - img_off->xmin()));
+    int ymax = ymin + int(img_off->core().scaling * (img_off->ymax() - img_off->ymin()));
 
     bool on = (xmin <= cursor->value().x() && cursor->value().x() <= xmax &&
                ymin <= cursor->value().y() && cursor->value().y() <= ymax);

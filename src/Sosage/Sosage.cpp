@@ -2,7 +2,7 @@
 #include <Sosage/Utils/file.h>
 #include <Sosage/Engine.h>
 
-int main (int argc, char** argv)
+int main (int, char**)
 {
   Sosage::Engine sosage;
 
