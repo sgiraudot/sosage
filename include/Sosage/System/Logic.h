@@ -63,7 +63,8 @@ public:
 private:
   void clear_timed(bool action_goto);
 
-  bool compute_path_from_target (Component::Position_handle target);
+  bool compute_path_from_target (Component::Position_handle target,
+                                 std::string id = "");
   void update_camera();
   void update_debug_info (Component::Debug_handle debug_info);
 

@@ -93,9 +93,8 @@ void Logic::run ()
   for (const Timed_handle& th : m_timed)
     if (th.first == 0) // special case for Path
     {
-      const std::string& id = get<C::String>("player:name")->value();
       auto saved_path = C::cast<C::Path>(th.second);
-      auto current_path = request<C::Path>(id + ":path");
+      auto current_path = request<C::Path>(saved_path->id());
       if (saved_path == current_path)
         new_timed_handle.insert(th);
     }
@@ -247,11 +246,13 @@ void Logic::clear_timed(bool action_goto)
   m_timed.swap(new_timed_handle);
 }
 
-bool Logic::compute_path_from_target (C::Position_handle target)
+bool Logic::compute_path_from_target (C::Position_handle target,
+                                      std::string id)
 {
   auto ground_map = get<C::Ground_map>("background:ground_map");
 
-  const std::string& id = get<C::String>("player:name")->value();
+  if (id == "")
+    id = get<C::String>("player:name")->value();
   auto position = get<C::Position>(id + "_body:position");
 
   Point origin = position->value();
@@ -440,15 +441,26 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
   return false;
 }
 
-bool Logic::function_goto (const std::vector<std::string>& args)
+bool Logic::function_goto (const std::vector<std::string>& init_args)
 {
-  check (args.size() <= 2, "function_goto() takes at most 2 arguments");
-  const std::string& id = get<C::String>("player:name")->value();
+  std::string id = "";
+  std::vector<std::string> args;
+  if (init_args.size() > 0 && request<C::Image>(init_args[0] + "_head:image"))
+  {
+    id = init_args[0];
+    args = std::vector<std::string>(init_args.begin() + 1, init_args.end());
+  }
+  else
+  {
+    id = get<C::String>("player:name")->value();
+    args = init_args;
+  }
 
   if (args.size() == 2)
   {
     if (compute_path_from_target
-        (C::make_handle<C::Position>("goto:target", Point (to_int(args[0]), to_int(args[1])))))
+        (C::make_handle<C::Position>("goto:view", Point (to_int(args[0]), to_int(args[1]))),
+         id))
       m_timed.insert (std::make_pair (0, get<C::Path>(id + ":path")));
   }
   else
@@ -458,7 +470,7 @@ bool Logic::function_goto (const std::vector<std::string>& args)
     debug ("action_goto " + target);
 
     auto position = request<C::Position>(target + ":view");
-    if (compute_path_from_target(position))
+    if (compute_path_from_target(position, id))
       m_timed.insert (std::make_pair (0, get<C::Path>(id + ":path")));
   }
 

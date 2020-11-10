@@ -174,7 +174,7 @@ void Animation::run_one_frame()
     {
       if (!compute_movement_from_path(path))
         to_remove.push_back(c->id());
-      else
+      else if (path->entity() == get<C::String>("player:name")->value())
         has_moved = true;
     }
     else if (C::cast<C::Signal>(c))
