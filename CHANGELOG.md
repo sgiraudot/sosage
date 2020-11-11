@@ -2,13 +2,13 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `dev`
+## `v0.2.0 (alpha2)` - 2020-11-11
 
 ### Release Management
 
 - Basic script for generating AppImage
 - Support for Emscripten / running in web browser
-- Script for generating Debian package
+- CPack support for DEB/RPM packaging
 - Fix install path using relative resolution with `SDL_GetBasePath()`
 - Introduction of testing using CTest
 
@@ -16,7 +16,7 @@ History of versions and modifications of the SOSAGE engine.
 
 - Handling configuration file and persistent settings
 - Switch fullscreen on/off
-- Loading screen
+- Threaed animated loading screen
 
 ### Game Engine
 
@@ -28,6 +28,9 @@ History of versions and modifications of the SOSAGE engine.
 - Integer objects + triggers
 - Default action with right click
 - Dialogs
+- Sound effects
+- Triggers
+- Pretty much all game mechanisms
 
 ## `v0.1.0 (alpha1)` - 2020-04-25
 
