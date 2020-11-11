@@ -25,6 +25,7 @@
 */
 
 
+#include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Path.h>
@@ -55,44 +56,11 @@ void Graphic::init()
                get<C::Boolean>("window:fullscreen")->value());
   iw->set(w);
   ih->set(h);
+
 }
 
 void Graphic::run()
 {
-#ifdef SOSAGE_THREADS_ENABLED
-  if (get<C::Status>(GAME__STATUS)->value() == LOADING)
-  {
-    if (receive ("game:loading_done"))
-    {
-      auto img = set<C::Image>("fade:image",
-                               Config::world_width + get<C::Int>("interface:width")->value(),
-                               Config::world_height + get<C::Int>("interface:height")->value(),
-                               0, 0, 0, 255);
-      img->z() = Config::overlay_depth;
-      set<C::Position>("fade:position", Point(0,0));
-
-      m_core.begin();
-      m_core.draw (img->core(), 0, 0, img->width(), img->height(), 0, 0,
-                   int(img->core().scaling * img->width()),
-                   int(img->core().scaling * img->height()));
-      m_core.end();
-
-      for (const auto& e : m_content)
-        if (auto img = C::cast<C::Image>(e))
-          m_core.create_texture (img->core());
-      get<C::Status>(GAME__STATUS)->pop();
-    }
-    else
-    {
-      m_core.begin();
-      display_spin_loading();
-      m_core.end();
-    }
-
-    return;
-  }
-#endif
-
   if (auto name = request<C::String>("game:name"))
   {
     m_core.update_window (name->value(), get<C::Image>("icon:image")->core());
@@ -140,9 +108,6 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
     {
       if (status->value() == LOCKED &&
            img->entity() == "cursor")
-        continue;
-      if (status->value() == LOADING &&
-          img->entity() != "loading")
         continue;
 
       auto position = get<C::Position>(img->entity() + ":position");
@@ -205,6 +170,8 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
 void Graphic::display_spin_loading()
 {
+  m_core.begin();
+
   auto img = get<C::Image>(LOADING_SPIN__IMAGE);
   auto position = get<C::Position>(LOADING_SPIN__POSITION);
   Point p = position->value();
@@ -220,6 +187,8 @@ void Graphic::display_spin_loading()
                screen_position.X(), screen_position.Y(),
                int(img->core().scaling * (xmax - xmin)),
                int(img->core().scaling * (ymax - ymin)));
+
+  m_core.end();
 }
 
 } // namespace Sosage::System

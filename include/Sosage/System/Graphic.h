@@ -51,13 +51,14 @@ public:
 
   virtual void run();
 
+  void display_spin_loading();
+
 private:
 
   void get_images (std::vector<Component::Image_handle>& images);
 
   void display_images (std::vector<Component::Image_handle>& images);
 
-  void display_spin_loading();
 };
 
 } // namespace Sosage::System

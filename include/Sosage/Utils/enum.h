@@ -33,7 +33,6 @@ namespace Sosage
 enum Status
 {
   IDLE,
-  LOADING,
   PAUSED,
   LOCKED,
   DIALOG_CHOICE,
@@ -42,12 +41,6 @@ enum Status
   IN_CODE
 };
 
-enum Thread_state
-{
-  NO_THREAD,
-  STARTED,
-  FINISHED
-};
 
 enum Collision_type
 {

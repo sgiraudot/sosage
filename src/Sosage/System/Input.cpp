@@ -44,8 +44,6 @@ Input::Input (Content& content)
 void Input::run()
 {
   auto status = get<C::Status>(GAME__STATUS);
-  if (status->value() == LOADING)
-    return;
 
   while (Event ev = m_core.next_event
          (get<C::Int>("interface:width")->value(),

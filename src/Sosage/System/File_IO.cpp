@@ -58,22 +58,10 @@ File_IO::File_IO (Content& content)
 
 void File_IO::run()
 {
-  if (m_thread.still_running())
-    return;
-
   if (auto new_room = request<C::String>("game:new_room"))
   {
-    auto status = get<C::Status>(GAME__STATUS);
-
-    // If new room must be loaded, first notify loading and restart
-    // loop so that Graphic displays loading screen, then only load
-    if (status->value() != LOADING)
-    {
-      status->push(LOADING);
-      return;
-    }
-
-    m_thread.run (&File_IO::read_room, this, new_room->value());
+    read_room (new_room->value());
+    remove ("game:new_room");
   }
 }
 
@@ -230,14 +218,6 @@ void File_IO::read_init (const std::string& folder_name)
     = set<C::Image>("turnicon:image", local_file_name(turnicon), 0);
   turnicon_img->on() = false;
 
-  std::string loading = input["loading"].string("images", "interface", "png");
-  auto loading_img = C::make_handle<C::Image> ("loading:image", local_file_name(loading),
-                                                               Config::loading_depth);
-  loading_img->set_relative_origin(0.5, 0.5);
-  set<C::Position> ("loading:position", Point(Config::world_width / 2,
-                                                                Config::world_height / 2));
-
-#ifdef SOSAGE_THREADS_ENABLED
   std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
   int nb_img = input["loading_spin"][1].integer();
   auto loading_spin_img = set_fac<C::Animation> (LOADING_SPIN__IMAGE, "loading_spin:image", local_file_name(loading_spin),
@@ -246,12 +226,6 @@ void File_IO::read_init (const std::string& folder_name)
   loading_spin_img->set_relative_origin(0.5, 0.5);
   set_fac<C::Position> (LOADING_SPIN__POSITION, "loading_spin:position", Point(Config::world_width / 2,
                                                                                Config::world_height / 2));
-#endif
-
-  set<C::Conditional>
-  ("loading:conditional",
-   C::make_value_condition<Sosage::Status> (status, LOADING),
-   loading_img);
 
   std::string click_sound = input["click_sound"].string("sounds", "effects", "wav");
   set<C::Sound>("click:sound", local_file_name(click_sound));

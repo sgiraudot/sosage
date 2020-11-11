@@ -109,6 +109,21 @@ int Engine::run (const std::string& folder_name)
 
   graphic->init(); // init graphics
 
+  m_content.set<Component::Simple<std::function<void()> > >
+      ("game:loading_callback",
+       [&]()
+       {
+          m_systems.back()->run(); // run time
+          static std::size_t latest_frame = 0;
+          auto img = m_content.get<Component::Animation>("loading_spin:image");
+          std::size_t frame = frame_id(m_content.get<Component::Double>(CLOCK__TIME)->value());
+          std::cerr << frame << " / " << latest_frame << std::endl;
+          for (; latest_frame != frame; ++ latest_frame)
+            img->next_frame();
+          graphic->display_spin_loading();
+       });
+
+
   file_io->read_init (folder_name);
 
   interface->init(); // init interface

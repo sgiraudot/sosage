@@ -135,6 +135,9 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
 
 void File_IO::read_room (const std::string& file_name)
 {
+  auto callback = get<C::Simple<std::function<void()> > >("game:loading_callback");
+  callback->value()();
+
   std::unordered_set<std::string> force_keep;
   auto inventory = get<C::Inventory>("game:inventory");
   for (const std::string& entity : *inventory)
@@ -165,8 +168,12 @@ void File_IO::read_room (const std::string& file_name)
 
   SOSAGE_TIMER_START(File_IO__read_room);
 
+  callback->value()();
+
   Core::File_IO input (local_file_name("data", "rooms", file_name, "yaml"));
   input.parse();
+
+  callback->value()();
 
   std::string name = input["name"].string();
 
@@ -179,9 +186,13 @@ void File_IO::read_room (const std::string& file_name)
     = set<C::Image>("background:image", local_file_name(background), 0);
   background_img->collision() = BOX;
 
+  callback->value()();
+
   set<C::Position>("background:position", Point(0, 0), false);
   set<C::Ground_map>("background:ground_map", local_file_name(ground_map),
                                        front_z, back_z);
+
+  callback->value()();
 
   // First instantiate all states
   for (std::size_t i = 0; i < input["content"].size(); ++ i)
@@ -203,6 +214,8 @@ void File_IO::read_room (const std::string& file_name)
       if (!request<C::String>(id + ":state"))
         set<C::String>(id + ":state");
   }
+
+  callback->value()();
 
   for (std::size_t i = 0; i < input["content"].size(); ++ i)
   {
@@ -236,6 +249,8 @@ void File_IO::read_room (const std::string& file_name)
       read_window (node, id);
     else
       debug ("Unknown content type " + type);
+
+    callback->value()();
   }
 
   auto hints = set<C::Hints>("game:hints");
@@ -254,6 +269,7 @@ void File_IO::read_room (const std::string& file_name)
       hints->add (condition);
     }
 
+  callback->value()();
 
   const std::string& origin = get<C::String>("game:new_room_origin")->value();
   auto origin_coord = get<C::Position>(origin + ":position");
@@ -262,11 +278,7 @@ void File_IO::read_room (const std::string& file_name)
   get<C::Position>(player + "_body:position")->set(origin_coord->value());
   set<C::Boolean>("game:in_new_room", origin_looking->value());
 
-  remove ("game:new_room");
-
   emit ("game:loading_done");
-
-  m_thread.notify();
 
 #ifdef SOSAGE_DEBUG
   // Display layers of images for easy room creation

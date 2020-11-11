@@ -77,8 +77,7 @@ Logic::Logic (Content& content)
 void Logic::run ()
 {
   auto status = get<C::Status>(GAME__STATUS);
-  if (status->value() == PAUSED || status->value() == LOADING
-      || status->value() == DIALOG_CHOICE)
+  if (status->value() == PAUSED || status->value() == DIALOG_CHOICE)
     return;
 
   double current_time = get<C::Double> (CLOCK__TIME)->value();

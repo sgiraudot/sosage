@@ -48,7 +48,7 @@ Interface::Interface (Content& content)
 void Interface::run()
 {
   auto status = get<C::Status>(GAME__STATUS);
-  if (status->value() == PAUSED || status->value() == LOADING)
+  if (status->value() == PAUSED)
     return;
 
   if (receive ("window:rescaled"))

@@ -31,7 +31,6 @@
 #include <Sosage/Content.h>
 #include <Sosage/Core/File_IO.h>
 #include <Sosage/System/Handle.h>
-#include <Sosage/Utils/thread.h>
 
 #include <unordered_set>
 
@@ -44,7 +43,6 @@ private:
 
   std::string m_folder_name;
   std::unordered_set<std::string> m_latest_room_entities;
-  Thread m_thread;
 
 public:
 

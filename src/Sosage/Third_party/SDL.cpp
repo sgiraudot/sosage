@@ -88,12 +88,8 @@ SDL::Surface SDL::load_surface (const std::string& file_name)
 SDL::Image SDL::load_image (const std::string& file_name)
 {
   Surface surf = load_surface (file_name);
-#ifdef SOSAGE_THREADS_ENABLED
-  Texture out = nullptr;
-#else
   Texture out = m_textures.make_mapped (file_name, SDL_CreateTextureFromSurface, m_renderer, surf.get());
   check (out != Texture(), "Cannot create texture from " + file_name);
-#endif
   return Image (surf, out, 1);
 }
 
@@ -367,12 +363,6 @@ void SDL::draw (const Image& image,
   target.y = ytarget;
   target.w = wtarget;
   target.h = htarget;
-
-#ifdef SOSAGE_THREADS_ENABLED
-  if (!image.texture)
-    const_cast<Image&>(image).texture
-      = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, image.surface.get());
-#endif
 
   SDL_RenderCopy(m_renderer, image.texture.get(), &source, &target);
 }

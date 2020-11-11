@@ -48,15 +48,6 @@ void Animation::run()
   std::size_t new_frame_id = frame_id(get<C::Double>(CLOCK__TIME)->value());
 
   auto status = get<C::Status>(GAME__STATUS);
-  if (status->value() == LOADING)
-  {
-#ifdef SOSAGE_THREADS_ENABLED
-    for (std::size_t i = m_frame_id; i < new_frame_id; ++ i)
-      get<C::Animation>(LOADING_SPIN__IMAGE)->next_frame();
-    m_frame_id = new_frame_id;
-#endif
-    return;
-  }
 
   if (status->value() == PAUSED)
     return;

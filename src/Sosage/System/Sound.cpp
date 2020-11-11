@@ -45,8 +45,6 @@ Sound::Sound (Content& content)
 void Sound::run()
 {
   auto status = m_content.get<C::Status>(GAME__STATUS);
-  if (status->value() == LOADING)
-    return;
 
   auto music = m_content.request<C::Music>("game:music");
 
