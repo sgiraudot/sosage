@@ -62,16 +62,31 @@ void Graphic::run()
 #ifdef SOSAGE_THREADS_ENABLED
   if (get<C::Status>(GAME__STATUS)->value() == LOADING)
   {
-    m_core.begin();
-    display_spin_loading();
-    m_core.end();
-
     if (receive ("game:loading_done"))
     {
+      auto img = set<C::Image>("fade:image",
+                               Config::world_width + get<C::Int>("interface:width")->value(),
+                               Config::world_height + get<C::Int>("interface:height")->value(),
+                               0, 0, 0, 255);
+      img->z() = Config::overlay_depth;
+      set<C::Position>("fade:position", Point(0,0));
+
+      m_core.begin();
+      m_core.draw (img->core(), 0, 0, img->width(), img->height(), 0, 0,
+                   int(img->core().scaling * img->width()),
+                   int(img->core().scaling * img->height()));
+      m_core.end();
+
       for (const auto& e : m_content)
         if (auto img = C::cast<C::Image>(e))
           m_core.create_texture (img->core());
       get<C::Status>(GAME__STATUS)->pop();
+    }
+    else
+    {
+      m_core.begin();
+      display_spin_loading();
+      m_core.end();
     }
 
     return;

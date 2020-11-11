@@ -96,6 +96,13 @@ void Animation::run_one_frame()
     const std::string& player = get<C::String>("player:name")->value();
     place_and_scale_character (player, looking_right->value());
     generate_random_idle_animation (player, looking_right->value());
+
+    // Relaunch animations
+    for (auto c : m_content)
+      if (auto anim = C::cast<C::Animation>(c))
+        if (request<C::String>(c->entity() + ":state"))
+          anim->on() = true;
+
     remove("game:in_new_room");
   }
 
@@ -312,12 +319,15 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
   direction.normalize();
   direction = to_walk * direction;
   direction = Vector (direction.x(), direction.y() / 3);
-  to_walk = direction.length();
 
   while (true)
   {
+    if (pos == (*path)[path->current()])
+    {
+      path->current() ++;
+      continue;
+    }
     Vector current_vector (pos, (*path)[path->current()]);
-
     if (current_vector.length() > to_walk) // Next position is between current and current + 1
     {
       current_vector.normalize();
@@ -583,7 +593,7 @@ void Animation::generate_animation (const std::string& id, const std::string& an
 
 void Animation::fade (double begin_time, double end_time, bool fadein)
 {
-  double current_time = frame_time(get<C::Double>(CLOCK__TIME)->value());
+  double current_time = get<C::Double>(CLOCK__TIME)->value();
 
   if (current_time > end_time)
     return;

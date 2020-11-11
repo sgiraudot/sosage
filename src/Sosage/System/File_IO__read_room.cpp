@@ -432,7 +432,8 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
 
 void File_IO::read_dialog (const Core::File_IO::Node& node, const std::string& id)
 {
-  auto dialog = set<C::Dialog>(id + ":dialog");
+  auto dialog = set<C::Dialog>(id + ":dialog",
+                               node.has("end") ? node["end"].string() : "");
 
   // First, instantiate all vertices
   std::vector<C::Dialog::GVertex> vec_vertices;
@@ -638,7 +639,6 @@ void File_IO::read_action (const Core::File_IO::Node& node, const std::string& i
     }
     conditional_handle->add(state, action);
   }
-  std::cerr << "Read " << id + ":action" << std::endl;
 }
 
 void File_IO::read_actions (const Core::File_IO::Node& node, const std::string& id)

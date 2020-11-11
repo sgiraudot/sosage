@@ -71,7 +71,7 @@ private:
 
 public:
 
-  Dialog (const std::string& id);
+  Dialog (const std::string& id, const std::string& end = "");
 
   GVertex add_vertex (const std::string& character = "",
                       const std::string& line = "");

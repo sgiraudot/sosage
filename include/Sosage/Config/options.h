@@ -31,7 +31,7 @@
 #define SOSAGE_THREADS_ENABLED
 #endif
 
-#if !defined(DNEBUG) || defined(SOSAGE_CFG_DISPLAY_DEBUG_INFO)
+#if !defined(NDEBUG) || defined(SOSAGE_CFG_DISPLAY_DEBUG_INFO)
 #define SOSAGE_DEBUG
 #endif
 

@@ -60,9 +60,8 @@ void Sound::run()
   if (receive("music:fade"))
   {
     check (music, "No music to fade");
-    m_core.stop_music();
     auto fadein = request<C::Boolean>("fade:in");
-    double current_time = frame_time(get<C::Double> (CLOCK__TIME)->value());
+    double current_time = get<C::Double> (CLOCK__TIME)->value();
     double end_time = get<C::Double>("fade:end")->value();
     m_core.fade(music->core(), end_time - current_time, fadein->value());
   }

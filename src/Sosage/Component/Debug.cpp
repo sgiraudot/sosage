@@ -50,37 +50,6 @@ std::string Debug::debug_str()
   out += "Next hint: " + m_content.get<Component::Hints>("game:hints")->next() + "\n";
 
   return out;
-  
-
-  std::vector<Component::Handle> components;
-  components.reserve (m_content.size());
-  std::copy (m_content.begin(), m_content.end(), std::back_inserter (components));
-  std::sort (components.begin(), components.end(),
-             [&](const Component::Handle& a, const Component::Handle& b) -> bool
-             {
-               return a->id() < b->id();
-             });
-
-
-  std::string latest = "";
-  for (const auto& c : components)
-  {
-    if (!c)
-      continue;
-
-    std::string entity = c->entity();
-    std::cerr << entity << std::endl;
-
-    if (entity != latest)
-    {
-      out += "\n *";
-      latest = entity;
-    }
-    out += " [" + c->str() + "]";
-
-  }
-
-  return out;
 }
 
 

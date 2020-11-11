@@ -29,11 +29,11 @@
 namespace Sosage::Component
 {
 
-Dialog::Dialog (const std::string& id)
+Dialog::Dialog (const std::string& id, const std::string& end)
   : Base(id)
 {
   m_vin = m_graph.add_vertex(Vertex("", "IN"));
-  m_vout = m_graph.add_vertex(Vertex("","OUT"));
+  m_vout = m_graph.add_vertex(Vertex(end,"OUT"));
 }
 
 Dialog::GVertex Dialog::add_vertex (const std::string& character, const std::string& line)

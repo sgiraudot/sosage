@@ -33,6 +33,8 @@
 
 #include <SDL.h>
 
+#include <cstdlib>
+
 namespace Sosage::Third_party::SDL_file
 {
 
@@ -75,7 +77,7 @@ inline std::string base_path()
 {
   char* bp = SDL_GetBasePath();
   std::string out = bp;
-  delete bp;
+  free(bp);
   return out;
 }
 
@@ -83,7 +85,7 @@ inline std::string pref_path()
 {
   char* pp = SDL_GetPrefPath("ptilouk", "superflu");
   std::string out = pp;
-  delete pp;
+  free(pp);
   return out;
 }
 

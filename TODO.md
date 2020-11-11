@@ -1,13 +1,13 @@
 # TODO list
 
+### Bugs / trucs à changer
+
+* Tête de Superflu
+* Bouteille sur câble
+
 ### Graphique
 
-* Animations Superflu
-* Ouverture sas
-* Sophie électrique
-
 * Intro
-
 * Choix du mode de curseur
 * Page tuto clics/curseur virtuel
 * Menus

@@ -432,7 +432,7 @@ bool Ground_map::intersects_border (const Graph& g,
 {
   for (GEdge e : g.edges())
   {
-    if (!g[e].border || condition(e))
+    if (!g.is_valid(e) || !g[e].border || condition(e))
       continue;
     Segment eseg (g[g.source(e)].point,
                   g[g.target(e)].point);

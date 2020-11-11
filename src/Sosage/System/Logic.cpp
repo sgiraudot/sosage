@@ -274,7 +274,9 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   if (path.empty() || ((path.size() == 1) && (path[0] == origin)))
     return false;
 
-  set<C::Path>(id + ":path", path);
+  auto p = set<C::Path>(id + ":path", path);
+  if ((*p)[0] == origin)
+    p->current() ++;
   return true;
 }
 
@@ -328,6 +330,8 @@ void Logic::update_debug_info (C::Debug_handle debug_info)
 
 bool Logic::apply_step (C::Action::Step s)
 {
+  check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
+         s.function() + " is not a valid function");
   return m_dispatcher[s.function()](s.args());
 }
 
@@ -415,7 +419,15 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
     dialog->next();
 
   if (dialog->is_over())
+  {
     get<C::Status>(GAME__STATUS)->pop();
+    if (dialog->line().first != "")
+    {
+      m_current_action = get<C::Action>(dialog->line().first + ":action");
+      m_next_step = 0;
+      return false;
+    }
+  }
   else if (dialog->is_line())
   {
     std::string character;
@@ -527,10 +539,16 @@ bool Logic::function_play (const std::vector<std::string>& args)
       auto animation = get<C::Animation>(target + ":image");
       emit (target + ":start_animation");
 
-      // If animation does not loop, insert dummy timed Event
-      // so that sync waits for the end of the animation
-      if (!animation->loop())
+      if (animation->loop())
       {
+        // If animation loop, add a fake state so that it's reloaded
+        // on if we exist and reener the room
+        set<C::String>(target + ":state", "dummy");
+      }
+      else
+      {
+        // If animation does not loop, insert dummy timed Event
+        // so that sync waits for the end of the animation
         int nb_frames = 0;
         for (const auto& f : animation->frames())
           nb_frames += f.duration;
@@ -665,6 +683,9 @@ bool Logic::function_system (const std::vector<std::string>& args)
     }
     return false;
   }
+  else if (option == "exit")
+    emit ("game:exit");
+
   return true;
 }
 

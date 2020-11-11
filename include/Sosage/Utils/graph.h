@@ -120,8 +120,16 @@ public:
       return out;
     }
 
-    GSimplex& operator[] (const Simplex& s) { return m_content[std::size_t(s)]; }
-    const GSimplex& operator[] (const Simplex& s) const { return m_content[std::size_t(s)]; }
+    GSimplex& operator[] (const Simplex& s)
+    {
+      dbg_check (std::size_t(s) < m_content.size(), "Trying to access Simplex " + std::to_string(s) + "/" + std::to_string(m_content.size()));
+      return m_content[std::size_t(s)];
+    }
+    const GSimplex& operator[] (const Simplex& s) const
+    {
+      dbg_check (std::size_t(s) < m_content.size(), "Trying to access Simplex " + std::to_string(s) + "/" + std::to_string(m_content.size()));
+      return m_content[std::size_t(s)];
+    }
 
     std::size_t size() const { return m_content.size(); }
 
@@ -160,6 +168,8 @@ public:
 
   std::vector<Edge>& incident_edges (const Vertex& v) { return m_vertices[v].incident_edges; }
   const std::vector<Edge>& incident_edges (const Vertex& v) const { return m_vertices[v].incident_edges; }
+
+  bool is_valid (const Edge& e) const { return m_edges[e].source != null_vertex() && m_edges[e].target != null_vertex(); }
 
   Vertex source (const Edge& e) const { return m_edges[e].source; }
   Vertex target (const Edge& e) const { return m_edges[e].target; }

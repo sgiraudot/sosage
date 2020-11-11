@@ -82,6 +82,9 @@ void Image::set_scale (double scale)
 
 bool Image::is_target_inside (int x, int y) const
 {
+  dbg_check (x < width() && y < height(),
+             "Out of bound pixel " + std::to_string(x) + "/" + std::to_string(width())
+             + " x " + std::to_string(y) + "/" + std::to_string(height()));
   return Core::Graphic::is_inside_image (m_core, x, y);
 }
 
