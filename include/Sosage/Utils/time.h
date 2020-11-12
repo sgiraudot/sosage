@@ -65,6 +65,11 @@ public:
     m_latest = m_start;
   }
 
+  void update()
+  {
+    m_time = (Time::now() - m_start) / 1000.;
+  }
+
   void wait(bool verbose)
   {
     Uint32 now = Time::now();

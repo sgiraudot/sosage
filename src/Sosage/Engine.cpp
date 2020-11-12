@@ -85,25 +85,24 @@ int Engine::run (const std::string& folder_name)
   m_content.set<Component::Double>("camera:target", 0.0);
   m_content.set<Component::Inventory>("game:inventory");
 
-  std::shared_ptr<System::File_IO>
-    file_io = System::make_handle<System::File_IO>(m_content);
+  auto file_io = System::make_handle<System::File_IO>(m_content);
   // Raise exception now if folder does not exit
   file_io->test_init_folder (folder_name);
 
-  std::shared_ptr<System::Graphic>
-    graphic = System::make_handle<System::Graphic>(m_content);
-  std::shared_ptr<System::Interface>
-    interface = System::make_handle<System::Interface>(m_content);
+  auto graphic = System::make_handle<System::Graphic>(m_content);
+  auto interface = System::make_handle<System::Interface>(m_content);
+  auto time = System::make_handle<System::Time>(m_content);
+  auto animation = System::make_handle<System::Animation>(m_content);
 
   // Create all systems
   m_systems.push_back (file_io);
   m_systems.push_back (System::make_handle<System::Input>(m_content));
   m_systems.push_back (interface);
   m_systems.push_back (System::make_handle<System::Logic>(m_content));
-  m_systems.push_back (System::make_handle<System::Animation>(m_content));
+  m_systems.push_back (animation);
   m_systems.push_back (System::make_handle<System::Sound>(m_content));
   m_systems.push_back (graphic);
-  m_systems.push_back (System::make_handle<System::Time>(m_content));
+  m_systems.push_back (time);
 
   file_io->read_config();
 
@@ -113,14 +112,9 @@ int Engine::run (const std::string& folder_name)
       ("game:loading_callback",
        [&]()
        {
-          m_systems.back()->run(); // run time
-          static std::size_t latest_frame = 0;
-          auto img = m_content.get<Component::Animation>("loading_spin:image");
-          std::size_t frame = frame_id(m_content.get<Component::Double>(CLOCK__TIME)->value());
-          std::cerr << frame << " / " << latest_frame << std::endl;
-          for (; latest_frame != frame; ++ latest_frame)
-            img->next_frame();
-          graphic->display_spin_loading();
+          time->run_loading();
+          if (animation->run_loading())
+            graphic->run_loading();
        });
 
 

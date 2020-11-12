@@ -249,6 +249,17 @@ void Animation::run_one_frame()
 
 }
 
+bool Animation::run_loading()
+{
+  std::size_t new_frame_id = frame_id(get<C::Double>(CLOCK__TIME)->value());
+  if (new_frame_id == m_frame_id)
+    return false;
+  auto img = m_content.get<Component::Animation>("loading_spin:image");
+  for (; m_frame_id != new_frame_id; ++ m_frame_id)
+    img->next_frame();
+  return true;
+}
+
 void Animation::place_and_scale_character(const std::string& id, bool looking_right)
 {
   auto visible = get<C::Boolean>(id + ":visible");

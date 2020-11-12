@@ -49,4 +49,10 @@ void Time::run()
   SOSAGE_TIMER_STOP(System_Time__run);
 }
 
+void Time::run_loading()
+{
+  m_clock.update();
+  get<C::Double> (CLOCK__TIME)->set(m_clock.time());
+}
+
 } // namespace Sosage::System

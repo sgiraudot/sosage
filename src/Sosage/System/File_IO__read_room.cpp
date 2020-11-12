@@ -190,7 +190,7 @@ void File_IO::read_room (const std::string& file_name)
 
   set<C::Position>("background:position", Point(0, 0), false);
   set<C::Ground_map>("background:ground_map", local_file_name(ground_map),
-                                       front_z, back_z);
+                                       front_z, back_z, callback->value());
 
   callback->value()();
 

@@ -38,7 +38,8 @@ namespace Sosage::Component
 
 Ground_map::Ground_map (const std::string& id,
                         const std::string& file_name,
-                        int front_z, int back_z)
+                        int front_z, int back_z,
+                        const std::function<void()>& callback)
   : Base(id), m_front_z (front_z), m_back_z (back_z)
 {
   SOSAGE_TIMER_START(Ground_map__Ground_map);
@@ -53,6 +54,7 @@ Ground_map::Ground_map (const std::string& id,
   std::map<Point, GVertex> map_p2v;
 
   for (int x = 0; x < width - 1; ++ x)
+  {
     for (int y = 0; y < height - 1; ++ y)
     {
       std::array<unsigned char, 3> c
@@ -85,6 +87,8 @@ Ground_map::Ground_map (const std::string& id,
         m_graph.add_edge (source, target);
       }
     }
+    callback();
+  }
 
   // Simplify border
 
@@ -102,6 +106,7 @@ Ground_map::Ground_map (const std::string& id,
   {
     if (deviation(v) < Config::boundary_precision)
       todo.insert (v);
+    callback();
   }
 
   while (!todo.empty())
@@ -128,6 +133,7 @@ Ground_map::Ground_map (const std::string& id,
       todo.insert (n0);
     if (deviation(n1) < Config::boundary_precision)
       todo.insert (n1);
+    callback();
   }
 
   m_graph.validity();
@@ -163,6 +169,7 @@ Ground_map::Ground_map (const std::string& id,
       GEdge e = m_graph.add_edge(v0, v1);
       m_graph[e].border = false;
     }
+    callback();
   }
   debug("Edges = " + std::to_string(m_graph.num_edges()));
   

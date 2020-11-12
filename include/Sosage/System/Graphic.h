@@ -51,7 +51,7 @@ public:
 
   virtual void run();
 
-  void display_spin_loading();
+  void run_loading();
 
 private:
 

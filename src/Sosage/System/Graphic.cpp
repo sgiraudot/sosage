@@ -168,7 +168,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
   }
 }
 
-void Graphic::display_spin_loading()
+void Graphic::run_loading()
 {
   m_core.begin();
 
