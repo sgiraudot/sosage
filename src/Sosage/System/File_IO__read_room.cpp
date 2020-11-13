@@ -162,6 +162,10 @@ void File_IO::read_room (const std::string& file_name)
        if (c->component() == "state" || c->component() == "position")
          return false;
 
+       // keep integers
+       if (C::cast<C::Int>(c))
+         return false;
+
        // else, remove component if belonged to the latest room
        return (m_latest_room_entities.find(c->entity()) != m_latest_room_entities.end());
      });
@@ -508,7 +512,9 @@ void File_IO::read_dialog (const Core::File_IO::Node& node, const std::string& i
 void File_IO::read_integer (const Core::File_IO::Node& node, const std::string& id)
 {
   int value = node["value"].integer();
-  auto integer = set<C::Int>(id + ":value", value);
+  auto integer = request<C::Int>(id + ":value");
+  if (!integer)
+    integer = set<C::Int>(id + ":value", value);
 
   for (std::size_t i = 0; i < node["triggers"].size(); ++ i)
   {
