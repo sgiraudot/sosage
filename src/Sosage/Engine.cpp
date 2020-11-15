@@ -112,9 +112,11 @@ int Engine::run (const std::string& folder_name)
       ("game:loading_callback",
        [&]()
        {
+#ifndef SOSAGE_EMSCRIPTEN
           time->run_loading();
           if (animation->run_loading())
             graphic->run_loading();
+#endif
        });
 
 
