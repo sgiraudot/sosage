@@ -13,7 +13,6 @@ function(sosage_option name description value)
   endif()
 endfunction()
 
-sosage_option(SOSAGE_CFG_USE_THREADS  "Allow multithreading for some tasks" ON)
 sosage_option(SOSAGE_CFG_DISPLAY_DEBUG_INFO "Force displaying debug info even in Release mode" OFF)
 sosage_option(SOSAGE_CFG_PROFILE "Profile and display timing info (requires debug info ON)" OFF)
 sosage_option(SOSAGE_CFG_USE_SDL_TIME "Use SDL clock instead of STL clock" OFF)
@@ -70,6 +69,7 @@ if (SOSAGE_DATA_FOLDER STREQUAL "")
 endif()
 
 include(${SOSAGE_DATA_FOLDER}/config.cmake)
+include(Sosage_version)
 include(Sosage_utils)
 
 ## Fetch sources and create executable

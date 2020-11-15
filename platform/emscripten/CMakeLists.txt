@@ -3,8 +3,8 @@ project (sosage_emscripten)
 
 ## Use C++17
 set(CMAKE_CXX_STANDARD 17)
-
-## Set up data folder
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
+include(Sosage_version)
 
 ## Fetch sources and create executable
 

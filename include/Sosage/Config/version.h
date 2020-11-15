@@ -35,10 +35,10 @@ namespace Sosage
 namespace Version
 {
 
-constexpr unsigned int major = 0;
-constexpr unsigned int minor = 2;
-constexpr unsigned int patch = 0;
-constexpr const char* name = "alpha2";
+constexpr unsigned int major = SOSAGE_VERSION_MAJOR;
+constexpr unsigned int minor = SOSAGE_VERSION_MINOR;
+constexpr unsigned int patch = SOSAGE_VERSION_PATCH;
+constexpr const char* name = SOSAGE_VERSION_NAME;
 
 inline std::string str()
 {
