@@ -77,6 +77,7 @@ void Interface::update_layout()
     horizontal_layout();
   }
 
+  remove ("dialog_choice_background:image", true);
   update_pause_screen();
 }
 
