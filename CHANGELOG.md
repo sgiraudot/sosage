@@ -2,6 +2,23 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v0.3.0 (xmas2020demo)` - TBD
+
+### Release Management
+
+- Cross-compilation Gnunux to Windows
+- Script to generate all platforms installers
+- Version handling by CMake
+
+### Interface and Menus
+
+- Remove threads to avoid problems, loading spinning image handled
+  with callbacks instead
+
+### Game Engine
+
+(nothing yet)
+
 ## `v0.2.0 (alpha2)` - 2020-11-11
 
 ### Release Management
@@ -16,7 +33,7 @@ History of versions and modifications of the SOSAGE engine.
 
 - Handling configuration file and persistent settings
 - Switch fullscreen on/off
-- Threaed animated loading screen
+- Threaded animated loading screen
 
 ### Game Engine
 
