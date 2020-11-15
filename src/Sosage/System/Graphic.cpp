@@ -67,6 +67,12 @@ void Graphic::run()
     remove ("game:name");
   }
 
+  if (request<C::String>("game:new_room"))
+  {
+    run_loading();
+    return;
+  }
+
   if (receive ("window:rescaled"))
     m_core.update_view (get<C::Int>("interface:width")->value(),
                         get<C::Int>("interface:height")->value());
