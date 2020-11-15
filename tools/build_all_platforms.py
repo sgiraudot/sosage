@@ -117,7 +117,7 @@ try:
     run_cmd(["ln", "-s", libyaml_souce_path, "libyaml"])
     run_cmd(["mkdir", "build"])
     os.chdir("build")
-    run_cmd(["ln", "-s", data_folder, "data"])
+    run_cmd(["ln", "-s", data_folder + "/data/", "data"])
     run_cmd(["emcmake", "cmake", "-DCMAKE_BUILD_TYPE=RelWithDebInfo", ".."])
     run_cmd(["make", "-j", "6"])
     run_cmd(["mkdir", "../../../" + output_dir + "/" + appname + "-web/"])

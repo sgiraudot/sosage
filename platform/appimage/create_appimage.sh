@@ -30,6 +30,6 @@ cd ..
 
 echo [Building AppImage]
 
-$LinuxDeploy --appdir install_dir -e install_dir/usr/games/superflu-riteurnz --output appimage
+$LinuxDeploy --appdir install_dir -e install_dir/usr/bin/superflu-riteurnz --output appimage
 
 echo [All done]
