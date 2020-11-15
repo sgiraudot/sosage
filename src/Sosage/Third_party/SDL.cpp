@@ -110,7 +110,7 @@ SDL_Color SDL::black()
   out.r = 0;
   out.g = 0;
   out.b = 0;
-  out.a = 0;
+  out.a = 255;
   return out;
 }
 
@@ -126,6 +126,7 @@ SDL_Color SDL::color (const std::string& color_str)
   out.r = color[0];
   out.g = color[1];
   out.b = color[2];
+  out.a = 255;
   return out;
 }
 
