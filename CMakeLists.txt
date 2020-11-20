@@ -75,6 +75,15 @@ include(Sosage_utils)
 ## Fetch sources and create executable
 
 file(GLOB_RECURSE SOSAGE_SRC "src/Sosage/*.cpp")
+
+if(MINGW)
+ set(SOSAGE_SRC ${SOSAGE_SRC} "${SOSAGE_DATA_FOLDER}/resources/sosage.rc")
+ set(CMAKE_RC_COMPILER_INIT windres)
+ enable_language(RC)
+ set(CMAKE_RC_COMPILE_OBJECT
+ "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
+endif(MINGW)
+
 add_executable(${SOSAGE_EXE_NAME} ${SOSAGE_SRC})
 target_link_libraries(${SOSAGE_EXE_NAME} PUBLIC sosage)
 

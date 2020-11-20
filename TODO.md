@@ -1,10 +1,5 @@
 # TODO list
 
-### Bugs / trucs à changer
-
-* Tête de Superflu
-* Réparer version Android
-
 ### Graphique
 
 * Intro
