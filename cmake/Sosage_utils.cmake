@@ -29,6 +29,7 @@ set(CPACK_DEBIAN_PACKAGE_HOMEPAGE ${SOSAGE_URL})
 set(CPACK_RPM_PACKAGE_GROUP "Games")
 set(CPACK_RPM_PACKAGE_REQUIRES "SDL2, SDL2_image, SDL2_mixer, SDL2_ttf, libyaml")
 set(CPACK_RPM_PACKAGE_URL ${SOSAGE_URL})
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/share/icons /usr/share/icons/hicolor /usr/share/icons/hicolor/scalable /usr/share/icons/hicolor/scalable/apps /usr/share/applications)
 
 set(CPACK_NSIS_DISPLAY_NAME ${SOSAGE_NAME})
 set(CPACK_NSIS_PACKAGE_NAME ${SOSAGE_NAME})
