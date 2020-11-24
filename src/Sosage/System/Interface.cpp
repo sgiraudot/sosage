@@ -128,6 +128,16 @@ void Interface::init()
     = set<C::Position>("pause_screen:position", Point(0, 0));
   set<C::Variable>("window_overlay:position", pause_screen_pos);
 
+  auto blackscreen = set<C::Image>("blackscreen:image",
+                                   Config::world_width + get<C::Int>("interface:width")->value(),
+                                   Config::world_height + get<C::Int>("interface:height")->value(),
+                                   0, 0, 0, 255);
+  blackscreen->on() = false;
+  blackscreen->z() = Config::overlay_depth;
+  blackscreen->collision() = UNCLICKABLE;
+
+  set<C::Position>("blackscreen:position", Point(0,0));
+
   update_layout();
 }
 

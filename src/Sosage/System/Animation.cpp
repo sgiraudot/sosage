@@ -230,7 +230,7 @@ void Animation::run_one_frame()
   }
   else if (m_fade_to_remove)
   {
-    remove("fade:image");
+    get<C::Image>("blackscreen:image")->on() = false;
     m_fade_to_remove = false;
   }
 
@@ -601,14 +601,14 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
 
   double alpha = (fadein ? (end_time - current_time) / (end_time - begin_time)
                          : (current_time - begin_time) / (end_time - begin_time));
+  if (alpha > 1)
+    alpha = 1;
+  if (alpha < 0)
+    alpha = 0;
 
-  auto img = set<C::Image>("fade:image",
-                           Config::world_width + get<C::Int>("interface:width")->value(),
-                           Config::world_height + get<C::Int>("interface:height")->value(),
-                           0, 0, 0, int(255. * alpha));
-  img->z() = Config::overlay_depth;
-  img->collision() = UNCLICKABLE;
-  set<C::Position>("fade:position", Point(0,0));
+  auto img = get<C::Image>("blackscreen:image");
+  img->on() = true;
+  img->set_alpha((unsigned char)(255 * alpha));
 }
 
 void Animation::update_camera_target ()

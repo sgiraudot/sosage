@@ -68,14 +68,11 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
   Surface surf = m_surfaces.make_single(SDL_CreateRGBSurface, 0, w, h, 32, rmask, gmask, bmask, amask);
   check (surf != Surface(), "Cannot create rectangle surface");
 
-  SDL_FillRect(surf.get(), nullptr, SDL_MapRGBA(surf->format, Uint8(r), Uint8(g), Uint8(b), Uint8(a)));
+  SDL_FillRect(surf.get(), nullptr, SDL_MapRGBA(surf->format, Uint8(r), Uint8(g), Uint8(b), Uint8(255)));
 
   Texture out = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf.get());
   check (out != Texture(), "Cannot create rectangle texture");
-  if (a != 255)
-    SDL_SetTextureBlendMode(out.get(), SDL_BLENDMODE_BLEND);
-
-  return Image (surf, out, 1);
+  return Image (surf, out, 1, (unsigned char)(a));
 }
 
 SDL::Surface SDL::load_surface (const std::string& file_name)
@@ -365,6 +362,8 @@ void SDL::draw (const Image& image,
   target.w = wtarget;
   target.h = htarget;
 
+  if (image.alpha != 255)
+    SDL_SetTextureAlphaMod(image.texture.get(), image.alpha);
   SDL_RenderCopy(m_renderer, image.texture.get(), &source, &target);
 }
 

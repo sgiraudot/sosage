@@ -56,9 +56,10 @@ public:
     Surface surface;
     Texture texture;
     double scaling;
+    unsigned char alpha;
 
-    Image (Surface surface = Surface(), Texture texture = Texture(), double scaling = 1.)
-      : surface (surface), texture (texture), scaling (scaling)
+    Image (Surface surface = Surface(), Texture texture = Texture(), double scaling = 1., unsigned char alpha = 255)
+      : surface (surface), texture (texture), scaling (scaling), alpha(alpha)
     { }
   };
 

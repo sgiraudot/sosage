@@ -84,6 +84,15 @@ void Interface::update_layout()
   get<C::Image>("interface_verbs:image")->on() = false;
   get<C::Image>("interface_inventory:image")->on() = false;
 
+  bool blackscreen_on = get<C::Image>("blackscreen:image")->on();
+  auto blackscreen = set<C::Image>("blackscreen:image",
+                                   Config::world_width + get<C::Int>("interface:width")->value(),
+                                   Config::world_height + get<C::Int>("interface:height")->value(),
+                                   0, 0, 0, 255);
+  blackscreen->on() = blackscreen_on;
+  blackscreen->z() = Config::overlay_depth;
+  blackscreen->collision() = UNCLICKABLE;
+
   remove ("dialog_choice_background:image", true);
   update_pause_screen();
 }

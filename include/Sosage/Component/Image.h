@@ -71,6 +71,7 @@ public:
   int& z() { return m_z; }
   void rescale (double z);
   void set_scale (double scale);
+  void set_alpha (unsigned char alpha) { m_core.alpha = alpha; }
   bool is_target_inside (int x, int y) const;
 };
 
