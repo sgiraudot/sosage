@@ -262,6 +262,8 @@ void Logic::run_cutscene()
         img->on() = false;
       else if (auto music = request<C::Music>(el.id))
         emit ("music:stop");
+      else if (el.id == "fadein")
+        get<C::Image>("blackscreen:image")->on() = false;
       continue;
     }
 
@@ -271,7 +273,12 @@ void Logic::run_cutscene()
 
     if (el.id == "fadein" || el.id == "fadeout")
     {
-
+      auto img = get<C::Image>("blackscreen:image");
+      img->on() = true;
+      if (el.id == "fadein")
+        img->set_alpha((unsigned char)(255 * (1. - zoom)));
+      else
+        img->set_alpha((unsigned char)(255 * zoom));
     }
     else if (auto img = request<C::Image>(el.id))
     {
@@ -293,6 +300,7 @@ void Logic::run_cutscene()
       check (false, "Can't find cutscene element " + el.id);
     }
   }
+  std::cerr << std::endl;
 }
 
 void Logic::clear_timed(bool action_goto)

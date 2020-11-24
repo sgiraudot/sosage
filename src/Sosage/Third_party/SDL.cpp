@@ -277,8 +277,8 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
   {
     SDL_DisplayMode DM;
     SDL_GetCurrentDisplayMode(0, &DM);
-    window_width = int(0.8 * DM.w);
     window_height = int(0.8 * DM.h);
+    window_width = int(1.6 * window_height);
   }
   m_window = SDL_CreateWindow ("",
                                SDL_WINDOWPOS_CENTERED,

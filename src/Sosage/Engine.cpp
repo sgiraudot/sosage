@@ -80,10 +80,17 @@ Engine::~Engine()
 int Engine::run (const std::string& folder_name)
 {
   // Init main variables
-  m_content.set_fac<Component::Status>(GAME__STATUS, "game:status");
+  auto status = m_content.set_fac<Component::Status>(GAME__STATUS, "game:status");
   m_content.set_fac<Component::Double>(CAMERA__POSITION, "camera:position", 0.0);
   m_content.set<Component::Double>("camera:target", 0.0);
   m_content.set<Component::Inventory>("game:inventory");
+
+  m_content.set<Component::And>
+      ("unlocked:condition",
+       Component::make_not
+        (Component::make_value_condition<Sosage::Status> (status, PAUSED)),
+        Component::make_not
+        (Component::make_value_condition<Sosage::Status> (status, CUTSCENE)));
 
   auto file_io = System::make_handle<System::File_IO>(m_content);
   // Raise exception now if folder does not exit

@@ -89,7 +89,7 @@ void Interface::update_layout()
                                    Config::world_width + get<C::Int>("interface:width")->value(),
                                    Config::world_height + get<C::Int>("interface:height")->value(),
                                    0, 0, 0, 255);
-  blackscreen->on() = blackscreen_on;
+  blackscreen->on() = false;
   blackscreen->z() = Config::overlay_depth;
   blackscreen->collision() = UNCLICKABLE;
 

@@ -87,14 +87,10 @@ void Interface::run()
         }
       }
     }
-    update_action();
-    update_inventory();
-    update_dialog_choices();
   }
-  else
-  {
-
-  }
+  update_action();
+  update_inventory();
+  update_dialog_choices();
 }
 
 void Interface::init()
@@ -440,6 +436,22 @@ void Interface::detect_collision (C::Position_handle cursor)
 
 void Interface::update_action ()
 {
+  if (get<C::Status>(GAME__STATUS)->value() != IDLE)
+  {
+    for (auto img : m_verbs)
+      img->on() = false;
+    if (auto img = request<C::Image>("chosen_verb:image"))
+      img->on() = false;
+    return;
+  }
+  else
+  {
+    for (auto img : m_verbs)
+      img->on() = true;
+    if (auto img = request<C::Image>("chosen_verb:image"))
+      img->on() = true;
+  }
+
   auto verb = get<C::String> ("chosen_verb:text");
   std::string target_object = "";
 
@@ -492,22 +504,8 @@ void Interface::update_action ()
 void Interface::update_inventory ()
 {
   Status status = get<C::Status>(GAME__STATUS)->value();
-  if (status == IN_WINDOW || status == LOCKED || status == DIALOG_CHOICE)
-  {
-    get<C::Image> ("interface_action:image")->z() = Config::inventory_over_depth;
-    get<C::Image> ("interface_verbs:image")->z() = Config::inventory_over_depth;
-    get<C::Image> ("interface_inventory:image")->z() = Config::inventory_over_depth;
-    if (status == IN_WINDOW)
-      get<C::Image> ("window_overlay:image")->on() = true;
-    return;
-  }
-  else
-  {
-    get<C::Image> ("interface_action:image")->z() = Config::interface_depth;
-    get<C::Image> ("interface_verbs:image")->z() = Config::interface_depth;
-    get<C::Image> ("interface_inventory:image")->z() = Config::interface_depth;
-    get<C::Image> ("window_overlay:image")->on() = false;
-  }
+  get<C::Image> ("window_overlay:image")->on() = (status == IN_WINDOW);
+  bool inventory_on = (status == IDLE);
 
   auto background = get<C::Image>("interface_inventory:image");
 
@@ -528,7 +526,7 @@ void Interface::update_inventory ()
     {
       std::size_t pos = i - position;
       double relative_pos = (1 + pos) / double(Config::displayed_inventory_size + 1);
-      img->on() = true;
+      img->on() = inventory_on;
 
       int x, y;
 
@@ -556,15 +554,13 @@ void Interface::update_inventory ()
       }
 
       set<C::Position>(inventory->get(i) + ":position", Point(x,y));
-
-
     }
     else
       img->on() = false;
   }
 
-  bool left_on = (inventory->position() > 0);
-  bool right_on =  (inventory->size() - inventory->position() > Config::displayed_inventory_size);
+  bool left_on = inventory_on && (inventory->position() > 0);
+  bool right_on = inventory_on && (inventory->size() - inventory->position() > Config::displayed_inventory_size);
 
   if (m_layout == Config::WIDESCREEN)
   {

@@ -236,9 +236,8 @@ void File_IO::read_init (const std::string& folder_name)
     set<C::Conditional>
         ("cursor:conditional",
          C::make_and
-         (C::make_not
-          (C::make_value_condition<Sosage::Status> (status, PAUSED)),
-           get<C::Boolean>("interface:virtual_cursor")),
+         (get<C::Condition>("unlocked:condition"),
+          get<C::Boolean>("interface:virtual_cursor")),
          cursor_img);
   }
   else
@@ -246,8 +245,7 @@ void File_IO::read_init (const std::string& folder_name)
     // Cursor displayed = NOT paused
     set<C::Conditional>
         ("cursor:conditional",
-         C::make_not
-         (C::make_value_condition<Sosage::Status> (status, PAUSED)),
+         get<C::Condition>("unlocked:condition"),
          cursor_img);
   }
 
@@ -412,7 +410,7 @@ void File_IO::read_cutscene (const std::string& file_name)
 
     if (type == "begin")
       for (const std::string& el : elements)
-        map_id2begin.insert (std::make_pair (el, time));
+        map_id2begin[el] = time;
     else
       for (const std::string& el : elements)
       {
