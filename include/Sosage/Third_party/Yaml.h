@@ -136,6 +136,25 @@ public:
       return out;
     }
 
+    double time() const
+    {
+      std::size_t sep0 = value.find(':');
+      check (sep0 != std::string::npos, "Time string should have ':' character");
+      std::size_t sep1 = value.find('.');
+      check (sep0 != std::string::npos, "Time string should have '.' character");
+
+      std::string minutes_str (value.begin(), value.begin() + sep0);
+      std::string seconds_str (value.begin() + sep0 + 1, value.begin() + sep1);
+      std::string milliseconds_str (value.begin() + sep1 + 1, value.end());
+
+      int minutes = to_int(minutes_str);
+      int seconds = to_int(seconds_str);
+      int milliseconds = to_int(milliseconds_str);
+
+      return 60. * minutes + seconds + (milliseconds / 1000.);
+    }
+
+
     void print(std::string prefix = "")
     {
       if (value != "")

@@ -61,6 +61,9 @@ public:
   virtual void run();
 
 private:
+
+  void run_cutscene();
+
   void clear_timed(bool action_goto);
 
   bool compute_path_from_target (Component::Position_handle target,

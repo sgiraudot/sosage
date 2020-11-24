@@ -33,6 +33,7 @@ namespace Sosage
 enum Status
 {
   IDLE,
+  CUTSCENE,
   PAUSED,
   LOCKED,
   DIALOG_CHOICE,

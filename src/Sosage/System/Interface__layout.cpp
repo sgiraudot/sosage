@@ -47,6 +47,9 @@ void Interface::update_layout()
 
   Config::Layout layout = Config::Layout(get<C::Int>("interface:layout")->value());
 
+  if (get<C::Status>(GAME__STATUS)->value() == CUTSCENE)
+    layout = Config::STANDARD;
+
   if ((layout == Config::AUTO && aspect_ratio >= 200) ||
       (layout == Config::WIDESCREEN))
   {
@@ -76,6 +79,10 @@ void Interface::update_layout()
 
     horizontal_layout();
   }
+
+  get<C::Image>("interface_action:image")->on() = false;
+  get<C::Image>("interface_verbs:image")->on() = false;
+  get<C::Image>("interface_inventory:image")->on() = false;
 
   remove ("dialog_choice_background:image", true);
   update_pause_screen();

@@ -108,6 +108,9 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
   auto status = get<C::Status>(GAME__STATUS);
   double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
+  int interface_width = get<C::Int>("interface:width")->value();
+  int interface_height = get<C::Int>("interface:height")->value();
+
   for (const auto& img : images)
   {
     if (img->on())
@@ -129,10 +132,54 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
       Point screen_position = p - img->core().scaling * Vector(img->origin());
 
-      m_core.draw (img->core(), xmin, ymin, (xmax - xmin), (ymax - ymin),
-                   screen_position.X(), screen_position.Y(),
-                   int(img->core().scaling * (xmax - xmin)),
-                   int(img->core().scaling * (ymax - ymin)));
+      int xmin_target = screen_position.X();
+      int ymin_target = screen_position.y();
+      int xmax_target = xmin_target + int(img->core().scaling * (xmax - xmin));
+      int ymax_target = ymin_target + int(img->core().scaling * (ymax - ymin));
+
+      int limit_width = Config::world_width;
+      if (position->absolute())
+        limit_width += interface_width;
+      int limit_height = Config::world_height;
+      if (position->absolute())
+        limit_height += interface_height;
+
+      // Skip out of boundaries images
+      if ((xmax_target < 0 || xmin_target > limit_width)
+          && (ymax_target < 0 || ymin_target > limit_height))
+        continue;
+
+      // Cut if image goes beyond boundaries
+      if (xmin_target < 0)
+      {
+        xmin -= xmin_target / img->core().scaling;
+        xmin_target = 0;
+      }
+      if (ymin_target < 0)
+      {
+        ymin -= ymin_target / img->core().scaling;
+        ymin_target = 0;
+      }
+      if (xmax_target > limit_width)
+      {
+        xmax -= (xmax_target - limit_width) / img->core().scaling;
+        xmax_target = limit_width;
+      }
+      if (ymax_target > limit_height)
+      {
+        ymax -= (ymax_target - limit_height) / img->core().scaling;
+        ymax_target = limit_height;
+      }
+
+      int width = xmax - xmin;
+      int height = ymax - ymin;
+
+      int width_target = xmax_target - xmin_target;
+      int height_target = ymax_target - ymin_target;
+
+      m_core.draw (img->core(), xmin, ymin, width, height,
+                   xmin_target, ymin_target,
+                   width_target, height_target);
     }
   }
 

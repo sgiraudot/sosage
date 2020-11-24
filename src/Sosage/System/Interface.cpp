@@ -57,39 +57,44 @@ void Interface::run()
     emit ("window:rescaled"); // re-emit for Graphics
   }
 
-  auto cursor = get<C::Position>(CURSOR__POSITION);
-  detect_collision (cursor);
-
-  if (m_collision && receive ("cursor:clicked"))
+  if (status->value() != CUTSCENE)
   {
+    auto cursor = get<C::Position>(CURSOR__POSITION);
+    detect_collision (cursor);
 
-    if (status->value() == IN_WINDOW)
-      window_clicked();
-    else if (status->value() == IN_CODE)
-      code_clicked(cursor);
-    else if (status->value() == DIALOG_CHOICE)
-      dialog_clicked();
-    else
+    if (m_collision && receive ("cursor:clicked"))
     {
-      if (m_collision->entity().find("verb_") == 0)
-        verb_clicked();
-      else if (m_collision->entity().find("inventory_arrow") == 0)
-        arrow_clicked();
+
+      if (status->value() == IN_WINDOW)
+        window_clicked();
+      else if (status->value() == IN_CODE)
+        code_clicked(cursor);
+      else if (status->value() == DIALOG_CHOICE)
+        dialog_clicked();
       else
       {
-        std::string verb
-          = get<C::String> ("chosen_verb:text")->entity();
-        verb = std::string (verb.begin() + 5, verb.end());
+        if (m_collision->entity().find("verb_") == 0)
+          verb_clicked();
+        else if (m_collision->entity().find("inventory_arrow") == 0)
+          arrow_clicked();
+        else
+        {
+          std::string verb
+              = get<C::String> ("chosen_verb:text")->entity();
+          verb = std::string (verb.begin() + 5, verb.end());
 
-        action_clicked(verb);
+          action_clicked(verb);
+        }
       }
     }
+    update_action();
+    update_inventory();
+    update_dialog_choices();
   }
+  else
+  {
 
-  update_action();
-  update_inventory();
-  update_dialog_choices();
-
+  }
 }
 
 void Interface::init()
@@ -403,6 +408,7 @@ void Interface::detect_collision (C::Position_handle cursor)
       {
         int x_in_image = cursor->value().X() - xmin;
         int y_in_image = cursor->value().Y() - ymin;
+
         if (!img->is_target_inside (x_in_image, y_in_image))
           continue;
       }

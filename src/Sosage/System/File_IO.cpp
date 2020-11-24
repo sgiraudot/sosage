@@ -28,6 +28,7 @@
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Cropped.h>
+#include <Sosage/Component/Cutscene.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Hints.h>
@@ -60,9 +61,50 @@ void File_IO::run()
 {
   if (auto new_room = request<C::String>("game:new_room"))
   {
-    read_room (new_room->value());
+    if (request<C::String>("game:new_room_origin"))
+      read_room (new_room->value());
+    else
+    {
+      read_cutscene (new_room->value());
+      get<C::Status>(GAME__STATUS)->push (CUTSCENE);
+    }
     remove ("game:new_room");
   }
+}
+
+void File_IO::clean_content()
+{
+  std::unordered_set<std::string> force_keep;
+  auto inventory = get<C::Inventory>("game:inventory");
+  for (const std::string& entity : *inventory)
+    force_keep.insert (entity);
+
+  const std::string& player = get<C::String>("player:name")->value();
+  force_keep.insert (player);
+  force_keep.insert (player + "_body");
+  force_keep.insert (player + "_head");
+  force_keep.insert (player + "_mouth");
+  force_keep.insert (player + "_walking");
+  force_keep.insert (player + "_idle");
+
+  m_content.clear
+    ([&](C::Handle c) -> bool
+     {
+       // keep inventory + other forced kept
+       if (force_keep.find(c->entity()) != force_keep.end())
+         return false;
+
+       // keep states and positions
+       if (c->component() == "state" || c->component() == "position")
+         return false;
+
+       // keep integers
+       if (C::cast<C::Int>(c))
+         return false;
+
+       // else, remove component if belonged to the latest room
+       return (m_latest_room_entities.find(c->entity()) != m_latest_room_entities.end());
+     });
 }
 
 void File_IO::read_config()
@@ -281,8 +323,153 @@ void File_IO::read_init (const std::string& folder_name)
   std::string player = input["player"].string();
   set<C::String>("player:name", player);
 
-  set<C::String>("game:new_room", input["load_room"][0].string());
-  set<C::String>("game:new_room_origin", input["load_room"][1].string());
+  if (input.has("load_room"))
+  {
+    set<C::String>("game:new_room", input["load_room"][0].string());
+    set<C::String>("game:new_room_origin", input["load_room"][1].string());
+  }
+  else
+  {
+    check (input.has("load_cutscene"), "Init should either load a room or a cutscene");
+    set<C::String>("game:new_room", input["load_cutscene"].string());
+  }
+}
+
+void File_IO::read_cutscene (const std::string& file_name)
+{
+  auto callback = get<C::Simple<std::function<void()> > >("game:loading_callback");
+  callback->value()();
+
+  clean_content();
+
+  SOSAGE_TIMER_START(File_IO__read_cutscene);
+
+  Core::File_IO input (local_file_name("data", "cutscenes", file_name, "yaml"));
+  input.parse();
+
+  callback->value()();
+
+  std::string name = input["name"].string();
+
+  auto interface_font = get<C::Font> ("interface:font");
+  std::string color = "000000";
+
+  std::unordered_map<std::string, const Core::File_IO::Node*> map_id2node;
+
+  for (std::size_t i = 0; i < input["content"].size(); ++ i)
+  {
+    const Core::File_IO::Node& node = input["content"][i];
+    std::string id = node["id"].string();
+    map_id2node.insert (std::make_pair (id, &node));
+    m_latest_room_entities.insert (id);
+
+    if (node.has("music")) // Music
+    {
+      std::string music = node["music"].string("sounds", "musics", "ogg");
+      set<C::Music>(id + ":music", local_file_name(music));
+      callback->value()();
+      continue;
+    }
+
+    C::Image_handle img;
+    if (node.has("skin")) // Image
+    {
+      std::string skin = node["skin"].string("images", "cutscenes", "png");
+      img = set<C::Image>(id + ":image", local_file_name(skin));
+    }
+    else // Text
+    {
+      check (node.has("text"), "Node should either have music, image or text");
+      std::string text = node["text"].string();
+      img = set<C::Image>(id + ":image", interface_font, color, text);
+    }
+    img->on() = false;
+    callback->value()();
+  }
+
+  std::unordered_map<std::string, double> map_id2begin;
+
+  auto cutscene = set<C::Cutscene>("game:cutscene");
+  for (std::size_t i = 0; i < input["timeline"].size(); ++ i)
+  {
+    const Core::File_IO::Node& node = input["timeline"][i];
+    double time = node["time"].time();
+
+    // Special case if cutscene ends by loading room
+    if (node.has("load"))
+    {
+      cutscene->add (node["load"].string(), time);
+      continue;
+    }
+
+    std::vector<std::string> elements;
+    std::string type = node.has("begin") ? "begin" : "end";
+
+    if (node[type].size() == 0)
+      elements.emplace_back (node[type].string());
+    else
+      elements = node[type].string_array();
+
+    if (type == "begin")
+      for (const std::string& el : elements)
+        map_id2begin.insert (std::make_pair (el, time));
+    else
+      for (const std::string& el : elements)
+      {
+        auto found = map_id2begin.find(el);
+        check (found != map_id2begin.end(), "Ending cutscene element " + el + " with no beginning");
+        double begin = found->second;
+
+        auto found_node = map_id2node.find(el);
+        if (found_node == map_id2node.end())
+        {
+          cutscene->add(el, begin, time);
+          continue;
+        }
+
+        const Core::File_IO::Node& el_node = *found_node->second;
+
+        if (el_node.has("coordinates"))
+        {
+          int x = el_node["coordinates"][0].integer();
+          int y = el_node["coordinates"][1].integer();
+          int z = el_node["coordinates"][2].integer();
+          double zoom = 1.;
+          if (el_node.has("text"))
+            zoom = 0.75;
+          cutscene->add (el + ":image", begin, time, x, y, z, zoom);
+        }
+        else if (el_node.has("keyframes"))
+        {
+          C::Cutscene::Element& element = cutscene->add(el + ":image");
+          for (std::size_t j = 0; j < el_node["keyframes"].size(); ++ j)
+          {
+            const Core::File_IO::Node& keyframe = el_node["keyframes"][j];
+            double relative_time = keyframe["time"].floating();
+            int x = keyframe["coordinates"][0].integer();
+            int y = keyframe["coordinates"][1].integer();
+            int z = keyframe["coordinates"][2].integer();
+            double zoom = keyframe.has("zoom") ? keyframe["zoom"].floating() : 1;
+
+            double real_time = relative_time * time + (1. - relative_time) * begin;
+            if (relative_time == 0)
+              real_time = begin;
+            else if (relative_time == 1)
+              real_time = time;
+
+            element.keyframes.emplace_back (real_time, x, y, z, zoom);
+          }
+        }
+        else
+          cutscene->add (el + ":music", begin, time);
+      }
+    callback->value()();
+  }
+
+  emit ("window:rescaled");
+  cutscene->finalize();
+
+  SOSAGE_TIMER_STOP(File_IO__read_cutscene);
 }
 
 std::string File_IO::local_file_name (const std::string& file_name) const

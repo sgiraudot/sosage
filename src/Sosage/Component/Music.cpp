@@ -31,7 +31,7 @@ namespace Sosage::Component
 {
 
 Music::Music (const std::string& id, const std::string& file_name)
-  : Base(id)
+  : Base(id), m_on(false)
 {
   m_core = Core::Sound::load_music (file_name);
 }

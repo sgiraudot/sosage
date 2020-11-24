@@ -50,6 +50,8 @@ public:
 
   virtual void run();
 
+  void clean_content();
+
   void read_config();
   void write_config();
 
@@ -57,6 +59,8 @@ public:
   { Core::File_IO input (folder_name + "data" + Config::folder_separator + "init.yaml"); }
 
   void read_init (const std::string& folder_name);
+
+  void read_cutscene (const std::string& file_name);
 
 private:
 

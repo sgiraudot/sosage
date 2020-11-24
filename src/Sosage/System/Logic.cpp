@@ -29,6 +29,7 @@
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Condition.h>
 #include <Sosage/Component/Cropped.h>
+#include <Sosage/Component/Cutscene.h>
 #include <Sosage/Component/Dialog.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Font.h>
@@ -83,6 +84,12 @@ void Logic::run ()
   double current_time = get<C::Double> (CLOCK__TIME)->value();
 
   m_current_time = current_time;
+
+  if (status->value() == CUTSCENE)
+  {
+    run_cutscene();
+    return;
+  }
 
   std::set<Timed_handle> new_timed_handle;
 
@@ -222,6 +229,70 @@ void Logic::run ()
 
   update_camera();
   update_debug_info (get<C::Debug>(GAME__DEBUG));
+}
+
+void Logic::run_cutscene()
+{
+  auto cutscene = get<C::Cutscene>("game:cutscene");
+
+  double current_time = cutscene->current_time (m_current_time);
+  for (C::Cutscene::Element& el : *cutscene)
+  {
+    if (!el.active)
+      continue;
+
+    double begin_time = el.keyframes.front().time;
+    if (begin_time > current_time)
+      continue;
+
+    if (el.keyframes.size() == 1) // load case
+    {
+      C::Base dummy (el.id);
+      set<C::String>("game:new_room", dummy.entity());
+      set<C::String>("game:new_room_origin", dummy.component());
+      get<C::Status>(GAME__STATUS)->pop();
+      continue;
+    }
+
+    double end_time = el.keyframes.back().time;
+    if (end_time < current_time)
+    {
+      el.active = false;
+      if (auto img = request<C::Image>(el.id))
+        img->on() = false;
+      else if (auto music = request<C::Music>(el.id))
+        emit ("music:stop");
+      continue;
+    }
+
+    int x, y, z;
+    double zoom;
+    cutscene->get_frame (current_time, el, x, y, z, zoom);
+
+    if (el.id == "fadein" || el.id == "fadeout")
+    {
+
+    }
+    else if (auto img = request<C::Image>(el.id))
+    {
+      img->on() = true;
+      img->z() = z;
+      img->set_scale(zoom);
+      set<C::Position>(img->entity() + ":position", Point(x,y));
+    }
+    else if (auto music = request<C::Music>(el.id))
+    {
+      if (!music->on())
+      {
+        set<C::Variable>("game:music", get<C::Music>(el.id));
+        emit ("music:start");
+      }
+    }
+    else
+    {
+      check (false, "Can't find cutscene element " + el.id);
+    }
+  }
 }
 
 void Logic::clear_timed(bool action_goto)

@@ -138,37 +138,7 @@ void File_IO::read_room (const std::string& file_name)
   auto callback = get<C::Simple<std::function<void()> > >("game:loading_callback");
   callback->value()();
 
-  std::unordered_set<std::string> force_keep;
-  auto inventory = get<C::Inventory>("game:inventory");
-  for (const std::string& entity : *inventory)
-    force_keep.insert (entity);
-
-  const std::string& player = get<C::String>("player:name")->value();
-  force_keep.insert (player);
-  force_keep.insert (player + "_body");
-  force_keep.insert (player + "_head");
-  force_keep.insert (player + "_mouth");
-  force_keep.insert (player + "_walking");
-  force_keep.insert (player + "_idle");
-
-  m_content.clear
-    ([&](C::Handle c) -> bool
-     {
-       // keep inventory + other forced kept
-       if (force_keep.find(c->entity()) != force_keep.end())
-         return false;
-
-       // keep states and positions
-       if (c->component() == "state" || c->component() == "position")
-         return false;
-
-       // keep integers
-       if (C::cast<C::Int>(c))
-         return false;
-
-       // else, remove component if belonged to the latest room
-       return (m_latest_room_entities.find(c->entity()) != m_latest_room_entities.end());
-     });
+  clean_content();
 
   SOSAGE_TIMER_START(File_IO__read_room);
 
@@ -279,6 +249,7 @@ void File_IO::read_room (const std::string& file_name)
   auto origin_coord = get<C::Position>(origin + ":position");
   auto origin_looking = get<C::Boolean>(origin + ":looking_right");
 
+  const std::string& player = get<C::String>("player:name")->value();
   get<C::Position>(player + "_body:position")->set(origin_coord->value());
   set<C::Boolean>("game:in_new_room", origin_looking->value());
 
