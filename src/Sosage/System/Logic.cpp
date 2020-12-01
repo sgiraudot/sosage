@@ -282,10 +282,19 @@ void Logic::run_cutscene()
     }
     else if (auto img = request<C::Image>(el.id))
     {
+      if (auto anim = C::cast<C::Animation>(img))
+      {
+        if (!img->on())
+          emit (img->entity() + ":start_animation");
+        if (!anim->loop())
+          el.active = false;
+      }
+
       img->on() = true;
       img->z() = z;
       img->set_scale(zoom);
       set<C::Position>(img->entity() + ":position", Point(x,y));
+
     }
     else if (auto music = request<C::Music>(el.id))
     {
@@ -300,7 +309,6 @@ void Logic::run_cutscene()
       check (false, "Can't find cutscene element " + el.id);
     }
   }
-  std::cerr << std::endl;
 }
 
 void Logic::clear_timed(bool action_goto)

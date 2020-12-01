@@ -370,7 +370,27 @@ void File_IO::read_cutscene (const std::string& file_name)
     }
 
     C::Image_handle img;
-    if (node.has("skin")) // Image
+    if (node.has("loop")) // Animation
+    {
+      std::string skin = node["skin"].string("images", "cutscenes", "png");
+      int width, height;
+      if (node["length"].size() == 0)
+      {
+        width = node["length"].integer();
+        height = 1;
+      }
+      else
+      {
+        width = node["length"][0].integer();
+        height = node["length"][1].integer();
+      }
+      auto anim = set<C::Animation>(id + ":image", local_file_name(skin), 1,
+                                    width, height, node["loop"].boolean());
+      int duration = (node.has("duration") ? node["duration"].integer() : 1);
+      anim->reset (true, duration);
+      img = anim;
+    }
+    else if (node.has("skin")) // Image
     {
       std::string skin = node["skin"].string("images", "cutscenes", "png");
       img = set<C::Image>(id + ":image", local_file_name(skin));

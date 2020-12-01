@@ -100,7 +100,7 @@ public:
   void update_view(int interface_width, int interface_height);
   void toggle_fullscreen(bool fullscreen);
   void get_window_size (int& w, int& h);
-  void begin();
+  void begin(int interface_width, int interface_height);
   void create_texture (const Image& image);
   void draw (const Image& image,
              const int xsource, const int ysource,

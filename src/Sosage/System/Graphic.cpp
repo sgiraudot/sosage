@@ -81,7 +81,8 @@ void Graphic::run()
 
   std::vector<C::Image_handle> images;
 
-  m_core.begin();
+  m_core.begin(get<C::Int>("interface:width")->value(),
+               get<C::Int>("interface:height")->value());
 
   get_images (images);
   display_images (images);
@@ -223,7 +224,8 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
 void Graphic::run_loading()
 {
-  m_core.begin();
+  m_core.begin(get<C::Int>("interface:width")->value(),
+               get<C::Int>("interface:height")->value());
 
   auto img = get<C::Image>(LOADING_SPIN__IMAGE);
   auto position = get<C::Position>(LOADING_SPIN__POSITION);

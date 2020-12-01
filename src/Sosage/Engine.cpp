@@ -114,6 +114,8 @@ int Engine::run (const std::string& folder_name)
   file_io->read_config();
 
   graphic->init(); // init graphics
+  m_content.emit ("window:rescaled");
+  graphic->run(); // Run graphic once to update view
 
   m_content.set<Component::Simple<std::function<void()> > >
       ("game:loading_callback",
@@ -128,12 +130,7 @@ int Engine::run (const std::string& folder_name)
 
 
   file_io->read_init (folder_name);
-
   interface->init(); // init interface
-
-  m_content.emit ("window:rescaled");
-
-  graphic->run(); // Run graphic once to update view
 
   debug("Init done, entering main loop");
 
