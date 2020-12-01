@@ -143,6 +143,10 @@ int Engine::run (const std::string& folder_name)
 
   file_io->write_config();
 
+  m_systems.clear();
+  interface.reset(); // Clear interface before SDL is exited
+  m_content.clear();
+
   return EXIT_SUCCESS;
 }
 
