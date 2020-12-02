@@ -60,13 +60,29 @@ public:
 private:
   std::vector<Element> m_display;
   double m_starting_time;
+  double m_paused_time;
 
 public:
 
-  Cutscene (const std::string& id) : Base(id), m_starting_time(-1) { }
+  Cutscene (const std::string& id) : Base(id), m_starting_time(-1), m_paused_time(-1) { }
 
-  double current_time(const double &time)
+  double current_time(const double &time, bool paused)
   {
+    if (paused)
+    {
+      std::cerr << "Pause " << time << std::endl;
+      if (m_paused_time < 0)
+        m_paused_time = time;
+      return -1;
+    }
+
+    if (m_paused_time > 0)
+    {
+      std::cerr << "Unpause " << time - m_paused_time << std::endl;
+      m_starting_time += (time - m_paused_time);
+      m_paused_time = -1;
+    }
+
     if (m_starting_time < 0)
     {
       m_starting_time = time;

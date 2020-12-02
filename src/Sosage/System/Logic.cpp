@@ -77,20 +77,16 @@ Logic::Logic (Content& content)
 
 void Logic::run ()
 {
+  m_current_time = get<C::Double> (CLOCK__TIME)->value();
+
   auto status = get<C::Status>(GAME__STATUS);
-  if (status->value() == PAUSED || status->value() == DIALOG_CHOICE)
-    return;
-
-  double current_time = get<C::Double> (CLOCK__TIME)->value();
-
-  m_current_time = current_time;
-
-  if (status->value() == CUTSCENE)
+  if (status->value() == CUTSCENE || status->next_value() == CUTSCENE)
   {
     run_cutscene();
     return;
   }
-
+  if (status->value() == PAUSED || status->value() == DIALOG_CHOICE)
+    return;
   std::set<Timed_handle> new_timed_handle;
 
   bool still_waiting // for this world to stop hating
@@ -235,7 +231,11 @@ void Logic::run_cutscene()
 {
   auto cutscene = get<C::Cutscene>("game:cutscene");
 
-  double current_time = cutscene->current_time (m_current_time);
+  double current_time
+      = cutscene->current_time (m_current_time, get<C::Status>(GAME__STATUS)->value() == PAUSED);
+  if (current_time < 0)
+    return;
+
   for (C::Cutscene::Element& el : *cutscene)
   {
     if (!el.active)
@@ -298,11 +298,9 @@ void Logic::run_cutscene()
     }
     else if (auto music = request<C::Music>(el.id))
     {
-      if (!music->on())
-      {
-        set<C::Variable>("game:music", get<C::Music>(el.id));
-        emit ("music:start");
-      }
+      set<C::Variable>("game:music", get<C::Music>(el.id));
+      emit ("music:start");
+      el.active = false;
     }
     else
     {

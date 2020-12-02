@@ -41,12 +41,15 @@ namespace C = Component;
 Interface::Interface (Content& content)
   : Base (content)
   , m_layout (Config::AUTO)
+  , m_latest_exit (-10000)
 {
 
 }
 
 void Interface::run()
 {
+  update_exit();
+
   auto status = get<C::Status>(GAME__STATUS);
   if (status->value() == PAUSED)
     return;
@@ -318,6 +321,46 @@ void Interface::action_clicked(const std::string& verb)
     ->set(get<C::String>("verb_goto:text"));
 }
 
+void Interface::update_exit()
+{
+  double time = get<C::Double>(CLOCK__TIME)->value();
+  if (receive("game:exit"))
+  {
+    if (time - m_latest_exit < Config::key_repeat_delay)
+    {
+      emit("game:exit");
+      return;
+    }
+    m_latest_exit = time;
+  }
+
+  bool exit_message_exists = (request<C::Image>("exit_message:image") != nullptr);
+
+  if (time - m_latest_exit < Config::key_repeat_delay)
+  {
+    if (!exit_message_exists)
+    {
+      auto interface_font = get<C::Font> ("interface:font");
+
+      auto img
+        = set<C::Image>("exit_message:image", interface_font, "FFFFFF",
+                        "Appuyer à nouveau pour passer");
+      img->z() += 10;
+      img->set_scale(0.5);
+
+      set<C::Position>("exit_message:position", Point(5,5));
+    }
+  }
+  else
+  {
+    if (exit_message_exists)
+    {
+      remove("exit_message:image");
+      remove("exit_message:position");
+    }
+  }
+
+}
 
 void Interface::update_pause_screen()
 {

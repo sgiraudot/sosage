@@ -45,7 +45,7 @@ class Status : public Value<Sosage::Status>
 private:
 
   typedef Value<Sosage::Status> Base;
-  std::stack<Sosage::Status> m_value;
+  mutable std::stack<Sosage::Status> m_value;
   
 public:
 
@@ -53,6 +53,17 @@ public:
   void push (const Sosage::Status& v) { m_value.push(v); }
   void pop () { m_value.pop(); }
   virtual Sosage::Status value() const { return m_value.top(); }
+  Sosage::Status next_value() const
+  {
+    if (m_value.size() == 1)
+      return value();
+    Sosage::Status saved = m_value.top();
+    m_value.pop();
+    Sosage::Status out = m_value.top();
+    m_value.push(saved);
+    return out;
+  }
+
 };
 
 typedef std::shared_ptr<Status> Status_handle;

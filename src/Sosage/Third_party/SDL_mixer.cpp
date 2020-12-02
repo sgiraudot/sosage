@@ -96,14 +96,13 @@ void SDL_mixer::set_volume (double percentage)
 
 void SDL_mixer::pause_music (const SDL_mixer::Music&)
 {
-  Mix_VolumeMusic(Config::max_music_volume / 6);
-//  Mix_PauseMusic();
+  Mix_PauseMusic();
 }
 
 void SDL_mixer::resume_music (const SDL_mixer::Music&)
 {
-  Mix_VolumeMusic(Config::max_music_volume / 2);
-//  Mix_ResumeMusic();
+  std::cerr << "Resumed music!" << std::endl;
+  Mix_ResumeMusic();
 }
 
 void SDL_mixer::play_sound (const SDL_mixer::Sound& sound)

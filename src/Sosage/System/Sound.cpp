@@ -70,14 +70,21 @@ void Sound::run()
   if (music)
   {
     bool paused = (status->value() == PAUSED);
+
     if (paused && music->on())
     {
-      m_core.pause_music (music->core());
+      if (status->next_value() == CUTSCENE)
+        m_core.pause_music (music->core());
+      else
+        m_core.set_volume(0.15);
       music->on() = false;
     }
     else if (!paused && !music->on())
     {
-      m_core.resume_music (music->core());
+      if (status->value() == CUTSCENE)
+        m_core.resume_music(music->core());
+      else
+        m_core.set_volume (0.5);
       music->on() = true;
     }
   }

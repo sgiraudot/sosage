@@ -49,6 +49,8 @@ constexpr double camera_speed = 0.1;
 constexpr double char_spoken_time = 0.05;
 constexpr double min_reading_time = 1.5;
 
+constexpr double key_repeat_delay = 5.;
+
 enum Depth
 {
   interface_depth = 1000000,

@@ -43,6 +43,8 @@ class Interface : public Base
   Config::Layout m_layout;
   Component::Image_handle m_collision;
 
+  double m_latest_exit;
+
   int m_action_height;
   double m_verb_scale;
 
@@ -64,6 +66,8 @@ private:
   void verb_clicked();
   void arrow_clicked();
   void action_clicked(const std::string& verb);
+
+  void update_exit();
 
   void update_pause_screen();
 
