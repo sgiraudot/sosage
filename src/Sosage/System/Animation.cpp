@@ -49,7 +49,7 @@ void Animation::run()
 
   auto status = get<C::Status>(GAME__STATUS);
 
-  if (status->value() == PAUSED)
+  if (status->value() == PAUSED || status->value() == IN_MENU)
     return;
 
   if (new_frame_id == m_frame_id)

@@ -112,7 +112,6 @@ void Input::run()
       get<C::Boolean>("window:fullscreen")->toggle();
       emit ("window:toggle_fullscreen");
     }
-
     if (ev == Event(WINDOW, RESIZED))
     {
       get<C::Int>("window:width")->set(ev.x());

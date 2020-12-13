@@ -230,11 +230,14 @@ void Logic::run ()
 void Logic::run_cutscene()
 {
   auto cutscene = get<C::Cutscene>("game:cutscene");
-
   double current_time
       = cutscene->current_time (m_current_time, get<C::Status>(GAME__STATUS)->value() == PAUSED);
   if (current_time < 0)
     return;
+
+  bool skip = receive ("game:skip_cutscene");
+  if (skip)
+    current_time = std::numeric_limits<double>::max();
 
   for (C::Cutscene::Element& el : *cutscene)
   {
@@ -253,6 +256,9 @@ void Logic::run_cutscene()
       get<C::Status>(GAME__STATUS)->pop();
       continue;
     }
+    // If cutscene skipped, continue until a load case is reached
+    if (skip)
+      continue;
 
     double end_time = el.keyframes.back().time;
     if (end_time < current_time)

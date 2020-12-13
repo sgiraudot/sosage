@@ -280,6 +280,9 @@ void File_IO::read_init (const std::string& folder_name)
   set<C::String> ("interface:color", interface_color);
   std::array<unsigned char, 3> color = color_from_string (interface_color);
 
+  std::string menu_color = input["menu_color"].string();
+  set<C::String> ("menu:color", menu_color);
+
   for (std::size_t i = 0; i < input["inventory_arrows"].size(); ++ i)
   {
     std::string id = input["inventory_arrows" ][i].string("images", "interface", "png");
@@ -295,6 +298,12 @@ void File_IO::read_init (const std::string& folder_name)
                                          color[0], color[1], color[2]);
     arrow_background->set_relative_origin(0.5, 0.5);
     arrow_background->z() = Config::inventory_back_depth;
+  }
+
+  for (std::size_t i = 0; i < input["text"].size(); ++ i)
+  {
+    const Core::File_IO::Node& itext = input["text"][i];
+    set<C::String>(itext["id"].string() + ":text", itext["value"].string());
   }
 
   for (std::size_t i = 0; i < input["actions"].size(); ++ i)
@@ -387,7 +396,20 @@ void File_IO::read_cutscene (const std::string& file_name)
       auto anim = set<C::Animation>(id + ":image", local_file_name(skin), 1,
                                     width, height, node["loop"].boolean());
       int duration = (node.has("duration") ? node["duration"].integer() : 1);
-      anim->reset (true, duration);
+
+      if (node.has("frames"))
+      {
+        anim->frames().clear();
+        for (std::size_t i = 0; i < node["frames"].size(); ++ i)
+        {
+          int idx = node["frames"][i].integer();
+          int x = idx % width;
+          int y = idx / width;
+          anim->frames().emplace_back (x, y, duration);
+        }
+      }
+      else
+        anim->reset(true, duration);
       img = anim;
     }
     else if (node.has("skin")) // Image

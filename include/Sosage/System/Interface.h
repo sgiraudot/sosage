@@ -28,6 +28,7 @@
 #define SOSAGE_SYSTEM_INTERFACE_H
 
 #include <Sosage/Component/Image.h>
+#include <Sosage/Component/Menu.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Content.h>
 #include <Sosage/System/Handle.h>
@@ -60,8 +61,15 @@ public:
 
 private:
 
+  void init_menu_item (Component::Menu::Node node, const std::string& id,
+                       const std::string& effect = std::string());
+  void init_menu_buttons (Component::Menu::Node node);
+  void create_menu (const std::string& id);
+  void delete_menu (const std::string& id);
+
   void window_clicked();
   void code_clicked (Component::Position_handle cursor);
+  void menu_clicked (Component::Position_handle cursor);
   void dialog_clicked ();
   void verb_clicked();
   void arrow_clicked();
