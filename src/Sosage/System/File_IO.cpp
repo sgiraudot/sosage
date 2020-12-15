@@ -381,7 +381,7 @@ void File_IO::read_init (const std::string& folder_name)
   set_fac<C::Position> (LOADING_SPIN__POSITION, "loading_spin:position", Point(Config::world_width / 2,
                                                                                Config::world_height / 2));
 
-  std::string click_sound = input["click_sound"].string("sounds", "effects", "wav");
+  std::string click_sound = input["click_sound"].string("sounds", "effects", "ogg");
   set<C::Sound>("click:sound", local_file_name(click_sound));
 
   std::string debug_font = input["debug_font"].string("fonts", "ttf");

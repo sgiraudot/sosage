@@ -392,11 +392,11 @@ void File_IO::read_animation (const Core::File_IO::Node& node, const std::string
 
 void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
 {
-  std::string button_sound = node["button_sound"].string("sounds", "effects", "wav");
+  std::string button_sound = node["button_sound"].string("sounds", "effects", "ogg");
   set<C::Sound>(id + "_button:sound", local_file_name(button_sound));
-  std::string success_sound = node["success_sound"].string("sounds", "effects", "wav");
+  std::string success_sound = node["success_sound"].string("sounds", "effects", "ogg");
   set<C::Sound>(id + "_success:sound", local_file_name(success_sound));
-  std::string failure_sound = node["failure_sound"].string("sounds", "effects", "wav");
+  std::string failure_sound = node["failure_sound"].string("sounds", "effects", "ogg");
   set<C::Sound>(id + "_failure:sound", local_file_name(failure_sound));
 
   auto code = set<C::Code>(id + ":code");
@@ -854,7 +854,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
 
 void File_IO::read_sound (const Core::File_IO::Node& node, const std::string& id)
 {
-  std::string sound = node["sound"].string("sounds", "effects", "wav");
+  std::string sound = node["sound"].string("sounds", "effects", "ogg");
   set<C::Sound>(id + ":sound", local_file_name(sound));
 }
 

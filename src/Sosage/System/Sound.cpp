@@ -95,7 +95,7 @@ void Sound::run()
   if (receive ("code:play_failure"))
     m_core.play_sound
       (m_content.get<C::Sound>
-       (m_content.get<C::Code>("game:code")->entity() +"_button:sound")->core());
+       (m_content.get<C::Code>("game:code")->entity() +"_failure:sound")->core());
   else if (receive ("code:play_success"))
     m_core.play_sound
       (m_content.get<C::Sound>
@@ -103,7 +103,7 @@ void Sound::run()
   else if (receive ("code:play_click"))
     m_core.play_sound
       (m_content.get<C::Sound>
-       (m_content.get<C::Code>("game:code")->entity() +"_failure:sound")->core());
+       (m_content.get<C::Code>("game:code")->entity() +"_button:sound")->core());
 
   std::vector<std::string> to_remove;
   for (C::Handle h : m_content)
