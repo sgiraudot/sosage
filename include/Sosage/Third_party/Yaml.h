@@ -182,11 +182,12 @@ private:
   std::string m_filename;
   File m_file;
   Node::Ptr m_root;
+  std::size_t m_indent;
 
 public:
 
   Yaml (const std::string& filename, bool write = false)
-    : m_filename (filename)
+    : m_filename (filename), m_indent(0)
   {
     m_file = Sosage::open (m_filename.c_str(), write);
   }
@@ -329,22 +330,105 @@ public:
     return m_root->has(key);
   }
 
+  void indent()
+  {
+    if (m_indent != 0)
+      Sosage::write (m_file, std::string(m_indent, ' '));
+  }
+
+  void start_section (const std::string& name)
+  {
+    indent();
+    Sosage::write (m_file, name + ":\n");
+    m_indent += 2;
+  }
+
+  void end_section()
+  {
+    m_indent -= 2;
+  }
+
   template <typename T>
   void write (const std::string& key, const T& value)
   {
+    indent();
     Sosage::write (m_file, key + ": " + std::to_string(value) + "\n");
   }
   void write (const std::string& key, const bool& value)
   {
+    indent();
     Sosage::write (m_file, key + ": " + (value ? "true" : "false") + "\n");
   }
   void write (const std::string& key, const std::string& value)
   {
-    Sosage::write (m_file, key + ": " + value + "\n");
+    indent();
+    Sosage::write (m_file, key + ": \"" + value + "\"\n");
   }
   void write (const std::string& key, const int& v0, const int& v1)
   {
+    indent();
     Sosage::write (m_file, key + ": [" + std::to_string(v0) + ", " + std::to_string(v1) + "]\n");
+  }
+  void write (const std::string& key, const std::vector<std::string>& value)
+  {
+    indent();
+    Sosage::write (m_file, key + ":\n");
+    m_indent += 2;
+    for (const std::string& v : value)
+    {
+      indent();
+      Sosage::write (m_file, "- \"" + v + "\"\n");
+    }
+    m_indent -= 2;
+  }
+
+  void write_list_item (const std::string& value)
+  {
+    indent();
+    Sosage::write (m_file, "- \"" + value + "\"\n");
+  }
+
+  template <typename T>
+  void write_list_item (const std::string& key1, const std::string& value1,
+                        const std::string& key2, const T& value2)
+  {
+    indent();
+    Sosage::write (m_file, "- { " + key1 + ": \"" + value1 + "\", "
+                   + key2 + ": " + std::to_string(value2) + " }\n");
+  }
+
+  void write_list_item (const std::string& key1, const std::string& value1,
+                        const std::string& key2, const std::string& value2)
+  {
+    indent();
+    Sosage::write (m_file, "- { " + key1 + ": \"" + value1 + "\", "
+                   + key2 + ": \"" + value2 + "\" }\n");
+  }
+
+  void write_list_item (const std::string& key1, const std::string& value1,
+                        const std::string& key2, const bool& value2)
+  {
+    indent();
+    Sosage::write (m_file, "- { " + key1 + ": \"" + value1 + "\", "
+                   + key2 + ": \"" + (value2 ? "true" : "false") + "\" }\n");
+  }
+
+  template <typename T>
+  void write_list_item (const std::string& key1, const std::string& value1,
+                        const std::string& key2, const std::initializer_list<T>& value2)
+  {
+    indent();
+    Sosage::write (m_file, "- { " + key1 + ": \"" + value1 + "\", "
+                   + key2 + ": [");
+    std::size_t idx = 0;
+    for (const T& t : value2)
+    {
+      Sosage::write (m_file, std::to_string(t));
+      if (++ idx != value2.size())
+        Sosage::write (m_file, ", ");
+    }
+    Sosage::write (m_file, "] }\n");
+
   }
 
 };

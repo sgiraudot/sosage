@@ -2,24 +2,20 @@
 
 ### Graphique
 
-* Intro
-* Choix du mode de curseur
 * Page tuto clics/curseur virtuel
-* Menus
 
 ### Sons
 
-* Digicode
-* Portes
+* Digicode bip
+* Digicode succès
+* Digicode échec
 * Passage secret
+* Porte
 * Grincement tableau
-* Bip ordi
+* Clavier ordi
 * Clef voiture
 
 ### Code
 
-* Animation d'intro
-* Cutscenes
-* Menus
 * Indices
 * Choix du mode de curseur Android

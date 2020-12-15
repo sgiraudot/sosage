@@ -62,6 +62,9 @@ public:
 
   void read_cutscene (const std::string& file_name);
 
+  void read_savefile();
+  void write_savefile();
+
 private:
 
   std::string local_file_name (const std::string& file_name) const;

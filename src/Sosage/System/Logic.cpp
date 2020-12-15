@@ -85,7 +85,8 @@ void Logic::run ()
     run_cutscene();
     return;
   }
-  if (status->value() == PAUSED || status->value() == DIALOG_CHOICE)
+  if (status->value() == PAUSED || status->value() == DIALOG_CHOICE ||
+      status->value() == IN_MENU)
     return;
   std::set<Timed_handle> new_timed_handle;
 
@@ -494,7 +495,13 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
   if (args.size() == 1)
   {
     get<C::Status>(GAME__STATUS)->push(LOCKED);
-    dialog->init();
+    if (auto pos = request<C::Int>("saved_game:dialog_position"))
+    {
+      dialog->init (pos->value());
+      remove ("saved_game:dialog_position");
+    }
+    else
+      dialog->init();
   }
   else if (auto choice = request<C::Int>("dialog:choice"))
   {
@@ -506,7 +513,9 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
     remove("dialog:choice");
   }
   else
+  {
     dialog->next();
+  }
 
   if (dialog->is_over())
   {
@@ -529,10 +538,16 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
   }
   else
   {
+    // Keep track in case player saves and reload there
+    set<C::Int>("game:dialog_position", dialog->current());
+
     get<C::Status>(GAME__STATUS)->push(DIALOG_CHOICE);
     auto choices = set<C::Vector<std::string> >("dialog:choices");
     dialog->get_choices (*choices);
     action->add ("dialog", { args[0], "continue" });
+
+    // Keep track in case player saves and reload there
+    set<C::String>("game:current_dialog", args[0]);
   }
 
   if (action->size() != 0)

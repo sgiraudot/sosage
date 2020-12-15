@@ -54,6 +54,8 @@ public:
   std::size_t size() const;
   std::size_t position() const;
   std::string get (std::size_t i) const;
+  const std::vector<std::string>& data() const { return m_data; }
+
 };
 
 typedef std::shared_ptr<Inventory> Inventory_handle;

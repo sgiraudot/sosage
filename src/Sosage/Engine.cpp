@@ -84,6 +84,7 @@ int Engine::run (const std::string& folder_name)
   m_content.set_fac<Component::Double>(CAMERA__POSITION, "camera:position", 0.0);
   m_content.set<Component::Double>("camera:target", 0.0);
   m_content.set<Component::Inventory>("game:inventory");
+  m_content.set<Component::Set<std::string> > ("game:visited_rooms");
 
   m_content.set<Component::And>
       ("unlocked:condition",
@@ -142,6 +143,7 @@ int Engine::run (const std::string& folder_name)
 #endif
 
   file_io->write_config();
+  file_io->write_savefile();
 
   m_systems.clear();
   interface.reset(); // Clear interface before SDL is exited

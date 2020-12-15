@@ -81,13 +81,19 @@ public:
 
   bool has_incident_edges (GVertex v) { return !m_graph.incident_edges(v).empty(); }
 
+  GVertex current() const { return m_current; }
   GVertex vertex_in() const { return m_vin; }
   GVertex vertex_out() const { return m_vout; }
 
-  void init()
+  void init(GVertex current = Graph::null_vertex())
   {
-    m_current = m_vin;
-    next();
+    if (current == Graph::null_vertex())
+    {
+      m_current = m_vin;
+      next();
+    }
+    else
+      m_current = current;
   }
 
   void next()

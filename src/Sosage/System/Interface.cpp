@@ -146,13 +146,15 @@ void Interface::init()
 
   // create menus
   auto exit_menu = set<C::Menu>("exit:menu");
-  exit_menu->split(VERTICALLY, 2);
-  (*exit_menu)[1].split(VERTICALLY, 3);
-  init_menu_item ((*exit_menu)[0], "wanna_quit");
-  init_menu_item ((*exit_menu)[1][0], "quit", "quit");
-  init_menu_item ((*exit_menu)[1][1], "restart", "restart");
-  init_menu_item ((*exit_menu)[1][2], "cancel", "cancel");
-  init_menu_buttons ((*exit_menu)[1]);
+  exit_menu->split(VERTICALLY, 7);
+  init_menu_item ((*exit_menu)[0], "continue", "cancel");
+  init_menu_item ((*exit_menu)[1], "continue", "cancel");
+  init_menu_item ((*exit_menu)[2], "new_game", "new_game");
+  init_menu_item ((*exit_menu)[3], "hint", "hint");
+  init_menu_item ((*exit_menu)[4], "settings", "settings");
+  init_menu_item ((*exit_menu)[5], "credits", "credits");
+  init_menu_item ((*exit_menu)[6], "quit", "quit");
+  init_menu_buttons (exit_menu->root());
 }
 
 void Interface::init_menu_item (Component::Menu::Node node, const std::string& id,
@@ -227,35 +229,39 @@ void Interface::init_menu_buttons (Component::Menu::Node node)
   {
     double width = 0;
     for (std::size_t i = 0; i < node.nb_children(); ++ i)
-      width = std::max (width, node[i][0].size().x());
+      if (node[i].direction() == BUTTON)
+        width = std::max (width, node[i][0].size().x());
 
     for (std::size_t i = 0; i < node.nb_children(); ++ i)
-    {
-      auto img = set<C::Image>(node[i][0].image()->entity() + "_button:image",
-                               width, node[i][0].size().y());
-      img->z() = Config::menu_button_depth;
-      img->set_relative_origin(0.5, 0.5);
-      img->on() = false;
-      auto pos = set<C::Position>(img->entity() + ":position", Point(0,0));
-      node[i].init(img, pos);
-    }
+      if (node[i].direction() == BUTTON)
+      {
+        auto img = set<C::Image>(node[i][0].image()->entity() + "_button:image",
+            width, node[i][0].size().y());
+        img->z() = Config::menu_button_depth;
+        img->set_relative_origin(0.5, 0.5);
+        img->on() = false;
+        auto pos = set<C::Position>(img->entity() + ":position", Point(0,0));
+        node[i].init(img, pos);
+      }
   }
   else
   {
     check (node.direction() == HORIZONTALLY, "Menu node should be vertical or horizontal");
     double height = 0;
     for (std::size_t i = 0; i < node.nb_children(); ++ i)
-      height = std::max (height, node[i][0].size().y());
+      if (node[i].direction() == BUTTON)
+        height = std::max (height, node[i][0].size().y());
     for (std::size_t i = 0; i < node.nb_children(); ++ i)
-    {
-      auto img = set<C::Image>(node[i][0].image()->entity() + "_button:image",
-                               node[i][0].size().x(), height);
-      img->z() = Config::menu_button_depth;
-      img->set_relative_origin(0.5, 0.5);
-      img->on() = false;
-      auto pos = set<C::Position>(img->entity() + ":position", Point(0,0));
-      node[i].init(img, pos);
-    }
+      if (node[i].direction() == BUTTON)
+      {
+        auto img = set<C::Image>(node[i][0].image()->entity() + "_button:image",
+            node[i][0].size().x(), height);
+        img->z() = Config::menu_button_depth;
+        img->set_relative_origin(0.5, 0.5);
+        img->on() = false;
+        auto pos = set<C::Position>(img->entity() + ":position", Point(0,0));
+        node[i].init(img, pos);
+      }
   }
 }
 
@@ -374,6 +380,7 @@ void Interface::dialog_clicked ()
   }
   remove("dialog_choice_background:image");
   remove("dialog_choice_background:position");
+  remove("game:current_dialog");
 
   get<C::Status>(GAME__STATUS)->pop();
 }

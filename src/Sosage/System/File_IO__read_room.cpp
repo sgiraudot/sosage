@@ -71,7 +71,9 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   std::string color = input["color"].string();
   set<C::String> (id + ":color", color);
 
-  auto visible = set<C::Boolean>(id + ":visible", true);
+  auto visible = request<C::Boolean>(id + ":visible");
+  if (!visible)
+    visible = set<C::Boolean>(id + ":visible", true);
 
   std::string mouth = input["mouth"]["skin"].string("images", "characters", "png");
   auto amouth
@@ -107,9 +109,6 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   set<C::Conditional>(aidle->id(), visible, aidle);
   aidle->set_relative_origin(0.5, 0.95);
 
-  auto pbody = set<C::Position>(id + "_body:position", Point(x, y), false);
-  set<C::Variable>(id + "_walking:position", pbody);
-  set<C::Variable>(id + "_idle:position", pbody);
 
   int hdx_right = input["head"]["dx_right"].integer();
   int hdx_left = input["head"]["dx_left"].integer();
@@ -122,9 +121,25 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   int mdy = input["mouth"]["dy"].integer();
   set<C::Position>(id + "_mouth:gap_right", Point(mdx_right,mdy), false);
   set<C::Position>(id + "_mouth:gap_left", Point(mdx_left,mdy), false);
-  set<C::Position>(id + "_head:position", Point(x - hdx_right, y - hdy), false);
-  set<C::Position>(id + "_mouth:position", Point(x - hdx_right - mdx_right,
-                                                                       y - hdy - mdy), false);
+
+  // Init position objects if they don't already exist
+  auto pbody = request<C::Position>(id + "_body:position");
+  if (!pbody)
+  {
+    pbody = set<C::Position>(id + "_body:position", Point(x, y), false);
+    set<C::Position>(id + "_head:position", Point(x - hdx_right, y - hdy), false);
+    set<C::Position>(id + "_mouth:position", Point(x - hdx_right - mdx_right,
+                                                   y - hdy - mdy), false);
+  }
+  else
+  {
+    pbody->absolute() = false;
+    get<C::Position>(id + "_head:position")->absolute() = false;
+    get<C::Position>(id + "_mouth:position")->absolute() = false;
+  }
+
+  set<C::Variable>(id + "_walking:position", pbody);
+  set<C::Variable>(id + "_idle:position", pbody);
 
   auto new_char = request<C::Vector<std::pair<std::string, bool> > >("game:new_characters");
   if (!new_char)
@@ -149,7 +164,10 @@ void File_IO::read_room (const std::string& file_name)
 
   callback->value()();
 
-  std::string name = input["name"].string();
+  std::string name = input["name"].string(); // unused so far
+
+  set<C::String>("game:current_room", file_name);
+  get<C::Set<std::string> >("game:visited_rooms")->insert (file_name);
 
   std::string background = input["background"].string("images", "backgrounds", "png");
   std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
@@ -227,6 +245,47 @@ void File_IO::read_room (const std::string& file_name)
     callback->value()();
   }
 
+  // Special handling for inventory after reloading save (may need to
+  // search in other rooms for the object)
+  auto inventory = get<C::Inventory>("game:inventory");
+  std::unordered_set<std::string> missing_objects;
+  for (std::size_t i = 0; i < inventory->size(); ++ i)
+    if (!request<C::String>(inventory->get(i) + ":name"))
+    {
+      std::cerr << inventory->get(i) << " is missing" << std::endl;
+      missing_objects.insert (inventory->get(i));
+    }
+
+  if (!missing_objects.empty())
+  {
+    bool all_found = false;
+    for (const std::string& room_name : *get<C::Set<std::string> >("game:visited_rooms"))
+      if (room_name != file_name)
+      {
+        Core::File_IO room (local_file_name("data", "rooms", room_name, "yaml"));
+        room.parse();
+        for (std::size_t i = 0; i < room["content"].size(); ++ i)
+        {
+          const Core::File_IO::Node& node = room["content"][i];
+          std::string id = node["id"].string();
+          std::string type = node["type"].string();
+          if (missing_objects.find (id) != missing_objects.end())
+          {
+            read_object (node, id);
+            missing_objects.erase (id);
+            if (missing_objects.empty())
+            {
+              all_found = true;
+              break;
+            }
+          }
+          callback->value();
+        }
+        if (all_found)
+          break;
+      }
+  }
+
   auto hints = set<C::Hints>("game:hints");
 
   if (input.has("hints"))
@@ -246,13 +305,16 @@ void File_IO::read_room (const std::string& file_name)
   callback->value()();
 
   const std::string& origin = get<C::String>("game:new_room_origin")->value();
-  auto origin_coord = get<C::Position>(origin + ":position");
-  auto origin_looking = get<C::Boolean>(origin + ":looking_right");
-
-  const std::string& player = get<C::String>("player:name")->value();
-  get<C::Position>(player + "_body:position")->set(origin_coord->value());
-  set<C::Boolean>("game:in_new_room", origin_looking->value());
-
+  if (origin == "saved_game")
+    set<C::Boolean>("game:in_new_room", true);
+  else
+  {
+    auto origin_coord = get<C::Position>(origin + ":position");
+    auto origin_looking = get<C::Boolean>(origin + ":looking_right");
+    const std::string& player = get<C::String>("player:name")->value();
+    get<C::Position>(player + "_body:position")->set(origin_coord->value());
+    set<C::Boolean>("game:in_new_room", origin_looking->value());
+  }
   emit ("game:loading_done");
 
 #ifdef SOSAGE_DEBUG
@@ -507,11 +569,6 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
 {
   // First, check if object already exists in inventory (if so, skip)
   auto state_handle = get<C::String>(id + ":state");
-  if (state_handle->value() == "inventory")
-  {
-    debug ("Skipping " + id);
-    return;
-  }
 
   std::string name = node["name"].string();
   int x = node["coordinates"][0].integer();
@@ -527,6 +584,8 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
   auto pos = request<C::Position>(id + ":position");
   if (!pos)
     pos = set<C::Position>(id + ":position", Point(x,y), false);
+  else
+    pos->absolute() = false;
 
   set<C::Position>(id + ":view", Point(vx,vy), false);
 
@@ -584,22 +643,16 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
           img = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin), z);
       }
 
-      img->set_relative_origin(0.5, 1.0);
+      if (state == "inventory")
+        img->set_relative_origin(0.5, 0.5);
+      else
+        img->set_relative_origin(0.5, 1.0);
       img->collision() = (box_collision ? BOX : PIXEL_PERFECT);
 
       debug("Object " + id + ":" + state + " at position " + std::to_string(img->z()));
 
       conditional_handle->add(state, img);
     }
-  }
-
-  if (state_handle->value() == "inventory")
-  {
-    get<C::Inventory>("game:inventory")->add(id);
-    auto img
-      = get<C::Image>(id + ":image");
-    img->set_relative_origin(0.5, 0.5);
-    img->z() = Config::inventory_back_depth;
   }
 
   read_actions(node, id);

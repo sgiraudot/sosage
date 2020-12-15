@@ -30,6 +30,7 @@
 #include <Sosage/Component/Handle.h>
 
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace Sosage::Component
@@ -78,6 +79,26 @@ public:
 
 template <typename T>
 using Vector_handle = std::shared_ptr<Vector<T> >;
+
+template <typename T>
+class Set : public Simple<std::unordered_set<T> >
+{
+  typedef std::unordered_set<T> set_t;
+  typedef Simple<set_t> Base;
+public:
+
+  Set(const std::string& id)
+    : Base(id) { }
+
+  void insert (const T& t) { this->m_value.insert (t); }
+
+  typename set_t::const_iterator begin() const { return this->m_value.begin(); }
+  typename set_t::const_iterator end() const { return this->m_value.end(); }
+};
+
+template <typename T>
+using Set_handle = std::shared_ptr<Set<T> >;
+
 
 } // namespace Sosage::Component
 

@@ -203,6 +203,120 @@ void File_IO::write_config()
                 get<C::Int>("interface:height")->value());
 }
 
+void File_IO::read_savefile()
+{
+  std::string file_name = Sosage::pref_path() + "save.yaml";
+  Core::File_IO input (file_name);
+  input.parse();
+  set<C::String>("game:new_room", input["room"].string());
+  set<C::String>("game:new_room_origin", "saved_game");
+
+  auto visited = get<C::Set<std::string> >("game:visited_rooms");
+  for (std::size_t i = 0; i < input["visited_rooms"].size(); ++ i)
+    visited->insert(input["visited_rooms"][i].string());
+
+  auto inventory = get<C::Inventory>("game:inventory");
+  for (std::size_t i = 0; i < input["inventory"].size(); ++ i)
+    inventory->add(input["inventory"][i].string());
+
+  auto action = set<C::Action>("saved_game:action");
+  action->add ("play", { "music", input["music"].string() });
+
+  for (std::size_t i = 0; i < input["states"].size(); ++ i)
+  {
+    const Core::File_IO::Node& istate = input["states"][i];
+    set<C::String>(istate["id"].string() + ":state", istate["value"].string());
+  }
+
+  for (std::size_t i = 0; i < input["positions"].size(); ++ i)
+  {
+    const Core::File_IO::Node& iposition = input["positions"][i];
+    Point point (iposition["value"][0].floating(), iposition["value"][1].floating());
+    set<C::Position>(iposition["id"].string() + ":position", point);
+  }
+
+  for (std::size_t i = 0; i < input["integers"].size(); ++ i)
+  {
+    const Core::File_IO::Node& iint = input["integers"][i];
+    set<C::Int>(iint["id"].string() + ":value", iint["value"].integer());
+  }
+
+  for (std::size_t i = 0; i < input["visibility"].size(); ++ i)
+  {
+    const Core::File_IO::Node& ivisibility = input["visibility"][i];
+    set<C::Boolean>(ivisibility["id"].string() + ":visible",
+                    ivisibility["value"].boolean());
+  }
+
+  for (std::size_t i = 0; i < input["active_animations"].size(); ++ i)
+  {
+    const Core::File_IO::Node& ianimation = input["active_animations"][i];
+    action->add ("play", { "animation", ianimation.string() });
+  }
+
+  if (input.has("dialog"))
+  {
+    action->add ("dialog", { input["dialog"].string() });
+    set<C::Int>("saved_game:dialog_position", input["dialog_position"].integer());
+  }
+}
+
+void File_IO::write_savefile()
+{
+  Core::File_IO output (Sosage::pref_path() + "save.yaml", true);
+
+  output.write("room", get<C::String>("game:current_room")->value());
+  output.write("inventory", get<C::Inventory>("game:inventory")->data());
+  output.write("music", get<C::Music>("game:music")->entity());
+
+  if (auto dialog = request<C::String>("game:current_dialog"))
+  {
+    output.write("dialog", dialog->value());
+    output.write("dialog_position", get<C::Int>("game:dialog_position")->value());
+  }
+
+  output.start_section("visited_rooms");
+  for (const std::string& room_name : *get<C::Set<std::string> >("game:visited_rooms"))
+    output.write_list_item (room_name);
+  output.end_section();
+
+  output.start_section("states");
+  for (C::Handle c : m_content)
+    if (c->component() == "state")
+      output.write_list_item ("id", c->entity(), "value", C::cast<C::String>(c)->value());
+  output.end_section();
+
+  output.start_section("positions");
+  for (C::Handle c : m_content)
+    if (c->component() == "position" && c->entity() != "cursor" && c->entity() != "loading_spin")
+      if (auto pos = C::cast<C::Position>(c))
+        output.write_list_item ("id", c->entity(), "value",
+                                { pos->value().x(), pos->value().y() });
+
+  output.end_section();
+
+  output.start_section("integers");
+  for (C::Handle c : m_content)
+    if (auto i = C::cast<C::Int>(c))
+      output.write_list_item ("id", c->entity(), "value", i->value());
+  output.end_section();
+
+  output.start_section("visibility");
+  for (C::Handle c : m_content)
+    if (auto b = C::cast<C::Boolean>(c))
+      if (b->component() == "visible")
+        output.write_list_item ("id", b->entity(), "value", b->value());
+  output.end_section();
+
+  output.start_section("active_animations");
+  for (C::Handle c : m_content)
+    if (auto a = C::cast<C::Animation>(c))
+      if (a->on() && a->loop())
+        output.write_list_item (a->entity());
+  output.end_section();
+}
+
+
 void File_IO::read_init (const std::string& folder_name)
 {
   m_folder_name = folder_name;
@@ -330,15 +444,22 @@ void File_IO::read_init (const std::string& folder_name)
   std::string player = input["player"].string();
   set<C::String>("player:name", player);
 
-  if (input.has("load_room"))
+  try
   {
-    set<C::String>("game:new_room", input["load_room"][0].string());
-    set<C::String>("game:new_room_origin", input["load_room"][1].string());
+    read_savefile();
   }
-  else
+  catch(Sosage::No_such_file&)
   {
-    check (input.has("load_cutscene"), "Init should either load a room or a cutscene");
-    set<C::String>("game:new_room", input["load_cutscene"].string());
+    if (input.has("load_room"))
+    {
+      set<C::String>("game:new_room", input["load_room"][0].string());
+      set<C::String>("game:new_room_origin", input["load_room"][1].string());
+    }
+    else
+    {
+      check (input.has("load_cutscene"), "Init should either load a room or a cutscene");
+      set<C::String>("game:new_room", input["load_cutscene"].string());
+    }
   }
 }
 
