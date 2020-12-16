@@ -74,33 +74,43 @@ void File_IO::run()
 
 void File_IO::clean_content()
 {
+  bool full_reset = receive ("game:reset");
+
   std::unordered_set<std::string> force_keep;
   auto inventory = get<C::Inventory>("game:inventory");
-  for (const std::string& entity : *inventory)
-    force_keep.insert (entity);
+  if (!full_reset)
+  {
+    for (const std::string& entity : *inventory)
+      force_keep.insert (entity);
 
-  const std::string& player = get<C::String>("player:name")->value();
-  force_keep.insert (player);
-  force_keep.insert (player + "_body");
-  force_keep.insert (player + "_head");
-  force_keep.insert (player + "_mouth");
-  force_keep.insert (player + "_walking");
-  force_keep.insert (player + "_idle");
+    const std::string& player = get<C::String>("player:name")->value();
+    force_keep.insert (player);
+    force_keep.insert (player + "_body");
+    force_keep.insert (player + "_head");
+    force_keep.insert (player + "_mouth");
+    force_keep.insert (player + "_walking");
+    force_keep.insert (player + "_idle");
+  }
+  else
+    inventory->clear();
 
   m_content.clear
     ([&](C::Handle c) -> bool
      {
-       // keep inventory + other forced kept
-       if (force_keep.find(c->entity()) != force_keep.end())
-         return false;
+       if (!full_reset)
+       {
+         // keep inventory + other forced kept
+         if (force_keep.find(c->entity()) != force_keep.end())
+           return false;
 
-       // keep states and positions
-       if (c->component() == "state" || c->component() == "position")
-         return false;
+         // keep states and positions
+         if (c->component() == "state" || c->component() == "position")
+           return false;
 
-       // keep integers
-       if (C::cast<C::Int>(c))
-         return false;
+         // keep integers
+         if (C::cast<C::Int>(c))
+           return false;
+       }
 
        // else, remove component if belonged to the latest room
        return (m_latest_room_entities.find(c->entity()) != m_latest_room_entities.end());
@@ -282,8 +292,9 @@ void File_IO::write_savefile()
 
   output.start_section("states");
   for (C::Handle c : m_content)
-    if (c->component() == "state")
-      output.write_list_item ("id", c->entity(), "value", C::cast<C::String>(c)->value());
+    if (auto s = C::cast<C::String>(c))
+      if (c->component() == "state" && s->value() != "dummy")
+        output.write_list_item ("id", c->entity(), "value", s->value());
   output.end_section();
 
   output.start_section("positions");
@@ -312,7 +323,9 @@ void File_IO::write_savefile()
   for (C::Handle c : m_content)
     if (auto a = C::cast<C::Animation>(c))
       if (a->on() && a->loop())
-        output.write_list_item (a->entity());
+        if (auto s = request<C::String>(a->entity() + ":state"))
+          if (s->value() == "dummy")
+            output.write_list_item (a->entity());
   output.end_section();
 }
 
@@ -394,8 +407,25 @@ void File_IO::read_init (const std::string& folder_name)
   set<C::String> ("interface:color", interface_color);
   std::array<unsigned char, 3> color = color_from_string (interface_color);
 
+  std::string menu_font = input["menu_font"].string("fonts", "ttf");
+  set<C::Font> ("menu:font", local_file_name(menu_font), 80);
+
   std::string menu_color = input["menu_color"].string();
   set<C::String> ("menu:color", menu_color);
+
+  std::string logo_id = input["menu_logo"].string("images", "interface", "png");
+  auto logo
+    = set<C::Image> ("menu_logo:image", local_file_name(logo_id));
+  logo->on() = false;
+  auto credits_logo
+    = set<C::Image> ("credits_logo:image", local_file_name(logo_id));
+  credits_logo->on() = false;
+
+
+  std::string credits_id = input["credits_image"].string("images", "interface", "png");
+  auto credits
+    = set<C::Image> ("credits_text:image", local_file_name(credits_id));
+  credits->on() = false;
 
   for (std::size_t i = 0; i < input["inventory_arrows"].size(); ++ i)
   {
@@ -444,22 +474,26 @@ void File_IO::read_init (const std::string& folder_name)
   std::string player = input["player"].string();
   set<C::String>("player:name", player);
 
+  if (input.has("load_room"))
+  {
+    set<C::String>("game:init_new_room", input["load_room"][0].string());
+    set<C::String>("game:init_new_room_origin", input["load_room"][1].string());
+  }
+  else
+  {
+    check (input.has("load_cutscene"), "Init should either load a room or a cutscene");
+    set<C::String>("game:init_new_room", input["load_cutscene"].string());
+  }
+
   try
   {
     read_savefile();
   }
   catch(Sosage::No_such_file&)
   {
-    if (input.has("load_room"))
-    {
-      set<C::String>("game:new_room", input["load_room"][0].string());
-      set<C::String>("game:new_room_origin", input["load_room"][1].string());
-    }
-    else
-    {
-      check (input.has("load_cutscene"), "Init should either load a room or a cutscene");
-      set<C::String>("game:new_room", input["load_cutscene"].string());
-    }
+    set<C::Variable>("game:new_room", get<C::String>("game:init_new_room"));
+    if (auto orig = request<C::String>("game:init_new_room_origin"))
+      set<C::Variable>("game:new_room_origin", orig);
   }
 }
 

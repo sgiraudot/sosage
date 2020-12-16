@@ -177,6 +177,7 @@ void File_IO::read_room (const std::string& file_name)
   auto background_img
     = set<C::Image>("background:image", local_file_name(background), 0);
   background_img->collision() = BOX;
+  m_latest_room_entities.insert ("background");
 
   callback->value()();
 

@@ -43,6 +43,8 @@ public:
 
   Inventory (const std::string& id);
 
+  void clear() { m_data.clear(); m_position = 0; }
+
   std::vector<std::string>::const_iterator begin() const { return m_data.begin(); }
   std::vector<std::string>::const_iterator end() const { return m_data.end(); }
 
