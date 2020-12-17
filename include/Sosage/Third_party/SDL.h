@@ -43,13 +43,13 @@ class SDL
 {
 public:
 
-  typedef Resource_manager<SDL_Surface> Surface_manager;
-  typedef Resource_manager<SDL_Texture> Texture_manager;
-  typedef Resource_manager<TTF_Font> Font_manager;
+  using Surface_manager = Resource_manager<SDL_Surface>;
+  using Texture_manager = Resource_manager<SDL_Texture>;
+  using Font_manager = Resource_manager<TTF_Font>;
 
-  typedef typename Surface_manager::Resource_handle Surface;
-  typedef typename Texture_manager::Resource_handle Texture;
-  typedef typename Font_manager::Resource_handle Font_base;
+  using Surface = typename Surface_manager::Resource_handle;
+  using Texture = typename Texture_manager::Resource_handle;
+  using Font_base = typename Font_manager::Resource_handle;
 
   struct Image
   {
@@ -63,7 +63,7 @@ public:
     { }
   };
 
-  typedef std::pair<Font_base, Font_base> Font;
+  using Font = std::pair<Font_base, Font_base>;
 
   static SDL_Window* m_window;
   static SDL_Renderer* m_renderer;

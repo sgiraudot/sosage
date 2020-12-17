@@ -73,7 +73,7 @@ public:
   
 };
 
-typedef std::shared_ptr<Code> Code_handle;
+using Code_handle = std::shared_ptr<Code>;
 
 } // namespace Sosage::Component
 

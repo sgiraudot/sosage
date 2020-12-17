@@ -1,6 +1,6 @@
 /*
   [include/Sosage/Utils/enum.h]
-  All enums used by Sosage.
+  All enums in namespace Sosage.
 
   =====================================================================
 
@@ -42,6 +42,12 @@ enum Status
   IN_CODE
 };
 
+enum Orientation
+{
+  COLINEAR,
+  CLOCKWISE,
+  COUNTERCLOCKWISE
+};
 
 enum Collision_type
 {
@@ -102,6 +108,13 @@ enum Fast_access_component
   NUMBER_OF_KEYS
 };
 
+enum Split_direction
+{
+  NO_SPLIT,
+  BUTTON,
+  VERTICALLY,
+  HORIZONTALLY
+};
 
 }
 

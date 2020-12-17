@@ -40,7 +40,7 @@ public:
   
 };
 
-typedef std::shared_ptr<Signal> Signal_handle;
+using Signal_handle = std::shared_ptr<Signal>;
 
 } // namespace Sosage::Component
 

@@ -73,7 +73,7 @@ public:
 
 };
 
-typedef std::shared_ptr<Action> Action_handle;
+using Action_handle = std::shared_ptr<Action>;
 
 } // namespace Sosage::Component
 

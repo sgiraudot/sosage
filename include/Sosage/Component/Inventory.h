@@ -60,7 +60,7 @@ public:
 
 };
 
-typedef std::shared_ptr<Inventory> Inventory_handle;
+using Inventory_handle = std::shared_ptr<Inventory>;
 
 } // namespace Sosage::Component
 

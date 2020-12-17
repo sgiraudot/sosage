@@ -41,8 +41,8 @@ class Resource_manager
 {
 public:
 
-  typedef std::shared_ptr<Resource> Resource_handle;
-  typedef std::unordered_map<std::string, Resource_handle> Data;
+  using Resource_handle = std::shared_ptr<Resource>;
+  using Data = std::unordered_map<std::string, Resource_handle> ;
   
 private:
 

@@ -45,7 +45,7 @@ public:
   virtual Handle get() const = 0;
 };
 
-typedef std::shared_ptr<Conditional_base> Conditional_base_handle;
+using Conditional_base_handle = std::shared_ptr<Conditional_base>;
 
 class Conditional : public Conditional_base
 {
@@ -65,7 +65,7 @@ public:
   virtual Handle get() const;
 };
 
-typedef std::shared_ptr<Conditional> Conditional_handle;
+using Conditional_handle = std::shared_ptr<Conditional>;
 
 class String_conditional : public Conditional_base
 {
@@ -82,7 +82,7 @@ public:
   virtual Handle get() const;
 };
 
-typedef std::shared_ptr<String_conditional> String_conditional_handle;
+using String_conditional_handle = std::shared_ptr<String_conditional>;
 
 class Random_conditional : public Conditional_base
 {
@@ -99,7 +99,7 @@ public:
   virtual Handle get() const;
 };
 
-typedef std::shared_ptr<Random_conditional> Random_conditional_handle;
+using Random_conditional_handle = std::shared_ptr<Random_conditional>;
 
 } // namespace Sosage::Component
 

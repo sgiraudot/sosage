@@ -75,7 +75,7 @@ public:
   bool is_target_inside (int x, int y) const;
 };
 
-typedef std::shared_ptr<Image> Image_handle;
+using Image_handle = std::shared_ptr<Image>;
 
 } // namespace Sosage::Component
 

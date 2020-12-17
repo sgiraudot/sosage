@@ -31,7 +31,7 @@
 
 namespace Sosage::Core
 {
-typedef Third_party::SDL_events Input;
+using Input = Third_party::SDL_events;
 }
 
 #endif

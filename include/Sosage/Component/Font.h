@@ -46,7 +46,7 @@ public:
   const Core::Graphic::Font& core() const { return m_core; }
 };
 
-typedef std::shared_ptr<Font> Font_handle;
+using Font_handle = std::shared_ptr<Font>;
 
 } // namespace Sosage::Component
 

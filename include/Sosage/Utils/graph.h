@@ -61,8 +61,8 @@ public:
 
   };
 
-  typedef Typed_int<VertexType> Vertex;
-  typedef Typed_int<EdgeType> Edge;
+  using Vertex = Typed_int<VertexType>;
+  using Edge = Typed_int<EdgeType>;
 
   struct GVertex
   {
@@ -142,8 +142,8 @@ public:
     }
   };
 
-  typedef Container<GVertex, Vertex> Vertices;
-  typedef Container<GEdge, Edge> Edges;
+  using Vertices = Container<GVertex, Vertex>;
+  using Edges = Container<GEdge, Edge>;
   
   Vertices m_vertices;
   Edges m_edges;

@@ -32,7 +32,7 @@
 #include <Sosage/Third_party/SDL_mixer.h>
 namespace Sosage::Core
 {
-typedef Third_party::SDL_mixer Sound;
+using Sound = Third_party::SDL_mixer;
 }
 
 #else

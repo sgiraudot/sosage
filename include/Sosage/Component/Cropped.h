@@ -56,7 +56,7 @@ public:
   virtual int ymax() const { return m_ymax; }
 };
 
-typedef std::shared_ptr<Cropped> Cropped_handle;
+using Cropped_handle = std::shared_ptr<Cropped>;
 
 } // namespace Sosage::Component
 

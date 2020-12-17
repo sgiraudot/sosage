@@ -50,7 +50,7 @@ public:
   class Node
   {
   public:
-    typedef std::shared_ptr<Node> Ptr;
+    using Ptr = std::shared_ptr<Node>;
     
     bool sequence;
     std::map<std::string, Ptr> map;

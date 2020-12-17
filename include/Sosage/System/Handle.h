@@ -68,7 +68,7 @@ public:
 
 };
 
-typedef std::shared_ptr<Base> Handle;
+using Handle = std::shared_ptr<Base>;
 
 template <typename T, typename ... Args>
 std::shared_ptr<T> make_handle (Args& ... args)

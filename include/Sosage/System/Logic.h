@@ -43,7 +43,7 @@ class Logic : public Base
 {
 private:
 
-  typedef std::pair<double, Component::Handle> Timed_handle;
+  using Timed_handle = std::pair<double, Component::Handle>;
   std::set<Timed_handle> m_timed;
 
   double m_current_time;
@@ -51,7 +51,7 @@ private:
   Component::Action_handle m_current_action;
   std::size_t m_next_step;
 
-  typedef std::function<bool(const std::vector<std::string>&)> Function;
+  using Function = std::function<bool(const std::vector<std::string>&)>;
   std::map<std::string, Function> m_dispatcher;
 
 public:

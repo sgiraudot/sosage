@@ -55,20 +55,19 @@ public:
 template <typename T>
 using Simple_handle = std::shared_ptr<Simple<T> >;
 
-typedef Simple<int> Int;
-typedef std::shared_ptr<Int> Int_handle;
+using Int = Simple<int>;
+using Int_handle = std::shared_ptr<Int>;
 
-typedef Simple<double> Double;
-typedef std::shared_ptr<Double> Double_handle;
+using Double = Simple<double>;
+using Double_handle = std::shared_ptr<Double>;
 
-typedef Simple<std::string> String;
-typedef std::shared_ptr<String> String_handle;
-
+using String = Simple<std::string>;
+using String_handle = std::shared_ptr<String>;
 
 template <typename T>
 class Vector : public Simple<std::vector<T> >
 {
-  typedef Simple<std::vector<T> > Base;
+  using Base = Simple<std::vector<T> >;
 public:
 
   Vector (const std::string& id, const std::vector<T>& value = std::vector<T>())
@@ -83,8 +82,8 @@ using Vector_handle = std::shared_ptr<Vector<T> >;
 template <typename T>
 class Set : public Simple<std::unordered_set<T> >
 {
-  typedef std::unordered_set<T> set_t;
-  typedef Simple<set_t> Base;
+  using set_t = std::unordered_set<T>;
+  using Base = Simple<set_t>;
 public:
 
   Set(const std::string& id)

@@ -40,8 +40,8 @@ class SDL_mixer
 {
 public:
 
-  typedef Mix_Music* Music;
-  typedef Mix_Chunk* Sound;
+  using Music = Mix_Music*;
+  using Sound = Mix_Chunk*;
 
 private:
 

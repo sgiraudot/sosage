@@ -48,7 +48,7 @@ public:
   std::string debug_str();
 };
 
-typedef std::shared_ptr<Debug> Debug_handle;
+using Debug_handle = std::shared_ptr<Debug>;
 
 } // namespace Sosage::Component
 

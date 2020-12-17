@@ -85,7 +85,7 @@ public:
   void set_id (const std::string& id) { m_id = id; }
 };
 
-typedef std::shared_ptr<Base> Handle;
+using Handle = std::shared_ptr<Base>;
 
 template <typename T>
 class Value : public Base
@@ -121,7 +121,7 @@ struct Equal_ids
   }
 };
 
-typedef std::unordered_set<Handle, Hash_ids, Equal_ids> Handle_set;
+using Handle_set = std::unordered_set<Handle, Hash_ids, Equal_ids>;
     
 } // namespace Sosage::Component
 

@@ -44,7 +44,7 @@ class Status : public Value<Sosage::Status>
 {
 private:
 
-  typedef Value<Sosage::Status> Base;
+  using Base = Value<Sosage::Status>;
   mutable std::stack<Sosage::Status> m_value;
   
 public:
@@ -66,7 +66,7 @@ public:
 
 };
 
-typedef std::shared_ptr<Status> Status_handle;
+using Status_handle = std::shared_ptr<Status>;
 
 } // namespace Component
 

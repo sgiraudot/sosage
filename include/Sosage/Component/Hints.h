@@ -49,7 +49,7 @@ public:
   void add (Conditional_base_handle condition) { m_values.push_back (condition); }
 };
 
-typedef std::shared_ptr<Hints> Hints_handle;
+using Hints_handle = std::shared_ptr<Hints>;
 
 } // namespace Sosage::Component
 

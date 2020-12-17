@@ -41,7 +41,7 @@ public:
   virtual std::string str() const;
 };
 
-typedef std::shared_ptr<Condition> Condition_handle;
+using Condition_handle = std::shared_ptr<Condition>;
 
 class Boolean : public Condition
 {
@@ -59,7 +59,7 @@ public:
   void end_temporary_true() { m_value = m_memory; }
 };
 
-typedef std::shared_ptr<Boolean> Boolean_handle;
+using Boolean_handle = std::shared_ptr<Boolean>;
 
 template <typename T>
 class Value_condition : public Condition
@@ -91,7 +91,7 @@ public:
   virtual bool value() const { return (m_values.first->value() && m_values.second->value()); }
 };
 
-typedef std::shared_ptr<And> And_handle;
+using And_handle = std::shared_ptr<And>;
 
 class Or : public Condition
 {
@@ -105,7 +105,7 @@ public:
   virtual bool value() const { return (m_values.first->value() || m_values.second->value()); }
 };
 
-typedef std::shared_ptr<Or> Or_handle;
+using Or_handle = std::shared_ptr<Or>;
 
 class Not : public Condition
 {
@@ -118,7 +118,7 @@ public:
   virtual bool value() const { return !(m_value->value()); }
 };
 
-typedef std::shared_ptr<Not> Not_handle;
+using Not_handle = std::shared_ptr<Not>;
 
 // Helpers
 template <typename T>

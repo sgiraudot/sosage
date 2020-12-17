@@ -39,8 +39,8 @@ class SDL_time
 {
 public:
 
-  typedef Uint32 Unit;
-  typedef Uint32 Duration;
+  using Unit = Uint32;
+  using Duration = Uint32;
 
   static Unit now()
   {

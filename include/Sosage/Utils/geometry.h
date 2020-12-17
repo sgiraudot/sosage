@@ -28,6 +28,7 @@
 #define SOSAGE_UTILS_GEOMETRY_H
 
 #include <Sosage/Config/config.h>
+#include <Sosage/Utils/enum.h>
 #include <Sosage/Utils/error.h>
 
 #include <cmath>
@@ -43,13 +44,6 @@ inline double distance (double xa, double ya, double xb, double yb)
 {
   return std::sqrt (square(xa - xb) + square(ya - yb));
 }
-
-enum Orientation
-{
-  COLINEAR,
-  CLOCKWISE,
-  COUNTERCLOCKWISE
-};
 
 struct Box
 {

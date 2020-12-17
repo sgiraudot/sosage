@@ -30,14 +30,13 @@
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
+#include <Sosage/Utils/enum.h>
 #include <Sosage/Utils/graph.h>
 
 #include <stack>
 
 namespace Sosage
 {
-
-enum Split_direction { NO_SPLIT, BUTTON, VERTICALLY, HORIZONTALLY };
 
 namespace Component
 {
@@ -213,7 +212,7 @@ public:
   Node root() const { return Node(const_cast<Tree&>(m_tree), m_root); }
 };
 
-typedef std::shared_ptr<Menu> Menu_handle;
+using Menu_handle = std::shared_ptr<Menu>;
 
 } // namespace Component
 

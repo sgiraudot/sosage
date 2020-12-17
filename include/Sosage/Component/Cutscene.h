@@ -196,7 +196,7 @@ public:
 
 };
 
-typedef std::shared_ptr<Cutscene> Cutscene_handle;
+using Cutscene_handle = std::shared_ptr<Cutscene>;
 
 } // namespace Sosage::Component
 

@@ -32,7 +32,7 @@
 namespace Sosage
 {
 
-typedef Third_party::SDL_file::File File;
+using File = Third_party::SDL_file::File;
 
 inline File open (const std::string& filename, bool write = false)
 {

@@ -51,6 +51,22 @@ constexpr double min_reading_time = 1.5;
 
 constexpr double key_repeat_delay = 5.;
 
+constexpr double boundary_precision = 2.0;
+
+constexpr int gui_fps = 60;
+constexpr int animation_fps = 12;
+
+constexpr int character_speed = 34;
+
+constexpr int text_outline = 10;
+constexpr int displayed_inventory_size = 4;
+
+constexpr double button_click_duration = 0.1;
+constexpr double virtual_cursor_sensitivity = 5;
+constexpr double virtual_cursor_speed = 2.0;
+
+constexpr int max_music_volume = 128;
+
 enum Depth
 {
   interface_depth = 1000000,
@@ -67,23 +83,14 @@ enum Depth
   loading_depth
 };
 
-enum Layout { AUTO, WIDESCREEN, STANDARD, SQUARE, PORTRAIT };
-
-constexpr double boundary_precision = 2.0;
-
-constexpr int gui_fps = 60;
-constexpr int animation_fps = 12;
-
-constexpr int character_speed = 34;
-
-constexpr int text_outline = 10;
-constexpr int displayed_inventory_size = 4;
-
-constexpr double button_click_duration = 0.1;
-constexpr double virtual_cursor_sensitivity = 5;
-constexpr double virtual_cursor_speed = 2.0;
-
-constexpr int max_music_volume = 128;
+enum Layout
+{
+  AUTO,
+  WIDESCREEN,
+  STANDARD,
+  SQUARE,
+  PORTRAIT
+};
 
 } // namespace Config
 

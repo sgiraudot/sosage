@@ -50,7 +50,7 @@ public:
 
 };
 
-typedef std::shared_ptr<Music> Music_handle;
+using Music_handle = std::shared_ptr<Music>;
 
 } // namespace Sosage::Component
 

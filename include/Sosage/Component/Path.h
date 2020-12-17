@@ -61,7 +61,8 @@ public:
   std::size_t& current() { return m_current; }
 
 };
-typedef std::shared_ptr<Path> Path_handle;
+
+using Path_handle = std::shared_ptr<Path>;
 
 } // namespace Sosage::Component
 

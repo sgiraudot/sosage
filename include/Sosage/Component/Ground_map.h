@@ -56,9 +56,9 @@ class Ground_map : public Base
     Edge() : border(true) { }
   };
 
-  typedef Sosage::Graph<Vertex, Edge, false> Graph;
-  typedef typename Graph::Vertex GVertex;
-  typedef typename Graph::Edge GEdge;
+  using Graph = Sosage::Graph<Vertex, Edge, false>;
+  using GVertex = typename Graph::Vertex;
+  using GEdge = typename Graph::Edge;
 
   double deviation(GVertex v) const
   {
@@ -160,7 +160,8 @@ public:
                           const std::function<bool(const GEdge&)>& condition) const;
 
 };
-typedef std::shared_ptr<Ground_map> Ground_map_handle;
+
+using Ground_map_handle = std::shared_ptr<Ground_map>;
 
 } // namespace Sosage::Component
 

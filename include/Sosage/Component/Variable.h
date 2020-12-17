@@ -47,7 +47,7 @@ public:
   virtual Handle get() const { return m_target; }
 };
 
-typedef std::shared_ptr<Variable> Variable_handle;
+using Variable_handle = std::shared_ptr<Variable>;
 
 } // namespace Sosage::Component
 

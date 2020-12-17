@@ -36,7 +36,6 @@
 namespace Sosage::Component
 {
 
-
 class Position : public Base
 {
   Point m_pos;
@@ -51,7 +50,8 @@ public:
   bool absolute() const { return m_absolute; }
   bool& absolute() { return m_absolute; }
 };
-typedef std::shared_ptr<Position> Position_handle;
+
+using Position_handle = std::shared_ptr<Position>;
 
 } // namespace Sosage::Component
 

@@ -46,7 +46,7 @@ public:
   const Core::Sound::Sound& core() const { return m_core; }
 };
 
-typedef std::shared_ptr<Sound> Sound_handle;
+using Sound_handle = std::shared_ptr<Sound>;
 
 } // namespace Sosage::Component
 

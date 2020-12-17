@@ -31,7 +31,7 @@
 
 namespace Sosage::Core
 {
-typedef Third_party::SDL Graphic;
+using Graphic = Third_party::SDL;
 }
 
 #endif

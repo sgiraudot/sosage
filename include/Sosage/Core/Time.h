@@ -36,14 +36,14 @@ namespace Sosage::Core
 {
 
 #ifdef SOSAGE_SDL_TIME
-typedef Third_party::SDL_time Time;
+using Time = Third_party::SDL_time;
 #else
 class Time
 {
 public:
 
-  typedef std::chrono::steady_clock::time_point::rep Unit;
-  typedef std::chrono::steady_clock::duration::rep Duration;
+  using Unit = std::chrono::steady_clock::time_point::rep;
+  using Duration = std::chrono::steady_clock::duration::rep;
 
   static Unit now()
   {

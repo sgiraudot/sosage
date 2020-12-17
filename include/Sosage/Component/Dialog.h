@@ -138,6 +138,7 @@ public:
 
 };
 
+using Dialog_handle = std::shared_ptr<Dialog>;
 
 } // namespace Sosage::Component
 

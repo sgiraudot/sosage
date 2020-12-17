@@ -75,7 +75,7 @@ public:
   bool next_frame();
 };
 
-typedef std::shared_ptr<Animation> Animation_handle;
+using Animation_handle = std::shared_ptr<Animation>;
 
 } // namespace Sosage::Component
 
