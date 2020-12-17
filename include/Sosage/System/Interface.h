@@ -61,12 +61,6 @@ public:
 
 private:
 
-  void init_menu_item (Component::Menu::Node node, const std::string& id,
-                       const std::string& effect = std::string());
-  void init_menu_buttons (Component::Menu::Node node);
-  void create_menu (const std::string& id);
-  void delete_menu (const std::string& id);
-
   void window_clicked();
   void code_clicked (Component::Position_handle cursor);
   void menu_clicked (Component::Position_handle cursor);
@@ -75,14 +69,22 @@ private:
   void arrow_clicked();
   void action_clicked(const std::string& verb);
 
-  void update_exit();
-
   void update_pause_screen();
 
   void detect_collision (Component::Position_handle cursor);
   void update_action ();
   void update_inventory ();
   void update_dialog_choices ();
+
+  // Implemented in Interface__menu.cpp
+  void init_menus();
+  void update_exit();
+  void init_menu_item (Component::Menu::Node node, const std::string& id,
+                       const std::string& effect = std::string());
+  void init_menu_buttons (Component::Menu::Node node);
+  void create_menu (const std::string& id);
+  void delete_menu (const std::string& id);
+
 
   // Implemented in Interface__layout.cpp:
   void update_layout();
