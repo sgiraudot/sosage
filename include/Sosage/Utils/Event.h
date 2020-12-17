@@ -53,14 +53,14 @@ inline std::ostream& operator<< (std::ostream& os, const Event_type& type)
 inline std::ostream& operator<< (std::ostream& os, const Event_value& value)
 {
   if (value == NONE) os << "NONE";
-  else if (value == QUIT) os << "QUIT";
+  else if (value == EXIT) os << "EXIT";
   else if (value == RESIZED) os << "RESIZED";
   else if (value == LEFT) os << "LEFT";
   else if (value == RIGHT) os << "RIGHT";
   else if (value == ALT) os << "ALT";
   else if (value == ANDROID_BACK) os << "ANDROID_BACK";
   else if (value == ENTER) os << "ENTER";
-  else if (value == EXIT) os << "EXIT";
+  else if (value == ESCAPE) os << "ESCAPE";
   else if (value == SPACE) os << "SPACE";
   else if (A <= value && value <= Z) os << char('A' + (value - A));
   else if (F1 <= value && value <= F12) os << "F" << 1 + value - F1;

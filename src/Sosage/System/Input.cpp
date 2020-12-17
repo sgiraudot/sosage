@@ -51,13 +51,12 @@ void Input::run()
   {
     //debug("New event " + ev.to_string());
 
-    // Quit on: interface X-cross / Escape key / Q key
-    if (ev == Event(WINDOW, QUIT) ||
-        ev == Event(KEY_UP, EXIT) ||
-        ev == Event(KEY_UP, Q) ||
+    if (ev == Event(KEY_UP, ESCAPE) ||
         ev == Event(KEY_UP, ANDROID_BACK))
-      emit ("game:exit");
+      emit ("game:escape");
 
+    if (ev == Event(WINDOW, EXIT))
+      emit ("game:exit");
 
     if (ev == Event(KEY_UP, SPACE))
     {
@@ -66,6 +65,13 @@ void Input::run()
       else
         status->push(PAUSED);
     }
+
+    if (ev == Event(WINDOW, FOREGROUND)
+        && status->value() == PAUSED)
+        status->pop();
+    if (ev == Event(WINDOW, BACKGROUND)
+        && status->value() != PAUSED)
+        status->push(PAUSED);
 
     if (status->value() == PAUSED)
       continue;

@@ -69,8 +69,10 @@ enum Event_value
   NONE,
 
   // Window
-  QUIT,
+  EXIT,
   RESIZED,
+  BACKGROUND,
+  FOREGROUND,
 
   // Cursor
   LEFT,
@@ -80,7 +82,7 @@ enum Event_value
   ALT,
   ANDROID_BACK,
   ENTER,
-  EXIT,
+  ESCAPE,
   SPACE,
 
   A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,

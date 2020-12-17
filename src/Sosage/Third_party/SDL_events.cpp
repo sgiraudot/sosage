@@ -50,8 +50,13 @@ Event SDL_events::next_event (int interface_width, int interface_height)
     return Event();
 
   // Exit button
-  if (ev.type == SDL_QUIT)
-    return Event (WINDOW, QUIT);
+  if (ev.type == SDL_QUIT || ev.type == SDL_APP_TERMINATING)
+    return Event (WINDOW, EXIT);
+
+  if (ev.type == SDL_APP_WILLENTERBACKGROUND)
+    return Event (WINDOW, BACKGROUND);
+  if (ev.type == SDL_APP_DIDENTERFOREGROUND)
+    return Event (WINDOW, FOREGROUND);
 
   // Window resized
   if (ev.type == SDL_WINDOWEVENT &&
@@ -136,7 +141,7 @@ Event SDL_events::next_event (int interface_width, int interface_height)
   if (ev.key.keysym.sym == SDLK_RETURN)
       return Event (type, ENTER);
   if (ev.key.keysym.sym == SDLK_ESCAPE)
-    return Event (type, EXIT);
+    return Event (type, ESCAPE);
   if (ev.key.keysym.sym == SDLK_SPACE)
     return Event (type, SPACE);
   if (SDLK_a <= ev.key.keysym.sym && ev.key.keysym.sym <= SDLK_z)

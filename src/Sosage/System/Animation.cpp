@@ -468,7 +468,7 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
       int new_pose;
       do
       {
-        new_pose = random_int(2, head->width_subdiv() + 1);
+        new_pose = random_int(2, head->width_subdiv());
       }
       while (new_pose == pose);
       pose = new_pose;

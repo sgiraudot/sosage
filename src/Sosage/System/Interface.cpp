@@ -600,7 +600,7 @@ void Interface::update_exit()
   auto status = get<C::Status>(GAME__STATUS);
   if (status->value() == LOCKED)
   {
-    receive("game:exit");
+    receive("game:escape");
     return;
   }
 
@@ -609,7 +609,7 @@ void Interface::update_exit()
     double time = get<C::Double>(CLOCK__TIME)->value();
     bool exit_message_exists = (request<C::Image>("exit_message:image") != nullptr);
 
-    if (receive("game:exit"))
+    if (receive("game:escape"))
     {
       if (time - m_latest_exit < Config::key_repeat_delay)
       {
@@ -651,7 +651,7 @@ void Interface::update_exit()
   }
   else // status != CUTSCENE
   {
-    if (receive("game:exit"))
+    if (receive("game:escape"))
     {
       if (status->value() == IN_MENU)
       {
