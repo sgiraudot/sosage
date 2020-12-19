@@ -127,7 +127,6 @@ class Menu : public Base
     {
       if (nb_children() == 0)
       {
-        std::cerr << "Set position of " << image()->entity() << " to " << x << ", " << y << std::endl;
         image()->on() = true;
         position()->set(Point(x,y));
       }

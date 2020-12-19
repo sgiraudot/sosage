@@ -32,8 +32,9 @@ namespace Sosage::Component
 {
 
 Animation::Animation (const std::string& id, const std::string& file_name, int z,
-                      int width_subdiv, int height_subdiv, bool loop)
-  : Image(id, file_name, z)
+                      int width_subdiv, int height_subdiv, bool loop,
+                      const Collision_type& collision)
+  : Image(id, file_name, z, collision)
   , m_width_subdiv (width_subdiv)
   , m_height_subdiv (height_subdiv)
   , m_current(0)

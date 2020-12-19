@@ -75,7 +75,7 @@ try:
     begin = time.perf_counter()
     os.chdir("platform/android")
     run_cmd(["./gradlew", "clean"])
-    run_cmd(["./gradlew", "assemble"])
+    run_cmd(["./gradlew", "assembleDebug", "--parallel", "--max-workers=6"])
     run_cmd(["cp", "app/build/outputs/apk/debug/app-debug.apk", "../../" + output_dir + "/" + appname + "-android.apk"])
     os.chdir("../..")
     end = time.perf_counter()

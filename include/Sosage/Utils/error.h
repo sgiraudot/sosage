@@ -76,21 +76,23 @@ inline void check_impl (const char* file, int line, const std::string& str)
 }
 #endif
 
-#if defined(SOSAGE_ANDROID)
+#if defined(SOSAGE_DEBUG)
+#  if defined(SOSAGE_ANDROID)
 inline void debug (const std::string& str)
 {
   __android_log_print (ANDROID_LOG_INFO, "Sosage Info", "%s", str.c_str());
 }
-#elif defined(SOSAGE_EMSCRIPTEN)
+#  elif defined(SOSAGE_EMSCRIPTEN)
 inline void debug (const std::string& str)
 {
   SDL_Log("%s", str.c_str());
 }
-#elif defined(SOSAGE_DEBUG)
+#  else
 inline void debug (const std::string& str)
 {
   std::cerr << str << std::endl;
 }
+#  endif
 #else
 inline void debug (const std::string&)
 {

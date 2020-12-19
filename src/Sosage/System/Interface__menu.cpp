@@ -47,7 +47,7 @@ void Interface::init_menus()
   init_menu_item ((*exit_menu)[3], "Hint", "hint");
   init_menu_item ((*exit_menu)[4], "Settings", "settings");
   init_menu_item ((*exit_menu)[5], "Credits", "credits");
-  init_menu_item ((*exit_menu)[6], "Quit", "quit");
+  init_menu_item ((*exit_menu)[6], "Save_and_quit", "quit");
   init_menu_buttons (exit_menu->root());
 
   auto wanna_restart_menu = set<C::Menu>("Wanna_restart:menu");
@@ -64,6 +64,14 @@ void Interface::init_menus()
   init_menu_item ((*credits_menu)[1], "Credits_text", "");
   init_menu_item ((*credits_menu)[2], "Ok", "ok");
   init_menu_buttons (credits_menu->root());
+
+  auto end_menu = set<C::Menu>("End:menu");
+  end_menu->split(VERTICALLY, 2);
+  (*end_menu)[1].split(HORIZONTALLY, 2);
+  init_menu_item ((*end_menu)[0], "End_text", "");
+  init_menu_item ((*end_menu)[1][0], "Restart", "new_game");
+  init_menu_item ((*end_menu)[1][1], "Quit", "quit");
+  init_menu_buttons ((*end_menu)[1]);
 }
 
 void Interface::init_menu_item (Component::Menu::Node node, const std::string& id,
@@ -218,6 +226,11 @@ void Interface::update_exit()
     receive("Game:escape");
     return;
   }
+  if (receive("Show:menu"))
+  {
+    create_menu (get<C::String>("Game:triggered_menu")->value());
+    status->push (IN_MENU);
+  }
 
   if (status->value() == CUTSCENE)
   {
@@ -285,8 +298,14 @@ void Interface::update_exit()
     {
       if (status->value() == IN_MENU)
       {
-        delete_menu(get<C::String>("Game:current_menu")->value());
-        status->pop();
+        const std::string& menu = get<C::String>("Game:current_menu")->value();
+        if (menu == "End")
+          emit("Game:exit");
+        else
+        {
+          delete_menu(menu);
+          status->pop();
+        }
       }
       else
       {
@@ -367,13 +386,25 @@ void Interface::menu_clicked(C::Position_handle cursor)
 
   if (effect->value() == "quit")
   {
-    emit ("Game:save");
+    if (menu != "End")
+      emit ("Game:save");
     emit ("Game:exit");
   }
   else if (effect->value() == "new_game")
   {
-    delete_menu ("Exit");
-    create_menu ("Wanna_restart");
+    delete_menu(menu);
+    if (menu == "Exit")
+      create_menu ("Wanna_restart");
+    else
+    {
+      set<C::Variable>("Game:new_room", get<C::String>("Game:init_new_room"));
+      if (auto orig = request<C::String>("Game:init_new_room_origin"))
+        set<C::Variable>("Game:new_room_origin", orig);
+      emit ("Game:reset");
+      remove("Game:music");
+      emit ("Music:stop");
+      get<C::Status>(GAME__STATUS)->pop();
+    }
   }
   else if (effect->value() == "ok")
   {
@@ -383,6 +414,8 @@ void Interface::menu_clicked(C::Position_handle cursor)
       if (auto orig = request<C::String>("Game:init_new_room_origin"))
         set<C::Variable>("Game:new_room_origin", orig);
       emit ("Game:reset");
+      remove("Game:music");
+      emit ("Music:stop");
       delete_menu("Wanna_restart");
       get<C::Status>(GAME__STATUS)->pop();
     }

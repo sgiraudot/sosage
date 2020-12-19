@@ -628,8 +628,9 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
         int nb_frames = istate["frames"].integer();
         int duration = istate["duration"].integer();
         auto anim = C::make_handle<C::Animation>(id + ":conditional_image",
-                                                                 local_file_name(skin), z,
-                                                                 nb_frames, 1, true);
+                                                 local_file_name(skin), z,
+                                                 nb_frames, 1, true,
+                                                 (box_collision ? BOX : PIXEL_PERFECT));
         anim->reset(true, duration);
         img = anim;
       }

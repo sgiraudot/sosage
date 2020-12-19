@@ -74,12 +74,12 @@ enum Depth
   inventory_front_depth,
   inventory_over_depth,
   dialog_depth,
+  overlay_depth,
   menu_back_depth,
   menu_front_depth,
   menu_button_depth,
   menu_text_depth,
   cursor_depth,
-  overlay_depth,
   loading_depth
 };
 

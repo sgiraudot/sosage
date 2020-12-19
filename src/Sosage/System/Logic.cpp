@@ -534,7 +534,7 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
     std::tie (character, line) = dialog->line();
     action->add ("talk", { character, line });
     action->add ("system", { "wait" });
-    action->add ("Dialog", { args[0], "continue" });
+    action->add ("dialog", { args[0], "continue" });
   }
   else
   {
@@ -544,7 +544,7 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
     get<C::Status>(GAME__STATUS)->push(DIALOG_CHOICE);
     auto choices = set<C::Vector<std::string> >("Dialog:choices");
     dialog->get_choices (*choices);
-    action->add ("Dialog", { args[0], "continue" });
+    action->add ("dialog", { args[0], "continue" });
 
     // Keep track in case player saves and reload there
     set<C::String>("Game:current_dialog", args[0]);
@@ -776,6 +776,11 @@ bool Logic::function_system (const std::vector<std::string>& args)
     std::string id = args[1];
     m_current_action = get<C::Action>(id + ":action");
     m_next_step = 0;
+  }
+  else if (option == "menu")
+  {
+    set<C::String>("Game:triggered_menu", args[1]);
+    emit("Show:menu");
   }
   else if (option == "unlock")
     get<C::Status>(GAME__STATUS)->pop();
