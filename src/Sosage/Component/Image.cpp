@@ -32,16 +32,17 @@ namespace Sosage::Component
 
 Image::Image (const std::string& id, int w, int h, int r, int g, int b, int a)
   : Base(id), m_origin(0,0), m_z(Config::interface_depth), m_on(true),
-    m_collision(PIXEL_PERFECT)
+    m_collision(BOX)
 {
   m_core = Core::Graphic::create_rectangle (w, h, r, g, b, a);
 }
 
-Image::Image (const std::string& id, const std::string& file_name, int z)
+Image::Image (const std::string& id, const std::string& file_name, int z,
+              const Collision_type& collision)
   : Base(id), m_origin(0,0), m_z(z), m_on(true),
-    m_collision (PIXEL_PERFECT)
+    m_collision (collision)
 {
-  m_core = Core::Graphic::load_image (file_name);
+  m_core = Core::Graphic::load_image (file_name, (collision == PIXEL_PERFECT));
 }
 
 Image::Image (const std::string& id, Font_handle font, const std::string& color_str,
@@ -60,6 +61,13 @@ std::string Image::str() const
   return this->id() + " at (" + std::to_string (m_origin.x())
     + ";" + std::to_string(m_origin.y())
     + ";" + std::to_string(m_z) + "), " + (m_on ? "ON" : "OFF");
+}
+
+void Image::set_collision (const Collision_type& collision)
+{
+  if (m_collision == PIXEL_PERFECT && collision != PIXEL_PERFECT)
+    m_core.free_mask();
+  m_collision = collision;
 }
 
 void Image::set_relative_origin (double ratio_x, double ratio_y)
@@ -82,10 +90,11 @@ void Image::set_scale (double scale)
 
 bool Image::is_target_inside (int x, int y) const
 {
+  check (m_core.mask != nullptr, "Checkin pixel perfect collision without mask");
   dbg_check (x < width() && y < height(),
              "Out of bound pixel " + std::to_string(x) + "/" + std::to_string(width())
              + " x " + std::to_string(y) + "/" + std::to_string(height()));
-  return Core::Graphic::is_inside_image (m_core, x, y);
+  return (*m_core.mask)(x, y);
 }
 
 

@@ -48,7 +48,8 @@ private:
 public:
 
   Image (const std::string& id, int w, int h, int r = 0, int g = 0, int b = 0, int a = 255);
-  Image (const std::string& id, const std::string& file_name, int z = 0);
+  Image (const std::string& id, const std::string& file_name, int z = 0,
+         const Collision_type& collision = UNCLICKABLE);
   Image (const std::string& id, Font_handle font, const std::string& color_str,
          const std::string& text, bool outlined = false);
   virtual ~Image() { /*debug("Destructor of " + id());*/ }
@@ -60,7 +61,7 @@ public:
   const bool& on() const { return m_on; }
   bool& on() { return m_on; }
   const Collision_type& collision() const { return m_collision; }
-  Collision_type& collision() { return m_collision; }
+  void set_collision(const Collision_type& collision);
   virtual int xmin() const { return 0; }
   virtual int xmax() const { return Core::Graphic::width(m_core); }
   virtual int ymin() const { return 0; }

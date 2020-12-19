@@ -36,8 +36,8 @@ namespace Sosage::Third_party
 
 SDL_Window* SDL::m_window = nullptr;
 SDL_Renderer* SDL::m_renderer = nullptr;
-SDL::Surface_manager SDL::m_surfaces (SDL_FreeSurface);
 SDL::Texture_manager SDL::m_textures (SDL_DestroyTexture);
+SDL::Bitmap_manager SDL::m_masks;
 SDL::Font_manager SDL::m_fonts (TTF_CloseFont);
 
 SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
@@ -55,29 +55,30 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
   amask = 0xff000000;
 #endif
 
-  Surface surf = m_surfaces.make_single(SDL_CreateRGBSurface, 0, w, h, 32, rmask, gmask, bmask, amask);
-  check (surf != Surface(), "Cannot create rectangle surface");
+  SDL_Surface* surf = SDL_CreateRGBSurface (0, w, h, 32, rmask, gmask, bmask, amask);
+  check (surf != nullptr, "Cannot create rectangle surface");
 
-  SDL_FillRect(surf.get(), nullptr, SDL_MapRGBA(surf->format, Uint8(r), Uint8(g), Uint8(b), Uint8(255)));
+  SDL_FillRect(surf, nullptr, SDL_MapRGBA(surf->format, Uint8(r), Uint8(g), Uint8(b), Uint8(255)));
 
-  Texture out = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf.get());
-  check (out != Texture(), "Cannot create rectangle texture");
-  return Image (surf, out, 1, (unsigned char)(a));
+  Texture text = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf);
+  check (text != Texture(), "Cannot create rectangle texture");
+  Image out (text, Bitmap(), surf->w, surf->h, 1, (unsigned char)(a));
+  SDL_FreeSurface(surf);
+  return out;
 }
 
-SDL::Surface SDL::load_surface (const std::string& file_name)
+SDL::Image SDL::load_image (const std::string& file_name, bool with_mask)
 {
-  Surface surf = m_surfaces.make_mapped (file_name, IMG_Load, file_name.c_str());
-  check (surf != Surface(), "Cannot load image " + file_name);
-  return surf;
-}
-
-SDL::Image SDL::load_image (const std::string& file_name)
-{
-  Surface surf = load_surface (file_name);
-  Texture out = m_textures.make_mapped (file_name, SDL_CreateTextureFromSurface, m_renderer, surf.get());
-  check (out != Texture(), "Cannot create texture from " + file_name);
-  return Image (surf, out, 1);
+  SDL_Surface* surf = IMG_Load (file_name.c_str());
+  check (surf != nullptr, "Cannot load image " + file_name);
+  Texture text = m_textures.make_mapped (file_name, SDL_CreateTextureFromSurface, m_renderer, surf);
+  check (text != Texture(), "Cannot create texture from " + file_name);
+  Bitmap mask = nullptr;
+  if (with_mask)
+    mask = m_masks.make_mapped (file_name, create_mask, surf);
+  Image out (text, mask, surf->w, surf->h, 1);
+  SDL_FreeSurface(surf);
+  return out;
 }
 
 SDL::Font SDL::load_font (const std::string& file_name, int size)
@@ -90,6 +91,53 @@ SDL::Font SDL::load_font (const std::string& file_name, int size)
 
   return std::make_pair(out, out2);
 }
+
+Bitmap_2* SDL::create_mask (SDL_Surface* surf)
+{
+  Bitmap_2* out = new Bitmap_2 (surf->w, surf->h);
+  SDL_LockSurface (surf);
+
+  int bpp = surf->format->BytesPerPixel;
+
+  for (std::size_t x = 0; x < out->width(); ++ x)
+    for (std::size_t y = 0; y < out->height(); ++ y)
+    {
+      Uint8 *p = (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
+      Uint32 data;
+      switch (bpp)
+      {
+        case 1:
+          data = *p;
+          break;
+
+        case 2:
+          data = *(Uint16 *)p;
+          break;
+
+        case 3:
+          if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
+            data = Uint32(p[0] << 16 | p[1] << 8 | p[2]);
+          else
+            data = Uint32(p[0] | p[1] << 8 | p[2] << 16);
+          break;
+
+        case 4:
+          data = *(Uint32 *)p;
+          break;
+
+        default:
+          exit(0);
+      }
+      unsigned char r, g, b, a;
+      SDL_GetRGBA(data, surf->format, &r, &g, &b, &a);
+      (*out)(x, y) = (a != 0);
+    }
+
+  SDL_UnlockSurface (surf);
+
+  return out;
+}
+
 
 SDL_Color SDL::black()
 {
@@ -120,40 +168,61 @@ SDL_Color SDL::color (const std::string& color_str)
 SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str,
                              const std::string& text)
 {
-  Surface surf;
+  SDL_Surface* surf;
   if (text.find('\n') == std::string::npos)
-    surf = m_surfaces.make_single (TTF_RenderUTF8_Blended, font.first.get(), text.c_str(), color(color_str));
+    surf = TTF_RenderUTF8_Blended(font.first.get(), text.c_str(), color(color_str));
   else
-    surf = m_surfaces.make_single (TTF_RenderUTF8_Blended_Wrapped, font.first.get(), text.c_str(), color(color_str), 1920);
+    surf = TTF_RenderUTF8_Blended_Wrapped(font.first.get(), text.c_str(), color(color_str), 1920);
 
-  check (surf != Surface(), "Cannot create text \"" + text + "\"");
-  Texture out = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf.get());
-  check (out != Texture(), "Cannot create texture from text \"" + text + "\"");
-  return Image (surf, out, 1);
+  check (surf != nullptr, "Cannot create text \"" + text + "\"");
+  Texture texture = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf);
+  check (texture != Texture(), "Cannot create texture from text \"" + text + "\"");
+  Image out (texture, Bitmap(), surf->w, surf->h, 1);
+  SDL_FreeSurface (surf);
+  return out;
 }
 
 SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& color_str,
                                       const std::string& text)
 {
-  Surface surf = m_surfaces.make_single (TTF_RenderUTF8_Blended, font.first.get(), text.c_str(), color(color_str));
-  check (surf != Surface(), "Cannot create text \"" + text + "\"");
+  SDL_Surface* surf = TTF_RenderUTF8_Blended (font.first.get(), text.c_str(), color(color_str));
+  check (surf != nullptr, "Cannot create text \"" + text + "\"");
 
-  Surface back = m_surfaces.make_single (TTF_RenderUTF8_Blended, font.second.get(), text.c_str(), black());
-  check (back != Surface(), "Cannot create text \"" + text + "\"");
+  SDL_Surface* back = TTF_RenderUTF8_Blended (font.second.get(), text.c_str(), black());
+  check (back != nullptr, "Cannot create text \"" + text + "\"");
 
   SDL_Rect rect = {Config::text_outline, Config::text_outline, surf->w, surf->h};
-  SDL_SetSurfaceBlendMode(surf.get(), SDL_BLENDMODE_BLEND);
-  SDL_BlitSurface (surf.get(), NULL, back.get(), &rect);
+  SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_BLEND);
+  SDL_BlitSurface (surf, NULL, back, &rect);
 
-  Texture out = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, back.get());
-  check (out != Texture(), "Cannot create texture from text \"" + text + "\"");
-
-  return Image (back, out, 1);
+  Texture texture = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, back);
+  check (texture != Texture(), "Cannot create texture from text \"" + text + "\"");
+  Image out (texture, Bitmap(), back->w, back->h, 1);
+  SDL_FreeSurface (surf);
+  SDL_FreeSurface (back);
+  return out;
 }
 
 void SDL::rescale (SDL::Image& source, double scaling)
 {
   source.scaling = scaling;
+}
+
+int SDL::width (SDL::Image image)
+{
+  return image.width;
+}
+int SDL::height (SDL::Image image)
+{
+  return image.height;
+}
+
+
+SDL::Surface SDL::load_surface (const std::string& file_name)
+{
+  Surface surf (IMG_Load(file_name.c_str()), SDL_FreeSurface);
+  check (surf != Surface(), "Cannot load image " + file_name);
+  return surf;
 }
 
 std::array<unsigned char, 3> SDL::get_color (SDL::Surface image, int x, int y)
@@ -193,59 +262,6 @@ std::array<unsigned char, 3> SDL::get_color (SDL::Surface image, int x, int y)
   return out;
 }
 
-bool SDL::is_inside_image (SDL::Image image, int x, int y)
-{
-  SDL_LockSurface (image.surface.get());
-
-  int bpp = image.surface->format->BytesPerPixel;
-  Uint8 *p = (Uint8 *)image.surface->pixels + y * image.surface->pitch + x * bpp;
-  Uint32 data;
-  switch (bpp)
-  {
-    case 1:
-      data = *p;
-      break;
-
-    case 2:
-      data = *(Uint16 *)p;
-      break;
-
-    case 3:
-      if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-        data = Uint32(p[0] << 16 | p[1] << 8 | p[2]);
-      else
-        data = Uint32(p[0] | p[1] << 8 | p[2] << 16);
-      break;
-
-    case 4:
-      data = *(Uint32 *)p;
-      break;
-
-    default:
-      exit(0);
-  }
-  unsigned char r, g, b, a;
-  SDL_GetRGBA(data, image.surface->format, &r, &g, &b, &a);
-  SDL_UnlockSurface (image.surface.get());
-  return (a != 0);
-}
-
-int SDL::width (SDL::Surface image) { return image->w; }
-int SDL::height (SDL::Surface image) { return image->h; }
-int SDL::width (SDL::Image image)
-{
-  return width(image.surface);
-  int out;
-  SDL_QueryTexture (image.texture.get(), NULL, NULL, &out, NULL);
-  return out;
-}
-int SDL::height (SDL::Image image)
-{
-  return height(image.surface);
-  int out;
-  SDL_QueryTexture (image.texture.get(), NULL, NULL, NULL, &out);
-  return out;
-}
 
 SDL::SDL ()
 {
@@ -292,9 +308,10 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
 
 SDL::~SDL ()
 {
-  m_surfaces.clear();
   m_textures.clear();
+  m_masks.clear();
   m_fonts.clear();
+  SDL_FreeSurface (m_icon);
   TTF_Quit ();
   IMG_Quit ();
   SDL_DestroyRenderer (m_renderer);
@@ -302,10 +319,11 @@ SDL::~SDL ()
   SDL_Quit ();
 }
 
-void SDL::update_window (const std::string& name, const Image& icon)
+void SDL::update_window (const std::string& name, const std::string& icon_filename)
 {
   SDL_SetWindowTitle (m_window, name.c_str());
-  SDL_SetWindowIcon (m_window, icon.surface.get());
+  m_icon = IMG_Load(icon_filename.c_str());
+  SDL_SetWindowIcon (m_window, m_icon);
 }
 
 void SDL::update_view(int interface_width, int interface_height)
@@ -336,13 +354,6 @@ void SDL::begin (int interface_width, int interface_height)
 
   SDL_SetRenderDrawColor(m_renderer, Uint8(0), Uint8(0), Uint8(0), 255);
   SDL_RenderFillRect(m_renderer, &rect);
-}
-
-void SDL::create_texture (const Image& image)
-{
-  if (!image.texture)
-    const_cast<Image&>(image).texture
-      = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, image.surface.get());
 }
 
 void SDL::draw (const Image& image,

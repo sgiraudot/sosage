@@ -175,8 +175,7 @@ void File_IO::read_room (const std::string& file_name)
   int back_z = input["back_z"].integer();
 
   auto background_img
-    = set<C::Image>("Background:image", local_file_name(background), 0);
-  background_img->collision() = BOX;
+    = set<C::Image>("Background:image", local_file_name(background), 0, BOX);
   m_latest_room_entities.insert ("Background");
 
   callback->value()();
@@ -434,7 +433,7 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
     std::string skin_off = istate["skin"][0].string("images", "windows", "png");
     auto img_off
       = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin_off),
-                                                 Config::inventory_back_depth);
+                                 Config::inventory_back_depth, BOX);
     img_off->set_relative_origin(0.5, 0.5);
     img_off->on() = false;
 
@@ -445,8 +444,8 @@ void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
     std::string skin_on = istate["skin"][1].string("images", "windows", "png");
     auto img_on
       = C::make_handle<C::Cropped>(id + "_button:conditional_image",
-                                                   local_file_name(skin_on),
-                                                   Config::inventory_front_depth);
+                                   local_file_name(skin_on),
+                                   Config::inventory_front_depth);
     img_on->set_relative_origin(0.5, 0.5);
     img_on->on() = false;
 
@@ -644,14 +643,15 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
                                          width, height, 0, 0, 0, 0);
         }
         else
-          img = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin), z);
+          img = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin), z,
+                                         (box_collision ? BOX : PIXEL_PERFECT));
       }
 
       if (state == "inventory")
         img->set_relative_origin(0.5, 0.5);
       else
         img->set_relative_origin(0.5, 1.0);
-      img->collision() = (box_collision ? BOX : PIXEL_PERFECT);
+      img->set_collision(box_collision ? BOX : PIXEL_PERFECT);
 
       debug("Object " + id + ":" + state + " at position " + std::to_string(img->z()));
 
@@ -839,7 +839,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
         std::string skin = istate["skin"].string("images", "scenery", "png");
         auto img = C::make_handle<C::Image>(id + ":conditional_image",
                                             local_file_name(skin), z);
-        img->collision() = UNCLICKABLE;
+        img->set_collision(UNCLICKABLE);
         img->set_relative_origin(0.5, 1.0);
         conditional_handle->add (state, img);
       }
@@ -850,7 +850,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
     std::string skin = node["skin"].string("images", "scenery", "png");
 
     auto img = set<C::Image>(id + ":image", local_file_name(skin), z);
-    img->collision() = UNCLICKABLE;
+    img->set_collision(UNCLICKABLE);
     img->set_relative_origin(0.5, 1.0);
     debug("Scenery " + id + " at position " + std::to_string(img->z()));
   }

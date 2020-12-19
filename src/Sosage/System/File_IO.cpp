@@ -365,9 +365,7 @@ void File_IO::read_init (const std::string& folder_name)
   set<C::String>("Game:name", game_name);
 
   std::string icon = input["icon"].string("images", "interface", "png");
-  auto icon_img
-    = set<C::Image>("Icon:image", local_file_name(icon), 0);
-  icon_img->on() = false;
+  set<C::String>("Icon:filename", local_file_name(icon));
 
   std::string cursor = input["cursor"].string("images", "interface", "png");
   auto cursor_img = C::make_handle<C::Image> ("Cursor:image", local_file_name(cursor),
@@ -599,6 +597,7 @@ void File_IO::read_cutscene (const std::string& file_name)
       std::string text = node["text"].string();
       img = set<C::Image>(id + ":image", interface_font, color, text);
     }
+    img->set_collision(UNCLICKABLE);
     img->on() = false;
     callback->value()();
   }

@@ -46,8 +46,8 @@ Ground_map::Ground_map (const std::string& id,
   
   m_image = Core::Graphic::load_surface (file_name);
 
-  int width = Core::Graphic::width(m_image);
-  int height = Core::Graphic::height(m_image);
+  int width = m_image->w;
+  int height = m_image->h;
 
   // Build border of ground area
   

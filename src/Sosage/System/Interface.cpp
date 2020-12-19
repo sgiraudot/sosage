@@ -138,7 +138,7 @@ void Interface::init()
                                    0, 0, 0, 255);
   blackscreen->on() = false;
   blackscreen->z() = Config::overlay_depth;
-  blackscreen->collision() = UNCLICKABLE;
+  blackscreen->set_collision(UNCLICKABLE);
 
   set<C::Position>("Blackscreen:position", Point(0,0));
 
