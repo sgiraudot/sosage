@@ -50,7 +50,10 @@ void Animation::run()
   auto status = get<C::Status>(GAME__STATUS);
 
   if (status->value() == PAUSED || status->value() == IN_MENU)
+  {
+    m_frame_id = new_frame_id;
     return;
+  }
 
   if (new_frame_id == m_frame_id)
   {
@@ -601,6 +604,7 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
 
   double alpha = (fadein ? (end_time - current_time) / (end_time - begin_time)
                          : (current_time - begin_time) / (end_time - begin_time));
+
   if (alpha > 1)
     alpha = 1;
   if (alpha < 0)

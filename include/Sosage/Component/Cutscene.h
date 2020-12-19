@@ -139,7 +139,7 @@ public:
   void get_frame (double time, const Element& element,
                   int& x, int& y, int& z, double& zoom)
   {
-    std::size_t keyframe_id = 0;
+    std::size_t keyframe_id = 1;
     while (keyframe_id != element.keyframes.size()
            && element.keyframes[keyframe_id].time < time)
       ++ keyframe_id;
@@ -155,6 +155,8 @@ public:
 
     double ratio = (time - element.keyframes[keyframe_id - 1].time)
                    / (element.keyframes[keyframe_id].time - element.keyframes[keyframe_id - 1].time);
+    if (ratio < 0.) ratio = 0.;
+    if (ratio > 1.) ratio = 1.;
 
     // Squat zoom for ratio if fadein/fadeout
     if (element.id == "fadein" || element.id == "fadeout")

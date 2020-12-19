@@ -143,7 +143,8 @@ int Engine::run (const std::string& folder_name)
 #endif
 
   file_io->write_config();
-  file_io->write_savefile();
+  if (m_content.receive("game:save"))
+    file_io->write_savefile();
 
   m_systems.clear();
   interface.reset(); // Clear interface before SDL is exited

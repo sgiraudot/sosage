@@ -176,69 +176,6 @@ void Interface::code_clicked (C::Position_handle cursor)
   }
 }
 
-void Interface::menu_clicked(C::Position_handle cursor)
-{
-  std::string entity = m_collision->entity();
-  std::size_t pos = entity.find("_button");
-  if (pos != std::string::npos)
-    entity.resize(pos);
-
-  auto effect = request<C::String>(entity + ":effect");
-  if (!effect)
-    return;
-
-  const std::string& menu = get<C::String>("game:current_menu")->value();
-
-  if (effect->value() == "quit")
-    emit ("game:exit");
-  else if (effect->value() == "new_game")
-  {
-    delete_menu ("exit");
-    create_menu ("wanna_restart");
-  }
-  else if (effect->value() == "ok")
-  {
-    if (menu == "wanna_restart")
-    {
-      set<C::Variable>("game:new_room", get<C::String>("game:init_new_room"));
-      if (auto orig = request<C::String>("game:init_new_room_origin"))
-        set<C::Variable>("game:new_room_origin", orig);
-      emit ("game:reset");
-      delete_menu("wanna_restart");
-      get<C::Status>(GAME__STATUS)->pop();
-    }
-    else if (menu == "credits")
-    {
-      delete_menu ("credits");
-      create_menu ("exit");
-    }
-    else if (menu == "hint")
-    {
-      delete_menu("hint");
-      get<C::Status>(GAME__STATUS)->pop();
-    }
-  }
-  else if (effect->value() == "credits")
-  {
-    delete_menu ("exit");
-    create_menu ("credits");
-  }
-  else if (effect->value() == "hint")
-  {
-    delete_menu ("exit");
-    create_menu ("hint");
-  }
-  else if (effect->value() == "cancel")
-  {
-    delete_menu(menu);
-    if (menu == "exit")
-      get<C::Status>(GAME__STATUS)->pop();
-    else if (menu == "wanna_restart")
-      create_menu("exit");
-  }
-}
-
-
 void Interface::dialog_clicked ()
 {
   if (m_collision->entity().find("dialog_choice_") == std::string::npos)

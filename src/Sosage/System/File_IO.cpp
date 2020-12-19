@@ -150,19 +150,25 @@ void File_IO::read_config()
   {
     Core::File_IO input (file_name);
     input.parse();
-    fullscreen = input["fullscreen"].boolean();
-    layout = input["layout"].integer();
-    virtual_cursor = input["virtual_cursor"].boolean();
-    dialog_speed = input["dialog_speed"].floating();
-    dialog_size = input["dialog_size"].floating();
-    music_volume = input["music_volume"].integer();
-    sounds_volume = input["sounds_volume"].integer();
-    autosave = input["autosave"].boolean();
-    hints = input["hints"].boolean();
-    window_width = input["window"][0].integer();
-    window_height = input["window"][1].integer();
-    interface_width = input["interface"][0].integer();
-    interface_height = input["interface"][1].integer();
+    if (input.has("fullscreen")) fullscreen = input["fullscreen"].boolean();
+    if (input.has("layout")) layout = input["layout"].integer();
+    if (input.has("virtual_cursor")) virtual_cursor = input["virtual_cursor"].boolean();
+    if (input.has("dialog_speed")) dialog_speed = input["dialog_speed"].floating();
+    if (input.has("dialog_size")) dialog_size = input["dialog_size"].floating();
+    if (input.has("music_volume")) music_volume = input["music_volume"].integer();
+    if (input.has("sounds_volume")) sounds_volume = input["sounds_volume"].integer();
+    if (input.has("autosave")) autosave = input["autosave"].boolean();
+    if (input.has("hints")) hints = input["hints"].boolean();
+    if (input.has("window"))
+    {
+      window_width = input["window"][0].integer();
+      window_height = input["window"][1].integer();
+    }
+    if (input.has("interface"))
+    {
+      interface_width = input["interface"][0].integer();
+      interface_height = input["interface"][1].integer();
+    }
   }
   catch (Sosage::No_such_file&)
   {

@@ -363,8 +363,7 @@ void SDL::draw (const Image& image,
   target.w = wtarget;
   target.h = htarget;
 
-  if (image.alpha != 255)
-    SDL_SetTextureAlphaMod(image.texture.get(), image.alpha);
+  SDL_SetTextureAlphaMod(image.texture.get(), image.alpha);
   SDL_RenderCopy(m_renderer, image.texture.get(), &source, &target);
 }
 

@@ -133,13 +133,21 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
   else // button
   {
     node.split(BUTTON, 1);
-    auto img = set<C::Image>(text->entity() + ":image",
-                             interface_font, menu_color, text->value());
-    img->z() = Config::menu_text_depth;
-    img->on() = false;
-    img->set_scale(0.75);
-    img->set_relative_origin(0.5, 0.5);
-    auto pos = set<C::Position>(text->entity() + ":position", Point(0,0));
+    // might be reused
+    auto img = request<C::Image>(text->entity() + ":image");
+    C::Position_handle pos;
+    if (!img)
+    {
+      img = set<C::Image>(text->entity() + ":image",
+                          interface_font, menu_color, text->value());
+      img->z() = Config::menu_text_depth;
+      img->on() = false;
+      img->set_scale(0.75);
+      img->set_relative_origin(0.5, 0.5);
+      pos = set<C::Position>(text->entity() + ":position", Point(0,0));
+    }
+    else
+      pos = get<C::Position>(text->entity() + ":position");
     node[0].init(img, pos);
 
     set<C::String>(text->entity() + ":effect", effect);
@@ -158,12 +166,19 @@ void Interface::init_menu_buttons (Component::Menu::Node node)
     for (std::size_t i = 0; i < node.nb_children(); ++ i)
       if (node[i].direction() == BUTTON)
       {
-        auto img = set<C::Image>(node[i][0].image()->entity() + "_button:image",
-            width, node[i][0].size().y());
-        img->z() = Config::menu_button_depth;
-        img->set_relative_origin(0.5, 0.5);
-        img->on() = false;
-        auto pos = set<C::Position>(img->entity() + ":position", Point(0,0));
+        auto img = request<C::Image>(node[i][0].image()->entity() + "_button:image");
+        C::Position_handle pos;
+        if (!img)
+        {
+          img = set<C::Image>(node[i][0].image()->entity() + "_button:image",
+              width, node[i][0].size().y());
+          img->z() = Config::menu_button_depth;
+          img->set_relative_origin(0.5, 0.5);
+          img->on() = false;
+          pos = set<C::Position>(img->entity() + ":position", Point(0,0));
+        }
+        else
+          pos = get<C::Position>(img->entity() + ":position");
         node[i].init(img, pos);
       }
   }
@@ -177,12 +192,19 @@ void Interface::init_menu_buttons (Component::Menu::Node node)
     for (std::size_t i = 0; i < node.nb_children(); ++ i)
       if (node[i].direction() == BUTTON)
       {
-        auto img = set<C::Image>(node[i][0].image()->entity() + "_button:image",
-            node[i][0].size().x(), height);
-        img->z() = Config::menu_button_depth;
-        img->set_relative_origin(0.5, 0.5);
-        img->on() = false;
-        auto pos = set<C::Position>(img->entity() + ":position", Point(0,0));
+        auto img = request<C::Image>(node[i][0].image()->entity() + "_button:image");
+        C::Position_handle pos;
+        if (!img)
+        {
+          img = set<C::Image>(node[i][0].image()->entity() + "_button:image",
+              node[i][0].size().x(), height);
+          img->z() = Config::menu_button_depth;
+          img->set_relative_origin(0.5, 0.5);
+          img->on() = false;
+          pos = set<C::Position>(img->entity() + ":position", Point(0,0));
+        }
+        else
+          pos = get<C::Position>(img->entity() + ":position");
         node[i].init(img, pos);
       }
   }
@@ -211,6 +233,8 @@ void Interface::update_exit()
         {
           remove("exit_message:image");
           remove("exit_message:position");
+          remove("exit_message_back:image");
+          remove("exit_message_back:position");
         }
         return;
       }
@@ -229,8 +253,19 @@ void Interface::update_exit()
                             get<C::String>("skip_cutscene:text")->value());
         img->z() += 10;
         img->set_scale(0.5);
+        img->set_relative_origin (1, 1);
 
-        set<C::Position>("exit_message:position", Point(5,5));
+        auto img_back
+            = set<C::Image>("exit_message_back:image", 0.5 * img->width() + 10, 0.5 * img->height() + 10);
+        img_back->z() = img->z() - 1;
+        img_back->set_relative_origin (1, 1);
+
+        int window_width = Config::world_width + get<C::Int>("interface:width")->value();
+        int window_height = Config::world_height + get<C::Int>("interface:height")->value();
+        set<C::Position>("exit_message:position", Point (window_width - 5,
+                                                         window_height - 5));
+        set<C::Position>("exit_message_back:position", Point (window_width,
+                                                              window_height));
       }
     }
     else
@@ -239,6 +274,8 @@ void Interface::update_exit()
       {
         remove("exit_message:image");
         remove("exit_message:position");
+        remove("exit_message_back:image");
+        remove("exit_message_back:position");
       }
     }
   }
@@ -314,5 +351,71 @@ void Interface::delete_menu (const std::string& id)
   get<C::Image>("menu_background:image")->on() = false;
   get<C::Image>("menu_foreground:image")->on() = false;
 }
+
+void Interface::menu_clicked(C::Position_handle cursor)
+{
+  std::string entity = m_collision->entity();
+  std::size_t pos = entity.find("_button");
+  if (pos != std::string::npos)
+    entity.resize(pos);
+
+  auto effect = request<C::String>(entity + ":effect");
+  if (!effect)
+    return;
+
+  const std::string& menu = get<C::String>("game:current_menu")->value();
+
+  if (effect->value() == "quit")
+  {
+    emit ("game:save");
+    emit ("game:exit");
+  }
+  else if (effect->value() == "new_game")
+  {
+    delete_menu ("exit");
+    create_menu ("wanna_restart");
+  }
+  else if (effect->value() == "ok")
+  {
+    if (menu == "wanna_restart")
+    {
+      set<C::Variable>("game:new_room", get<C::String>("game:init_new_room"));
+      if (auto orig = request<C::String>("game:init_new_room_origin"))
+        set<C::Variable>("game:new_room_origin", orig);
+      emit ("game:reset");
+      delete_menu("wanna_restart");
+      get<C::Status>(GAME__STATUS)->pop();
+    }
+    else if (menu == "credits")
+    {
+      delete_menu ("credits");
+      create_menu ("exit");
+    }
+    else if (menu == "hint")
+    {
+      delete_menu("hint");
+      get<C::Status>(GAME__STATUS)->pop();
+    }
+  }
+  else if (effect->value() == "credits")
+  {
+    delete_menu ("exit");
+    create_menu ("credits");
+  }
+  else if (effect->value() == "hint")
+  {
+    delete_menu ("exit");
+    create_menu ("hint");
+  }
+  else if (effect->value() == "cancel")
+  {
+    delete_menu(menu);
+    if (menu == "exit")
+      get<C::Status>(GAME__STATUS)->pop();
+    else if (menu == "wanna_restart")
+      create_menu("exit");
+  }
+}
+
 
 }
