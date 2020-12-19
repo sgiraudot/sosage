@@ -47,7 +47,7 @@ std::string Debug::debug_str()
   out += "CPU = " + std::to_string(m_clock.cpu()) + "%\n\n";
 
   out += std::to_string(m_content.size()) + " components in memory\n";
-  out += "Next hint: " + m_content.get<Component::Hints>("game:hints")->next() + "\n";
+  out += "Next hint: " + m_content.get<Component::Hints>("Game:hints")->next() + "\n";
 
   return out;
 }

@@ -59,31 +59,31 @@ File_IO::File_IO (Content& content)
 
 void File_IO::run()
 {
-  if (auto new_room = request<C::String>("game:new_room"))
+  if (auto new_room = request<C::String>("Game:new_room"))
   {
-    if (request<C::String>("game:new_room_origin"))
+    if (request<C::String>("Game:new_room_origin"))
       read_room (new_room->value());
     else
     {
       read_cutscene (new_room->value());
       get<C::Status>(GAME__STATUS)->push (CUTSCENE);
     }
-    remove ("game:new_room");
+    remove ("Game:new_room");
   }
 }
 
 void File_IO::clean_content()
 {
-  bool full_reset = receive ("game:reset");
+  bool full_reset = receive ("Game:reset");
 
   std::unordered_set<std::string> force_keep;
-  auto inventory = get<C::Inventory>("game:inventory");
+  auto inventory = get<C::Inventory>("Game:inventory");
   if (!full_reset)
   {
     for (const std::string& entity : *inventory)
       force_keep.insert (entity);
 
-    const std::string& player = get<C::String>("player:name")->value();
+    const std::string& player = get<C::String>("Player:name")->value();
     force_keep.insert (player);
     force_keep.insert (player + "_body");
     force_keep.insert (player + "_head");
@@ -92,7 +92,11 @@ void File_IO::clean_content()
     force_keep.insert (player + "_idle");
   }
   else
+  {
+    for (const std::string& entity : *inventory)
+      get<C::Image>(entity + ":image")->on() = false;
     inventory->clear();
+  }
 
   m_content.clear
     ([&](C::Handle c) -> bool
@@ -175,48 +179,48 @@ void File_IO::read_config()
 
   }
 
-  set<C::Boolean>("window:fullscreen", fullscreen);
-  set<C::Int>("interface:layout", layout);
-  set<C::Boolean>("interface:virtual_cursor", virtual_cursor);
+  set<C::Boolean>("Window:fullscreen", fullscreen);
+  set<C::Int>("Interface:layout", layout);
+  set<C::Boolean>("Interface:virtual_cursor", virtual_cursor);
 
-  set<C::Double>("text:dialog_speed", dialog_speed);
-  set<C::Double>("text:dialog_size", dialog_size);
+  set<C::Double>("Text:dialog_speed", dialog_speed);
+  set<C::Double>("Text:dialog_size", dialog_size);
 
-  set<C::Int>("music:volume", music_volume);
-  set<C::Int>("sounds:volume", sounds_volume);
+  set<C::Int>("Music:volume", music_volume);
+  set<C::Int>("Sounds:volume", sounds_volume);
 
-  set<C::Boolean>("game:autosave", autosave);
-  set<C::Boolean>("game:hints_on", hints);
+  set<C::Boolean>("Game:autosave", autosave);
+  set<C::Boolean>("Game:hints_on", hints);
 
-  set<C::Int>("interface:width", interface_width);
-  set<C::Int>("interface:height", interface_height);
-  set<C::Int>("window:width", window_width);
-  set<C::Int>("window:height", window_height);
+  set<C::Int>("Interface:width", interface_width);
+  set<C::Int>("Interface:height", interface_height);
+  set<C::Int>("Window:width", window_width);
+  set<C::Int>("Window:height", window_height);
 }
 
 void File_IO::write_config()
 {
   Core::File_IO output (Sosage::pref_path() + "config.yaml", true);
 
-  output.write ("fullscreen", get<C::Boolean>("window:fullscreen")->value());
-  output.write ("layout", get<C::Int>("interface:layout")->value());
-  output.write ("virtual_cursor", get<C::Boolean>("interface:virtual_cursor")->value());
+  output.write ("fullscreen", get<C::Boolean>("Window:fullscreen")->value());
+  output.write ("layout", get<C::Int>("Interface:layout")->value());
+  output.write ("virtual_cursor", get<C::Boolean>("Interface:virtual_cursor")->value());
 
-  output.write ("dialog_speed", get<C::Double>("text:dialog_speed")->value());
-  output.write ("dialog_size", get<C::Double>("text:dialog_size")->value());
+  output.write ("dialog_speed", get<C::Double>("Text:dialog_speed")->value());
+  output.write ("dialog_size", get<C::Double>("Text:dialog_size")->value());
 
-  output.write ("music_volume", get<C::Int>("music:volume")->value());
-  output.write ("sounds_volume", get<C::Int>("sounds:volume")->value());
+  output.write ("music_volume", get<C::Int>("Music:volume")->value());
+  output.write ("sounds_volume", get<C::Int>("Sounds:volume")->value());
 
-  output.write ("autosave", get<C::Boolean>("game:autosave")->value());
-  output.write ("hints", get<C::Boolean>("game:hints_on")->value());
+  output.write ("autosave", get<C::Boolean>("Game:autosave")->value());
+  output.write ("hints", get<C::Boolean>("Game:hints_on")->value());
 
   output.write ("window",
-                get<C::Int>("window:width")->value(),
-                get<C::Int>("window:height")->value());
+                get<C::Int>("Window:width")->value(),
+                get<C::Int>("Window:height")->value());
   output.write ("interface",
-                get<C::Int>("interface:width")->value(),
-                get<C::Int>("interface:height")->value());
+                get<C::Int>("Interface:width")->value(),
+                get<C::Int>("Interface:height")->value());
 }
 
 void File_IO::read_savefile()
@@ -224,18 +228,18 @@ void File_IO::read_savefile()
   std::string file_name = Sosage::pref_path() + "save.yaml";
   Core::File_IO input (file_name);
   input.parse();
-  set<C::String>("game:new_room", input["room"].string());
-  set<C::String>("game:new_room_origin", "saved_game");
+  set<C::String>("Game:new_room", input["room"].string());
+  set<C::String>("Game:new_room_origin", "Saved_game");
 
-  auto visited = get<C::Set<std::string> >("game:visited_rooms");
+  auto visited = get<C::Set<std::string> >("Game:visited_rooms");
   for (std::size_t i = 0; i < input["visited_rooms"].size(); ++ i)
     visited->insert(input["visited_rooms"][i].string());
 
-  auto inventory = get<C::Inventory>("game:inventory");
+  auto inventory = get<C::Inventory>("Game:inventory");
   for (std::size_t i = 0; i < input["inventory"].size(); ++ i)
     inventory->add(input["inventory"][i].string());
 
-  auto action = set<C::Action>("saved_game:action");
+  auto action = set<C::Action>("Saved_game:action");
   action->add ("play", { "music", input["music"].string() });
 
   for (std::size_t i = 0; i < input["states"].size(); ++ i)
@@ -273,7 +277,7 @@ void File_IO::read_savefile()
   if (input.has("dialog"))
   {
     action->add ("dialog", { input["dialog"].string() });
-    set<C::Int>("saved_game:dialog_position", input["dialog_position"].integer());
+    set<C::Int>("Saved_game:dialog_position", input["dialog_position"].integer());
   }
 }
 
@@ -281,31 +285,32 @@ void File_IO::write_savefile()
 {
   Core::File_IO output (Sosage::pref_path() + "save.yaml", true);
 
-  output.write("room", get<C::String>("game:current_room")->value());
-  output.write("inventory", get<C::Inventory>("game:inventory")->data());
-  output.write("music", get<C::Music>("game:music")->entity());
+  output.write("room", get<C::String>("Game:current_room")->value());
+  output.write("inventory", get<C::Inventory>("Game:inventory")->data());
+  output.write("music", get<C::Music>("Game:music")->entity());
 
-  if (auto dialog = request<C::String>("game:current_dialog"))
+  if (auto dialog = request<C::String>("Game:current_dialog"))
   {
     output.write("dialog", dialog->value());
-    output.write("dialog_position", get<C::Int>("game:dialog_position")->value());
+    output.write("dialog_position", get<C::Int>("Game:dialog_position")->value());
   }
 
   output.start_section("visited_rooms");
-  for (const std::string& room_name : *get<C::Set<std::string> >("game:visited_rooms"))
+  for (const std::string& room_name : *get<C::Set<std::string> >("Game:visited_rooms"))
     output.write_list_item (room_name);
   output.end_section();
 
   output.start_section("states");
   for (C::Handle c : m_content)
-    if (auto s = C::cast<C::String>(c))
-      if (c->component() == "state" && s->value() != "dummy")
+    if (!c->is_system())
+      if (auto s = C::cast<C::String>(c))
+        if (c->component() == "state")
         output.write_list_item ("id", c->entity(), "value", s->value());
   output.end_section();
 
   output.start_section("positions");
   for (C::Handle c : m_content)
-    if (c->component() == "position" && c->entity() != "cursor" && c->entity() != "loading_spin")
+    if (c->component() == "position" && c->entity() != "Cursor" && c->entity() != "Loading_spin")
       if (auto pos = C::cast<C::Position>(c))
         output.write_list_item ("id", c->entity(), "value",
                                 { pos->value().x(), pos->value().y() });
@@ -314,24 +319,27 @@ void File_IO::write_savefile()
 
   output.start_section("integers");
   for (C::Handle c : m_content)
-    if (auto i = C::cast<C::Int>(c))
-      output.write_list_item ("id", c->entity(), "value", i->value());
+    if (!c->is_system())
+      if (auto i = C::cast<C::Int>(c))
+        output.write_list_item ("id", c->entity(), "value", i->value());
   output.end_section();
 
   output.start_section("visibility");
   for (C::Handle c : m_content)
-    if (auto b = C::cast<C::Boolean>(c))
-      if (b->component() == "visible")
+    if (!c->is_system())
+      if (auto b = C::cast<C::Boolean>(c))
+        if (b->component() == "visible")
         output.write_list_item ("id", b->entity(), "value", b->value());
   output.end_section();
 
   output.start_section("active_animations");
   for (C::Handle c : m_content)
-    if (auto a = C::cast<C::Animation>(c))
-      if (a->on() && a->loop())
-        if (auto s = request<C::String>(a->entity() + ":state"))
-          if (s->value() == "dummy")
-            output.write_list_item (a->entity());
+    if (!c->is_system())
+      if (auto a = C::cast<C::Animation>(c))
+        if (a->on() && a->loop())
+          if (auto s = request<C::String>(a->entity() + ":state"))
+            if (s->value() == "Dummy")
+              output.write_list_item (a->entity());
   output.end_section();
 }
 
@@ -349,15 +357,15 @@ void File_IO::read_init (const std::string& folder_name)
          "Error: room version " + v + " incompatible with Sosage " + Version::str());
 
   std::string game_name = input["name"].string();
-  set<C::String>("game:name", game_name);
+  set<C::String>("Game:name", game_name);
 
   std::string icon = input["icon"].string("images", "interface", "png");
   auto icon_img
-    = set<C::Image>("icon:image", local_file_name(icon), 0);
+    = set<C::Image>("Icon:image", local_file_name(icon), 0);
   icon_img->on() = false;
 
   std::string cursor = input["cursor"].string("images", "interface", "png");
-  auto cursor_img = C::make_handle<C::Image> ("cursor:image", local_file_name(cursor),
+  auto cursor_img = C::make_handle<C::Image> ("Cursor:image", local_file_name(cursor),
                                                               Config::cursor_depth);
   cursor_img->set_relative_origin(0.5, 0.5);
 
@@ -367,82 +375,82 @@ void File_IO::read_init (const std::string& folder_name)
   {
     // Cursor displayed = NOT paused AND virtual
     set<C::Conditional>
-        ("cursor:conditional",
+        ("Cursor:conditional",
          C::make_and
-         (get<C::Condition>("unlocked:condition"),
-          get<C::Boolean>("interface:virtual_cursor")),
+         (get<C::Condition>("Unlocked:condition"),
+          get<C::Boolean>("Interface:virtual_cursor")),
          cursor_img);
   }
   else
   {
     // Cursor displayed = NOT paused
     set<C::Conditional>
-        ("cursor:conditional",
-         get<C::Condition>("unlocked:condition"),
+        ("Cursor:conditional",
+         get<C::Condition>("Unlocked:condition"),
          cursor_img);
   }
 
-  set_fac<C::Position> (CURSOR__POSITION, "cursor:position",
-                        (get<C::Boolean>("interface:virtual_cursor")->value()
+  set_fac<C::Position> (CURSOR__POSITION, "Cursor:position",
+                        (get<C::Boolean>("Interface:virtual_cursor")->value()
                         ? Point(Config::world_width / 2, Config::world_height / 2) : Point(0,0)));
 
   std::string turnicon = input["turnicon"].string("images", "interface", "png");
   auto turnicon_img
-    = set<C::Image>("turnicon:image", local_file_name(turnicon), 0);
+    = set<C::Image>("Turnicon:image", local_file_name(turnicon), 0);
   turnicon_img->on() = false;
 
   std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
   int nb_img = input["loading_spin"][1].integer();
-  auto loading_spin_img = set_fac<C::Animation> (LOADING_SPIN__IMAGE, "loading_spin:image", local_file_name(loading_spin),
+  auto loading_spin_img = set_fac<C::Animation> (LOADING_SPIN__IMAGE, "Loading_spin:image", local_file_name(loading_spin),
                                                                    Config::loading_depth, nb_img, 1, true);
   loading_spin_img->on() = false;
   loading_spin_img->set_relative_origin(0.5, 0.5);
-  set_fac<C::Position> (LOADING_SPIN__POSITION, "loading_spin:position", Point(Config::world_width / 2,
+  set_fac<C::Position> (LOADING_SPIN__POSITION, "Loading_spin:position", Point(Config::world_width / 2,
                                                                                Config::world_height / 2));
 
   std::string click_sound = input["click_sound"].string("sounds", "effects", "ogg");
-  set<C::Sound>("click:sound", local_file_name(click_sound));
+  set<C::Sound>("Click:sound", local_file_name(click_sound));
 
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
-  set<C::Font> ("debug:font", local_file_name(debug_font), 40);
+  set<C::Font> ("Debug:font", local_file_name(debug_font), 40);
 
   std::string interface_font = input["interface_font"].string("fonts", "ttf");
-  set<C::Font> ("interface:font", local_file_name(interface_font), 80);
+  set<C::Font> ("Interface:font", local_file_name(interface_font), 80);
 
   std::string interface_color = input["interface_color"].string();
-  set<C::String> ("interface:color", interface_color);
+  set<C::String> ("Interface:color", interface_color);
   std::array<unsigned char, 3> color = color_from_string (interface_color);
 
   std::string menu_font = input["menu_font"].string("fonts", "ttf");
-  set<C::Font> ("menu:font", local_file_name(menu_font), 80);
+  set<C::Font> ("Menu:font", local_file_name(menu_font), 80);
 
   std::string menu_color = input["menu_color"].string();
-  set<C::String> ("menu:color", menu_color);
+  set<C::String> ("Menu:color", menu_color);
 
   std::string logo_id = input["menu_logo"].string("images", "interface", "png");
   auto logo
-    = set<C::Image> ("menu_logo:image", local_file_name(logo_id));
+    = set<C::Image> ("Menu_logo:image", local_file_name(logo_id));
   logo->on() = false;
   auto credits_logo
-    = set<C::Image> ("credits_logo:image", local_file_name(logo_id));
+    = set<C::Image> ("Credits_logo:image", local_file_name(logo_id));
   credits_logo->on() = false;
 
 
   std::string credits_id = input["credits_image"].string("images", "interface", "png");
   auto credits
-    = set<C::Image> ("credits_text:image", local_file_name(credits_id));
+    = set<C::Image> ("Credits_text:image", local_file_name(credits_id));
   credits->on() = false;
 
   for (std::size_t i = 0; i < input["inventory_arrows"].size(); ++ i)
   {
     std::string id = input["inventory_arrows" ][i].string("images", "interface", "png");
     auto arrow
-      = set<C::Image> ("inventory_arrow_" + std::to_string(i) + ":image",
+      = set<C::Image> ("Inventory_arrow_" + std::to_string(i) + ":image",
                                          local_file_name(id),
                                          Config::inventory_front_depth);
     arrow->set_relative_origin(0.5, 0.5);
     auto arrow_background
-      = set<C::Image> ("inventory_arrow_background_" + std::to_string(i)
+      = set<C::Image> ("Inventory_arrow_background_" + std::to_string(i)
                                          + ":image",
                                          arrow->width(), arrow->height(),
                                          color[0], color[1], color[2]);
@@ -453,7 +461,9 @@ void File_IO::read_init (const std::string& folder_name)
   for (std::size_t i = 0; i < input["text"].size(); ++ i)
   {
     const Core::File_IO::Node& itext = input["text"][i];
-    set<C::String>(itext["id"].string() + ":text", itext["value"].string());
+    std::string id = itext["id"].string();
+    id[0] = toupper(id[0]); // system id start with uppercase
+    set<C::String>(id + ":text", itext["value"].string());
   }
 
   for (std::size_t i = 0; i < input["actions"].size(); ++ i)
@@ -461,7 +471,7 @@ void File_IO::read_init (const std::string& folder_name)
     const Core::File_IO::Node& idefault = input["actions"][i];
     std::string id = idefault["id"].string();
 
-    auto action = set<C::Random_conditional>("default:" + id);
+    auto action = set<C::Random_conditional>("Default:" + id);
 
     for (std::size_t j = 0; j < idefault["effect"].size(); ++ j)
     {
@@ -469,7 +479,7 @@ void File_IO::read_init (const std::string& folder_name)
       std::string function = iaction.nstring();
 
       auto rnd_action = C::make_handle<C::Action>
-        ("default:" + id + "_" + std::to_string(j));
+        ("Default:" + id + "_" + std::to_string(j));
       rnd_action->add ("look", {});
       rnd_action->add (function, iaction[function].string_array());
       action->add (1.0, rnd_action);
@@ -478,17 +488,17 @@ void File_IO::read_init (const std::string& folder_name)
   }
 
   std::string player = input["player"].string();
-  set<C::String>("player:name", player);
+  set<C::String>("Player:name", player);
 
   if (input.has("load_room"))
   {
-    set<C::String>("game:init_new_room", input["load_room"][0].string());
-    set<C::String>("game:init_new_room_origin", input["load_room"][1].string());
+    set<C::String>("Game:init_new_room", input["load_room"][0].string());
+    set<C::String>("Game:init_new_room_origin", input["load_room"][1].string());
   }
   else
   {
     check (input.has("load_cutscene"), "Init should either load a room or a cutscene");
-    set<C::String>("game:init_new_room", input["load_cutscene"].string());
+    set<C::String>("Game:init_new_room", input["load_cutscene"].string());
   }
 
   try
@@ -497,15 +507,15 @@ void File_IO::read_init (const std::string& folder_name)
   }
   catch(Sosage::No_such_file&)
   {
-    set<C::Variable>("game:new_room", get<C::String>("game:init_new_room"));
-    if (auto orig = request<C::String>("game:init_new_room_origin"))
-      set<C::Variable>("game:new_room_origin", orig);
+    set<C::Variable>("Game:new_room", get<C::String>("Game:init_new_room"));
+    if (auto orig = request<C::String>("Game:init_new_room_origin"))
+      set<C::Variable>("Game:new_room_origin", orig);
   }
 }
 
 void File_IO::read_cutscene (const std::string& file_name)
 {
-  auto callback = get<C::Simple<std::function<void()> > >("game:loading_callback");
+  auto callback = get<C::Simple<std::function<void()> > >("Game:loading_callback");
   callback->value()();
 
   clean_content();
@@ -519,7 +529,7 @@ void File_IO::read_cutscene (const std::string& file_name)
 
   std::string name = input["name"].string();
 
-  auto interface_font = get<C::Font> ("interface:font");
+  auto interface_font = get<C::Font> ("Interface:font");
   std::string color = "000000";
 
   std::unordered_map<std::string, const Core::File_IO::Node*> map_id2node;
@@ -590,7 +600,7 @@ void File_IO::read_cutscene (const std::string& file_name)
 
   std::unordered_map<std::string, double> map_id2begin;
 
-  auto cutscene = set<C::Cutscene>("game:cutscene");
+  auto cutscene = set<C::Cutscene>("Game:cutscene");
   for (std::size_t i = 0; i < input["timeline"].size(); ++ i)
   {
     const Core::File_IO::Node& node = input["timeline"][i];
@@ -667,7 +677,7 @@ void File_IO::read_cutscene (const std::string& file_name)
     callback->value()();
   }
 
-  emit ("window:rescaled");
+  emit ("Window:rescaled");
   cutscene->finalize();
 
   SOSAGE_TIMER_STOP(File_IO__read_cutscene);

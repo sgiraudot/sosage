@@ -46,25 +46,25 @@ void Sound::run()
 {
   auto status = m_content.get<C::Status>(GAME__STATUS);
 
-  auto music = m_content.request<C::Music>("game:music");
+  auto music = m_content.request<C::Music>("Game:music");
 
-  if (receive("music:start"))
+  if (receive("Music:start"))
   {
     check (music, "No music to start");
     m_core.start_music (music->core());
     music->on() = true;
   }
 
-  if (receive("music:fade"))
+  if (receive("Music:fade"))
   {
     check (music, "No music to fade");
-    auto fadein = request<C::Boolean>("fade:in");
+    auto fadein = request<C::Boolean>("Fade:in");
     double current_time = get<C::Double> (CLOCK__TIME)->value();
-    double end_time = get<C::Double>("fade:end")->value();
+    double end_time = get<C::Double>("Fade:end")->value();
     m_core.fade(music->core(), end_time - current_time, fadein->value());
   }
 
-  if (receive("music:stop"))
+  if (receive("Music:stop"))
     m_core.stop_music();
 
   if (music)
@@ -89,21 +89,21 @@ void Sound::run()
     }
   }
 
-  if (receive ("game:verb_clicked"))
-    m_core.play_sound (m_content.get<C::Sound>("click:sound")->core());
+  if (receive ("Game:verb_clicked"))
+    m_core.play_sound (m_content.get<C::Sound>("Click:sound")->core());
 
   if (receive ("code:play_failure"))
     m_core.play_sound
       (m_content.get<C::Sound>
-       (m_content.get<C::Code>("game:code")->entity() +"_failure:sound")->core());
+       (m_content.get<C::Code>("Game:code")->entity() +"_failure:sound")->core());
   else if (receive ("code:play_success"))
     m_core.play_sound
       (m_content.get<C::Sound>
-       (m_content.get<C::Code>("game:code")->entity() +"_success:sound")->core());
+       (m_content.get<C::Code>("Game:code")->entity() +"_success:sound")->core());
   else if (receive ("code:play_click"))
     m_core.play_sound
       (m_content.get<C::Sound>
-       (m_content.get<C::Code>("game:code")->entity() +"_button:sound")->core());
+       (m_content.get<C::Code>("Game:code")->entity() +"_button:sound")->core());
 
   std::vector<std::string> to_remove;
   for (C::Handle h : m_content)

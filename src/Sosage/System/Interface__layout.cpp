@@ -40,12 +40,12 @@ namespace C = Component;
 
 void Interface::update_layout()
 {
-  int window_width = get<C::Int>("window:width")->value();
-  int window_height = get<C::Int>("window:height")->value();
+  int window_width = get<C::Int>("Window:width")->value();
+  int window_height = get<C::Int>("Window:height")->value();
 
   int aspect_ratio = int(100. * window_width / double(window_height));
 
-  Config::Layout layout = Config::Layout(get<C::Int>("interface:layout")->value());
+  Config::Layout layout = Config::Layout(get<C::Int>("Interface:layout")->value());
 
   if (get<C::Status>(GAME__STATUS)->value() == CUTSCENE)
     layout = Config::STANDARD;
@@ -80,20 +80,20 @@ void Interface::update_layout()
     horizontal_layout();
   }
 
-  get<C::Image>("interface_action:image")->on() = false;
-  get<C::Image>("interface_verbs:image")->on() = false;
-  get<C::Image>("interface_inventory:image")->on() = false;
+  get<C::Image>("Interface_action:image")->on() = false;
+  get<C::Image>("Interface_verbs:image")->on() = false;
+  get<C::Image>("Interface_inventory:image")->on() = false;
 
-  bool blackscreen_on = get<C::Image>("blackscreen:image")->on();
-  auto blackscreen = set<C::Image>("blackscreen:image",
-                                   Config::world_width + get<C::Int>("interface:width")->value(),
-                                   Config::world_height + get<C::Int>("interface:height")->value(),
+  bool blackscreen_on = get<C::Image>("Blackscreen:image")->on();
+  auto blackscreen = set<C::Image>("Blackscreen:image",
+                                   Config::world_width + get<C::Int>("Interface:width")->value(),
+                                   Config::world_height + get<C::Int>("Interface:height")->value(),
                                    0, 0, 0, 255);
   blackscreen->on() = false;
   blackscreen->z() = Config::overlay_depth;
   blackscreen->collision() = UNCLICKABLE;
 
-  remove ("dialog_choice_background:image", true);
+  remove ("Dialog_choice_background:image", true);
   update_pause_screen();
 }
 
@@ -105,24 +105,24 @@ void Interface::layout_widescreen()
   int interface_height = 525;
   int interface_width = 180;
 
-  set<C::Image> ("interface_action:image", world_width, m_action_height, 0, 0, 0);
-  set<C::Position> ("interface_action:position", Point(0, world_height));
+  set<C::Image> ("Interface_action:image", world_width, m_action_height, 0, 0, 0);
+  set<C::Position> ("Interface_action:position", Point(0, world_height));
 
-  set<C::Image> ("interface_verbs:image", interface_width, interface_height, 0, 0, 0);
-  set<C::Position> ("interface_verbs:position", Point(world_width, 0));
+  set<C::Image> ("Interface_verbs:image", interface_width, interface_height, 0, 0, 0);
+  set<C::Position> ("Interface_verbs:position", Point(world_width, 0));
 
-  set<C::Image> ("interface_inventory:image", interface_width, interface_height, 0, 0, 0);
-  set<C::Position> ("interface_inventory:position",
+  set<C::Image> ("Interface_inventory:image", interface_width, interface_height, 0, 0, 0);
+  set<C::Position> ("Interface_inventory:position",
                                       Point(world_width, interface_height));
 
-  set<C::Position>("chosen_verb:position", Point(world_width / 2,
+  set<C::Position>("Chosen_verb:position", Point(world_width / 2,
                                                                    world_height + m_action_height / 2));
 
-  get<C::Image> ("turnicon:image")->on() = false;
+  get<C::Image> ("Turnicon:image")->on() = false;
 
 
-  get<C::Int>("interface:width")->set(interface_width);
-  get<C::Int>("interface:height")->set(m_action_height);
+  get<C::Int>("Interface:width")->set(interface_width);
+  get<C::Int>("Interface:height")->set(m_action_height);
 }
 
 void Interface::layout_standard()
@@ -133,23 +133,23 @@ void Interface::layout_standard()
   int interface_height = 150;
   int interface_width = world_width / 2;
 
-  set<C::Image> ("interface_action:image", world_width, m_action_height, 0, 0, 0);
-  set<C::Position> ("interface_action:position", Point(0, world_height));
+  set<C::Image> ("Interface_action:image", world_width, m_action_height, 0, 0, 0);
+  set<C::Position> ("Interface_action:position", Point(0, world_height));
 
-  set<C::Image> ("interface_verbs:image", interface_width, interface_height, 0, 0, 0);
-  set<C::Position> ("interface_verbs:position", Point(0, m_action_height + world_height));
+  set<C::Image> ("Interface_verbs:image", interface_width, interface_height, 0, 0, 0);
+  set<C::Position> ("Interface_verbs:position", Point(0, m_action_height + world_height));
 
-  set<C::Image> ("interface_inventory:image", interface_width, interface_height, 0, 0, 0);
-  set<C::Position> ("interface_inventory:position",
+  set<C::Image> ("Interface_inventory:image", interface_width, interface_height, 0, 0, 0);
+  set<C::Position> ("Interface_inventory:position",
                                       Point(interface_width, m_action_height + world_height));
 
-  set<C::Position>("chosen_verb:position", Point(world_width / 2,
+  set<C::Position>("Chosen_verb:position", Point(world_width / 2,
                                                                    world_height + m_action_height / 2));
 
-  get<C::Image> ("turnicon:image")->on() = false;
+  get<C::Image> ("Turnicon:image")->on() = false;
 
-  get<C::Int>("interface:width")->set(0);
-  get<C::Int>("interface:height")->set(interface_height + m_action_height);
+  get<C::Int>("Interface:width")->set(0);
+  get<C::Int>("Interface:height")->set(interface_height + m_action_height);
 }
 
 void Interface::layout_square()
@@ -160,23 +160,23 @@ void Interface::layout_square()
   int interface_height = 300;
   int interface_width = world_width;
 
-  set<C::Image> ("interface_action:image", world_width, m_action_height, 0, 0, 0);
-  set<C::Position> ("interface_action:position", Point(0, world_height));
+  set<C::Image> ("Interface_action:image", world_width, m_action_height, 0, 0, 0);
+  set<C::Position> ("Interface_action:position", Point(0, world_height));
 
-  set<C::Image> ("interface_verbs:image", interface_width, interface_height, 0, 0, 0);
-  set<C::Position> ("interface_verbs:position", Point(0, m_action_height + world_height));
+  set<C::Image> ("Interface_verbs:image", interface_width, interface_height, 0, 0, 0);
+  set<C::Position> ("Interface_verbs:position", Point(0, m_action_height + world_height));
 
-  set<C::Image> ("interface_inventory:image", interface_width, interface_height, 0, 0, 0);
-  set<C::Position> ("interface_inventory:position",
+  set<C::Image> ("Interface_inventory:image", interface_width, interface_height, 0, 0, 0);
+  set<C::Position> ("Interface_inventory:position",
                                       Point(0, m_action_height + world_height + interface_height));
 
-  set<C::Position>("chosen_verb:position", Point(world_width / 2,
+  set<C::Position>("Chosen_verb:position", Point(world_width / 2,
                                                                    world_height + m_action_height / 2));
 
-  get<C::Image> ("turnicon:image")->on() = false;
+  get<C::Image> ("Turnicon:image")->on() = false;
 
-  get<C::Int>("interface:width")->set(0);
-  get<C::Int>("interface:height")->set(2 * interface_height + m_action_height);
+  get<C::Int>("Interface:width")->set(0);
+  get<C::Int>("Interface:height")->set(2 * interface_height + m_action_height);
 }
 
 void Interface::layout_portrait()
@@ -187,37 +187,37 @@ void Interface::layout_portrait()
   int interface_height = 300;
   int interface_width = world_width;
 
-  set<C::Image> ("interface_action:image", world_width, m_action_height, 0, 0, 0);
-  set<C::Position> ("interface_action:position", Point(0, world_height));
+  set<C::Image> ("Interface_action:image", world_width, m_action_height, 0, 0, 0);
+  set<C::Position> ("Interface_action:position", Point(0, world_height));
 
-  set<C::Image> ("interface_verbs:image", interface_width, interface_height, 0, 0, 0);
-  set<C::Position> ("interface_verbs:position", Point(0, m_action_height + world_height));
+  set<C::Image> ("Interface_verbs:image", interface_width, interface_height, 0, 0, 0);
+  set<C::Position> ("Interface_verbs:position", Point(0, m_action_height + world_height));
 
-  set<C::Image> ("interface_inventory:image", interface_width, interface_height, 0, 0, 0);
-  set<C::Position> ("interface_inventory:position",
+  set<C::Image> ("Interface_inventory:image", interface_width, interface_height, 0, 0, 0);
+  set<C::Position> ("Interface_inventory:position",
                                       Point(0, m_action_height + world_height + interface_height));
 
-  set<C::Position>("chosen_verb:position", Point(world_width / 2,
+  set<C::Position>("Chosen_verb:position", Point(world_width / 2,
                                                                    world_height + m_action_height / 2));
 
   auto turnicon
-    = get<C::Image> ("turnicon:image");
+    = get<C::Image> ("Turnicon:image");
 
-  set<C::Position>("turnicon:position",
+  set<C::Position>("Turnicon:position",
                                      Point(0, world_height + 2 * interface_height + m_action_height));
 
   turnicon->on() = true;
 
-  get<C::Int>("interface:width")->set(0);
-  get<C::Int>("interface:height")->set(2 * interface_height + m_action_height
+  get<C::Int>("Interface:width")->set(0);
+  get<C::Int>("Interface:height")->set(2 * interface_height + m_action_height
                                                          + turnicon->height());
 }
 
 void Interface::vertical_layout()
 {
-  auto interface_font = get<C::Font> ("interface:font");
+  auto interface_font = get<C::Font> ("Interface:font");
 
-  auto interface_verbs = get<C::Image>("interface_verbs:image");
+  auto interface_verbs = get<C::Image>("Interface_verbs:image");
   int interface_width = interface_verbs->width();
   int interface_height = interface_verbs->height();
 
@@ -270,56 +270,56 @@ void Interface::vertical_layout()
     current_y += img->height() * min_scaling + h_spacing;
   }
 
-  set<C::Position>("chosen_verb:position", Point(Config::world_width / 2,
+  set<C::Position>("Chosen_verb:position", Point(Config::world_width / 2,
                                                                    Config::world_height + m_action_height / 2));
 
   m_verb_scale = min_scaling;
 
-  get<C::Image> ("inventory_arrow_1:image")->on() = false;
-  get<C::Image> ("inventory_arrow_background_1:image")->on() = false;
-  get<C::Image> ("inventory_arrow_3:image")->on() = false;
-  get<C::Image> ("inventory_arrow_background_3:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_1:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_background_1:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_3:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_background_3:image")->on() = false;
 
   auto inventory_position
-    = get<C::Position> ("interface_inventory:position");
-  auto inventory = get<C::Inventory>("game:inventory");
+    = get<C::Position> ("Interface_inventory:position");
+  auto inventory = get<C::Inventory>("Game:inventory");
   bool left_on = (inventory->position() > 0);
   bool right_on =  (inventory->size() - inventory->position() > Config::displayed_inventory_size);
 
-  auto arrow_img = get<C::Image> ("inventory_arrow_0:image");
+  auto arrow_img = get<C::Image> ("Inventory_arrow_0:image");
   arrow_img->on() = left_on;
   arrow_img->set_scale (interface_width / double(arrow_img->width()));
 
   auto arrow_background_img
-    = get<C::Image> ("inventory_arrow_background_0:image");
+    = get<C::Image> ("Inventory_arrow_background_0:image");
   arrow_background_img->on() = left_on;
   arrow_background_img->set_scale (interface_width / double(arrow_img->width()));
 
-  set<C::Position> ("inventory_arrow_0:position",
+  set<C::Position> ("Inventory_arrow_0:position",
                                       inventory_position->value()
                                       + Vector(interface_width / 2,
                                                interface_height * 0.05));
-  set<C::Position> ("inventory_arrow_background_0:position",
+  set<C::Position> ("Inventory_arrow_background_0:position",
                                       inventory_position->value()
                                       + Vector(interface_width / 2,
                                                interface_height * 0.05));
 
 
   arrow_img
-    = get<C::Image> ("inventory_arrow_2:image");
+    = get<C::Image> ("Inventory_arrow_2:image");
   arrow_img->on() = right_on;
   arrow_img->set_scale (interface_width / double(arrow_img->width()));
 
   arrow_background_img
-    = get<C::Image> ("inventory_arrow_background_2:image");
+    = get<C::Image> ("Inventory_arrow_background_2:image");
   arrow_background_img->on() = right_on;
   arrow_background_img->set_scale (interface_width / double(arrow_img->width()));
 
-  set<C::Position> ("inventory_arrow_2:position",
+  set<C::Position> ("Inventory_arrow_2:position",
                                       inventory_position->value()
                                       + Vector(interface_width / 2,
                                                interface_height * 0.95));
-  set<C::Position> ("inventory_arrow_background_2:position",
+  set<C::Position> ("Inventory_arrow_background_2:position",
                                       inventory_position->value()
                                       + Vector(interface_width / 2,
                                                interface_height * 0.95));
@@ -327,9 +327,9 @@ void Interface::vertical_layout()
 
 void Interface::horizontal_layout()
 {
-  auto interface_font = get<C::Font> ("interface:font");
+  auto interface_font = get<C::Font> ("Interface:font");
 
-  auto interface_verbs = get<C::Image>("interface_verbs:image");
+  auto interface_verbs = get<C::Image>("Interface_verbs:image");
   int interface_width = interface_verbs->width();
   int interface_height = interface_verbs->height();
 
@@ -408,57 +408,57 @@ void Interface::horizontal_layout()
     current_xbottom += bottom->width() * min_scaling + w_spacing_bottom;
   }
 
-  set<C::Position>("chosen_verb:position", Point(Config::world_width / 2,
+  set<C::Position>("Chosen_verb:position", Point(Config::world_width / 2,
                                                                    Config::world_height + m_action_height / 2));
 
   m_verb_scale = min_scaling;
 
-  get<C::Image> ("inventory_arrow_0:image")->on() = false;
-  get<C::Image> ("inventory_arrow_background_0:image")->on() = false;
-  get<C::Image> ("inventory_arrow_2:image")->on() = false;
-  get<C::Image> ("inventory_arrow_background_2:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_0:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_background_0:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_2:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_background_2:image")->on() = false;
 
   auto inventory_position
-    = get<C::Position> ("interface_inventory:position");
-  auto inventory = get<C::Inventory>("game:inventory");
+    = get<C::Position> ("Interface_inventory:position");
+  auto inventory = get<C::Inventory>("Game:inventory");
   bool left_on = (inventory->position() > 0);
   bool right_on =  (inventory->size() - inventory->position() > Config::displayed_inventory_size);
 
   auto arrow_img
-    = get<C::Image> ("inventory_arrow_1:image");
+    = get<C::Image> ("Inventory_arrow_1:image");
   arrow_img->on() = left_on;
   arrow_img->set_scale (interface_height / double(arrow_img->height()));
 
   auto arrow_background_img
-    = get<C::Image> ("inventory_arrow_background_1:image");
+    = get<C::Image> ("Inventory_arrow_background_1:image");
   arrow_background_img->on() = left_on;
   arrow_background_img->set_scale (interface_height / double(arrow_img->height()));
 
-  set<C::Position> ("inventory_arrow_1:position",
+  set<C::Position> ("Inventory_arrow_1:position",
                                       inventory_position->value()
                                       + Vector(interface_width * 0.05,
                                                interface_height / 2));
-  set<C::Position> ("inventory_arrow_background_1:position",
+  set<C::Position> ("Inventory_arrow_background_1:position",
                                       inventory_position->value()
                                       + Vector(interface_width * 0.05,
                                                interface_height / 2));
 
 
   arrow_img
-    = get<C::Image> ("inventory_arrow_3:image");
+    = get<C::Image> ("Inventory_arrow_3:image");
   arrow_img->on() = right_on;
   arrow_img->set_scale (interface_height / double(arrow_img->height()));
 
   arrow_background_img
-    = get<C::Image> ("inventory_arrow_background_3:image");
+    = get<C::Image> ("Inventory_arrow_background_3:image");
   arrow_background_img->on() = right_on;
   arrow_background_img->set_scale (interface_height / double(arrow_img->height()));
 
-  set<C::Position> ("inventory_arrow_3:position",
+  set<C::Position> ("Inventory_arrow_3:position",
                                       inventory_position->value()
                                       + Vector(interface_width * 0.95,
                                                interface_height / 2));
-  set<C::Position> ("inventory_arrow_background_3:position",
+  set<C::Position> ("Inventory_arrow_background_3:position",
                                       inventory_position->value()
                                       + Vector(interface_width * 0.95,
                                                interface_height / 2));

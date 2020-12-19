@@ -58,7 +58,7 @@ void Animation::run()
   if (new_frame_id == m_frame_id)
   {
     // Force update when new room is loaded
-    if (request<C::Boolean>("game:in_new_room"))
+    if (request<C::Boolean>("Game:in_new_room"))
       run_one_frame();
     return;
   }
@@ -75,19 +75,19 @@ void Animation::run_one_frame()
       if (b->component() == "visible")
         b->begin_temporary_true();
 
-  if (auto new_char = request<C::Vector<std::pair<std::string, bool> > >("game:new_characters"))
+  if (auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game:new_characters"))
   {
     for (const auto& nc : new_char->value())
     {
       place_and_scale_character (nc.first, nc.second);
       generate_random_idle_animation (nc.first, nc.second);
     }
-    remove("game:new_characters");
+    remove("Game:new_characters");
   }
 
-  if (auto looking_right = request<C::Boolean>("game:in_new_room"))
+  if (auto looking_right = request<C::Boolean>("Game:in_new_room"))
   {
-    const std::string& player = get<C::String>("player:name")->value();
+    const std::string& player = get<C::String>("Player:name")->value();
     place_and_scale_character (player, looking_right->value());
     generate_random_idle_animation (player, looking_right->value());
 
@@ -97,7 +97,7 @@ void Animation::run_one_frame()
         if (request<C::String>(c->entity() + ":state"))
           anim->on() = true;
 
-    remove("game:in_new_room");
+    remove("Game:in_new_room");
   }
 
   std::vector<std::string> to_remove;
@@ -175,7 +175,7 @@ void Animation::run_one_frame()
     {
       if (!compute_movement_from_path(path))
         to_remove.push_back(c->id());
-      else if (path->entity() == get<C::String>("player:name")->value())
+      else if (path->entity() == get<C::String>("Player:name")->value())
         has_moved = true;
     }
     else if (C::cast<C::Signal>(c))
@@ -226,14 +226,14 @@ void Animation::run_one_frame()
   for (const std::string& c : to_remove)
     remove(c);
 
-  if (auto fadein = request<C::Boolean>("fade:in"))
+  if (auto fadein = request<C::Boolean>("Fade:in"))
   {
-    fade (get<C::Double>("fade:begin")->value(), get<C::Double>("fade:end")->value(), fadein->value());
+    fade (get<C::Double>("Fade:begin")->value(), get<C::Double>("Fade:end")->value(), fadein->value());
     m_fade_to_remove = fadein->value();
   }
   else if (m_fade_to_remove)
   {
-    get<C::Image>("blackscreen:image")->on() = false;
+    get<C::Image>("Blackscreen:image")->on() = false;
     m_fade_to_remove = false;
   }
 
@@ -258,7 +258,7 @@ bool Animation::run_loading()
   if (new_frame_id == m_frame_id)
     return false;
   m_frame_id = new_frame_id;
-  m_content.get<Component::Animation>("loading_spin:image")->next_frame();
+  m_content.get<Component::Animation>("Loading_spin:image")->next_frame();
   return true;
 }
 
@@ -274,7 +274,7 @@ void Animation::place_and_scale_character(const std::string& id, bool looking_ri
   auto pbody = get<C::Position>(id + "_body:position");
   auto phead = get<C::Position>(id + "_head:position");
   auto pmouth = get<C::Position>(id + "_mouth:position");
-  auto ground_map = get<C::Ground_map>("background:ground_map");
+  auto ground_map = get<C::Ground_map>("Background:ground_map");
 
   double new_z = ground_map->z_at_point (pbody->value());
   abody->rescale (new_z);
@@ -313,7 +313,7 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
   auto pbody = get<C::Position>(id + "_body:position");
   auto phead = get<C::Position>(id + "_head:position");
   auto pmouth = get<C::Position>(id + "_mouth:position");
-  auto ground_map = get<C::Ground_map>("background:ground_map");
+  auto ground_map = get<C::Ground_map>("Background:ground_map");
 
   Point pos = pbody->value();
 
@@ -610,23 +610,23 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
   if (alpha < 0)
     alpha = 0;
 
-  auto img = get<C::Image>("blackscreen:image");
+  auto img = get<C::Image>("Blackscreen:image");
   img->on() = true;
   img->set_alpha((unsigned char)(255 * alpha));
 }
 
 void Animation::update_camera_target ()
 {
-  const std::string& id = get<C::String>("player:name")->value();
+  const std::string& id = get<C::String>("Player:name")->value();
   int xbody = get<C::Position>(id + "_body:position")->value().X();
   double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
   if (xbody < xcamera + Config::camera_limit_left)
-    get<C::Double>("camera:target")->set (std::max (0, xbody - Config::camera_limit_right));
+    get<C::Double>("Camera:target")->set (std::max (0, xbody - Config::camera_limit_right));
   else if (xbody > xcamera + Config::camera_limit_right)
   {
-    int width = get<C::Image>("background:image")->width();
-    get<C::Double>("camera:target")->set (std::min (width - Config::world_width, xbody - Config::camera_limit_left));
+    int width = get<C::Image>("Background:image")->width();
+    get<C::Double>("Camera:target")->set (std::min (width - Config::world_width, xbody - Config::camera_limit_left));
   }
 }
 

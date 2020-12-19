@@ -39,39 +39,39 @@ namespace C = Component;
 
 void Interface::init_menus()
 {
-  auto exit_menu = set<C::Menu>("exit:menu");
+  auto exit_menu = set<C::Menu>("Exit:menu");
   exit_menu->split(VERTICALLY, 7);
-  init_menu_item ((*exit_menu)[0], "menu_logo", "");
-  init_menu_item ((*exit_menu)[1], "continue", "cancel");
-  init_menu_item ((*exit_menu)[2], "new_game", "new_game");
-  init_menu_item ((*exit_menu)[3], "hint", "hint");
-  init_menu_item ((*exit_menu)[4], "settings", "settings");
-  init_menu_item ((*exit_menu)[5], "credits", "credits");
-  init_menu_item ((*exit_menu)[6], "quit", "quit");
+  init_menu_item ((*exit_menu)[0], "Menu_logo", "");
+  init_menu_item ((*exit_menu)[1], "Continue", "cancel");
+  init_menu_item ((*exit_menu)[2], "New_game", "new_game");
+  init_menu_item ((*exit_menu)[3], "Hint", "hint");
+  init_menu_item ((*exit_menu)[4], "Settings", "settings");
+  init_menu_item ((*exit_menu)[5], "Credits", "credits");
+  init_menu_item ((*exit_menu)[6], "Quit", "quit");
   init_menu_buttons (exit_menu->root());
 
-  auto wanna_restart_menu = set<C::Menu>("wanna_restart:menu");
+  auto wanna_restart_menu = set<C::Menu>("Wanna_restart:menu");
   wanna_restart_menu->split(VERTICALLY, 2);
   (*wanna_restart_menu)[1].split(HORIZONTALLY, 2);
-  init_menu_item ((*wanna_restart_menu)[0], "wanna_restart", "");
-  init_menu_item ((*wanna_restart_menu)[1][0], "ok", "ok");
-  init_menu_item ((*wanna_restart_menu)[1][1], "cancel", "cancel");
+  init_menu_item ((*wanna_restart_menu)[0], "Wanna_restart", "");
+  init_menu_item ((*wanna_restart_menu)[1][0], "Ok", "ok");
+  init_menu_item ((*wanna_restart_menu)[1][1], "Cancel", "cancel");
   init_menu_buttons ((*wanna_restart_menu)[1]);
 
-  auto credits_menu = set<C::Menu>("credits:menu");
+  auto credits_menu = set<C::Menu>("Credits:menu");
   credits_menu->split(VERTICALLY, 3);
-  init_menu_item ((*credits_menu)[0], "credits_logo", "");
-  init_menu_item ((*credits_menu)[1], "credits_text", "");
-  init_menu_item ((*credits_menu)[2], "ok", "ok");
+  init_menu_item ((*credits_menu)[0], "Credits_logo", "");
+  init_menu_item ((*credits_menu)[1], "Credits_text", "");
+  init_menu_item ((*credits_menu)[2], "Ok", "ok");
   init_menu_buttons (credits_menu->root());
 }
 
 void Interface::init_menu_item (Component::Menu::Node node, const std::string& id,
                                const std::string& effect)
 {
-  const std::string& menu_color = get<C::String>("menu:color")->value();
-  auto interface_font = get<C::Font>("interface:font");
-  auto menu_font = get<C::Font>("menu:font");
+  const std::string& menu_color = get<C::String>("Menu:color")->value();
+  auto interface_font = get<C::Font>("Interface:font");
+  auto menu_font = get<C::Font>("Menu:font");
 
   auto text = request<C::String>(id + ":text");
 
@@ -215,26 +215,26 @@ void Interface::update_exit()
   auto status = get<C::Status>(GAME__STATUS);
   if (status->value() == LOCKED)
   {
-    receive("game:escape");
+    receive("Game:escape");
     return;
   }
 
   if (status->value() == CUTSCENE)
   {
     double time = get<C::Double>(CLOCK__TIME)->value();
-    bool exit_message_exists = (request<C::Image>("exit_message:image") != nullptr);
+    bool exit_message_exists = (request<C::Image>("Exit_message:image") != nullptr);
 
-    if (receive("game:escape"))
+    if (receive("Game:escape"))
     {
       if (time - m_latest_exit < Config::key_repeat_delay)
       {
-        emit("game:skip_cutscene");
+        emit("Game:skip_cutscene");
         if (exit_message_exists)
         {
-          remove("exit_message:image");
-          remove("exit_message:position");
-          remove("exit_message_back:image");
-          remove("exit_message_back:position");
+          remove("Exit_message:image");
+          remove("Exit_message:position");
+          remove("Exit_message_back:image");
+          remove("Exit_message_back:position");
         }
         return;
       }
@@ -246,25 +246,25 @@ void Interface::update_exit()
     {
       if (!exit_message_exists)
       {
-        auto interface_font = get<C::Font> ("interface:font");
+        auto interface_font = get<C::Font> ("Interface:font");
 
         auto img
-            = set<C::Image>("exit_message:image", interface_font, "FFFFFF",
-                            get<C::String>("skip_cutscene:text")->value());
+            = set<C::Image>("Exit_message:image", interface_font, "FFFFFF",
+                            get<C::String>("Skip_cutscene:text")->value());
         img->z() += 10;
         img->set_scale(0.5);
         img->set_relative_origin (1, 1);
 
         auto img_back
-            = set<C::Image>("exit_message_back:image", 0.5 * img->width() + 10, 0.5 * img->height() + 10);
+            = set<C::Image>("Exit_message_back:image", 0.5 * img->width() + 10, 0.5 * img->height() + 10);
         img_back->z() = img->z() - 1;
         img_back->set_relative_origin (1, 1);
 
-        int window_width = Config::world_width + get<C::Int>("interface:width")->value();
-        int window_height = Config::world_height + get<C::Int>("interface:height")->value();
-        set<C::Position>("exit_message:position", Point (window_width - 5,
+        int window_width = Config::world_width + get<C::Int>("Interface:width")->value();
+        int window_height = Config::world_height + get<C::Int>("Interface:height")->value();
+        set<C::Position>("Exit_message:position", Point (window_width - 5,
                                                          window_height - 5));
-        set<C::Position>("exit_message_back:position", Point (window_width,
+        set<C::Position>("Exit_message_back:position", Point (window_width,
                                                               window_height));
       }
     }
@@ -272,25 +272,25 @@ void Interface::update_exit()
     {
       if (exit_message_exists)
       {
-        remove("exit_message:image");
-        remove("exit_message:position");
-        remove("exit_message_back:image");
-        remove("exit_message_back:position");
+        remove("Exit_message:image");
+        remove("Exit_message:position");
+        remove("Exit_message_back:image");
+        remove("Exit_message_back:position");
       }
     }
   }
   else // status != CUTSCENE
   {
-    if (receive("game:escape"))
+    if (receive("Game:escape"))
     {
       if (status->value() == IN_MENU)
       {
-        delete_menu(get<C::String>("game:current_menu")->value());
+        delete_menu(get<C::String>("Game:current_menu")->value());
         status->pop();
       }
       else
       {
-        create_menu("exit");
+        create_menu("Exit");
         status->push (IN_MENU);
       }
     }
@@ -300,41 +300,41 @@ void Interface::update_exit()
 
 void Interface::create_menu (const std::string& id)
 {
-  set<C::String>("game:current_menu", id);
+  set<C::String>("Game:current_menu", id);
 
   // Hint menu is created on the fly
-  if (id == "hint")
+  if (id == "Hint")
   {
-    std::string hint = get<C::Hints>("game:hints")->next();
+    std::string hint = get<C::Hints>("Game:hints")->next();
     if (hint == "")
-      hint = get<C::String>("no_hint:text")->value();
-    set<C::String>("hint_text:text", hint);
-    auto hint_menu = set<C::Menu>("hint:menu");
+      hint = get<C::String>("No_hint:text")->value();
+    set<C::String>("Hint_text:text", hint);
+    auto hint_menu = set<C::Menu>("Hint:menu");
     hint_menu->split(VERTICALLY, 2);
-    init_menu_item ((*hint_menu)[0], "hint_text", "");
-    init_menu_item ((*hint_menu)[1], "ok", "ok");
+    init_menu_item ((*hint_menu)[0], "Hint_text", "");
+    init_menu_item ((*hint_menu)[1], "Ok", "ok");
     init_menu_buttons (hint_menu->root());
   }
 
   auto menu = get<C::Menu>(id + ":menu");
-  const std::string& menu_color = get<C::String>("menu:color")->value();
+  const std::string& menu_color = get<C::String>("Menu:color")->value();
 
   Vector size = menu->size();
 
   auto color = color_from_string (menu_color);
-  auto img = set<C::Image>("menu_foreground:image", size.x(), size.y(),
+  auto img = set<C::Image>("Menu_foreground:image", size.x(), size.y(),
                            color[0], color[1], color[2]);
   img->set_relative_origin (0.5, 0.5);
   img->z() = Config::menu_front_depth;
-  set<C::Position>("menu_foreground:position",
+  set<C::Position>("Menu_foreground:position",
                    Point (Config::world_width / 2,
                           Config::world_height / 2));
 
-  auto img2 = set<C::Image>("menu_background:image", size.x() + 10, size.y() + 10);
+  auto img2 = set<C::Image>("Menu_background:image", size.x() + 10, size.y() + 10);
 
   img2->set_relative_origin (0.5, 0.5);
   img2->z() = Config::menu_back_depth;
-  set<C::Position>("menu_background:position",
+  set<C::Position>("Menu_background:position",
                    Point (Config::world_width / 2,
                           Config::world_height / 2));
 
@@ -348,8 +348,8 @@ void Interface::delete_menu (const std::string& id)
 {
   auto menu = get<C::Menu>(id + ":menu");
   menu->hide();
-  get<C::Image>("menu_background:image")->on() = false;
-  get<C::Image>("menu_foreground:image")->on() = false;
+  get<C::Image>("Menu_background:image")->on() = false;
+  get<C::Image>("Menu_foreground:image")->on() = false;
 }
 
 void Interface::menu_clicked(C::Position_handle cursor)
@@ -363,57 +363,57 @@ void Interface::menu_clicked(C::Position_handle cursor)
   if (!effect)
     return;
 
-  const std::string& menu = get<C::String>("game:current_menu")->value();
+  const std::string& menu = get<C::String>("Game:current_menu")->value();
 
   if (effect->value() == "quit")
   {
-    emit ("game:save");
-    emit ("game:exit");
+    emit ("Game:save");
+    emit ("Game:exit");
   }
   else if (effect->value() == "new_game")
   {
-    delete_menu ("exit");
-    create_menu ("wanna_restart");
+    delete_menu ("Exit");
+    create_menu ("Wanna_restart");
   }
   else if (effect->value() == "ok")
   {
-    if (menu == "wanna_restart")
+    if (menu == "Wanna_restart")
     {
-      set<C::Variable>("game:new_room", get<C::String>("game:init_new_room"));
-      if (auto orig = request<C::String>("game:init_new_room_origin"))
-        set<C::Variable>("game:new_room_origin", orig);
-      emit ("game:reset");
-      delete_menu("wanna_restart");
+      set<C::Variable>("Game:new_room", get<C::String>("Game:init_new_room"));
+      if (auto orig = request<C::String>("Game:init_new_room_origin"))
+        set<C::Variable>("Game:new_room_origin", orig);
+      emit ("Game:reset");
+      delete_menu("Wanna_restart");
       get<C::Status>(GAME__STATUS)->pop();
     }
-    else if (menu == "credits")
+    else if (menu == "Credits")
     {
-      delete_menu ("credits");
-      create_menu ("exit");
+      delete_menu ("Credits");
+      create_menu ("Exit");
     }
-    else if (menu == "hint")
+    else if (menu == "Hint")
     {
-      delete_menu("hint");
+      delete_menu("Hint");
       get<C::Status>(GAME__STATUS)->pop();
     }
   }
   else if (effect->value() == "credits")
   {
-    delete_menu ("exit");
-    create_menu ("credits");
+    delete_menu ("Exit");
+    create_menu ("Credits");
   }
   else if (effect->value() == "hint")
   {
-    delete_menu ("exit");
-    create_menu ("hint");
+    delete_menu ("Exit");
+    create_menu ("Hint");
   }
   else if (effect->value() == "cancel")
   {
     delete_menu(menu);
-    if (menu == "exit")
+    if (menu == "Exit")
       get<C::Status>(GAME__STATUS)->pop();
-    else if (menu == "wanna_restart")
-      create_menu("exit");
+    else if (menu == "Wanna_restart")
+      create_menu("Exit");
   }
 }
 

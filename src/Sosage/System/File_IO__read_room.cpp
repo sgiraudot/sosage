@@ -141,16 +141,16 @@ void File_IO::read_character (const Core::File_IO::Node& node, const std::string
   set<C::Variable>(id + "_walking:position", pbody);
   set<C::Variable>(id + "_idle:position", pbody);
 
-  auto new_char = request<C::Vector<std::pair<std::string, bool> > >("game:new_characters");
+  auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game:new_characters");
   if (!new_char)
-    new_char = set<C::Vector<std::pair<std::string, bool> > >("game:new_characters");
+    new_char = set<C::Vector<std::pair<std::string, bool> > >("Game:new_characters");
 
   new_char->push_back (std::make_pair (id, looking_right));
 }
 
 void File_IO::read_room (const std::string& file_name)
 {
-  auto callback = get<C::Simple<std::function<void()> > >("game:loading_callback");
+  auto callback = get<C::Simple<std::function<void()> > >("Game:loading_callback");
   callback->value()();
 
   clean_content();
@@ -166,8 +166,8 @@ void File_IO::read_room (const std::string& file_name)
 
   std::string name = input["name"].string(); // unused so far
 
-  set<C::String>("game:current_room", file_name);
-  get<C::Set<std::string> >("game:visited_rooms")->insert (file_name);
+  set<C::String>("Game:current_room", file_name);
+  get<C::Set<std::string> >("Game:visited_rooms")->insert (file_name);
 
   std::string background = input["background"].string("images", "backgrounds", "png");
   std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
@@ -175,14 +175,14 @@ void File_IO::read_room (const std::string& file_name)
   int back_z = input["back_z"].integer();
 
   auto background_img
-    = set<C::Image>("background:image", local_file_name(background), 0);
+    = set<C::Image>("Background:image", local_file_name(background), 0);
   background_img->collision() = BOX;
-  m_latest_room_entities.insert ("background");
+  m_latest_room_entities.insert ("Background");
 
   callback->value()();
 
-  set<C::Position>("background:position", Point(0, 0), false);
-  set<C::Ground_map>("background:ground_map", local_file_name(ground_map),
+  set<C::Position>("Background:position", Point(0, 0), false);
+  set<C::Ground_map>("Background:ground_map", local_file_name(ground_map),
                                        front_z, back_z, callback->value());
 
   callback->value()();
@@ -248,7 +248,7 @@ void File_IO::read_room (const std::string& file_name)
 
   // Special handling for inventory after reloading save (may need to
   // search in other rooms for the object)
-  auto inventory = get<C::Inventory>("game:inventory");
+  auto inventory = get<C::Inventory>("Game:inventory");
   std::unordered_set<std::string> missing_objects;
   for (std::size_t i = 0; i < inventory->size(); ++ i)
     if (!request<C::String>(inventory->get(i) + ":name"))
@@ -260,7 +260,7 @@ void File_IO::read_room (const std::string& file_name)
   if (!missing_objects.empty())
   {
     bool all_found = false;
-    for (const std::string& room_name : *get<C::Set<std::string> >("game:visited_rooms"))
+    for (const std::string& room_name : *get<C::Set<std::string> >("Game:visited_rooms"))
       if (room_name != file_name)
       {
         Core::File_IO room (local_file_name("data", "rooms", room_name, "yaml"));
@@ -287,7 +287,7 @@ void File_IO::read_room (const std::string& file_name)
       }
   }
 
-  auto hints = set<C::Hints>("game:hints");
+  auto hints = set<C::Hints>("Game:hints");
 
   if (input.has("hints"))
     for (std::size_t i = 0; i < input["hints"].size(); ++ i)
@@ -298,25 +298,25 @@ void File_IO::read_room (const std::string& file_name)
       std::string text = node["text"].string();
 
       auto condition = C::make_handle<C::String_conditional>
-        ("hint:condition", get<C::String>(id + ":state"));
-      condition->add(state, C::make_handle<C::String>("hint:text", text));
+        ("Hint:condition", get<C::String>(id + ":state"));
+      condition->add(state, C::make_handle<C::String>("Hint:text", text));
       hints->add (condition);
     }
 
   callback->value()();
 
-  const std::string& origin = get<C::String>("game:new_room_origin")->value();
-  if (origin == "saved_game")
-    set<C::Boolean>("game:in_new_room", true);
+  const std::string& origin = get<C::String>("Game:new_room_origin")->value();
+  if (origin == "Saved_game")
+    set<C::Boolean>("Game:in_new_room", true);
   else
   {
     auto origin_coord = get<C::Position>(origin + ":position");
     auto origin_looking = get<C::Boolean>(origin + ":looking_right");
-    const std::string& player = get<C::String>("player:name")->value();
+    const std::string& player = get<C::String>("Player:name")->value();
     get<C::Position>(player + "_body:position")->set(origin_coord->value());
-    set<C::Boolean>("game:in_new_room", origin_looking->value());
+    set<C::Boolean>("Game:in_new_room", origin_looking->value());
   }
-  emit ("game:loading_done");
+  emit ("Game:loading_done");
 
 #ifdef SOSAGE_DEBUG
   // Display layers of images for easy room creation
@@ -500,7 +500,7 @@ void File_IO::read_dialog (const Core::File_IO::Node& node, const std::string& i
       std::string character = l["character"].string();
       std::string line = l["line"].string();
       vertex = dialog->add_vertex (character, line);
-    }    
+    }
 
     if (l.has("id"))
       map_vertices.insert (std::make_pair (l["id"].string(), vertex));

@@ -44,6 +44,8 @@ public:
   Base(const std::string& id) : m_id (id) { }
   virtual ~Base() { }
 
+  bool is_system() const { return isupper(m_id[0]); }
+
   const std::string& id() const { return m_id; }
 
   std::string entity() const

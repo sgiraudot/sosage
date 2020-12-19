@@ -80,14 +80,14 @@ Engine::~Engine()
 int Engine::run (const std::string& folder_name)
 {
   // Init main variables
-  auto status = m_content.set_fac<Component::Status>(GAME__STATUS, "game:status");
-  m_content.set_fac<Component::Double>(CAMERA__POSITION, "camera:position", 0.0);
-  m_content.set<Component::Double>("camera:target", 0.0);
-  m_content.set<Component::Inventory>("game:inventory");
-  m_content.set<Component::Set<std::string> > ("game:visited_rooms");
+  auto status = m_content.set_fac<Component::Status>(GAME__STATUS, "Game:status");
+  m_content.set_fac<Component::Double>(CAMERA__POSITION, "Camera:position", 0.0);
+  m_content.set<Component::Double>("Camera:target", 0.0);
+  m_content.set<Component::Inventory>("Game:inventory");
+  m_content.set<Component::Set<std::string> > ("Game:visited_rooms");
 
   m_content.set<Component::And>
-      ("unlocked:condition",
+      ("Unlocked:condition",
        Component::make_not
         (Component::make_value_condition<Sosage::Status> (status, PAUSED)),
         Component::make_not
@@ -115,11 +115,11 @@ int Engine::run (const std::string& folder_name)
   file_io->read_config();
 
   graphic->init(); // init graphics
-  m_content.emit ("window:rescaled");
+  m_content.emit ("Window:rescaled");
   graphic->run(); // Run graphic once to update view
 
   m_content.set<Component::Simple<std::function<void()> > >
-      ("game:loading_callback",
+      ("Game:loading_callback",
        [&]()
        {
 #ifndef SOSAGE_EMSCRIPTEN
@@ -143,7 +143,7 @@ int Engine::run (const std::string& folder_name)
 #endif
 
   file_io->write_config();
-  if (m_content.receive("game:save"))
+  if (m_content.receive("Game:save"))
     file_io->write_savefile();
 
   m_systems.clear();
@@ -157,7 +157,7 @@ bool Engine::run()
 {
   for (System::Handle system : m_systems)
     system->run();
-  return !m_content.receive("game:exit");
+  return !m_content.receive("Game:exit");
 }
 
 

@@ -48,12 +48,12 @@ Graphic::Graphic (Content& content)
 
 void Graphic::init()
 {
-  auto iw = get<C::Int>("window:width");
-  auto ih = get<C::Int>("window:height");
+  auto iw = get<C::Int>("Window:width");
+  auto ih = get<C::Int>("Window:height");
   int w = iw->value();
   int h = ih->value();
   m_core.init (w, h,
-               get<C::Boolean>("window:fullscreen")->value());
+               get<C::Boolean>("Window:fullscreen")->value());
   iw->set(w);
   ih->set(h);
 
@@ -61,28 +61,28 @@ void Graphic::init()
 
 void Graphic::run()
 {
-  if (auto name = request<C::String>("game:name"))
+  if (auto name = request<C::String>("Game:name"))
   {
-    m_core.update_window (name->value(), get<C::Image>("icon:image")->core());
-    remove ("game:name");
+    m_core.update_window (name->value(), get<C::Image>("Icon:image")->core());
+    remove ("Game:name");
   }
 
-  if (request<C::String>("game:new_room"))
+  if (request<C::String>("Game:new_room"))
   {
     run_loading();
     return;
   }
 
-  if (receive ("window:rescaled"))
-    m_core.update_view (get<C::Int>("interface:width")->value(),
-                        get<C::Int>("interface:height")->value());
-  if (receive ("window:toggle_fullscreen"))
-    m_core.toggle_fullscreen (get<C::Boolean>("window:fullscreen")->value());
+  if (receive ("Window:rescaled"))
+    m_core.update_view (get<C::Int>("Interface:width")->value(),
+                        get<C::Int>("Interface:height")->value());
+  if (receive ("Window:toggle_fullscreen"))
+    m_core.toggle_fullscreen (get<C::Boolean>("Window:fullscreen")->value());
 
   std::vector<C::Image_handle> images;
 
-  m_core.begin(get<C::Int>("interface:width")->value(),
-               get<C::Int>("interface:height")->value());
+  m_core.begin(get<C::Int>("Interface:width")->value(),
+               get<C::Int>("Interface:height")->value());
 
   get_images (images);
   display_images (images);
@@ -109,15 +109,15 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
   auto status = get<C::Status>(GAME__STATUS);
   double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
-  int interface_width = get<C::Int>("interface:width")->value();
-  int interface_height = get<C::Int>("interface:height")->value();
+  int interface_width = get<C::Int>("Interface:width")->value();
+  int interface_height = get<C::Int>("Interface:height")->value();
 
   for (const auto& img : images)
   {
     if (img->on())
     {
       if (status->value() == LOCKED &&
-           img->entity() == "cursor")
+           img->entity() == "Cursor")
         continue;
 
       auto position = get<C::Position>(img->entity() + ":position");
@@ -186,7 +186,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
   if (get<C::Boolean>(GAME__DEBUG)->value())
   {
-    auto ground_map = get<C::Ground_map>("background:ground_map");
+    auto ground_map = get<C::Ground_map>("Background:ground_map");
 
     ground_map->for_each_vertex
       ([&](const Point& point)
@@ -202,7 +202,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
                            (border ? 255 : 0), 0, (border ? 0 : 255));
        });
 
-    const std::string& id = get<C::String>("player:name")->value();
+    const std::string& id = get<C::String>("Player:name")->value();
     auto path = request<C::Path>(id + ":path");
     if (path)
     {
@@ -224,8 +224,8 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
 void Graphic::run_loading()
 {
-  m_core.begin(get<C::Int>("interface:width")->value(),
-               get<C::Int>("interface:height")->value());
+  m_core.begin(get<C::Int>("Interface:width")->value(),
+               get<C::Int>("Interface:height")->value());
 
   auto img = get<C::Image>(LOADING_SPIN__IMAGE);
   auto position = get<C::Position>(LOADING_SPIN__POSITION);

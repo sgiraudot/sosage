@@ -46,17 +46,17 @@ void Input::run()
   auto status = get<C::Status>(GAME__STATUS);
 
   while (Event ev = m_core.next_event
-         (get<C::Int>("interface:width")->value(),
-          get<C::Int>("interface:height")->value()))
+         (get<C::Int>("Interface:width")->value(),
+          get<C::Int>("Interface:height")->value()))
   {
     //debug("New event " + ev.to_string());
 
     if (ev == Event(KEY_UP, ESCAPE) ||
         ev == Event(KEY_UP, ANDROID_BACK))
-      emit ("game:escape");
+      emit ("Game:escape");
 
     if (ev == Event(WINDOW, EXIT))
-      emit ("game:exit");
+      emit ("Game:exit");
 
     if (ev == Event(KEY_UP, SPACE))
     {
@@ -77,37 +77,37 @@ void Input::run()
       continue;
 
     if (ev == Event(KEY_UP, D))
-      get<C::Boolean>("game:debug")->toggle();
+      get<C::Boolean>("Game:debug")->toggle();
 
     if (ev == Event(KEY_UP, Sosage::C))
     {
-      get<C::Boolean>("game:console")->toggle();
+      get<C::Boolean>("Game:console")->toggle();
     }
 
     if (ev == Event(KEY_UP, F1))
     {
-      get<C::Int>("interface:layout")->set(Config::AUTO);
-      emit ("window:rescaled");
+      get<C::Int>("Interface:layout")->set(Config::AUTO);
+      emit ("Window:rescaled");
     }
     else if (ev == Event(KEY_UP, F2))
     {
-      get<C::Int>("interface:layout")->set(Config::WIDESCREEN);
-      emit ("window:rescaled");
+      get<C::Int>("Interface:layout")->set(Config::WIDESCREEN);
+      emit ("Window:rescaled");
     }
     else if (ev == Event(KEY_UP, F3))
     {
-      get<C::Int>("interface:layout")->set(Config::STANDARD);
-      emit ("window:rescaled");
+      get<C::Int>("Interface:layout")->set(Config::STANDARD);
+      emit ("Window:rescaled");
     }
     else if (ev == Event(KEY_UP, F4))
     {
-      get<C::Int>("interface:layout")->set(Config::SQUARE);
-      emit ("window:rescaled");
+      get<C::Int>("Interface:layout")->set(Config::SQUARE);
+      emit ("Window:rescaled");
     }
     else if (ev == Event(KEY_UP, F5))
     {
-      get<C::Int>("interface:layout")->set(Config::PORTRAIT);
-      emit ("window:rescaled");
+      get<C::Int>("Interface:layout")->set(Config::PORTRAIT);
+      emit ("Window:rescaled");
     }
     else if (ev == Event(KEY_DOWN, ALT))
       m_alt = true;
@@ -115,21 +115,21 @@ void Input::run()
       m_alt = false;
     else if (ev == Event(KEY_UP, ENTER) && m_alt)
     {
-      get<C::Boolean>("window:fullscreen")->toggle();
-      emit ("window:toggle_fullscreen");
+      get<C::Boolean>("Window:fullscreen")->toggle();
+      emit ("Window:toggle_fullscreen");
     }
     if (ev == Event(WINDOW, RESIZED))
     {
-      get<C::Int>("window:width")->set(ev.x());
-      get<C::Int>("window:height")->set(ev.y());
-      emit ("window:rescaled");
+      get<C::Int>("Window:width")->set(ev.x());
+      get<C::Int>("Window:height")->set(ev.y());
+      emit ("Window:rescaled");
     }
 
     // If paused, ignore mouse events
     if (status->value() == LOCKED)
       continue;
 
-    if (get<C::Boolean>("interface:virtual_cursor")->value())
+    if (get<C::Boolean>("Interface:virtual_cursor")->value())
     {
       if (ev.type() == CURSOR_DOWN)
       {
@@ -150,8 +150,8 @@ void Input::run()
 
         if (!m_virtual_cursor.has_moved)
         {
-          emit ("cursor:clicked");
-          set<C::Boolean>("click:left", true);
+          emit ("Cursor:clicked");
+          set<C::Boolean>("Click:left", true);
         }
       }
 
@@ -179,15 +179,15 @@ void Input::run()
       {
         get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-        emit ("cursor:clicked");
-        set<C::Boolean>("click:left", true);
+        emit ("Cursor:clicked");
+        set<C::Boolean>("Click:left", true);
       }
       if (ev == Event(CURSOR_DOWN, RIGHT))
       {
         get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-        emit ("cursor:clicked");
-        set<C::Boolean>("click:left", false);
+        emit ("Cursor:clicked");
+        set<C::Boolean>("Click:left", false);
       }
     }
   }
