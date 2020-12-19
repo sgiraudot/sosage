@@ -253,7 +253,7 @@ void File_IO::read_room (const std::string& file_name)
   for (std::size_t i = 0; i < inventory->size(); ++ i)
     if (!request<C::String>(inventory->get(i) + ":name"))
     {
-      std::cerr << inventory->get(i) << " is missing" << std::endl;
+      debug (inventory->get(i) + " is missing");
       missing_objects.insert (inventory->get(i));
     }
 

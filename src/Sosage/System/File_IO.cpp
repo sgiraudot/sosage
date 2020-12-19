@@ -126,7 +126,7 @@ void File_IO::read_config()
   std::string file_name = Sosage::pref_path() + "config.yaml";
 
   // Default config values
-  bool fullscreen = Config::android;
+  bool fullscreen = true;
   int layout = int(Config::AUTO);
   bool virtual_cursor = Config::android;
 

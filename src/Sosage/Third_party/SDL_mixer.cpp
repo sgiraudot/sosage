@@ -101,7 +101,6 @@ void SDL_mixer::pause_music (const SDL_mixer::Music&)
 
 void SDL_mixer::resume_music (const SDL_mixer::Music&)
 {
-  std::cerr << "Resumed music!" << std::endl;
   Mix_ResumeMusic();
 }
 

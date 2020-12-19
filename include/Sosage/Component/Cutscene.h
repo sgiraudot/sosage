@@ -70,7 +70,6 @@ public:
   {
     if (paused)
     {
-      std::cerr << "Pause " << time << std::endl;
       if (m_paused_time < 0)
         m_paused_time = time;
       return -1;
@@ -78,7 +77,6 @@ public:
 
     if (m_paused_time > 0)
     {
-      std::cerr << "Unpause " << time - m_paused_time << std::endl;
       m_starting_time += (time - m_paused_time);
       m_paused_time = -1;
     }
