@@ -68,12 +68,13 @@ public:
   void update()
   {
     m_time = (Time::now() - m_start) / 1000.;
+    m_latest = m_time;
   }
 
   void wait(bool verbose)
   {
-    Uint32 now = Time::now();
-    Uint32 duration = now - m_latest;
+    Time::Unit now = Time::now();
+    Time::Duration duration = now - m_latest;
 
     if (duration > m_refresh_time)
     {
