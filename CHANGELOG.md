@@ -2,7 +2,7 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v0.3.0 (xmas2020demo)` - TBD
+## `v0.3.0 (xmas2020demo)` - 2020-12-25
 
 ### Release Management
 
@@ -14,10 +14,13 @@ History of versions and modifications of the SOSAGE engine.
 
 - Remove threads to avoid problems, loading spinning image handled
   with callbacks instead
+- Saving/loading
+- Main menu
 
 ### Game Engine
 
-(nothing yet)
+- Cutscenes
+- Indices
 
 ## `v0.2.0 (alpha2)` - 2020-11-11
 

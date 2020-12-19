@@ -58,14 +58,16 @@ public:
     Texture texture;
     Bitmap mask;
     double scaling;
+    double texture_downscale;
     unsigned char alpha;
     int width;
     int height;
 
     Image (Texture texture = Texture(), Bitmap mask = Bitmap(), int width = -1, int height = -1,
            double scaling = 1., unsigned char alpha = 255)
-      : texture (texture), mask(mask), width(width),
-        height(height), scaling (scaling), alpha(alpha)
+      : texture (texture), mask(mask),
+        scaling (scaling), texture_downscale(1), alpha(alpha),
+        width(width), height(height)
     { }
 
     void free_mask()
@@ -78,6 +80,7 @@ public:
 
   static SDL_Window* m_window;
   static SDL_Renderer* m_renderer;
+  static SDL_RendererInfo m_info;
   static Texture_manager m_textures;
   static Bitmap_manager m_masks;
   static Font_manager m_fonts;

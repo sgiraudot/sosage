@@ -268,7 +268,10 @@ void Logic::run_cutscene()
       if (auto img = request<C::Image>(el.id))
         img->on() = false;
       else if (auto music = request<C::Music>(el.id))
+      {
+        remove ("Game:music");
         emit ("Music:stop");
+      }
       else if (el.id == "fadein")
         get<C::Image>("Blackscreen:image")->on() = false;
       continue;

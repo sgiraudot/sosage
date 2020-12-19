@@ -36,6 +36,7 @@ namespace Sosage::Third_party
 
 SDL_Window* SDL::m_window = nullptr;
 SDL_Renderer* SDL::m_renderer = nullptr;
+SDL_RendererInfo SDL::m_info;
 SDL::Texture_manager SDL::m_textures (SDL_DestroyTexture);
 SDL::Bitmap_manager SDL::m_masks;
 SDL::Font_manager SDL::m_fonts (TTF_CloseFont);
@@ -56,12 +57,14 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
 #endif
 
   SDL_Surface* surf = SDL_CreateRGBSurface (0, w, h, 32, rmask, gmask, bmask, amask);
-  check (surf != nullptr, "Cannot create rectangle surface");
+  check (surf != nullptr, "Cannot create rectangle surface ("
+         + std::string(SDL_GetError()) + ")");
 
   SDL_FillRect(surf, nullptr, SDL_MapRGBA(surf->format, Uint8(r), Uint8(g), Uint8(b), Uint8(255)));
 
   Texture text = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf);
-  check (text != Texture(), "Cannot create rectangle texture");
+  check (text != Texture(), "Cannot create rectangle texture ("
+         + std::string(SDL_GetError()) + ")");
   Image out (text, Bitmap(), surf->w, surf->h, 1, (unsigned char)(a));
   SDL_FreeSurface(surf);
   return out;
@@ -70,13 +73,49 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
 SDL::Image SDL::load_image (const std::string& file_name, bool with_mask)
 {
   SDL_Surface* surf = IMG_Load (file_name.c_str());
-  check (surf != nullptr, "Cannot load image " + file_name);
+  check (surf != nullptr, "Cannot load image " + file_name
+         + " (" + std::string(SDL_GetError()) + ")");
+
+  int height = surf->h;
+  int width = surf->w;
+  int width_max = m_info.max_texture_width;
+  int height_max = m_info.max_texture_height;
+  double texture_downscale = 1.;
+  if (surf->w > width_max || surf->h > height_max)
+  {
+    texture_downscale = std::min (double(width_max) / surf->w,
+                                  double(height_max) / surf->h);
+    debug (file_name + " is too large and will be downscaled by a factor "
+           + std::to_string(texture_downscale));
+    SDL_Surface* old = surf;
+    surf = SDL_CreateRGBSurface
+           (old->flags, old->w, old->h,
+            32, old->format->Rmask, old->format->Gmask, old->format->Bmask, old->format->Amask);
+    SDL_BlitSurface (old, nullptr, surf, nullptr);
+    SDL_FreeSurface (old);
+
+    old = surf;
+    surf = SDL_CreateRGBSurface
+           (old->flags, int(texture_downscale * old->w), int(texture_downscale * old->h),
+            32, old->format->Rmask, old->format->Gmask, old->format->Bmask, old->format->Amask);
+    check (surf != nullptr, "Cannot create rectangle surface ("
+           + std::string(SDL_GetError()) + ")");
+
+    int result = SDL_BlitScaled(old, nullptr, surf, nullptr);
+    check (result == 0, "Couldn't blit surface ("
+           + std::string(SDL_GetError()) + ")");
+    SDL_FreeSurface(old);
+  }
+
+
   Texture text = m_textures.make_mapped (file_name, SDL_CreateTextureFromSurface, m_renderer, surf);
-  check (text != Texture(), "Cannot create texture from " + file_name);
+  check (text != Texture(), "Cannot create texture from " + file_name
+         + " (" + std::string(SDL_GetError()) + ")");
   Bitmap mask = nullptr;
   if (with_mask)
     mask = m_masks.make_mapped (file_name, create_mask, surf);
-  Image out (text, mask, surf->w, surf->h, 1);
+  Image out (text, mask, width, height, 1);
+  out.texture_downscale = texture_downscale;
   SDL_FreeSurface(surf);
   return out;
 }
@@ -297,6 +336,9 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
   m_renderer = SDL_CreateRenderer (m_window, -1, 0);
   check (m_renderer != nullptr, "Cannot create SDL Renderer");
 
+  int result = SDL_GetRendererInfo (m_renderer, &m_info);
+  check (result == 0, "Cannot create SDL Renderer Info");
+
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
 
   // Render black screen while the rest is loading
@@ -363,10 +405,10 @@ void SDL::draw (const Image& image,
                 const int wtarget, const int htarget)
 {
   SDL_Rect source;
-  source.x = xsource;
-  source.y = ysource;
-  source.w = wsource;
-  source.h = hsource;
+  source.x = image.texture_downscale * xsource;
+  source.y = image.texture_downscale * ysource;
+  source.w = image.texture_downscale * wsource;
+  source.h = image.texture_downscale * hsource;
 
   SDL_Rect target;
   target.x = xtarget;
