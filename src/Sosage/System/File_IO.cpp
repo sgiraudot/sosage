@@ -239,8 +239,12 @@ void File_IO::read_savefile()
   for (std::size_t i = 0; i < input["inventory"].size(); ++ i)
     inventory->add(input["inventory"][i].string());
 
+  double camera_target = input["camera"].floating();
+  get<C::Double>(CAMERA__POSITION)->set (camera_target);
+  set<C::Double>("Camera:target")->set (camera_target);
   auto action = set<C::Action>("Saved_game:action");
   action->add ("play", { "music", input["music"].string() });
+  action->add ("camera", { "fadein", "0.5" });
 
   for (std::size_t i = 0; i < input["states"].size(); ++ i)
   {
@@ -286,6 +290,7 @@ void File_IO::write_savefile()
   Core::File_IO output (Sosage::pref_path() + "save.yaml", true);
 
   output.write("room", get<C::String>("Game:current_room")->value());
+  output.write("camera", get<C::Double>(CAMERA__POSITION)->value());
   output.write("inventory", get<C::Inventory>("Game:inventory")->data());
   output.write("music", get<C::Music>("Game:music")->entity());
 

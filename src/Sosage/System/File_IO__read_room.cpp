@@ -315,6 +315,9 @@ void File_IO::read_room (const std::string& file_name)
     const std::string& player = get<C::String>("Player:name")->value();
     get<C::Position>(player + "_body:position")->set(origin_coord->value());
     set<C::Boolean>("Game:in_new_room", origin_looking->value());
+    // Reset camera
+    get<C::Double>(CAMERA__POSITION)->set(0);
+    get<C::Double>("Camera:target")->set(0);
   }
   emit ("Game:loading_done");
 
