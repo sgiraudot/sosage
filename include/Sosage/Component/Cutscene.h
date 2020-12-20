@@ -30,6 +30,7 @@
 #include <Sosage/Component/Handle.h>
 #include <Sosage/Utils/geometry.h>
 
+#include <algorithm>
 #include <vector>
 
 namespace Sosage::Component

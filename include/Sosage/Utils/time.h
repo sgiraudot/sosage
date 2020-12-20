@@ -77,9 +77,7 @@ public:
     Time::Duration duration = now - m_latest;
 
     if (duration > m_refresh_time)
-    {
-      debug("Warning: frame lasted " + std::to_string(duration) + " (max is " + std::to_string(m_refresh_time) + ")");
-    }
+      debug("Warning: frame lasted ", duration, " (max is ", m_refresh_time, ")");
 
     if constexpr (!Config::emscripten)
     {

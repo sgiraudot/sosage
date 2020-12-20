@@ -76,7 +76,7 @@ public:
   {
     if (m_master)
     {
-      debug ("[Profiling " + m_id + "] ");
+      debug ("[Profiling ", m_id, "] ");
       display();
     }
   }
@@ -110,11 +110,11 @@ public:
     }
 
     std::sort(m_duration.begin(), m_duration.end());
-    debug ("Min = " + to_string(m_duration.front())
-           + ", 10% = " + to_string(m_duration[m_duration.size() / 10])
-        + ", median = " + to_string(m_duration[m_duration.size() / 2])
-        + ", 90% = " + to_string(m_duration[9 * m_duration.size() / 10])
-        + ", ma x= " + to_string(m_duration.back()));;
+    debug ("Min = ", to_string(m_duration.front()),
+           ", 10% = ", to_string(m_duration[m_duration.size() / 10]),
+           ", median = ", to_string(m_duration[m_duration.size() / 2]),
+           ", 90% = ", to_string(m_duration[9 * m_duration.size() / 10]),
+           ", ma x= ", to_string(m_duration.back()));
   }
 #else
   double mean_duration() const { return m_duration / double(m_nb); }
@@ -146,7 +146,7 @@ public:
   Counter (const std::string& id) : m_id (id), m_nb(0) { }
   ~Counter ()
   {
-    debug ("[Profiling " + m_id + "] " + std::to_string(m_nb) + " iteration(s)");
+    debug ("[Profiling ", m_id, "] ", m_nb, " iteration(s)");
   }
 
   void increment() { ++ m_nb; }

@@ -49,7 +49,7 @@ void Input::run()
          (get<C::Int>("Interface:width")->value(),
           get<C::Int>("Interface:height")->value()))
   {
-    //debug("New event " + ev.to_string());
+    //debug("New event ", ev.to_string());
 
     if (ev == Event(KEY_UP, ESCAPE) ||
         ev == Event(KEY_UP, ANDROID_BACK))

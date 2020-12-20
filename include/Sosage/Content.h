@@ -76,12 +76,12 @@ public:
     for (Component::Handle c : m_data)
       if (!filter(c))
       {
-        debug("Keeping " + c->id());
+        debug("Keeping ", c->id());
         new_set.insert(c);
       }
       else
       {
-        debug("Deleting " + c->id());
+        debug("Deleting ", c->id());
       }
     m_data.swap (new_set);
   }
@@ -130,7 +130,7 @@ public:
       std::string entity (key.begin(), key.begin() + key.find_first_of(':'));
       for (Component::Handle h : m_data)
         if (h->entity() == entity)
-          debug (" * " + h->id());
+          debug (" * ", h->id());
     }
 #endif
     check (out != std::shared_ptr<T>(), "Cannot find " + key);
@@ -199,8 +199,8 @@ private:
                });
     debug ("[Profiling component access count (10 first)]");
     for (std::size_t i = 0; i < 10; ++ i)
-      debug (" * " + sorted[i].first + " (accessed "
-             +  std::to_string(sorted[i].second) + " times)");
+      debug (" * ", sorted[i].first, " (accessed ",
+             sorted[i].second, " times)");
   }
 #else
   inline void count_access (const std::string&) { }

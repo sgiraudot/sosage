@@ -240,7 +240,7 @@ void File_IO::read_room (const std::string& file_name)
     else if (type == "window")
       read_window (node, id);
     else
-      debug ("Unknown content type " + type);
+       debug ("Unknown content type ", type);
 
     callback->value()();
   }
@@ -252,7 +252,7 @@ void File_IO::read_room (const std::string& file_name)
   for (std::size_t i = 0; i < inventory->size(); ++ i)
     if (!request<C::String>(inventory->get(i) + ":name"))
     {
-      debug (inventory->get(i) + " is missing");
+      debug (inventory->get(i), " is missing");
       missing_objects.insert (inventory->get(i));
     }
 
@@ -390,7 +390,7 @@ void File_IO::read_animation (const Core::File_IO::Node& node, const std::string
 
   img->on() = false;
   img->set_relative_origin(0.5, 1.0);
-  debug("Animation " + id + " at position " + std::to_string(img->z()));
+  debug("Animation ", id, " at position ", img->z());
 }
 
 void File_IO::read_code (const Core::File_IO::Node& node, const std::string& id)
@@ -654,7 +654,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
         img->set_relative_origin(0.5, 1.0);
       img->set_collision(box_collision ? BOX : PIXEL_PERFECT);
 
-      debug("Object " + id + ":" + state + " at position " + std::to_string(img->z()));
+      debug("Object ", id, ":", state, " at position ", img->z());
 
       conditional_handle->add(state, img);
     }
@@ -720,7 +720,7 @@ void File_IO::read_actions (const Core::File_IO::Node& node, const std::string& 
 
       C::Action_handle action;
 
-      debug("Read action " + id + ":" + a_id);
+      debug("Read action ", id, ":", a_id);
 
       if (iaction.has("state"))
       {
@@ -853,7 +853,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node, const std::string& 
     auto img = set<C::Image>(id + ":image", local_file_name(skin), z);
     img->set_collision(UNCLICKABLE);
     img->set_relative_origin(0.5, 1.0);
-    debug("Scenery " + id + " at position " + std::to_string(img->z()));
+    debug("Scenery ", id, " at position ", img->z());
   }
 }
 

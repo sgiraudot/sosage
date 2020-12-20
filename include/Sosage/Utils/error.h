@@ -29,6 +29,9 @@
 
 #include <Sosage/Config/options.h>
 #include <Sosage/Config/platform.h>
+#include <Sosage/Utils/conversions.h>
+
+#include <utility>
 
 #ifdef SOSAGE_ANDROID
 #include <android/log.h>
@@ -77,6 +80,7 @@ inline void check_impl (const char* file, int line, const std::string& str)
 #endif
 
 #if defined(SOSAGE_DEBUG)
+
 #  if defined(SOSAGE_ANDROID)
 inline void debug (const std::string& str)
 {
@@ -93,9 +97,16 @@ inline void debug (const std::string& str)
   std::cerr << str << std::endl;
 }
 #  endif
-#else
-inline void debug (const std::string&)
+template <typename ... Args>
+inline void debug (const Args& ... args)
 {
+  debug (to_string(std::forward<const Args>(args)...));
+}
+#else
+template <typename ... Args>
+inline void debug (const Args& ...)
+{
+
 }
 #endif
 

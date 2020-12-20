@@ -352,15 +352,15 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   Point origin = position->value();
   Point t = target->value();
 
-  debug("Target = " + to_string(t));
+  debug("Target = ", t);
 
   if (target->component() != "view")
   {
-    debug ("Camera position = " + std::to_string(get<C::Double>(CAMERA__POSITION)->value()));
+    debug ("Camera position = ", get<C::Double>(CAMERA__POSITION)->value());
     t = t + Vector (get<C::Double>(CAMERA__POSITION)->value(), 0);
   }
 
-  debug("Computing path from " + to_string(origin) + " to " + to_string(t));
+  debug("Computing path from ", origin, " to ", t);
   std::vector<Point> path;
   ground_map->find_path (origin, t, path);
 
@@ -587,7 +587,7 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
   {
     std::string target
         = (args.empty() ? m_current_action->target_entity() : args[0]);
-    debug ("Action_goto " + target);
+    debug ("Action_goto ", target);
 
     auto position = request<C::Position>(target + ":view");
     if (compute_path_from_target(position, id))
@@ -607,7 +607,7 @@ bool Logic::function_look (const std::vector<std::string>& args)
   else
     target = m_current_action->target_entity();
 
-  debug ("Action_look " + target);
+  debug ("Action_look ", target);
   const std::string& id = get<C::String>("Player:name")->value();
 
   if (target == "default" || !request<C::Position>(target + ":position"))

@@ -85,8 +85,8 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask)
   {
     texture_downscale = std::min (double(width_max) / surf->w,
                                   double(height_max) / surf->h);
-    debug (file_name + " is too large and will be downscaled by a factor "
-           + std::to_string(texture_downscale));
+    debug (file_name, " is too large and will be downscaled by a factor ",
+           texture_downscale);
     SDL_Surface* old = surf;
     surf = SDL_CreateRGBSurface
            (old->flags, old->w, old->h,
@@ -331,7 +331,8 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
                                window_width, window_height,
                                SDL_WINDOW_RESIZABLE |
                                (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
-  check (m_window != nullptr, "Cannot create SDL Window");
+  check (m_window != nullptr, "Cannot create SDL Window ("
+         + std::string(SDL_GetError()) + ")");
 
   m_renderer = SDL_CreateRenderer (m_window, -1, 0);
   check (m_renderer != nullptr, "Cannot create SDL Renderer");

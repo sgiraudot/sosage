@@ -12,6 +12,7 @@ file(GLOB_RECURSE SOSAGE_SRC "../../src/Sosage/*.cpp")
 file(GLOB_RECURSE YAML_SRC "libyaml/src/*.c")
 add_executable(superflu-riteurnz ${SOSAGE_SRC} ${YAML_SRC})
 target_compile_options(superflu-riteurnz PUBLIC -DSOSAGE_DATA_FOLDER="data/")
+target_compile_options(superflu-riteurnz PUBLIC -DSOSAGE_INSTALL_DATA_FOLDER="data/")
 target_compile_definitions(superflu-riteurnz PUBLIC
   "-DSOSAGE_LINKED_WITH_SDL_MIXER")
 
@@ -34,7 +35,7 @@ target_compile_definitions(superflu-riteurnz PUBLIC
 
 ## Link dependencies
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --embed-file data")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file data")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s DISABLE_EXCEPTION_CATCHING=0")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2")

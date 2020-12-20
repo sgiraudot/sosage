@@ -52,7 +52,7 @@ private:
   std::size_t m_next_step;
 
   using Function = std::function<bool(const std::vector<std::string>&)>;
-  std::map<std::string, Function> m_dispatcher;
+  std::unordered_map<std::string, Function> m_dispatcher;
 
 public:
 

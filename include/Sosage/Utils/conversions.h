@@ -30,6 +30,7 @@
 #include <array>
 #include <sstream>
 #include <string>
+#include <utility>
 
 namespace Sosage
 {
@@ -47,6 +48,33 @@ inline double to_double (const std::string& str)
 inline int to_bool (const std::string& str)
 {
   return (str == "true");
+}
+
+template <typename T>
+inline std::string to_string (const T& t)
+{
+  return std::to_string(t);
+}
+
+inline const std::string& to_string (const std::string& str)
+{
+  return str;
+}
+
+inline std::string to_string (const char* str)
+{
+  return std::string(str);
+}
+
+inline std::string to_string (const bool& t)
+{
+  return (t ? "true" : "false");
+}
+
+template <typename T, typename ... Ts>
+inline std::string to_string (const T& t, const Ts& ... ts)
+{
+  return to_string(t) + to_string(std::forward<const Ts>(ts)...);
 }
 
 } // namespace Sosage

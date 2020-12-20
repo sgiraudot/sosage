@@ -279,7 +279,6 @@ public:
 
   void validity()
   {
-    debug("checking graph");
     for (Vertex v : vertices())
     {
       for (std::size_t i = 0; i < incident_edges(v).size(); ++ i)

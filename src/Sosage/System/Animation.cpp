@@ -409,7 +409,7 @@ void Animation::generate_random_idle_animation (const std::string& id, bool look
 
 void Animation::generate_random_idle_head_animation (const std::string& id, bool looking_right)
 {
-  debug ("Generate random idle head animation for character \"" + id + "\"");
+  debug ("Generate random idle head animation for character \"", id, "\"");
 
   auto head = get<C::Animation>(id + "_head:image");
   auto mouth = get<C::Animation>(id + "_mouth:image");
@@ -488,7 +488,7 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
 
 void Animation::generate_random_idle_body_animation (const std::string& id, bool looking_right)
 {
-  debug ("Generate random idle body animation for character \"" + id + "\"");
+  debug ("Generate random idle body animation for character \"", id, "\"");
 
   auto image = get<C::Animation>(id + "_idle:image");
   get<C::Animation>(id + "_walking:image")->on() = false;
@@ -571,7 +571,7 @@ void Animation::generate_random_mouth_animation (const std::string& id)
 
 void Animation::generate_animation (const std::string& id, const std::string& anim)
 {
-  debug ("Generate animation \"" + anim + "\" for character \"" + id + "\"");
+  debug ("Generate animation \"", anim, "\" for character \"", id, "\"");
   auto image = get<C::Animation>(id + "_idle:image");
   const std::vector<std::string>& positions
     = get<C::Vector<std::string> >(id + "_idle:values")->value();

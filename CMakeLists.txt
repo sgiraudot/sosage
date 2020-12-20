@@ -110,15 +110,22 @@ include(CPack)
 
 if(SOSAGE_COMPILE_TESTS)
 
+  list(REMOVE_ITEM SOSAGE_SRC ${CMAKE_SOURCE_DIR}/src/Sosage/Sosage.cpp)
+
   enable_testing()
 
-  set (SOSAGE_TEST_TARGETS "unit_component_action")
+  set (SOSAGE_TEST_TARGETS "unit_Component_Ground_map")
 
   foreach(target ${SOSAGE_TEST_TARGETS})
     add_executable("test_${target}" "test/${target}.cpp" ${SOSAGE_SRC})
     target_link_libraries("test_${target}" PUBLIC sosage)
     sosage_add_test("test_${target}")
   endforeach()
+
+  file(GLOB_RECURSE GROUND_MAPS "${SOSAGE_DATA_FOLDER}/data/images/backgrounds/*_map.png")
+  list(JOIN GROUND_MAPS "\;" GROUND_MAPS_STR)
+  message(${GROUND_MAPS_STR})
+  target_compile_definitions("test_unit_Component_Ground_map" PUBLIC "-DSOSAGE_GROUND_MAPS=\"${GROUND_MAPS_STR}\"")
 
   file(GLOB_RECURSE SOSAGE_HEADERS "include/Sosage/*.h")
   foreach(header ${SOSAGE_HEADERS})
