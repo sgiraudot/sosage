@@ -69,7 +69,7 @@ void Interface::run()
     auto cursor = get<C::Position>(CURSOR__POSITION);
     detect_collision (cursor);
 
-    if (m_collision && receive ("Cursor:clicked"))
+    if (receive ("Cursor:clicked") && m_collision)
     {
       if (status->value() == IN_WINDOW)
         window_clicked();
