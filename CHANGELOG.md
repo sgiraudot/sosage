@@ -20,7 +20,7 @@ History of versions and modifications of the SOSAGE engine.
 ### Game Engine
 
 - Cutscenes
-- Indices
+- Hints
 
 ## `v0.2.0 (alpha2)` - 2020-11-11
 

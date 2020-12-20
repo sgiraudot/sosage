@@ -40,3 +40,6 @@ set(CPACK_NSIS_CONTACT ${SOSAGE_AUTHOR})
 set(CPACK_NSIS_WELCOME_TITLE "Bienvenue dans l'installateur de ${SOSAGE_NAME}")
 set(CPACK_NSIS_FINISH_TITLE "L'installation de ${SOSAGE_NAME} est maintenant terminée")
 set(CPACK_NSIS_UNINSTALL_NAME "desinstaller-${SOSAGE_EXE_NAME}")
+set(CPACK_NSIS_CREATE_ICONS_EXTRA
+    "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\${SOSAGE_NAME}.lnk' '$INSTDIR\\\\${SOSAGE_EXE_NAME}.exe'"
+)
