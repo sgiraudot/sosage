@@ -33,6 +33,13 @@
 #include <queue>
 #include <set>
 
+//#define SOSAGE_DEBUG_GROUND_MAP
+#ifdef SOSAGE_DEBUG_GROUND_MAP
+#  define debug_gm(args...) debug(args)
+#else
+#  define debug_gm(args...) (static_cast<void>(0))
+#endif
+
 namespace Sosage::Component
 {
 
@@ -140,7 +147,7 @@ Ground_map::Ground_map (const std::string& id,
   m_graph.clean();
   m_graph.validity();
 
-  debug("Edges = " + std::to_string(m_graph.num_edges()));
+  debug("Edges = ", m_graph.num_edges());
   
   for (auto it0 = m_graph.vertices().begin(); it0 != m_graph.vertices().end(); ++ it0)
   {
@@ -171,7 +178,7 @@ Ground_map::Ground_map (const std::string& id,
     }
     callback();
   }
-  debug("Edges = " + std::to_string(m_graph.num_edges()));
+  debug("Edges = ", m_graph.num_edges());
   
   m_latest_graph = m_graph;
   
@@ -191,24 +198,31 @@ void Ground_map::find_path (Point origin,
   GEdge eorigin = Graph::null_edge();
   GEdge etarget = Graph::null_edge();
   std::set<std::pair<GVertex, GVertex>, Compare_ordered_pair> to_add;
-  
-  if (!is_ground_point(origin))
+
+  // To avoid problems with inexact intersections, snap to closest
+  // vertex if we are less than 2 pixels away from it
+  double snapping_dist = 2.;
   {
     Neighbor_query query = closest_simplex(origin);
-    origin = query.point;
-    if (query.edge == Graph::null_edge())
-      vorigin = query.vertex;
-    else
-      eorigin = query.edge;
+    if (!is_ground_point(origin) || query.dist < snapping_dist)
+    {
+      origin = query.point;
+      if (query.edge == Graph::null_edge())
+        vorigin = query.vertex;
+      else
+        eorigin = query.edge;
+    }
   }
-  if (!is_ground_point(target))
   {
     Neighbor_query query = closest_simplex(target);
-    target = query.point;
-    if (query.edge == Graph::null_edge())
-      vtarget = query.vertex;
-    else
-      etarget = query.edge;
+    if (!is_ground_point(target) || query.dist < snapping_dist)
+    {
+      target = query.point;
+      if (query.edge == Graph::null_edge())
+        vtarget = query.vertex;
+      else
+        etarget = query.edge;
+    }
   }
 
   if (eorigin != Graph::null_edge() && eorigin == etarget) // moving along the same line
@@ -239,7 +253,10 @@ void Ground_map::find_path (Point origin,
     to_add.insert (std::make_pair (vtarget, v1));
   }
   else if (vtarget == Graph::null_vertex())
+  {
     vtarget = m_latest_graph.add_vertex(target);
+    debug_gm ("New target vertex ", vtarget);
+  }
 
   Segment segment (origin, target);
   
@@ -271,9 +288,13 @@ void Ground_map::find_path (Point origin,
 
     for (GVertex n : { vorigin, vtarget })
     {
+      debug_gm ("Trying to insert ", v, "-> ", n);
       Point mid = midpoint (m_latest_graph[v].point, m_latest_graph[n].point);
       if (!is_ground_point(mid))
+      {
+        debug_gm (" -> mid point is not ground");
         continue;
+      }
         
       Segment seg (m_latest_graph[v].point, m_latest_graph[n].point);
       if (intersects_border
@@ -282,7 +303,10 @@ void Ground_map::find_path (Point origin,
            {
              return ((e == eorigin || e == etarget) || m_latest_graph.edge_has_vertex(e, v));
            }))
+      {
+        debug_gm (" -> segment intersects border");
         continue;
+      }
 
       to_add.insert (std::make_pair(v, n));
     }
@@ -290,9 +314,12 @@ void Ground_map::find_path (Point origin,
 
   for (const auto& p : to_add)
   {
+    debug_gm ("New edge ", p.first, " -> ", p.second);
     GEdge e = m_latest_graph.add_edge(p.first, p.second);
     m_latest_graph[e].border = false;
   }
+
+  check (!m_latest_graph.incident_edges(vtarget).empty(), "Can't compute Djikstra from isolated vertex");
 
   m_latest_graph.clean();
   
@@ -347,6 +374,7 @@ Ground_map::Neighbor_query Ground_map::closest_simplex (const Point& p) const
   for (GVertex v : m_graph.vertices())
   {
     double dist = distance (p, m_graph[v].point);
+    debug_gm ("Dist(v", v, ",", p, ") = ", dist);
     if (dist < min_dist)
     {
       point = m_graph[v].point;
@@ -369,6 +397,7 @@ Ground_map::Neighbor_query Ground_map::closest_simplex (const Point& p) const
     if (does_project)
     {
       double dist = distance (p, proj);
+      debug_gm ("Dist(e", e, ",", p, ") = ", dist);
       if (dist < min_dist)
       {
         point = proj;
@@ -397,6 +426,7 @@ void Ground_map::shortest_path (GVertex vorigin, GVertex vtarget,
       dist = 0;
     m_latest_graph[v].dist = dist;
     todo.push (std::make_pair(-dist, v));
+    debug_gm ("Dist[", v, "] = ", dist);
   }
 
   while (!todo.empty())
@@ -416,7 +446,9 @@ void Ground_map::shortest_path (GVertex vorigin, GVertex vtarget,
       if (dist < m_latest_graph[next].dist)
       {
         m_latest_graph[next].dist = dist;
+        debug_gm ("Update Dist[", next, "] = ", dist);
         parent[std::size_t(next)] = current;
+        debug_gm ("Update Parent[", next, "] = ", current);
         todo.push (std::make_pair (-dist, next));
       }
     }
@@ -425,6 +457,7 @@ void Ground_map::shortest_path (GVertex vorigin, GVertex vtarget,
   std::vector<Point> path;
   while (vtarget != vorigin)
   {
+    debug_gm ("Going back from ", vtarget, " to ", parent[vtarget]);
     check (parent[vtarget] != Graph::null_vertex(), "Node has no parent");
     path.push_back (m_latest_graph[vtarget].point);
     vtarget = parent[std::size_t(vtarget)];
