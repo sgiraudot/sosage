@@ -84,39 +84,42 @@ void Input::run()
       get<C::Boolean>("Game:console")->toggle();
     }
 
-    if (ev == Event(KEY_UP, F1))
+    if constexpr (!Config::emscripten) // Do not prevent web users to use F1/F2/etc
     {
-      get<C::Int>("Interface:layout")->set(Config::AUTO);
-      emit ("Window:rescaled");
-    }
-    else if (ev == Event(KEY_UP, F2))
-    {
-      get<C::Int>("Interface:layout")->set(Config::WIDESCREEN);
-      emit ("Window:rescaled");
-    }
-    else if (ev == Event(KEY_UP, F3))
-    {
-      get<C::Int>("Interface:layout")->set(Config::STANDARD);
-      emit ("Window:rescaled");
-    }
-    else if (ev == Event(KEY_UP, F4))
-    {
-      get<C::Int>("Interface:layout")->set(Config::SQUARE);
-      emit ("Window:rescaled");
-    }
-    else if (ev == Event(KEY_UP, F5))
-    {
-      get<C::Int>("Interface:layout")->set(Config::PORTRAIT);
-      emit ("Window:rescaled");
-    }
-    else if (ev == Event(KEY_DOWN, ALT))
-      m_alt = true;
-    else if (ev == Event(KEY_UP, ALT))
-      m_alt = false;
-    else if (ev == Event(KEY_UP, ENTER) && m_alt)
-    {
-      get<C::Boolean>("Window:fullscreen")->toggle();
-      emit ("Window:toggle_fullscreen");
+      if (ev == Event(KEY_UP, F1))
+      {
+        get<C::Int>("Interface:layout")->set(Config::AUTO);
+        emit ("Window:rescaled");
+      }
+      else if (ev == Event(KEY_UP, F2))
+      {
+        get<C::Int>("Interface:layout")->set(Config::WIDESCREEN);
+        emit ("Window:rescaled");
+      }
+      else if (ev == Event(KEY_UP, F3))
+      {
+        get<C::Int>("Interface:layout")->set(Config::STANDARD);
+        emit ("Window:rescaled");
+      }
+      else if (ev == Event(KEY_UP, F4))
+      {
+        get<C::Int>("Interface:layout")->set(Config::SQUARE);
+        emit ("Window:rescaled");
+      }
+      else if (ev == Event(KEY_UP, F5))
+      {
+        get<C::Int>("Interface:layout")->set(Config::PORTRAIT);
+        emit ("Window:rescaled");
+      }
+      else if (ev == Event(KEY_DOWN, ALT))
+        m_alt = true;
+      else if (ev == Event(KEY_UP, ALT))
+        m_alt = false;
+      else if (ev == Event(KEY_UP, ENTER) && m_alt)
+      {
+        get<C::Boolean>("Window:fullscreen")->toggle();
+        emit ("Window:toggle_fullscreen");
+      }
     }
     if (ev == Event(WINDOW, RESIZED))
     {

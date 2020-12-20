@@ -40,14 +40,20 @@ namespace C = Component;
 void Interface::init_menus()
 {
   auto exit_menu = set<C::Menu>("Exit:menu");
-  exit_menu->split(VERTICALLY, 7);
+
+  if constexpr (Config::emscripten)
+    exit_menu->split(VERTICALLY, 5);
+  else
+    exit_menu->split(VERTICALLY, 6);
+
   init_menu_item ((*exit_menu)[0], "Menu_logo", "");
   init_menu_item ((*exit_menu)[1], "Continue", "cancel");
   init_menu_item ((*exit_menu)[2], "New_game", "new_game");
   init_menu_item ((*exit_menu)[3], "Hint", "hint");
-  init_menu_item ((*exit_menu)[4], "Settings", "settings");
-  init_menu_item ((*exit_menu)[5], "Credits", "credits");
-  init_menu_item ((*exit_menu)[6], "Save_and_quit", "quit");
+  //init_menu_item ((*exit_menu)[4], "Settings", "settings"); // <-- TODO
+  init_menu_item ((*exit_menu)[4], "Credits", "credits");
+  if constexpr (!Config::emscripten)
+    init_menu_item ((*exit_menu)[5], "Save_and_quit", "quit");
   init_menu_buttons (exit_menu->root());
 
   auto wanna_restart_menu = set<C::Menu>("Wanna_restart:menu");
