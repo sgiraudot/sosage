@@ -76,7 +76,7 @@ void Interface::run()
       else if (status->value() == IN_CODE)
         code_clicked(cursor);
       else if (status->value() == IN_MENU)
-        menu_clicked(cursor);
+        menu_clicked();
       else if (status->value() == DIALOG_CHOICE)
         dialog_clicked();
       else
@@ -212,7 +212,7 @@ void Interface::verb_clicked()
 {
   get<C::Variable> ("Chosen_verb:text")
     ->set(get<C::String>(m_collision->entity() + ":text"));
-  emit ("Game:verb_clicked");
+  emit ("Click:play_sound");
   remove ("Action:source", true);
 }
 

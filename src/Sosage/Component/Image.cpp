@@ -56,6 +56,14 @@ Image::Image (const std::string& id, Font_handle font, const std::string& color_
     m_core = Core::Graphic::create_text (font->core(), color_str, text);
 }
 
+// Image that share the same Graphic core
+Image::Image (const std::string& id, std::shared_ptr<Image> copy)
+  : Base(id), m_core (copy->m_core), m_origin(copy->m_origin),
+    m_z(copy->m_z), m_on(copy->m_on), m_collision(copy->m_collision)
+{
+
+}
+
 std::string Image::str() const
 {
   return this->id() + " at (" + std::to_string (m_origin.x())

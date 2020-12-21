@@ -130,11 +130,11 @@ void File_IO::read_config()
   int layout = int(Config::AUTO);
   bool virtual_cursor = Config::android;
 
-  double dialog_speed = 1.;
-  double dialog_size = 0.75;
+  int dialog_speed = Config::MEDIUM_SPEED;
+  int dialog_size = Config::MEDIUM;
 
-  int music_volume = 64;
-  int sounds_volume = 128;
+  int music_volume = 7;
+  int sounds_volume = 9;
 
   bool autosave = true;
   bool hints = true;
@@ -183,8 +183,8 @@ void File_IO::read_config()
   set<C::Int>("Interface:layout", layout);
   set<C::Boolean>("Interface:virtual_cursor", virtual_cursor);
 
-  set<C::Double>("Text:dialog_speed", dialog_speed);
-  set<C::Double>("Text:dialog_size", dialog_size);
+  set<C::Int>("Dialog:speed", dialog_speed);
+  set<C::Int>("Dialog:size", dialog_size);
 
   set<C::Int>("Music:volume", music_volume);
   set<C::Int>("Sounds:volume", sounds_volume);
@@ -206,8 +206,8 @@ void File_IO::write_config()
   output.write ("layout", get<C::Int>("Interface:layout")->value());
   output.write ("virtual_cursor", get<C::Boolean>("Interface:virtual_cursor")->value());
 
-  output.write ("dialog_speed", get<C::Double>("Text:dialog_speed")->value());
-  output.write ("dialog_size", get<C::Double>("Text:dialog_size")->value());
+  output.write ("dialog_speed", get<C::Int>("Dialog:speed")->value());
+  output.write ("dialog_size", get<C::Int>("Dialog:size")->value());
 
   output.write ("music_volume", get<C::Int>("Music:volume")->value());
   output.write ("sounds_volume", get<C::Int>("Sounds:volume")->value());
@@ -460,6 +460,14 @@ void File_IO::read_init (const std::string& folder_name)
     arrow_background->set_relative_origin(0.5, 0.5);
     arrow_background->z() = Config::inventory_back_depth;
   }
+
+  std::string left_arrow_id = input["menu_arrows"][0].string("images", "interface", "png");
+  auto arrow_left = set<C::Image>("Menu_left_arrow:image", local_file_name(left_arrow_id));
+  arrow_left->on() = false;
+
+  std::string right_arrow_id = input["menu_arrows"][1].string("images", "interface", "png");
+  auto arrow_right = set<C::Image>("Menu_right_arrow:image", local_file_name(right_arrow_id));
+  arrow_right->on() = false;
 
   for (std::size_t i = 0; i < input["text"].size(); ++ i)
   {

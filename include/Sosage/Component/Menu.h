@@ -47,8 +47,9 @@ class Menu : public Base
   struct Vertex
   {
     Split_direction direction;
-    Image_handle image;
+    std::vector<Image_handle> image;
     Position_handle position;
+    std::size_t current = 0;
   };
 
   struct Edge {};
@@ -67,13 +68,55 @@ class Menu : public Base
       : tree(tree), vertex(vertex) {}
 
     Split_direction direction() const { return tree[vertex].direction; }
-    Image_handle image() const { return tree[vertex].image; }
+
+    Image_handle image() const { return tree[vertex].image[tree[vertex].current]; }
     Position_handle position() const { return tree[vertex].position; }
 
     void init (Image_handle image, Position_handle position)
     {
-      tree[vertex].image = image;
+      tree[vertex].image.emplace_back(image);
       tree[vertex].position = position;
+    }
+
+    void add (Image_handle image)
+    {
+      tree[vertex].image.emplace_back(image);
+    }
+
+    std::string change_setting (const std::string& setting, int diff)
+    {
+      if (nb_children() == 0)
+      {
+        if (tree[vertex].image.size() > 1 &&
+            position()->entity() == setting)
+        {
+          image()->on() = false;
+          if (diff == 1)
+          {
+            ++ tree[vertex].current;
+            if (tree[vertex].current == tree[vertex].image.size())
+              tree[vertex].current = 0;
+          }
+          else
+          {
+            if (tree[vertex].current == 0)
+              tree[vertex].current = tree[vertex].image.size();
+            -- tree[vertex].current;
+          }
+
+          image()->on() = true;
+          std::string entity = image()->entity();
+          return std::string (entity.begin() + setting.size() + 1, entity.end());
+        }
+      }
+      else
+        for (std::size_t i = 0; i < nb_children(); ++ i)
+        {
+          std::string out = (*this)[i].change_setting (setting, diff);
+          if (out != "")
+            return out;
+        }
+      return "";
     }
 
     Vertex_wrapper operator[] (const std::size_t idx) const
@@ -97,7 +140,15 @@ class Menu : public Base
     Sosage::Vector size() const
     {
       if (nb_children() == 0)
-        return Sosage::Vector(image()->width() + 10, image()->height() + 10);
+      {
+        int x = 0, y = 0;
+        for (Image_handle img : tree[vertex].image)
+        {
+          x = std::max(x, img->width());
+          y = std::max(y, img->height());
+        }
+        return Sosage::Vector(x + 10, y + 10);
+      }
       else if (nb_children() == 1)
       {
         Sosage::Vector s = (*this)[0].size();
@@ -175,6 +226,31 @@ class Menu : public Base
           (*this)[i].hide();
     }
 
+    void update_setting (const std::string& setting, const std::string& value)
+    {
+      if (nb_children() == 0)
+      {
+        if (tree[vertex].image.size() > 1 &&
+            position()->entity() == setting)
+        {
+          for (std::size_t i = 0; i < tree[vertex].image.size(); ++ i)
+          {
+            std::string entity = tree[vertex].image[i]->entity();
+            std::string v (entity.begin() + setting.size() + 1, entity.end());
+            std::cerr << v << std::endl;
+            if (v == value)
+            {
+              tree[vertex].current = i;
+              return;
+            }
+          }
+          check (false, "Value " + value + " not found in setting " + setting);
+        }
+      }
+      else
+        for (std::size_t i = 0; i < nb_children(); ++ i)
+          (*this)[i].update_setting (setting, value);
+    }
   };
 
 
@@ -209,7 +285,22 @@ public:
 
   void hide() { root().hide(); }
 
+  void update_setting (const std::string& setting, const std::string& value)
+  {
+    root().update_setting (setting, value);
+  }
+
+  std::string increment (const std::string& setting)
+  {
+    return root().change_setting (setting, 1);
+  }
+  std::string decrement (const std::string& setting)
+  {
+    return root().change_setting (setting, -1);
+  }
+
   Node root() const { return Node(const_cast<Tree&>(m_tree), m_root); }
+
 };
 
 using Menu_handle = std::shared_ptr<Menu>;

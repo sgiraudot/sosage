@@ -308,9 +308,11 @@ void Logic::run_cutscene()
     }
     else if (auto music = request<C::Music>(el.id))
     {
-      set<C::Variable>("Game:music", get<C::Music>(el.id));
-      emit ("Music:start");
-      el.active = false;
+      if (!request<C::Variable>("Game:music"))
+      {
+        set<C::Variable>("Game:music", get<C::Music>(el.id));
+        emit ("Music:start");
+      }
     }
     else
     {
@@ -825,7 +827,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 
   int nb_char = int(text.size());
   double nb_seconds_read
-      = get<C::Double>("Text:dialog_speed")->value()
+      = (get<C::Int>("Dialog:speed")->value() / double(Config::MEDIUM_SPEED))
       * (Config::min_reading_time + nb_char * Config::char_spoken_time);
   double nb_seconds_lips_moving = nb_char * Config::char_spoken_time;
 
@@ -833,22 +835,23 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   int x = int(get<C::Position>(id + "_body:position")->value().x()
               - get<C::Double>(CAMERA__POSITION)->value());
 
+  double size_factor = 0.75 * (get<C::Int>("Dialog:size")->value() / double(Config::MEDIUM));
+
   for (auto img : dialog)
-    if (x + 0.75 * img->width() / 2 > int(0.95 * Config::world_width))
-      x = int(0.95 * Config::world_width - 0.75 * img->width() / 2);
-    else if (x - 0.75 * img->width() / 2 < int(0.1 * Config::world_width))
-      x = int(0.1 * Config::world_width + 0.75 * img->width() / 2);
+    if (x + size_factor * img->width() / 2 > int(0.95 * Config::world_width))
+      x = int(0.95 * Config::world_width - size_factor * img->width() / 2);
+    else if (x - size_factor * img->width() / 2 < int(0.1 * Config::world_width))
+      x = int(0.1 * Config::world_width + size_factor * img->width() / 2);
 
 
   for (auto img : dialog)
   {
     auto pos = set<C::Position> (img->entity() + ":position", Point(x,y));
-    y += img->height() * 1.1 * 0.75;
+    y += img->height() * 1.1 * size_factor;
 
     m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), img));
     m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), pos));
   }
-
   emit (id + ":start_talking");
 
   m_timed.insert (std::make_pair (m_current_time + nb_seconds_lips_moving,
@@ -863,6 +866,8 @@ void Logic::create_dialog (const std::string& character,
 {
   static const int width_max = int(0.6 * Config::world_width);
 
+  double size_factor = 0.75 * (get<C::Int>("Dialog:size")->value() / double(Config::MEDIUM));
+
   auto interface_font = get<C::Font> ("Interface:font");
   const std::string& color = get<C::String> (character + ":color")->value();
 
@@ -871,7 +876,7 @@ void Logic::create_dialog (const std::string& character,
                                        interface_font,
                                        color,
                                        text, true);
-  img->set_scale(0.75);
+  img->set_scale(size_factor);
   img->set_relative_origin(0.5, 0.5);
 
   if (img->width() <= width_max)
@@ -922,7 +927,7 @@ void Logic::create_dialog (const std::string& character,
                                            std::string(text.begin() + std::ptrdiff_t(begin),
                                                        text.begin() + std::ptrdiff_t(end)), true);
       img->z() = Config::inventory_over_depth;
-      img->set_scale(0.75);
+      img->set_scale(size_factor);
       img->set_relative_origin(0.5, 0.5);
       dialog.push_back (img);
     }

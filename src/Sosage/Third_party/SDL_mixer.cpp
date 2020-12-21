@@ -104,8 +104,9 @@ void SDL_mixer::resume_music (const SDL_mixer::Music&)
   Mix_ResumeMusic();
 }
 
-void SDL_mixer::play_sound (const SDL_mixer::Sound& sound)
+void SDL_mixer::play_sound (const SDL_mixer::Sound& sound, double percentage)
 {
+  Mix_VolumeChunk (sound, int(percentage * Config::max_music_volume));
   Mix_PlayChannel(-1, sound, 0);
 }
 

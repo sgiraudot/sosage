@@ -64,6 +64,9 @@ void Sound::run()
     m_core.fade(music->core(), end_time - current_time, fadein->value());
   }
 
+  if (receive("Music:volume_changed"))
+    m_core.set_volume (get<C::Int>("Music:volume")->value() / 10.);
+
   if (receive("Music:stop"))
     m_core.stop_music();
 
@@ -76,7 +79,7 @@ void Sound::run()
       if (status->next_value() == CUTSCENE)
         m_core.pause_music (music->core());
       else
-        m_core.set_volume(0.15);
+        m_core.set_volume(0.15 * get<C::Int>("Music:volume")->value() / 10.);
       music->on() = false;
     }
     else if (!paused && !music->on())
@@ -84,33 +87,38 @@ void Sound::run()
       if (status->value() == CUTSCENE)
         m_core.resume_music(music->core());
       else
-        m_core.set_volume (0.5);
+        m_core.set_volume (get<C::Int>("Music:volume")->value() / 10.);
       music->on() = true;
     }
   }
 
-  if (receive ("Game:verb_clicked"))
-    m_core.play_sound (m_content.get<C::Sound>("Click:sound")->core());
+  if (receive ("Click:play_sound"))
+    m_core.play_sound (get<C::Sound>("Click:sound")->core(),
+                       get<C::Int>("Sounds:volume")->value() / 10.);
 
   if (receive ("code:play_failure"))
     m_core.play_sound
       (m_content.get<C::Sound>
-       (m_content.get<C::Code>("Game:code")->entity() +"_failure:sound")->core());
+       (m_content.get<C::Code>("Game:code")->entity() +"_failure:sound")->core(),
+       get<C::Int>("Sounds:volume")->value() / 10.);
   else if (receive ("code:play_success"))
     m_core.play_sound
       (m_content.get<C::Sound>
-       (m_content.get<C::Code>("Game:code")->entity() +"_success:sound")->core());
+       (m_content.get<C::Code>("Game:code")->entity() +"_success:sound")->core(),
+       get<C::Int>("Sounds:volume")->value() / 10.);
   else if (receive ("code:play_click"))
     m_core.play_sound
       (m_content.get<C::Sound>
-       (m_content.get<C::Code>("Game:code")->entity() +"_button:sound")->core());
+       (m_content.get<C::Code>("Game:code")->entity() +"_button:sound")->core(),
+       get<C::Int>("Sounds:volume")->value() / 10.);
 
   std::vector<std::string> to_remove;
   for (C::Handle h : m_content)
     if (auto ev = C::cast<C::Signal>(h))
       if (ev->entity() == "play_sound")
       {
-        m_core.play_sound (m_content.get<C::Sound> (ev->component() + ":sound")->core());
+        m_core.play_sound (m_content.get<C::Sound> (ev->component() + ":sound")->core(),
+                           get<C::Int>("Sounds:volume")->value() / 10.);
         to_remove.push_back (ev->id());
       }
 

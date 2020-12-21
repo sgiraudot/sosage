@@ -42,18 +42,18 @@ void Interface::init_menus()
   auto exit_menu = set<C::Menu>("Exit:menu");
 
   if constexpr (Config::emscripten)
-    exit_menu->split(VERTICALLY, 5);
-  else
     exit_menu->split(VERTICALLY, 6);
+  else
+    exit_menu->split(VERTICALLY, 7);
 
   init_menu_item ((*exit_menu)[0], "Menu_logo", "");
   init_menu_item ((*exit_menu)[1], "Continue", "cancel");
   init_menu_item ((*exit_menu)[2], "New_game", "new_game");
   init_menu_item ((*exit_menu)[3], "Hint", "hint");
-  //init_menu_item ((*exit_menu)[4], "Settings", "settings"); // <-- TODO
-  init_menu_item ((*exit_menu)[4], "Credits", "credits");
+  init_menu_item ((*exit_menu)[4], "Settings", "settings");
+  init_menu_item ((*exit_menu)[5], "Credits", "credits");
   if constexpr (!Config::emscripten)
-    init_menu_item ((*exit_menu)[5], "Save_and_quit", "quit");
+    init_menu_item ((*exit_menu)[6], "Save_and_quit", "quit");
   init_menu_buttons (exit_menu->root());
 
   auto wanna_restart_menu = set<C::Menu>("Wanna_restart:menu");
@@ -63,6 +63,36 @@ void Interface::init_menus()
   init_menu_item ((*wanna_restart_menu)[1][0], "Ok", "ok");
   init_menu_item ((*wanna_restart_menu)[1][1], "Cancel", "cancel");
   init_menu_buttons ((*wanna_restart_menu)[1]);
+
+#if 1
+  std::vector<std::array<std::string, 2> > settings_list
+      = {
+#ifndef SOSAGE_ANDROID
+          { "Fullscreen", "fullscreen" },
+#endif
+          { "Layout", "layout" },
+#ifdef SOSAGE_ANDROID
+          { "Virtual_cursor", "virtual_cursor" },
+          { "Cursor_sensivity", "cursor_sentivity" },
+#endif
+          { "Text_size", "text_size" },
+          { "Text_speed", "text_speed" },
+          { "Music_volume", "music_volume" },
+          { "Sound_volume", "sound_volume" } };
+  auto settings_menu = set<C::Menu>("Settings:menu");
+  settings_menu->split(VERTICALLY, 2);
+  (*settings_menu)[0].split(HORIZONTALLY, 4);
+  for (std::size_t i = 0; i < 4; ++ i)
+    (*settings_menu)[0][i].split(VERTICALLY, settings_list.size());
+  for (std::size_t i = 0; i < settings_list.size(); ++ i)
+  {
+    init_menu_item ((*settings_menu)[0][0][i], settings_list[i][0], "");
+    init_setting_item ((*settings_menu)[0][1][i], (*settings_menu)[0][2][i],
+        (*settings_menu)[0][3][i], settings_list[i][1]);
+  }
+  init_menu_item ((*settings_menu)[1], "Ok", "ok");
+  init_menu_buttons (settings_menu->root());
+#endif
 
   auto credits_menu = set<C::Menu>("Credits:menu");
   credits_menu->split(VERTICALLY, 3);
@@ -166,6 +196,70 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
 
     set<C::String>(text->entity() + ":effect", effect);
   }
+}
+
+void Interface::init_setting_item (Component::Menu::Node node_left,
+                                   Component::Menu::Node node,
+                                   Component::Menu::Node node_right,
+                                   const std::string& effect)
+{
+  auto left_arrow = set<C::Image>("Menu_" + effect + "_left_arrow:image",
+                                  get<C::Image>("Menu_left_arrow:image"));
+  left_arrow->z() = Config::menu_text_depth;
+  left_arrow->set_relative_origin(0.5, 0.5);
+  left_arrow->set_collision(BOX);
+  auto left_pos = set<C::Position>("Menu_" + effect + "_left_arrow:position", Point(0, 0));
+  node_left.init (left_arrow, left_pos);
+  auto right_arrow = set<C::Image>("Menu_" + effect + "_right_arrow:image",
+                                  get<C::Image>("Menu_right_arrow:image"));
+  right_arrow->z() = Config::menu_text_depth;
+  right_arrow->set_relative_origin(0.5, 0.5);
+  right_arrow->set_collision(BOX);
+  auto right_pos = set<C::Position>("Menu_" + effect + "_right_arrow:position", Point(0, 0));
+  node_right.init (right_arrow, right_pos);
+
+  std::vector<std::string> possible_values;
+  if (effect == "fullscreen")
+    possible_values = { "Yes", "No" };
+  else if (effect == "layout")
+    possible_values = { "Layout_auto", "Layout_widescreen",
+                        "Layout_standard", "Layout_square" };
+  else if (effect == "virtual_cursor")
+    possible_values = { "Yes", "No" };
+  else if (effect == "text_size")
+    possible_values = { "Small", "Medium", "Large" };
+  else if (effect == "text_speed")
+    possible_values = { "Slow", "Medium_speed", "Fast" };
+  else if (effect == "music_volume" || effect == "sound_volume")
+    possible_values = { "0", "10", "20", "30", "40",
+                        "50", "60", "70", "80", "90",
+                        "100" };
+
+  auto menu_font = get<C::Font>("Menu:font");
+
+  auto pos = set<C::Position>(effect + ":position", Point(0,0));
+  for (std::size_t i = 0; i < possible_values.size(); ++ i)
+  {
+    std::string id = effect + '_' + possible_values[i];
+    std::string text;
+    if (auto t = request<C::String>(possible_values[i] + ":text"))
+      text = t->value();
+    else
+      text = possible_values[i] + " %";
+
+    auto img = set<C::Image>(id + ":image",
+                             menu_font, "000000", text);
+    img->z() = Config::menu_text_depth;
+    img->on() = false;
+    img->set_scale(0.75);
+    img->set_relative_origin(0.5, 0.5);
+    set<C::Variable>(id + ":position", pos);
+    if (i == 0)
+      node.init(img, pos);
+    else
+      node.add(img);
+  }
+
 }
 
 void Interface::init_menu_buttons (Component::Menu::Node node)
@@ -323,7 +417,8 @@ void Interface::update_exit()
 
 }
 
-void Interface::create_menu (const std::string& id)
+void Interface::
+create_menu (const std::string& id)
 {
   set<C::String>("Game:current_menu", id);
 
@@ -342,6 +437,46 @@ void Interface::create_menu (const std::string& id)
   }
 
   auto menu = get<C::Menu>(id + ":menu");
+
+  // Update settings menu with current settings
+  if (id == "Settings")
+  {
+    menu->update_setting ("fullscreen",
+                          get<C::Boolean>("Window:fullscreen")->value() ? "Yes" : "No");
+
+    Config::Layout layout = Config::Layout(get<C::Int>("Interface:layout")->value());
+    if (layout == Config::AUTO)
+      menu->update_setting ("layout", "Layout_auto");
+    else if (layout == Config::WIDESCREEN)
+      menu->update_setting ("layout", "Layout_widescreen");
+    else if (layout == Config::STANDARD)
+      menu->update_setting ("layout", "Layout_standard");
+    else
+      menu->update_setting ("layout", "Layout_square");
+
+    menu->update_setting ("virtual_cursor",
+                          get<C::Boolean>("Interface:virtual_cursor")->value() ? "Yes" : "No");
+
+    int speed = get<C::Int>("Dialog:speed")->value();
+    if (speed == Config::SLOW)
+      menu->update_setting ("text_speed", "Slow");
+    else if (speed == Config::MEDIUM_SPEED)
+      menu->update_setting ("text_speed", "Medium_speed");
+    else if (speed == Config::FAST)
+      menu->update_setting ("text_speed", "Fast");
+
+    int size = get<C::Int>("Dialog:size")->value();
+    if (size == Config::SMALL)
+      menu->update_setting ("text_size", "Small");
+    else if (size == Config::MEDIUM)
+      menu->update_setting ("text_size", "Medium");
+    else if (size == Config::LARGE)
+      menu->update_setting ("text_size", "Large");
+
+    menu->update_setting ("music_volume", std::to_string(10 * get<C::Int>("Music:volume")->value()));
+    menu->update_setting ("sound_volume", std::to_string(10 * get<C::Int>("Sounds:volume")->value()));
+  }
+
   const std::string& menu_color = get<C::String>("Menu:color")->value();
 
   Vector size = menu->size();
@@ -377,18 +512,41 @@ void Interface::delete_menu (const std::string& id)
   get<C::Image>("Menu_foreground:image")->on() = false;
 }
 
-void Interface::menu_clicked(C::Position_handle cursor)
+void Interface::menu_clicked()
 {
   std::string entity = m_collision->entity();
   std::size_t pos = entity.find("_button");
   if (pos != std::string::npos)
     entity.resize(pos);
 
+  const std::string& menu = get<C::String>("Game:current_menu")->value();
+
   auto effect = request<C::String>(entity + ":effect");
   if (!effect)
-    return;
+  {
+    if (menu == "Settings")
+    {
+      std::size_t pos = entity.find("_left_arrow");
+      bool left_arrow = (pos != std::string::npos);
+      if (!left_arrow)
+      {
+        pos = entity.find("_right_arrow");
+        if (pos == std::string::npos)
+          return;
+      }
 
-  const std::string& menu = get<C::String>("Game:current_menu")->value();
+      emit("Click:play_sound");
+      std::string setting (entity.begin() + 5, entity.begin() + pos);
+      if (left_arrow)
+        apply_setting (setting, get<C::Menu>("Settings:menu")->decrement(setting));
+      else
+        apply_setting (setting, get<C::Menu>("Settings:menu")->increment(setting));
+    }
+    return;
+  }
+
+  emit("Click:play_sound");
+
 
   if (effect->value() == "quit")
   {
@@ -425,9 +583,9 @@ void Interface::menu_clicked(C::Position_handle cursor)
       delete_menu("Wanna_restart");
       get<C::Status>(GAME__STATUS)->pop();
     }
-    else if (menu == "Credits")
+    else if (menu == "Credits" || menu == "Settings")
     {
-      delete_menu ("Credits");
+      delete_menu (menu);
       create_menu ("Exit");
     }
     else if (menu == "Hint")
@@ -435,6 +593,11 @@ void Interface::menu_clicked(C::Position_handle cursor)
       delete_menu("Hint");
       get<C::Status>(GAME__STATUS)->pop();
     }
+  }
+  else if (effect->value() == "settings")
+  {
+    delete_menu ("Exit");
+    create_menu ("Settings");
   }
   else if (effect->value() == "credits")
   {
@@ -454,6 +617,56 @@ void Interface::menu_clicked(C::Position_handle cursor)
     else if (menu == "Wanna_restart")
       create_menu("Exit");
   }
+}
+
+void Interface::apply_setting (const std::string& setting, const std::string& value)
+{
+  std::cerr << value << std::endl;
+  if (setting == "fullscreen")
+  {
+    get<C::Boolean>("Window:fullscreen")->set(value == "Yes");
+    emit ("Window:toggle_fullscreen");
+  }
+  else if (setting == "layout")
+  {
+    if (value == "Layout_auto")
+      get<C::Int>("Interface:layout")->set(Config::AUTO);
+    else if (value == "Layout_widescreen")
+      get<C::Int>("Interface:layout")->set(Config::WIDESCREEN);
+    else if (value == "Layout_standard")
+      get<C::Int>("Interface:layout")->set(Config::STANDARD);
+    else if (value == "Layout_square")
+      get<C::Int>("Interface:layout")->set(Config::SQUARE);
+    update_layout();
+    emit ("Window:rescaled");
+  }
+  else if (setting == "virtual_cursor")
+    get<C::Boolean>("Interface:virtual_cursor")->set(value == "Yes");
+  else if (setting == "text_size")
+  {
+    if (value == "Small")
+      set<C::Int>("Dialog:size")->set(Config::SMALL);
+    else if (value == "Medium")
+      set<C::Int>("Dialog:size")->set(Config::MEDIUM);
+    else
+      set<C::Int>("Dialog:size")->set(Config::LARGE);
+  }
+  else if (setting == "text_speed")
+  {
+    if (value == "Slow")
+      set<C::Int>("Dialog:speed")->set(Config::SLOW);
+    else if (value == "Medium_speed")
+      set<C::Int>("Dialog:speed")->set(Config::MEDIUM_SPEED);
+    else
+      set<C::Int>("Dialog:speed")->set(Config::FAST);
+  }
+  else if (setting == "music_volume")
+  {
+    set<C::Int>("Music:volume")->set(to_int(value) / 10);
+    emit("Music:volume_changed");
+  }
+  else if (setting == "sound_volume")
+    set<C::Int>("Sounds:volume")->set(to_int(value) / 10);
 }
 
 

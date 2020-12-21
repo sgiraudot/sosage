@@ -92,6 +92,20 @@ enum Layout
   PORTRAIT
 };
 
+enum Dialog_speed
+{
+  SLOW = 18,
+  MEDIUM_SPEED = 12,
+  FAST = 9
+};
+
+enum Dialog_size
+{
+  SMALL = 9,
+  MEDIUM = 12,
+  LARGE = 18,
+};
+
 } // namespace Config
 
 } // namespace Sosage

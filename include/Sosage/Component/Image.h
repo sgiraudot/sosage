@@ -52,6 +52,7 @@ public:
          const Collision_type& collision = UNCLICKABLE);
   Image (const std::string& id, Font_handle font, const std::string& color_str,
          const std::string& text, bool outlined = false);
+  Image (const std::string& id, std::shared_ptr<Image> copy);
   virtual ~Image() { /*debug("Destructor of ", id());*/ }
   virtual std::string str() const;
   void set_relative_origin (double ratio_x, double ratio_y);
