@@ -638,13 +638,13 @@ void Interface::menu_clicked()
   }
   else if (effect->value() == "cursor_choice_virtual")
   {
-    set<C::Boolean>("Interface:virtual_cursor", true);
+    get<C::Boolean>("Interface:virtual_cursor")->set (true);
     delete_menu("Cursor");
     get<C::Status>(GAME__STATUS)->pop();
   }
   else if (effect->value() == "cursor_choice_no")
   {
-    set<C::Boolean>("Interface:virtual_cursor", false);
+    get<C::Boolean>("Interface:virtual_cursor")->set (false);
     delete_menu("Cursor");
     get<C::Status>(GAME__STATUS)->pop();
   }
