@@ -128,7 +128,7 @@ void File_IO::read_config()
   // Default config values
   bool fullscreen = !Config::emscripten;
   int layout = int(Config::AUTO);
-  bool virtual_cursor = Config::android;
+  bool virtual_cursor = false;
 
   int dialog_speed = Config::MEDIUM_SPEED;
   int dialog_size = Config::MEDIUM;
@@ -143,8 +143,8 @@ void File_IO::read_config()
   int interface_height = 200;
 
 #ifdef SOSAGE_EMSCRIPTEN
-  int window_width = 960;
-  int window_height = 600;
+  int window_width = 640;
+  int window_height = 400;
 #else
   int window_width = -1;
   int window_height = -1;
@@ -176,7 +176,11 @@ void File_IO::read_config()
   }
   catch (Sosage::No_such_file&)
   {
-
+    if constexpr (Config::android)
+    {
+      emit("Show:menu");
+      set<C::String>("Game:triggered_menu", "Cursor");
+    }
   }
 
   set<C::Boolean>("Window:fullscreen", fullscreen);

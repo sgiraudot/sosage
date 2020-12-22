@@ -124,7 +124,6 @@ if(SOSAGE_COMPILE_TESTS)
 
   file(GLOB_RECURSE GROUND_MAPS "${SOSAGE_DATA_FOLDER}/data/images/backgrounds/*_map.png")
   list(JOIN GROUND_MAPS "\;" GROUND_MAPS_STR)
-  message(${GROUND_MAPS_STR})
   target_compile_definitions("test_unit_Component_Ground_map" PUBLIC "-DSOSAGE_GROUND_MAPS=\"${GROUND_MAPS_STR}\"")
 
   file(GLOB_RECURSE SOSAGE_HEADERS "include/Sosage/*.h")
@@ -136,6 +135,5 @@ if(SOSAGE_COMPILE_TESTS)
     target_link_libraries("check_header_${target}" PUBLIC sosage)
     sosage_add_test("check_header_${target}")
   endforeach()
-
 
 endif()

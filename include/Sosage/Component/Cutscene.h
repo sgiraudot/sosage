@@ -76,17 +76,19 @@ public:
       return -1;
     }
 
+    if (m_starting_time < 0)
+    {
+      m_starting_time = time;
+      m_paused_time = -1;
+      return 0;
+    }
+
     if (m_paused_time > 0)
     {
       m_starting_time += (time - m_paused_time);
       m_paused_time = -1;
     }
 
-    if (m_starting_time < 0)
-    {
-      m_starting_time = time;
-      return 0;
-    }
     return time - m_starting_time;
   }
 

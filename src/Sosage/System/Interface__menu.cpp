@@ -67,13 +67,14 @@ void Interface::init_menus()
 #if 1
   std::vector<std::array<std::string, 2> > settings_list
       = {
-#ifndef SOSAGE_ANDROID
+#if !defined(SOSAGE_ANDROID) && !defined(SOSAGE_EMSCRIPTEN)
           { "Fullscreen", "fullscreen" },
 #endif
+#ifndef SOSAGE_EMSCRIPTEN
           { "Layout", "layout" },
+#endif
 #ifdef SOSAGE_ANDROID
           { "Virtual_cursor", "virtual_cursor" },
-          { "Cursor_sensivity", "cursor_sentivity" },
 #endif
           { "Text_size", "text_size" },
           { "Text_speed", "text_speed" },
@@ -93,6 +94,20 @@ void Interface::init_menus()
   init_menu_item ((*settings_menu)[1], "Ok", "ok");
   init_menu_buttons (settings_menu->root());
 #endif
+
+  auto cursor_menu = set<C::Menu>("Cursor:menu");
+  cursor_menu->split(VERTICALLY, 3);
+  (*cursor_menu)[2].split(HORIZONTALLY, 2);
+  (*cursor_menu)[2][0].split(VERTICALLY, 2);
+  (*cursor_menu)[2][1].split(VERTICALLY, 2);
+  init_menu_item ((*cursor_menu)[0], "Cursor_choice", "");
+  init_menu_item ((*cursor_menu)[1], "Cursor_choice_later", "");
+  init_menu_item ((*cursor_menu)[2][0][0], "Cursor_choice_virtual", "cursor_choice_virtual");
+  init_menu_item ((*cursor_menu)[2][1][0], "Cursor_choice_no", "cursor_choice_no");
+  init_menu_item ((*cursor_menu)[2][0][1], "Cursor_choice_virtual_text", "");
+  init_menu_item ((*cursor_menu)[2][1][1], "Cursor_choice_no_text", "");
+  init_menu_buttons ((*cursor_menu)[2][0]);
+  init_menu_buttons ((*cursor_menu)[2][1]);
 
   auto credits_menu = set<C::Menu>("Credits:menu");
   credits_menu->split(VERTICALLY, 3);
@@ -148,6 +163,10 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
         }
         while (pos != std::string::npos);
 
+        double scale = 0.75;
+        if (lines.size() > 2) // hack for cursor selection menu
+          scale = 0.6;
+
         node.split(VERTICALLY, lines.size());
         for (std::size_t i = 0; i < lines.size(); ++ i)
         {
@@ -156,7 +175,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
                                    menu_font, "000000", lines[i]);
           img->z() = Config::menu_text_depth;
           img->on() = false;
-          img->set_scale(0.75);
+          img->set_scale(scale);
           img->set_relative_origin(0.5, 0.5);
           auto pos = set<C::Position>(text->entity() + "_" + std::to_string(i)
                                       + ":position", Point(0, 0));
@@ -616,6 +635,18 @@ void Interface::menu_clicked()
       get<C::Status>(GAME__STATUS)->pop();
     else if (menu == "Wanna_restart")
       create_menu("Exit");
+  }
+  else if (effect->value() == "cursor_choice_virtual")
+  {
+    set<C::Boolean>("Interface:virtual_cursor", true);
+    delete_menu("Cursor");
+    get<C::Status>(GAME__STATUS)->pop();
+  }
+  else if (effect->value() == "cursor_choice_no")
+  {
+    set<C::Boolean>("Interface:virtual_cursor", false);
+    delete_menu("Cursor");
+    get<C::Status>(GAME__STATUS)->pop();
   }
 }
 

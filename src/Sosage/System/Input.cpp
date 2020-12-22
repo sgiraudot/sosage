@@ -149,12 +149,15 @@ void Input::run()
 
       if (ev.type() == CURSOR_UP)
       {
-        m_virtual_cursor.down = false;
-
-        if (!m_virtual_cursor.has_moved)
+        if (m_virtual_cursor.down) // should always be true except if we just activated virtual cursor
         {
-          emit ("Cursor:clicked");
-          set<C::Boolean>("Click:left", true);
+          m_virtual_cursor.down = false;
+
+          if (!m_virtual_cursor.has_moved)
+          {
+            emit ("Cursor:clicked");
+            set<C::Boolean>("Click:left", true);
+          }
         }
       }
 

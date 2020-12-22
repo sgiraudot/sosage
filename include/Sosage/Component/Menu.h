@@ -144,8 +144,11 @@ class Menu : public Base
         int x = 0, y = 0;
         for (Image_handle img : tree[vertex].image)
         {
-          x = std::max(x, img->width());
-          y = std::max(y, img->height());
+          double scale = 1.;
+          if (img->scale() < 1.)
+            scale = img->scale() / 0.75;
+          x = std::max(x, int(img->width() * scale));
+          y = std::max(y, int(img->height() * scale));
         }
         return Sosage::Vector(x + 10, y + 10);
       }

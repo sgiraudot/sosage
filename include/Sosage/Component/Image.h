@@ -71,6 +71,7 @@ public:
   int height() const { return ymax() - ymin(); }
   const int& z() const { return m_z; }
   int& z() { return m_z; }
+  double scale() const { return m_core.scaling; }
   void rescale (double z);
   void set_scale (double scale);
   void set_alpha (unsigned char alpha) { m_core.alpha = alpha; }

@@ -231,8 +231,10 @@ void Logic::run ()
 void Logic::run_cutscene()
 {
   auto cutscene = get<C::Cutscene>("Game:cutscene");
+  bool paused = get<C::Status>(GAME__STATUS)->value() == PAUSED
+                || get<C::Status>(GAME__STATUS)->value() == IN_MENU;
   double current_time
-      = cutscene->current_time (m_current_time, get<C::Status>(GAME__STATUS)->value() == PAUSED);
+      = cutscene->current_time (m_current_time, paused);
   if (current_time < 0)
     return;
 

@@ -44,4 +44,12 @@
 #define SOSAGE_ASSERTIONS_AS_EXCEPTIONS
 #endif
 
+#ifndef SOSAGE_PREF_PATH
+#define SOSAGE_PREF_PATH "ptilouk"
+#endif
+
+#ifndef SOSAGE_PREF_SUBPATH
+#define SOSAGE_PREF_SUBPATH "sosage"
+#endif
+
 #endif // SOSAGE_CONFIG_OPTIONS_H

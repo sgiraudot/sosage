@@ -28,6 +28,7 @@
 #define SOSAGE_THIRD_PARTY_SDL_FILE_H
 
 #include <Sosage/Config/config.h>
+#include <Sosage/Config/options.h>
 #include <Sosage/Config/platform.h>
 #include <Sosage/Utils/error.h>
 
@@ -83,7 +84,7 @@ inline std::string base_path()
 
 inline std::string pref_path()
 {
-  char* pp = SDL_GetPrefPath("ptilouk", "superflu");
+  char* pp = SDL_GetPrefPath(SOSAGE_PREF_PATH, SOSAGE_PREF_SUBPATH);
   std::string out = pp;
   free(pp);
   return out;
