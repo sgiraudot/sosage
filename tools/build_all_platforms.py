@@ -12,6 +12,7 @@ libyaml_souce_path = "/home/gee/local/sources/libyaml-master"
 gamename = "superflu-riteurnz"
 version = "v1.0.0-xmas2020demo"
 
+data_dir = "TMP_data"
 linux_buildir = "TMP_build_linux"
 appimg_buildir = "TMP_build_appimg"
 windows_buildir = "TMP_build_windows"
@@ -30,7 +31,27 @@ def run_cmd(cmd):
 run_cmd(["rm", "-rf", output_dir])
 run_cmd(["mkdir", output_dir])
 
-print("(1/5) BUILD LINUX DEB/RPM")
+print("(1/6) BUILD DATA ZIP")
+try:
+    begin = time.perf_counter()
+    run_cmd(["rm", "-rf", data_dir])
+    run_cmd(["mkdir", data_dir])
+    os.chdir(data_dir)
+    copy_data_dir = appname + "-data"
+    run_cmd(["cp", "-r", data_folder, copy_data_dir])
+    run_cmd(["rm", "-rf", copy_data_dir + "/workspace"])
+    run_cmd(["rm", "-rf", copy_data_dir + "/.git*"])
+    run_cmd(["zip", "-r", "../" + output_dir + "/" + appname + "-data.zip",
+             copy_data_dir])
+    os.chdir("..")
+    run_cmd(["rm", "-rf", data_dir])
+    end = time.perf_counter()
+    print("  -> done in " + str(int(end - begin)) + "s")
+except:
+    run_cmd(["rm", "-rf", data_dir])
+    print("  -> ERROR, something went wrong")
+
+print("(2/6) BUILD LINUX DEB/RPM")
 try:
     begin = time.perf_counter()
     run_cmd(["rm", "-rf", linux_buildir])
@@ -51,7 +72,7 @@ except:
     run_cmd(["rm", "-rf", linux_buildir])
     print("  -> ERROR, something went wrong")
 
-print("(2/5) BUILD LINUX APPIMAGE")
+print("(3/6) BUILD LINUX APPIMAGE")
 try:
     begin = time.perf_counter()
     run_cmd(["rm", "-rf", appimg_buildir])
@@ -70,7 +91,7 @@ except:
     run_cmd(["rm", "-rf", appimg_buildir])
     print("  -> ERROR, something went wrong")
 
-print("(3/5) BUILD ANDROID")
+print("(4/6) BUILD ANDROID")
 try:
     begin = time.perf_counter()
     os.chdir("platform/android")
@@ -83,7 +104,7 @@ try:
 except:
     print("  -> ERROR, something went wrong")
 
-print("(4/5) BUILD WINDOWS")
+print("(5/6) BUILD WINDOWS")
 try:
     begin = time.perf_counter()
     run_cmd(["rm", "-rf", windows_buildir])
@@ -105,7 +126,7 @@ except:
     run_cmd(["rm", "-rf", windows_buildir])
     print("  -> ERROR, something went wrong")
 
-print("(5/5) BUILD EMSCRIPTEN")
+print("(6/6) BUILD EMSCRIPTEN")
 try:
     begin = time.perf_counter()
     run_cmd(["rm", "-rf", emscripten_buildir])
