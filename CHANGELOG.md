@@ -2,7 +2,7 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v0.3.0 (xmas2020demo)` - 2020-12-25
+## `v1.0.0 (xmas2020demo)` - 2020-12-25
 
 ### Release Management
 
@@ -16,6 +16,8 @@ History of versions and modifications of the SOSAGE engine.
   with callbacks instead
 - Saving/loading
 - Main menu
+- Settings menu
+- Cursor choice menu
 
 ### Game Engine
 
