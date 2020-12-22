@@ -351,15 +351,20 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
 
 SDL::~SDL ()
 {
-  m_textures.clear();
-  m_masks.clear();
-  m_fonts.clear();
+  clear_managers();
   SDL_FreeSurface (m_icon);
   TTF_Quit ();
   IMG_Quit ();
   SDL_DestroyRenderer (m_renderer);
   SDL_DestroyWindow (m_window);
   SDL_Quit ();
+}
+
+void SDL::clear_managers()
+{
+  m_textures.clear();
+  m_masks.clear();
+  m_fonts.clear();
 }
 
 void SDL::update_window (const std::string& name, const std::string& icon_filename)

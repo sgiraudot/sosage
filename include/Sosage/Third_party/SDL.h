@@ -110,6 +110,8 @@ public:
   SDL ();
   ~SDL ();
 
+  void clear_managers();
+
   void init (int& window_width, int& window_height, bool fullscreen);
 
   void update_window (const std::string& name, const std::string& icon_filename);

@@ -69,6 +69,7 @@ void Graphic::run()
 
   if (request<C::String>("Game:new_room"))
   {
+    m_core.clear_managers();
     run_loading();
     return;
   }
