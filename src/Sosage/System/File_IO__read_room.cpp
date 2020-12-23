@@ -319,6 +319,7 @@ void File_IO::read_room (const std::string& file_name)
     get<C::Double>("Camera:target")->set(0);
   }
   emit ("Game:loading_done");
+  emit ("Window:rescaled");
 
 #ifdef SOSAGE_DEBUG
   // Display layers of images for easy room creation
