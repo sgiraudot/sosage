@@ -46,6 +46,9 @@ class Clock
   double m_active;
   std::size_t m_nb;
 
+  std::size_t m_nb_recorded;
+  std::size_t m_nb_missed;
+
   double m_fps;
   double m_cpu;
 
@@ -58,7 +61,8 @@ public:
 
   Clock()
     : m_refresh_time (1000. / double(Config::gui_fps))
-    , m_mean(0), m_active(0), m_nb(0), m_fps(Config::gui_fps), m_cpu(0)
+    , m_mean(0), m_active(0), m_nb(0), m_nb_recorded(0),
+      m_nb_missed(0), m_fps(Config::gui_fps), m_cpu(0)
     , m_time(0)
   {
     m_start = Time::now();
@@ -78,6 +82,7 @@ public:
 
     if (duration > m_refresh_time)
       debug("Warning: frame lasted ", duration, " (max is ", m_refresh_time, ")");
+    adapt_fps (duration > m_refresh_time);
 
     if constexpr (!Config::emscripten)
     {
@@ -110,6 +115,42 @@ public:
   double fps() const { return m_fps; }
   double cpu() const { return m_cpu; }
   double time() const { return m_time; }
+
+private:
+
+  // 60fps might be too greedy for some configs,
+  // adapt if too many missed frames
+  void adapt_fps(bool missed)
+  {
+    static const std::size_t interval = 1000;
+    static const std::size_t max_missed = 100;
+
+    ++ m_nb_recorded;
+    if (missed)
+      ++ m_nb_missed;
+    if (m_nb_recorded == interval)
+    {
+      debug(m_nb_missed / 10., "% frames exceeded allowed refresh time");
+      if (m_nb_missed > max_missed)
+      {
+        int current_fps = int(1000. / m_refresh_time);
+        int target_fps = int(0.8 * current_fps);
+        if (target_fps >= Config::animation_fps)
+        {
+          m_refresh_time = 1000. / double(target_fps);
+          debug("Downgrading FPS to ", int(1000. / m_refresh_time));
+        }
+        else
+          debug("Can't downgrade FPS anymore (", int(1000. / m_refresh_time), ")");
+      }
+      else
+        debug("Keeping FPS to ", int(1000. / m_refresh_time));
+
+
+      m_nb_recorded = 0;
+      m_nb_missed = 0;
+    }
+  }
 };
 
 inline std::size_t frame_id (const double& time)

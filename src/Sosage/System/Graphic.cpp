@@ -187,38 +187,38 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
   if (get<C::Boolean>(GAME__DEBUG)->value())
   {
-    auto ground_map = get<C::Ground_map>("Background:ground_map");
-
-    ground_map->for_each_vertex
-      ([&](const Point& point)
-       {
-         m_core.draw_square (int(point.x() - xcamera), point.Y(), 10);
-       });
-
-    ground_map->for_each_edge
-      ([&](const Point& source, const Point& target, bool border)
-       {
-         m_core.draw_line (int(source.x() - xcamera), source.Y(),
-                           int(target.x() - xcamera), target.Y(),
-                           (border ? 255 : 0), 0, (border ? 0 : 255));
-       });
-
-    const std::string& id = get<C::String>("Player:name")->value();
-    auto path = request<C::Path>(id + ":path");
-    if (path)
+    if (auto ground_map = request<C::Ground_map>("Background:ground_map"))
     {
-      Point current = get<C::Position>(id + "_body:position")->value();
-      m_core.draw_square (int(current.x() - xcamera), current.Y(), 10, 0, 255, 0);
+        ground_map->for_each_vertex
+        ([&](const Point& point)
+        {
+           m_core.draw_square (int(point.x() - xcamera), point.Y(), 10);
+        });
 
-      for (std::size_t p = path->current(); p < path->size(); ++ p)
-      {
-        Point next = (*path)[p];
-        m_core.draw_square (int(next.x() - xcamera), next.Y(), 10, 0, 255, 0);
-        m_core.draw_line (int(current.x() - xcamera), current.Y(),
-                          int(next.x() - xcamera), next.Y(), 0, 255, 0);
-        current = next;
-      }
+        ground_map->for_each_edge
+        ([&](const Point& source, const Point& target, bool border)
+        {
+           m_core.draw_line (int(source.x() - xcamera), source.Y(),
+                            int(target.x() - xcamera), target.Y(),
+                            (border ? 255 : 0), 0, (border ? 0 : 255));
+        });
 
+        const std::string& id = get<C::String>("Player:name")->value();
+        auto path = request<C::Path>(id + ":path");
+        if (path)
+        {
+          Point current = get<C::Position>(id + "_body:position")->value();
+          m_core.draw_square (int(current.x() - xcamera), current.Y(), 10, 0, 255, 0);
+
+          for (std::size_t p = path->current(); p < path->size(); ++ p)
+          {
+            Point next = (*path)[p];
+            m_core.draw_square (int(next.x() - xcamera), next.Y(), 10, 0, 255, 0);
+            m_core.draw_line (int(current.x() - xcamera), current.Y(),
+                              int(next.x() - xcamera), next.Y(), 0, 255, 0);
+            current = next;
+          }
+        }
     }
   }
 }
