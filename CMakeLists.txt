@@ -115,6 +115,7 @@ if(SOSAGE_COMPILE_TESTS)
   enable_testing()
 
   set (SOSAGE_TEST_TARGETS "unit_Component_Ground_map")
+  set (SOSAGE_TEST_TARGETS ${SOSAGE_TEST_TARGETS} "check_data_validity")
 
   foreach(target ${SOSAGE_TEST_TARGETS})
     add_executable("test_${target}" "test/${target}.cpp" ${SOSAGE_SRC})
@@ -125,6 +126,10 @@ if(SOSAGE_COMPILE_TESTS)
   file(GLOB_RECURSE GROUND_MAPS "${SOSAGE_DATA_FOLDER}/data/images/backgrounds/*_map.png")
   list(JOIN GROUND_MAPS "\;" GROUND_MAPS_STR)
   target_compile_definitions("test_unit_Component_Ground_map" PUBLIC "-DSOSAGE_GROUND_MAPS=\"${GROUND_MAPS_STR}\"")
+
+  file(GLOB_RECURSE DATA_FILES "${SOSAGE_DATA_FOLDER}/data/data/*/*.yaml")
+  list(JOIN DATA_FILES "\;" DATA_FILES_STR)
+  target_compile_definitions("test_check_data_validity" PUBLIC "-DSOSAGE_DATA_FILES=\"${DATA_FILES_STR}\"")
 
   file(GLOB_RECURSE SOSAGE_HEADERS "include/Sosage/*.h")
   foreach(header ${SOSAGE_HEADERS})
