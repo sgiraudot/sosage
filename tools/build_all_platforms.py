@@ -143,7 +143,7 @@ try:
     run_cmd(["make", "-j", "6"])
     run_cmd(["mkdir", "../../../" + output_dir + "/" + appname + "-web/"])
     run_cmd(["cp", "-r", "data", "../../../" + output_dir + "/" + appname + "-web/"])
-    run_cmd(["cp", "*.html", "*.js", "*.wasm", "../../../" + output_dir + "/" + appname + "-web/"])
+    run_cmd(["cp", "*.data", "*.js", "*.wasm", "../../../" + output_dir + "/" + appname + "-web/"])
     os.chdir("../../../")
     run_cmd(["rm", "-rf", emscripten_buildir])
     end = time.perf_counter()
