@@ -56,7 +56,7 @@ public:
   static void delete_music (const Music& music);
   static void delete_sound (const Sound& sound);
 
-  void start_music (const Music& music);
+  void start_music (const Music& music, double percentage);
   void stop_music();
   void fade (const Music& music, double time, bool in);
   void set_volume (double percentage);
