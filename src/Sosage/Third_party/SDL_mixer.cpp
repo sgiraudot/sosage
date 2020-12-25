@@ -70,9 +70,9 @@ void SDL_mixer::delete_sound (const SDL_mixer::Sound& sound)
   Mix_FreeChunk (sound);
 }
 
-void SDL_mixer::start_music (const SDL_mixer::Music& music)
+void SDL_mixer::start_music (const SDL_mixer::Music& music, double percentage)
 {
-  Mix_VolumeMusic(Config::max_music_volume / 2);
+  Mix_VolumeMusic(int(percentage * Config::max_music_volume));
   Mix_PlayMusic (music, -1);
 }
 

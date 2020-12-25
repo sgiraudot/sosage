@@ -51,7 +51,7 @@ void Sound::run()
   if (receive("Music:start"))
   {
     check (music, "No music to start");
-    m_core.start_music (music->core());
+    m_core.start_music (music->core(), get<C::Int>("Music:volume")->value() / 10.);
     music->on() = true;
   }
 
