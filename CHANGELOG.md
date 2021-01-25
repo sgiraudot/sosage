@@ -2,6 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.0.1 (xmas2020demo-bugfix1)` - TBD
+
+### Bug fixes
+
+- Music volume was not taken into account when starting a new music
+
 ## `v1.0.0 (xmas2020demo)` - 2020-12-25
 
 ### Release Management
