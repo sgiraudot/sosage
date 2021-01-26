@@ -331,7 +331,7 @@ SDL::SDL ()
 
 void SDL::init (int& window_width, int& window_height, bool fullscreen)
 {
-  int okay = SDL_Init(SDL_INIT_VIDEO);
+  int okay = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
   check (okay != -1, "Cannot initialize SDL");
 
   okay = IMG_Init(IMG_INIT_PNG);
@@ -369,6 +369,19 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
   SDL_RenderClear (m_renderer);
   SDL_RenderPresent (m_renderer);
   SDL_ShowCursor(SDL_DISABLE);
+
+  SDL_GameController *controller = NULL;
+  for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+      if (SDL_IsGameController(i)) {
+          controller = SDL_GameControllerOpen(i);
+          if (controller) {
+              break;
+          } else {
+              fprintf(stderr, "Could not open gamecontroller %i: %s\n", i, SDL_GetError());
+          }
+      }
+  }
+
 }
 
 SDL::~SDL ()

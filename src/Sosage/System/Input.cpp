@@ -47,7 +47,7 @@ void Input::run()
 
   while (Event ev = m_core.next_event ())
   {
-    //debug("New event ", ev.to_string());
+    debug("Loop ", i, " -> new event ", ev.to_string());
 
     if (ev == Event(KEY_UP, ESCAPE) ||
         ev == Event(KEY_UP, ANDROID_BACK))

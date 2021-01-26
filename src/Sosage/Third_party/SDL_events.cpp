@@ -35,7 +35,6 @@ namespace Sosage::Third_party
 
 SDL_events::SDL_events ()
 {
-
 }
 
 SDL_events::~SDL_events ()
@@ -125,6 +124,47 @@ Event SDL_events::next_event ()
                   int(ev.tfinger.y * Config::world_height));
   }
 
+  if (ev.type == SDL_CONTROLLERBUTTONDOWN)
+  {
+    type = BUTTON_DOWN;
+
+    if (ev.cbutton.button == SDL_CONTROLLER_BUTTON_A)
+      return Event (type, SOUTH);
+    if (ev.cbutton.button == SDL_CONTROLLER_BUTTON_B)
+      return Event (type, EAST);
+    if (ev.cbutton.button == SDL_CONTROLLER_BUTTON_X)
+      return Event (type, WEST);
+    if (ev.cbutton.button == SDL_CONTROLLER_BUTTON_Y)
+      return Event (type, NORTH);
+    if (ev.cbutton.button == SDL_CONTROLLER_BUTTON_LEFTSHOULDER)
+      return Event (type, LEFT_SHOULDER);
+    if (ev.cbutton.button == SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)
+      return Event (type, RIGHT_SHOULDER);
+    if (ev.cbutton.button == SDL_CONTROLLER_BUTTON_START)
+      return Event (type, START);
+    if (ev.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)
+      return Event (type, SELECT);
+    return Event (type, NONE);
+  }
+  if (ev.type == SDL_CONTROLLERAXISMOTION)
+  {
+    type = STICK_MOVE;
+    if (ev.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX)
+      return Event (type, LEFT, ev.caxis.value, 0);
+    if (ev.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY)
+      return Event (type, LEFT, 0, ev.caxis.value);
+    if (ev.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTX)
+      return Event (type, RIGHT, ev.caxis.value, 0);
+    if (ev.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTY)
+      return Event (type, RIGHT, 0, ev.caxis.value);
+    if (ev.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
+      return Event (BUTTON_DOWN, LEFT_SHOULDER);
+    if (ev.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
+      return Event (BUTTON_DOWN, RIGHT_SHOULDER);
+    return Event(type, NONE);
+  }
+
+
   // Keys
   if (ev.type == SDL_KEYDOWN)
     type = KEY_DOWN;
@@ -144,6 +184,14 @@ Event SDL_events::next_event ()
     return Event (type, ESCAPE);
   if (ev.key.keysym.sym == SDLK_SPACE)
     return Event (type, SPACE);
+  if (ev.key.keysym.sym == SDLK_UP)
+    return Event (type, UP_ARROW);
+  if (ev.key.keysym.sym == SDLK_RIGHT)
+    return Event (type, RIGHT_ARROW);
+  if (ev.key.keysym.sym == SDLK_LEFT)
+    return Event (type, LEFT_ARROW);
+  if (ev.key.keysym.sym == SDLK_DOWN)
+    return Event (type, DOWN_ARROW);
   if (SDLK_a <= ev.key.keysym.sym && ev.key.keysym.sym <= SDLK_z)
     return Event (type, Event::Value(A + (ev.key.keysym.sym - SDLK_a)));
   if (SDLK_F1 <= ev.key.keysym.sym && ev.key.keysym.sym <= SDLK_F12)

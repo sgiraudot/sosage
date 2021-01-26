@@ -71,7 +71,11 @@ enum Event_type
   CURSOR_UP,
 
   KEY_DOWN,
-  KEY_UP
+  KEY_UP,
+
+  BUTTON_DOWN,
+  BUTTON_UP,
+  STICK_MOVE
 };
 
 enum Event_value
@@ -94,6 +98,20 @@ enum Event_value
   ENTER,
   ESCAPE,
   SPACE,
+  UP_ARROW,
+  LEFT_ARROW,
+  RIGHT_ARROW,
+  DOWN_ARROW,
+
+  // Controller
+  NORTH,
+  WEST,
+  EAST,
+  SOUTH,
+  LEFT_SHOULDER,
+  RIGHT_SHOULDER,
+  START,
+  SELECT,
 
   A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,
   F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12
