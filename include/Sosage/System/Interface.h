@@ -41,7 +41,6 @@ namespace Sosage::System
 
 class Interface : public Base
 {
-  Config::Layout m_layout;
   Component::Image_handle m_collision;
 
   double m_latest_exit;
@@ -93,11 +92,7 @@ private:
 
   // Implemented in Interface__layout.cpp:
   void update_layout();
-  void layout_widescreen();
   void layout_standard();
-  void layout_square();
-  void layout_portrait();
-  void vertical_layout();
   void horizontal_layout();
 };
 

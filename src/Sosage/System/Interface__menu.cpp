@@ -70,9 +70,6 @@ void Interface::init_menus()
 #if !defined(SOSAGE_ANDROID) && !defined(SOSAGE_EMSCRIPTEN)
           { "Fullscreen", "fullscreen" },
 #endif
-#ifndef SOSAGE_EMSCRIPTEN
-          { "Layout", "layout" },
-#endif
 #ifdef SOSAGE_ANDROID
           { "Virtual_cursor", "virtual_cursor" },
 #endif
@@ -240,9 +237,6 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
   std::vector<std::string> possible_values;
   if (effect == "fullscreen")
     possible_values = { "Yes", "No" };
-  else if (effect == "layout")
-    possible_values = { "Layout_auto", "Layout_widescreen",
-                        "Layout_standard", "Layout_square" };
   else if (effect == "virtual_cursor")
     possible_values = { "Yes", "No" };
   else if (effect == "text_size")
@@ -463,16 +457,6 @@ create_menu (const std::string& id)
     menu->update_setting ("fullscreen",
                           get<C::Boolean>("Window:fullscreen")->value() ? "Yes" : "No");
 
-    Config::Layout layout = Config::Layout(get<C::Int>("Interface:layout")->value());
-    if (layout == Config::AUTO)
-      menu->update_setting ("layout", "Layout_auto");
-    else if (layout == Config::WIDESCREEN)
-      menu->update_setting ("layout", "Layout_widescreen");
-    else if (layout == Config::STANDARD)
-      menu->update_setting ("layout", "Layout_standard");
-    else
-      menu->update_setting ("layout", "Layout_square");
-
     menu->update_setting ("virtual_cursor",
                           get<C::Boolean>("Interface:virtual_cursor")->value() ? "Yes" : "No");
 
@@ -657,19 +641,6 @@ void Interface::apply_setting (const std::string& setting, const std::string& va
   {
     get<C::Boolean>("Window:fullscreen")->set(value == "Yes");
     emit ("Window:toggle_fullscreen");
-  }
-  else if (setting == "layout")
-  {
-    if (value == "Layout_auto")
-      get<C::Int>("Interface:layout")->set(Config::AUTO);
-    else if (value == "Layout_widescreen")
-      get<C::Int>("Interface:layout")->set(Config::WIDESCREEN);
-    else if (value == "Layout_standard")
-      get<C::Int>("Interface:layout")->set(Config::STANDARD);
-    else if (value == "Layout_square")
-      get<C::Int>("Interface:layout")->set(Config::SQUARE);
-    update_layout();
-    emit ("Window:rescaled");
   }
   else if (setting == "virtual_cursor")
     get<C::Boolean>("Interface:virtual_cursor")->set(value == "Yes");

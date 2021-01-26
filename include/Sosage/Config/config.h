@@ -83,15 +83,6 @@ enum Depth
   loading_depth
 };
 
-enum Layout
-{
-  AUTO,
-  WIDESCREEN,
-  STANDARD,
-  SQUARE,
-  PORTRAIT
-};
-
 enum Dialog_speed
 {
   SLOW = 18,
