@@ -75,15 +75,13 @@ void Graphic::run()
   }
 
   if (receive ("Window:rescaled"))
-    m_core.update_view (get<C::Int>("Interface:width")->value(),
-                        get<C::Int>("Interface:height")->value());
+    m_core.update_view (0, Config::interface_height);
   if (receive ("Window:toggle_fullscreen"))
     m_core.toggle_fullscreen (get<C::Boolean>("Window:fullscreen")->value());
 
   std::vector<C::Image_handle> images;
 
-  m_core.begin(get<C::Int>("Interface:width")->value(),
-               get<C::Int>("Interface:height")->value());
+  m_core.begin(0, Config::interface_height);
 
   get_images (images);
   display_images (images);
@@ -110,8 +108,8 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
   auto status = get<C::Status>(GAME__STATUS);
   double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
-  int interface_width = get<C::Int>("Interface:width")->value();
-  int interface_height = get<C::Int>("Interface:height")->value();
+  int interface_width = 0;
+  int interface_height = Config::interface_height;
 
   for (const auto& img : images)
   {
@@ -225,8 +223,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
 void Graphic::run_loading()
 {
-  m_core.begin(get<C::Int>("Interface:width")->value(),
-               get<C::Int>("Interface:height")->value());
+  m_core.begin(0, Config::interface_height);
 
   auto img = get<C::Image>(LOADING_SPIN__IMAGE);
   auto position = get<C::Position>(LOADING_SPIN__POSITION);

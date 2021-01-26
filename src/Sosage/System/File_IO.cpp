@@ -138,9 +138,6 @@ void File_IO::read_config()
   bool autosave = true;
   bool hints = true;
 
-  int interface_width = 0;
-  int interface_height = 200;
-
 #ifdef SOSAGE_EMSCRIPTEN
   int window_width = 640;
   int window_height = 400;
@@ -166,11 +163,6 @@ void File_IO::read_config()
       window_width = input["window"][0].integer();
       window_height = input["window"][1].integer();
     }
-    if (input.has("interface"))
-    {
-      interface_width = input["interface"][0].integer();
-      interface_height = input["interface"][1].integer();
-    }
   }
   catch (Sosage::No_such_file&)
   {
@@ -193,8 +185,6 @@ void File_IO::read_config()
   set<C::Boolean>("Game:autosave", autosave);
   set<C::Boolean>("Game:hints_on", hints);
 
-  set<C::Int>("Interface:width", interface_width);
-  set<C::Int>("Interface:height", interface_height);
   set<C::Int>("Window:width", window_width);
   set<C::Int>("Window:height", window_height);
 }
@@ -218,9 +208,6 @@ void File_IO::write_config()
   output.write ("window",
                 get<C::Int>("Window:width")->value(),
                 get<C::Int>("Window:height")->value());
-  output.write ("interface",
-                get<C::Int>("Interface:width")->value(),
-                get<C::Int>("Interface:height")->value());
 }
 
 void File_IO::read_savefile()

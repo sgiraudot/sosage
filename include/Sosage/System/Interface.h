@@ -42,12 +42,8 @@ namespace Sosage::System
 class Interface : public Base
 {
   Component::Image_handle m_collision;
-
   double m_latest_exit;
-
-  int m_action_height;
   double m_verb_scale;
-
   std::vector<Component::Image_handle> m_verbs;
 
 public:
