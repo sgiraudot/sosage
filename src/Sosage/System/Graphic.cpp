@@ -75,13 +75,13 @@ void Graphic::run()
   }
 
   if (receive ("Window:rescaled"))
-    m_core.update_view (0, Config::interface_height);
+    m_core.update_view ();
   if (receive ("Window:toggle_fullscreen"))
     m_core.toggle_fullscreen (get<C::Boolean>("Window:fullscreen")->value());
 
   std::vector<C::Image_handle> images;
 
-  m_core.begin(0, Config::interface_height);
+  m_core.begin();
 
   get_images (images);
   display_images (images);
@@ -140,7 +140,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
       int limit_width = Config::world_width;
       if (position->absolute())
         limit_width += interface_width;
-      int limit_height = Config::world_height;
+      int limit_height = Config::world_height - Config::interface_height;
       if (position->absolute())
         limit_height += interface_height;
 
@@ -223,7 +223,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
 void Graphic::run_loading()
 {
-  m_core.begin(0, Config::interface_height);
+  m_core.begin();
 
   auto img = get<C::Image>(LOADING_SPIN__IMAGE);
   auto position = get<C::Position>(LOADING_SPIN__POSITION);

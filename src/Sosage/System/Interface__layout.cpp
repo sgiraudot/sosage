@@ -49,7 +49,7 @@ void Interface::update_layout()
 
   auto blackscreen = set<C::Image>("Blackscreen:image",
                                    Config::world_width,
-                                   Config::world_height + Config::interface_height,
+                                   Config::world_height,
                                    0, 0, 0, 255);
   blackscreen->on() = false;
   blackscreen->z() = Config::overlay_depth;
@@ -64,18 +64,18 @@ void Interface::layout_standard()
   int interface_height = Config::interface_height - Config::action_height;
 
   set<C::Image> ("Interface_action:image", Config::world_width, Config::action_height, 0, 0, 0);
-  set<C::Position> ("Interface_action:position", Point(0, Config::world_height));
+  set<C::Position> ("Interface_action:position", Point(0, Config::world_height - Config::interface_height));
 
   set<C::Image> ("Interface_verbs:image", Config::world_width / 2, interface_height, 0, 0, 0);
-  set<C::Position> ("Interface_verbs:position", Point(0, Config::action_height + Config::world_height));
+  set<C::Position> ("Interface_verbs:position", Point(0, Config::action_height + Config::world_height - Config::interface_height));
 
   set<C::Image> ("Interface_inventory:image", Config::world_width / 2, interface_height, 0, 0, 0);
   set<C::Position> ("Interface_inventory:position",
                                       Point(Config::world_width / 2, Config::action_height
-                                            + Config::world_height));
+                                            + Config::world_height - Config::interface_height));
 
   set<C::Position>("Chosen_verb:position", Point(Config::world_width / 2,
-                                                 Config::world_height + Config::action_height / 2));
+                                                 Config::world_height - Config::interface_height + Config::action_height / 2));
 
   get<C::Image> ("Turnicon:image")->on() = false;
 }
@@ -142,7 +142,7 @@ void Interface::horizontal_layout()
 
   int current_xtop = w_spacing_top / 2;
   int current_xbottom = w_spacing_bottom / 2;
-  int current_ytop = Config::world_height + Config::action_height + (h_spacing / 2);
+  int current_ytop = Config::world_height - Config::interface_height + Config::action_height + (h_spacing / 2);
   int current_ybottom = current_ytop + int(min_scaling * top_verbs_height) + h_spacing;
 
   for (std::size_t i = 0; i < m_verbs.size(); i += 2)
@@ -164,7 +164,7 @@ void Interface::horizontal_layout()
   }
 
   set<C::Position>("Chosen_verb:position", Point(Config::world_width / 2,
-                                                 Config::world_height + Config::action_height / 2));
+                                                 Config::world_height - Config::interface_height + Config::action_height / 2));
 
   m_verb_scale = min_scaling;
 

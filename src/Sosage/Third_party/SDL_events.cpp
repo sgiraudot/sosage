@@ -43,7 +43,7 @@ SDL_events::~SDL_events ()
 
 }
 
-Event SDL_events::next_event (int interface_width, int interface_height)
+Event SDL_events::next_event ()
 {
   SDL_Event ev;
   if (SDL_PollEvent(&ev) != 1)
@@ -121,8 +121,8 @@ Event SDL_events::next_event (int interface_width, int interface_height)
   if (is_finger)
   {
     return Event (type, LEFT,
-                  int(ev.tfinger.x * (Config::world_width + interface_width)),
-                  int(ev.tfinger.y * (Config::world_height + interface_height)));
+                  int(ev.tfinger.x * Config::world_width),
+                  int(ev.tfinger.y * Config::world_height));
   }
 
   // Keys

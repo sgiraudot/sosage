@@ -43,7 +43,7 @@ public:
 
   ~SDL_events();
 
-  Event next_event(int interface_width, int interface_height);
+  Event next_event();
 };
 
 } // namespace Sosage::Third_party

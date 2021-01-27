@@ -133,7 +133,7 @@ void Interface::init()
 
   auto blackscreen = set<C::Image>("Blackscreen:image",
                                    Config::world_width,
-                                   Config::world_height + Config::interface_height,
+                                   Config::world_height,
                                    0, 0, 0, 255);
   blackscreen->on() = false;
   blackscreen->z() = Config::overlay_depth;
@@ -336,7 +336,7 @@ void Interface::update_pause_screen()
     = C::make_handle<C::Image>
     ("Pause_screen:image",
      Config::world_width,
-     Config::world_height + Config::interface_height,
+     Config::world_height,
      0, 0, 0, 192);
   pause_screen_img->z() += 10;
 
@@ -357,7 +357,7 @@ void Interface::update_pause_screen()
   auto window_overlay_img
     = set<C::Image>("Window_overlay:image",
                                       Config::world_width,
-                                      Config::world_height + Config::interface_height,
+                                      Config::world_height,
                                       0, 0, 0, 128);
   window_overlay_img->z() = Config::interface_depth;
   window_overlay_img->on() = false;

@@ -39,7 +39,7 @@ namespace Config
 constexpr char folder_separator = (windows ? '\\' : '/');
 
 constexpr int world_width = 1920;
-constexpr int world_height = 1000;
+constexpr int world_height = 1200;
 constexpr int world_depth = 3240;
 
 constexpr int interface_height = 200;

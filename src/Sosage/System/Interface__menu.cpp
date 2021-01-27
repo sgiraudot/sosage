@@ -387,7 +387,7 @@ void Interface::update_exit()
         img_back->set_relative_origin (1, 1);
 
         int window_width = Config::world_width;
-        int window_height = Config::world_height + Config::interface_height;
+        int window_height = Config::world_height;
         set<C::Position>("Exit_message:position", Point (window_width - 5,
                                                          window_height - 5));
         set<C::Position>("Exit_message_back:position", Point (window_width,

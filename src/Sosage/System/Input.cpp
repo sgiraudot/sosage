@@ -45,7 +45,7 @@ void Input::run()
 {
   auto status = get<C::Status>(GAME__STATUS);
 
-  while (Event ev = m_core.next_event (0, Config::interface_height))
+  while (Event ev = m_core.next_event ())
   {
     //debug("New event ", ev.to_string());
 
