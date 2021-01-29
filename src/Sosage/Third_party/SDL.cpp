@@ -27,6 +27,7 @@
 #include <Sosage/Config/platform.h>
 #include <Sosage/Third_party/SDL.h>
 #include <Sosage/Utils/color.h>
+#include <Sosage/Utils/geometry.h>
 #include <Sosage/Utils/error.h>
 
 #include <functional>
@@ -61,12 +62,37 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
   check (surf != nullptr, "Cannot create rectangle surface ("
          + std::string(SDL_GetError()) + ")");
 
-  SDL_FillRect(surf, nullptr, SDL_MapRGBA(surf->format, Uint8(r), Uint8(g), Uint8(b), Uint8(255)));
+  SDL_FillRect(surf, nullptr, SDL_MapRGBA(surf->format, Uint8(r), Uint8(g), Uint8(b), Uint8(a)));
 
   Texture text = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf);
   check (text != Texture(), "Cannot create rectangle texture ("
          + std::string(SDL_GetError()) + ")");
-  Image out (text, Bitmap(), surf->w, surf->h, 1, (unsigned char)(a));
+  Image out (text, Bitmap(), surf->w, surf->h, 1, (unsigned char)(255));
+
+  if (a == 0) // special highlight for fully transparent objects
+  {
+    SDL_Surface* highlight = SDL_CreateRGBSurface (0, surf->w,
+                                                   surf->h, 32, rmask, gmask, bmask, amask);
+
+    Surface_access access(highlight);
+    for (std::size_t i = 0; i < access.width(); ++ i)
+      for (std::size_t j = 0; j < access.height(); ++ j)
+      {
+        double x = std::abs(double(i) - 0.5 * access.width()) / double(0.5 * access.width());
+        double y = std::abs(double(j) - 0.5 * access.height()) / double(0.5 * access.height());
+        double dist_to_center = x*x + y*y;
+        if (dist_to_center > 1.0)
+          access.set(i,j, { 255, 255, 255, 0 });
+        else
+          access.set(i,j, { 255, 255, 255,
+                            (unsigned char)(255 * (1.0 - dist_to_center)) });
+      }
+
+    access.release();
+    out.highlight = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, highlight);
+    SDL_FreeSurface (highlight);
+  }
+
   SDL_FreeSurface(surf);
   return out;
 }
@@ -80,19 +106,6 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
   SDL_Surface* highlight = nullptr;
   if (with_highlight)
   {
-    Uint32 rmask, gmask, bmask, amask;
-  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    rmask = 0xff000000;
-    gmask = 0x00ff0000;
-    bmask = 0x0000ff00;
-    amask = 0x000000ff;
-  #else
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
-    amask = 0xff000000;
-  #endif
-
     highlight = SDL_CreateRGBSurface (0, surf->w,
                                       surf->h, 32, rmask, gmask, bmask, amask);
 

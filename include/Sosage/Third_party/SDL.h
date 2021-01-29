@@ -45,6 +45,18 @@ class SDL
 {
 public:
 
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+  static constexpr Uint32 rmask = 0xff000000;
+  static constexpr Uint32 gmask = 0x00ff0000;
+  static constexpr Uint32 bmask = 0x0000ff00;
+  static constexpr Uint32 amask = 0x000000ff;
+#else
+  static constexpr Uint32 rmask = 0x000000ff;
+  static constexpr Uint32 gmask = 0x0000ff00;
+  static constexpr Uint32 bmask = 0x00ff0000;
+  static constexpr Uint32 amask = 0xff000000;
+#endif
+
   using Texture_manager = Resource_manager<SDL_Texture>;
   using Bitmap_manager = Resource_manager<Bitmap_2>;
   using Font_manager = Resource_manager<TTF_Font>;

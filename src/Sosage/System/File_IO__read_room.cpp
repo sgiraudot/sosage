@@ -643,6 +643,7 @@ void File_IO::read_object (const Core::File_IO::Node& node, const std::string& i
           int height = istate["size"][1].integer();
           img = C::make_handle<C::Image>(id + ":conditional_image",
                                          width, height, 0, 0, 0, 0);
+          img->z() = z;
         }
         else
           img = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin), z,
