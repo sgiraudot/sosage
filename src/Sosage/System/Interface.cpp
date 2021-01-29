@@ -383,9 +383,13 @@ void Interface::detect_collision (C::Position_handle cursor)
     if (m_collision->entity().find("Verb_") == 0)
       m_collision->set_scale(m_verb_scale);
     if (auto name = request<C::String>(m_collision->entity() + ":name"))
+    {
       get<C::Image>("Verb_look:image")->set_scale(m_verb_scale);
+      get<C::Image>(m_collision->entity() + ":image")->set_highlight(0);
+    }
   }
 
+  auto previous_collision = m_collision;
   m_collision = C::Image_handle();
   double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
@@ -442,6 +446,9 @@ void Interface::detect_collision (C::Position_handle cursor)
 
     }
 
+  if (m_collision &&
+      request<C::String>(m_collision->entity() + ":name"))
+    get<C::Image>(m_collision->entity() + ":image")->set_highlight(128);
 }
 
 void Interface::update_action ()
@@ -530,7 +537,10 @@ void Interface::update_inventory ()
     double factor = 1.;
 
     if (img == m_collision)
+    {
+      img->set_highlight(0);
       factor = 1.1;
+    }
 
     if (position <= i && i < position + Config::displayed_inventory_size)
     {

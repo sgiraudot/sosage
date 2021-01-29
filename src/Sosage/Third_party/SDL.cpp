@@ -69,7 +69,7 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
          + std::string(SDL_GetError()) + ")");
   Image out (text, Bitmap(), surf->w, surf->h, 1, (unsigned char)(255));
 
-  if (a == 0) // special highlight for fully transparent objects
+  if (a == 0) // special ellipse highlight for fully transparent objects
   {
     SDL_Surface* highlight = SDL_CreateRGBSurface (0, surf->w,
                                                    surf->h, 32, rmask, gmask, bmask, amask);
@@ -446,9 +446,9 @@ void SDL::draw (const Image& image,
 
   SDL_SetTextureAlphaMod(image.texture.get(), image.alpha);
   SDL_RenderCopy(m_renderer, image.texture.get(), &source, &target);
-  if (image.highlight != nullptr)
+  if (image.highlight != nullptr && image.highlight_alpha != 0)
   {
-    SDL_SetTextureAlphaMod(image.highlight.get(), image.alpha);
+    SDL_SetTextureAlphaMod(image.highlight.get(), image.highlight_alpha);
     SDL_RenderCopy(m_renderer, image.highlight.get(), &source, &target);
   }
 }

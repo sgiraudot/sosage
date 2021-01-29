@@ -73,6 +73,7 @@ public:
     Bitmap mask;
     double scaling;
     double texture_downscale;
+    unsigned char highlight_alpha = 0;
     unsigned char alpha;
     int width;
     int height;
