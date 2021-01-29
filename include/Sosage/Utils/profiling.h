@@ -70,7 +70,11 @@ class Timer
 
 public:
 
-  Timer (const std::string& id, bool master = true) : m_id (id), m_master(master) { }
+  Timer (const std::string& id, bool master = true) : m_id (id), m_master(master)
+#ifndef SOSAGE_PROFILE_FINELY
+  , m_duration(0), m_nb(0)
+#endif
+  { }
 
   ~Timer()
   {
