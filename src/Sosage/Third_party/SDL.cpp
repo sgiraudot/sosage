@@ -30,6 +30,7 @@
 #include <Sosage/Utils/error.h>
 
 #include <functional>
+#include <queue>
 
 namespace Sosage::Third_party
 {
@@ -70,11 +71,42 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
   return out;
 }
 
-SDL::Image SDL::load_image (const std::string& file_name, bool with_mask)
+SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool with_highlight)
 {
   SDL_Surface* surf = IMG_Load (file_name.c_str());
   check (surf != nullptr, "Cannot load image " + file_name
          + " (" + std::string(SDL_GetError()) + ")");
+
+  SDL_Surface* highlight = nullptr;
+  if (with_highlight)
+  {
+    Uint32 rmask, gmask, bmask, amask;
+  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    rmask = 0xff000000;
+    gmask = 0x00ff0000;
+    bmask = 0x0000ff00;
+    amask = 0x000000ff;
+  #else
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = 0xff000000;
+  #endif
+
+    highlight = SDL_CreateRGBSurface (0, surf->w,
+                                      surf->h, 32, rmask, gmask, bmask, amask);
+
+    Surface_access source (surf);
+    Surface_access target (highlight);
+
+    for (std::size_t i = 0; i < target.width(); ++ i)
+      for (std::size_t j = 0; j < target.height(); ++ j)
+        target.set(i,j, {255, 255, 255, (unsigned char)(0.5 * source.get(i,j)[3])});
+
+    source.release();
+    target.release();
+
+  }
 
   int height = surf->h;
   int width = surf->w;
@@ -114,7 +146,15 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask)
   Bitmap mask = nullptr;
   if (with_mask)
     mask = m_masks.make_mapped (file_name, create_mask, surf);
+
   Image out (text, mask, width, height, 1);
+  if (with_highlight)
+  {
+    out.highlight = m_textures.make_mapped (file_name + "highlight",
+                                            SDL_CreateTextureFromSurface, m_renderer, highlight);
+    SDL_FreeSurface (highlight);
+  }
+
   out.texture_downscale = texture_downscale;
   SDL_FreeSurface(surf);
   return out;
@@ -134,45 +174,14 @@ SDL::Font SDL::load_font (const std::string& file_name, int size)
 Bitmap_2* SDL::create_mask (SDL_Surface* surf)
 {
   Bitmap_2* out = new Bitmap_2 (surf->w, surf->h);
-  SDL_LockSurface (surf);
 
-  int bpp = surf->format->BytesPerPixel;
+  Surface_access access (surf);
 
   for (std::size_t x = 0; x < out->width(); ++ x)
     for (std::size_t y = 0; y < out->height(); ++ y)
-    {
-      Uint8 *p = (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
-      Uint32 data;
-      switch (bpp)
-      {
-        case 1:
-          data = *p;
-          break;
+      (*out)(x, y) = (access.get(x,y)[3] != 0);
 
-        case 2:
-          data = *(Uint16 *)p;
-          break;
-
-        case 3:
-          if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-            data = Uint32(p[0] << 16 | p[1] << 8 | p[2]);
-          else
-            data = Uint32(p[0] | p[1] << 8 | p[2] << 16);
-          break;
-
-        case 4:
-          data = *(Uint32 *)p;
-          break;
-
-        default:
-          exit(0);
-      }
-      unsigned char r, g, b, a;
-      SDL_GetRGBA(data, surf->format, &r, &g, &b, &a);
-      (*out)(x, y) = (a != 0);
-    }
-
-  SDL_UnlockSurface (surf);
+  access.release();
 
   return out;
 }
@@ -424,6 +433,11 @@ void SDL::draw (const Image& image,
 
   SDL_SetTextureAlphaMod(image.texture.get(), image.alpha);
   SDL_RenderCopy(m_renderer, image.texture.get(), &source, &target);
+  if (image.highlight != nullptr)
+  {
+    SDL_SetTextureAlphaMod(image.highlight.get(), image.alpha);
+    SDL_RenderCopy(m_renderer, image.highlight.get(), &source, &target);
+  }
 }
 
 void SDL::draw_line (const int xa, const int ya, const int xb, const int yb,

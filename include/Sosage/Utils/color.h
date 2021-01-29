@@ -34,7 +34,10 @@
 namespace Sosage
 {
 
-inline std::array<unsigned char, 3> color_from_string (const std::string& str)
+using RGB_color = std::array<unsigned char, 3>;
+using RGBA_color = std::array<unsigned char, 4>;
+
+inline RGB_color color_from_string (const std::string& str)
 {
   std::stringstream ss(str);
   int num;
