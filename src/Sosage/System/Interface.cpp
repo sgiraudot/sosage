@@ -368,7 +368,7 @@ void Interface::update_pause_screen()
                                             pause_text_img);
 
   set<C::Position>("Pause_text:position", Point(Config::world_width / 2,
-                                                                  Config::world_height / 2));
+                                                Config::world_height / 2));
 
 }
 
@@ -382,7 +382,8 @@ void Interface::detect_collision (C::Position_handle cursor)
     if (auto name = request<C::String>(m_collision->entity() + ":name"))
     {
       get<C::Image>("Verb_look:image")->set_scale(m_verb_scale);
-      get<C::Image>(m_collision->entity() + ":image")->set_highlight(0);
+      if (auto img = request<C::Image>(m_collision->entity() + ":image"))
+        img->set_highlight(0);
     }
   }
 

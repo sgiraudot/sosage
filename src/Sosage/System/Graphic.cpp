@@ -140,7 +140,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
       int limit_width = Config::world_width;
       if (position->absolute())
         limit_width += interface_width;
-      int limit_height = Config::world_height - Config::interface_height;
+      int limit_height = Config::world_height;
       if (position->absolute())
         limit_height += interface_height;
 
