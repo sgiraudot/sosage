@@ -396,12 +396,9 @@ void SDL::update_window (const std::string& name, const std::string& icon_filena
   SDL_SetWindowIcon (m_window, m_icon);
 }
 
-void SDL::update_view(int interface_width, int interface_height)
+void SDL::update_view()
 {
-  int window_width = Config::world_width + interface_width;
-  int window_height = Config::world_height + interface_height;
-
-  SDL_RenderSetLogicalSize(m_renderer, window_width, window_height);
+  SDL_RenderSetLogicalSize(m_renderer, Config::world_width, Config::world_height);
 }
 
 void SDL::toggle_fullscreen (bool fullscreen)
@@ -409,7 +406,7 @@ void SDL::toggle_fullscreen (bool fullscreen)
   SDL_SetWindowFullscreen (m_window, (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
 }
 
-void SDL::begin (int interface_width, int interface_height)
+void SDL::begin()
 {
   // Out of bound background is gray
   SDL_SetRenderDrawColor (m_renderer, 48, 48, 48, 255);
@@ -419,8 +416,8 @@ void SDL::begin (int interface_width, int interface_height)
   SDL_Rect rect;
   rect.x = 0;
   rect.y = 0;
-  rect.w = Config::world_width + interface_width;
-  rect.h = Config::world_height + interface_height;
+  rect.w = Config::world_width;
+  rect.h = Config::world_height;
 
   SDL_SetRenderDrawColor(m_renderer, Uint8(0), Uint8(0), Uint8(0), 255);
   SDL_RenderFillRect(m_renderer, &rect);

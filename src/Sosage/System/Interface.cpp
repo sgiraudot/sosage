@@ -44,7 +44,6 @@ namespace C = Component;
 
 Interface::Interface (Content& content)
   : Base (content)
-  , m_layout (Config::AUTO)
   , m_latest_exit (-10000)
 {
 
@@ -133,8 +132,8 @@ void Interface::init()
   set<C::Variable>("Window_overlay:position", pause_screen_pos);
 
   auto blackscreen = set<C::Image>("Blackscreen:image",
-                                   Config::world_width + get<C::Int>("Interface:width")->value(),
-                                   Config::world_height + get<C::Int>("Interface:height")->value(),
+                                   Config::world_width,
+                                   Config::world_height,
                                    0, 0, 0, 255);
   blackscreen->on() = false;
   blackscreen->z() = Config::overlay_depth;
@@ -336,8 +335,8 @@ void Interface::update_pause_screen()
   auto pause_screen_img
     = C::make_handle<C::Image>
     ("Pause_screen:image",
-     Config::world_width + get<C::Int>("Interface:width")->value(),
-     Config::world_height + get<C::Int>("Interface:height")->value(),
+     Config::world_width,
+     Config::world_height,
      0, 0, 0, 192);
   pause_screen_img->z() += 10;
 
@@ -357,10 +356,8 @@ void Interface::update_pause_screen()
 
   auto window_overlay_img
     = set<C::Image>("Window_overlay:image",
-                                      Config::world_width
-                                      + get<C::Int>("Interface:width")->value(),
-                                      Config::world_height
-                                      + get<C::Int>("Interface:height")->value(),
+                                      Config::world_width,
+                                      Config::world_height,
                                       0, 0, 0, 128);
   window_overlay_img->z() = Config::interface_depth;
   window_overlay_img->on() = false;
@@ -514,7 +511,7 @@ void Interface::update_action ()
                                         text);
 
     text_img->set_relative_origin(0.5, 0.5);
-    text_img->set_scale(0.8 * m_action_height / text_img->height());
+    text_img->set_scale(0.8 * Config::action_height / text_img->height());
   }
 }
 
@@ -548,30 +545,14 @@ void Interface::update_inventory ()
       double relative_pos = (1 + pos) / double(Config::displayed_inventory_size + 1);
       img->on() = inventory_on;
 
-      int x, y;
+      int height = img->height();
+      int inv_height = background->height();
+      int target_height = int(0.8 * inv_height);
 
-      if (m_layout == Config::WIDESCREEN)
-      {
-        int width = img->width();
-        int inv_width = background->width();
-        int target_width = int(0.8 * inv_width);
+      img->set_scale (factor * target_height / double(height));
 
-        img->set_scale (factor * target_width / double(width));
-
-        x = inv_pos->value().X() + background->width() / 2;
-        y = inv_pos->value().Y() + int(relative_pos * background->height());
-      }
-      else
-      {
-        int height = img->height();
-        int inv_height = background->height();
-        int target_height = int(0.8 * inv_height);
-
-        img->set_scale (factor * target_height / double(height));
-
-        x = inv_pos->value().X() + int(relative_pos * background->width());
-        y = inv_pos->value().Y() + background->height() / 2;
-      }
+      int x = inv_pos->value().X() + int(relative_pos * background->width());
+      int y = inv_pos->value().Y() + background->height() / 2;
 
       set<C::Position>(inventory->get(i) + ":position", Point(x,y));
     }
@@ -582,28 +563,14 @@ void Interface::update_inventory ()
   bool left_on = inventory_on && (inventory->position() > 0);
   bool right_on = inventory_on && (inventory->size() - inventory->position() > Config::displayed_inventory_size);
 
-  if (m_layout == Config::WIDESCREEN)
-  {
-    get<C::Image> ("Inventory_arrow_0:image")->on() = left_on;
-    get<C::Image> ("Inventory_arrow_background_0:image")->on() = left_on;
-    get<C::Image> ("Inventory_arrow_1:image")->on() = false;
-    get<C::Image> ("Inventory_arrow_background_1:image")->on() = false;
-    get<C::Image> ("Inventory_arrow_2:image")->on() = right_on;
-    get<C::Image> ("Inventory_arrow_background_2:image")->on() = right_on;
-    get<C::Image> ("Inventory_arrow_3:image")->on() = false;
-    get<C::Image> ("Inventory_arrow_background_3:image")->on() = false;
-  }
-  else
-  {
-    get<C::Image> ("Inventory_arrow_0:image")->on() = false;
-    get<C::Image> ("Inventory_arrow_background_0:image")->on() = false;
-    get<C::Image> ("Inventory_arrow_1:image")->on() = left_on;
-    get<C::Image> ("Inventory_arrow_background_1:image")->on() = left_on;
-    get<C::Image> ("Inventory_arrow_2:image")->on() = false;
-    get<C::Image> ("Inventory_arrow_background_2:image")->on() = false;
-    get<C::Image> ("Inventory_arrow_3:image")->on() = right_on;
-    get<C::Image> ("Inventory_arrow_background_3:image")->on() = right_on;
-  }
+  get<C::Image> ("Inventory_arrow_0:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_background_0:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_1:image")->on() = left_on;
+  get<C::Image> ("Inventory_arrow_background_1:image")->on() = left_on;
+  get<C::Image> ("Inventory_arrow_2:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_background_2:image")->on() = false;
+  get<C::Image> ("Inventory_arrow_3:image")->on() = right_on;
+  get<C::Image> ("Inventory_arrow_background_3:image")->on() = right_on;
 }
 
 void Interface::update_dialog_choices()

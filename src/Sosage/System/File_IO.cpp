@@ -127,7 +127,6 @@ void File_IO::read_config()
 
   // Default config values
   bool fullscreen = !Config::emscripten;
-  int layout = int(Config::AUTO);
   bool virtual_cursor = false;
 
   int dialog_speed = Config::MEDIUM_SPEED;
@@ -138,9 +137,6 @@ void File_IO::read_config()
 
   bool autosave = true;
   bool hints = true;
-
-  int interface_width = 0;
-  int interface_height = 200;
 
 #ifdef SOSAGE_EMSCRIPTEN
   int window_width = 640;
@@ -155,7 +151,6 @@ void File_IO::read_config()
     Core::File_IO input (file_name);
     input.parse();
     if (input.has("fullscreen")) fullscreen = input["fullscreen"].boolean();
-    if (input.has("layout")) layout = input["layout"].integer();
     if (input.has("virtual_cursor")) virtual_cursor = input["virtual_cursor"].boolean();
     if (input.has("dialog_speed")) dialog_speed = input["dialog_speed"].floating();
     if (input.has("dialog_size")) dialog_size = input["dialog_size"].floating();
@@ -168,11 +163,6 @@ void File_IO::read_config()
       window_width = input["window"][0].integer();
       window_height = input["window"][1].integer();
     }
-    if (input.has("interface"))
-    {
-      interface_width = input["interface"][0].integer();
-      interface_height = input["interface"][1].integer();
-    }
   }
   catch (Sosage::No_such_file&)
   {
@@ -184,7 +174,6 @@ void File_IO::read_config()
   }
 
   set<C::Boolean>("Window:fullscreen", fullscreen);
-  set<C::Int>("Interface:layout", layout);
   set<C::Boolean>("Interface:virtual_cursor", virtual_cursor);
 
   set<C::Int>("Dialog:speed", dialog_speed);
@@ -196,8 +185,6 @@ void File_IO::read_config()
   set<C::Boolean>("Game:autosave", autosave);
   set<C::Boolean>("Game:hints_on", hints);
 
-  set<C::Int>("Interface:width", interface_width);
-  set<C::Int>("Interface:height", interface_height);
   set<C::Int>("Window:width", window_width);
   set<C::Int>("Window:height", window_height);
 }
@@ -207,7 +194,6 @@ void File_IO::write_config()
   Core::File_IO output (Sosage::pref_path() + "config.yaml", true);
 
   output.write ("fullscreen", get<C::Boolean>("Window:fullscreen")->value());
-  output.write ("layout", get<C::Int>("Interface:layout")->value());
   output.write ("virtual_cursor", get<C::Boolean>("Interface:virtual_cursor")->value());
 
   output.write ("dialog_speed", get<C::Int>("Dialog:speed")->value());
@@ -222,9 +208,6 @@ void File_IO::write_config()
   output.write ("window",
                 get<C::Int>("Window:width")->value(),
                 get<C::Int>("Window:height")->value());
-  output.write ("interface",
-                get<C::Int>("Interface:width")->value(),
-                get<C::Int>("Interface:height")->value());
 }
 
 void File_IO::read_savefile()

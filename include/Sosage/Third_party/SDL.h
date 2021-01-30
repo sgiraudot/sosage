@@ -218,10 +218,10 @@ public:
   void init (int& window_width, int& window_height, bool fullscreen);
 
   void update_window (const std::string& name, const std::string& icon_filename);
-  void update_view(int interface_width, int interface_height);
+  void update_view();
   void toggle_fullscreen(bool fullscreen);
   void get_window_size (int& w, int& h);
-  void begin(int interface_width, int interface_height);
+  void begin();
   void draw (const Image& image,
              const int xsource, const int ysource,
              const int wsource, const int hsource,

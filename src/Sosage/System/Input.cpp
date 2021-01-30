@@ -45,9 +45,7 @@ void Input::run()
 {
   auto status = get<C::Status>(GAME__STATUS);
 
-  while (Event ev = m_core.next_event
-         (get<C::Int>("Interface:width")->value(),
-          get<C::Int>("Interface:height")->value()))
+  while (Event ev = m_core.next_event ())
   {
     //debug("New event ", ev.to_string());
 
@@ -86,32 +84,7 @@ void Input::run()
 
     if constexpr (!Config::emscripten) // Do not prevent web users to use F1/F2/etc
     {
-      if (ev == Event(KEY_UP, F1))
-      {
-        get<C::Int>("Interface:layout")->set(Config::AUTO);
-        emit ("Window:rescaled");
-      }
-      else if (ev == Event(KEY_UP, F2))
-      {
-        get<C::Int>("Interface:layout")->set(Config::WIDESCREEN);
-        emit ("Window:rescaled");
-      }
-      else if (ev == Event(KEY_UP, F3))
-      {
-        get<C::Int>("Interface:layout")->set(Config::STANDARD);
-        emit ("Window:rescaled");
-      }
-      else if (ev == Event(KEY_UP, F4))
-      {
-        get<C::Int>("Interface:layout")->set(Config::SQUARE);
-        emit ("Window:rescaled");
-      }
-      else if (ev == Event(KEY_UP, F5))
-      {
-        get<C::Int>("Interface:layout")->set(Config::PORTRAIT);
-        emit ("Window:rescaled");
-      }
-      else if (ev == Event(KEY_DOWN, ALT))
+      if (ev == Event(KEY_DOWN, ALT))
         m_alt = true;
       else if (ev == Event(KEY_UP, ALT))
         m_alt = false;
