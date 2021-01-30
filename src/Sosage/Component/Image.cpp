@@ -42,7 +42,8 @@ Image::Image (const std::string& id, const std::string& file_name, int z,
   : Base(id), m_origin(0,0), m_z(z), m_on(true),
     m_collision (collision)
 {
-  m_core = Core::Graphic::load_image (file_name, (collision == PIXEL_PERFECT));
+  m_core = Core::Graphic::load_image (file_name, (collision == PIXEL_PERFECT),
+                                      (collision != UNCLICKABLE) && z != 0);
 }
 
 Image::Image (const std::string& id, Font_handle font, const std::string& color_str,

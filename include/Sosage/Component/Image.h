@@ -75,6 +75,7 @@ public:
   void rescale (double z);
   void set_scale (double scale);
   void set_alpha (unsigned char alpha) { m_core.alpha = alpha; }
+  void set_highlight (unsigned char alpha) { m_core.highlight_alpha = alpha; }
   bool is_target_inside (int x, int y) const;
 };
 
