@@ -126,8 +126,8 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
                                const std::string& effect)
 {
   const std::string& menu_color = get<C::String>("Menu:color")->value();
+  auto dialog_font = get<C::Font>("Dialog:font");
   auto interface_font = get<C::Font>("Interface:font");
-  auto menu_font = get<C::Font>("Menu:font");
 
   auto text = request<C::String>(id + ":text");
 
@@ -140,7 +140,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
       if (pos == std::string::npos)
       {
         auto img = set<C::Image>(text->entity() + ":image",
-                                 menu_font, "000000", text->value());
+                                 interface_font, "000000", text->value());
         img->z() = Config::menu_text_depth;
         img->on() = false;
         img->set_scale(0.75);
@@ -169,7 +169,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
         {
           auto img = set<C::Image>(text->entity() + "_" + std::to_string(i)
                                    + ":image",
-                                   menu_font, "000000", lines[i]);
+                                   interface_font, "000000", lines[i]);
           img->z() = Config::menu_text_depth;
           img->on() = false;
           img->set_scale(scale);
@@ -199,7 +199,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
     if (!img)
     {
       img = set<C::Image>(text->entity() + ":image",
-                          interface_font, menu_color, text->value());
+                          dialog_font, menu_color, text->value());
       img->z() = Config::menu_text_depth;
       img->on() = false;
       img->set_scale(0.75);
@@ -248,7 +248,7 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
                         "50", "60", "70", "80", "90",
                         "100" };
 
-  auto menu_font = get<C::Font>("Menu:font");
+  auto menu_font = get<C::Font>("Interface:font");
 
   auto pos = set<C::Position>(effect + ":position", Point(0,0));
   for (std::size_t i = 0; i < possible_values.size(); ++ i)

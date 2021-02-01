@@ -384,11 +384,6 @@ void File_IO::read_init (const std::string& folder_name)
                         (get<C::Boolean>("Interface:virtual_cursor")->value()
                         ? Point(Config::world_width / 2, Config::world_height / 2) : Point(0,0)));
 
-  std::string turnicon = input["turnicon"].string("images", "interface", "png");
-  auto turnicon_img
-    = set<C::Image>("Turnicon:image", local_file_name(turnicon), 0);
-  turnicon_img->on() = false;
-
   std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
   int nb_img = input["loading_spin"][1].integer();
   auto loading_spin_img = set_fac<C::Animation> (LOADING_SPIN__IMAGE, "Loading_spin:image", local_file_name(loading_spin),
@@ -407,12 +402,8 @@ void File_IO::read_init (const std::string& folder_name)
   std::string interface_font = input["interface_font"].string("fonts", "ttf");
   set<C::Font> ("Interface:font", local_file_name(interface_font), 80);
 
-  std::string interface_color = input["interface_color"].string();
-  set<C::String> ("Interface:color", interface_color);
-  std::array<unsigned char, 3> color = color_from_string (interface_color);
-
-  std::string menu_font = input["menu_font"].string("fonts", "ttf");
-  set<C::Font> ("Menu:font", local_file_name(menu_font), 80);
+  std::string dialog_font = input["dialog_font"].string("fonts", "ttf");
+  set<C::Font> ("Dialog:font", local_file_name(dialog_font), 80);
 
   std::string menu_color = input["menu_color"].string();
   set<C::String> ("Menu:color", menu_color);
@@ -430,23 +421,6 @@ void File_IO::read_init (const std::string& folder_name)
   auto credits
     = set<C::Image> ("Credits_text:image", local_file_name(credits_id));
   credits->on() = false;
-
-  for (std::size_t i = 0; i < input["inventory_arrows"].size(); ++ i)
-  {
-    std::string id = input["inventory_arrows" ][i].string("images", "interface", "png");
-    auto arrow
-      = set<C::Image> ("Inventory_arrow_" + std::to_string(i) + ":image",
-                                         local_file_name(id),
-                                         Config::inventory_front_depth);
-    arrow->set_relative_origin(0.5, 0.5);
-    auto arrow_background
-      = set<C::Image> ("Inventory_arrow_background_" + std::to_string(i)
-                                         + ":image",
-                                         arrow->width(), arrow->height(),
-                                         color[0], color[1], color[2]);
-    arrow_background->set_relative_origin(0.5, 0.5);
-    arrow_background->z() = Config::inventory_back_depth;
-  }
 
   std::string left_arrow_id = input["menu_arrows"][0].string("images", "interface", "png");
   auto arrow_left = set<C::Image>("Menu_left_arrow:image", local_file_name(left_arrow_id));

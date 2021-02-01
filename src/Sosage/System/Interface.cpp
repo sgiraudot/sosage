@@ -57,12 +57,6 @@ void Interface::run()
   if (status->value() == PAUSED)
     return;
 
-  if (receive ("Window:rescaled"))
-  {
-    update_layout();
-    emit ("Window:rescaled"); // re-emit for Graphics
-  }
-
   if (status->value() != CUTSCENE)
   {
     auto cursor = get<C::Position>(CURSOR__POSITION);
@@ -86,47 +80,18 @@ void Interface::run()
           arrow_clicked();
         else
         {
-          std::string verb
-              = get<C::String> ("Chosen_verb:text")->entity();
-          verb = std::string (verb.begin() + 5, verb.end());
-
-          action_clicked(verb);
+          action_clicked("goto");
         }
       }
     }
   }
   update_action();
-  update_inventory();
+  // TO UNCOMMENT update_inventory();
   update_dialog_choices();
 }
 
 void Interface::init()
 {
-  auto interface_font = get<C::Font> ("Interface:font");
-  std::string color_str = get<C::String> ("Interface:color")->value();
-
-  for (const auto& verb : { std::make_pair (std::string("open"), std::string("Ouvrir")),
-        std::make_pair (std::string("close"), std::string("Fermer")),
-        std::make_pair (std::string("give"), std::string("Donner")),
-        std::make_pair (std::string("take"), std::string("Prendre")),
-        std::make_pair (std::string("look"), std::string("Regarder")),
-        std::make_pair (std::string("talk"), std::string("Parler")),
-        std::make_pair (std::string("use"), std::string("Utiliser")),
-        std::make_pair (std::string("move"), std::string("Déplacer")) })
-  {
-    set<C::String> ("Verb_" + verb.first + ":text", verb.second);
-    auto verb_img
-      = set<C::Image> ("Verb_" + verb.first + ":image",
-                                         interface_font, color_str, verb.second);
-    set<C::Position> ("Verb_" + verb.first + ":position",
-                                        Point(0,0));
-    m_verbs.push_back (verb_img);
-    verb_img->set_relative_origin(0.5, 0.5);
-  }
-
-  auto verb_goto = set<C::String> ("Verb_goto:text", "Aller vers");
-  set<C::Variable>("Chosen_verb:text", verb_goto);
-
   auto pause_screen_pos
     = set<C::Position>("Pause_screen:position", Point(0, 0));
   set<C::Variable>("Window_overlay:position", pause_screen_pos);
@@ -140,8 +105,6 @@ void Interface::init()
   blackscreen->set_collision(UNCLICKABLE);
 
   set<C::Position>("Blackscreen:position", Point(0,0));
-
-  update_layout();
 
   init_menus();
 }
@@ -377,11 +340,8 @@ void Interface::detect_collision (C::Position_handle cursor)
   // Deactive previous collisions
   if (m_collision)
   {
-    if (m_collision->entity().find("Verb_") == 0)
-      m_collision->set_scale(m_verb_scale);
     if (auto name = request<C::String>(m_collision->entity() + ":name"))
     {
-      get<C::Image>("Verb_look:image")->set_scale(m_verb_scale);
       if (auto img = request<C::Image>(m_collision->entity() + ":image"))
         img->set_highlight(0);
     }
@@ -400,7 +360,6 @@ void Interface::detect_collision (C::Position_handle cursor)
           img->collision() == UNCLICKABLE ||
           img->character_entity() == player ||
           img->id().find("debug") == 0 ||
-          img->id().find("Chosen_verb") == 0 ||
           img->id().find("Interface_") == 0)
         continue;
 
@@ -451,73 +410,12 @@ void Interface::detect_collision (C::Position_handle cursor)
 
 void Interface::update_action ()
 {
-  if (get<C::Status>(GAME__STATUS)->value() != IDLE)
-  {
-    for (auto img : m_verbs)
-      img->on() = false;
-    if (auto img = request<C::Image>("Chosen_verb:image"))
-      img->on() = false;
-    return;
-  }
-  else
-  {
-    for (auto img : m_verbs)
-      img->on() = true;
-    if (auto img = request<C::Image>("Chosen_verb:image"))
-      img->on() = true;
-  }
-
-  auto verb = get<C::String> ("Chosen_verb:text");
-  std::string target_object = "";
-
-  if (m_collision)
-  {
-    if (m_collision->entity().find("Verb_") == 0)
-      m_collision->set_scale(1.1 * m_verb_scale);
-
-    const std::string& entity = m_collision->character_entity();
-    if (entity != get<C::String>("Player:name")->value())
-      if (auto name = request<C::String>(entity + ":name"))
-      {
-        get<C::Image>("Verb_look:image")->set_scale(1.1 * m_verb_scale);
-        target_object = name->value();
-        auto state = request<C::String>(m_collision->entity() + ":state");
-        if (state && state->value() == "inventory")
-        {
-          if (verb->entity() == "Verb_goto")
-            verb = get<C::String>("Verb_look:text");
-        }
-      }
-  }
-
-  if (!request<C::Action>("Character:action")
-      || verb != get<C::String>("Verb_goto:text"))
-  {
-    std::string text = verb->value() + " " + target_object;
-    auto source = request<C::String>("Action:source");
-    if (source)
-    {
-      if (auto name
-          = request<C::String>(source->value() + ":name"))
-      {
-        if (name->value() == target_object)
-          target_object = "";
-        text = verb->value() + " " + name->value() + " avec " + target_object;
-      }
-    }
-
-    auto text_img
-      = set<C::Image>("Chosen_verb:image",
-                                        get<C::Font>("Interface:font"), "FFFFFF",
-                                        text);
-
-    text_img->set_relative_origin(0.5, 0.5);
-    text_img->set_scale(0.8 * Config::action_height / text_img->height());
-  }
+  // TODO
 }
 
 void Interface::update_inventory ()
 {
+  // TODO
   Status status = get<C::Status>(GAME__STATUS)->value();
   get<C::Image> ("Window_overlay:image")->on() = (status == IN_WINDOW);
   bool inventory_on = (status == IDLE);

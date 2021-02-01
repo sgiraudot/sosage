@@ -43,8 +43,6 @@ class Interface : public Base
 {
   Component::Image_handle m_collision;
   double m_latest_exit;
-  double m_verb_scale;
-  std::vector<Component::Image_handle> m_verbs;
 
 public:
 
@@ -85,11 +83,6 @@ private:
   void menu_clicked ();
   void apply_setting (const std::string& setting, const std::string& value);
 
-
-  // Implemented in Interface__layout.cpp:
-  void update_layout();
-  void layout_standard();
-  void horizontal_layout();
 };
 
 

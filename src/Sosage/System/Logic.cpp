@@ -870,14 +870,14 @@ void Logic::create_dialog (const std::string& character,
 
   double size_factor = 0.75 * (get<C::Int>("Dialog:size")->value() / double(Config::MEDIUM));
 
-  auto interface_font = get<C::Font> ("Interface:font");
+  auto font = get<C::Font> ("Dialog:font");
   const std::string& color = get<C::String> (character + ":color")->value();
 
   auto img
     = set<C::Image> ("Comment:image",
-                                       interface_font,
-                                       color,
-                                       text, true);
+                     font,
+                     color,
+                     text, true);
   img->set_scale(size_factor);
   img->set_relative_origin(0.5, 0.5);
 
@@ -924,10 +924,10 @@ void Logic::create_dialog (const std::string& character,
       std::size_t end = (i == nb_imgs - 1 ? text.size() : cuts[std::size_t(i)]);
       auto img
         = set<C::Image> ("Comment_" + std::to_string(i) + ":image",
-                                           interface_font,
-                                           color,
-                                           std::string(text.begin() + std::ptrdiff_t(begin),
-                                                       text.begin() + std::ptrdiff_t(end)), true);
+                         font,
+                         color,
+                         std::string(text.begin() + std::ptrdiff_t(begin),
+                                     text.begin() + std::ptrdiff_t(end)), true);
       img->z() = Config::inventory_over_depth;
       img->set_scale(size_factor);
       img->set_relative_origin(0.5, 0.5);
