@@ -84,13 +84,6 @@ void String_conditional::add (const std::string& state, Handle h)
   
 Handle String_conditional::get() const
 {
-  if (id() == "Cursor:image")
-  {
-   std::cerr << "Cursor:image = ";
-   for (auto h : m_handles)
-     std::cerr << " " << h.first;
-   std::cerr << std::endl;
-  }
   auto iter
     = m_handles.find(m_state->value());
   if (iter == m_handles.end())

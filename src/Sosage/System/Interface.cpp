@@ -404,11 +404,50 @@ void Interface::detect_collision (C::Position_handle cursor)
 
     }
 
-  if (m_collision &&
-      request<C::String>(m_collision->entity() + ":name"))
+  if (previous_collision != m_collision)
   {
-    get<C::Image>(m_collision->entity() + ":image")->set_highlight(128);
-    get<C::String>("Cursor:state")->set("object");
+    remove("Object_label:image", true);
+    remove("Object_label_back:image", true);
+    get<C::Image>("Right_circle:image")->on() = false;
+  }
+
+  if (m_collision)
+  {
+    if (auto name = request<C::String>(m_collision->entity() + ":name"))
+    {
+      get<C::Image>(m_collision->entity() + ":image")->set_highlight(128);
+      get<C::String>("Cursor:state")->set("object");
+
+      if (previous_collision != m_collision)
+      {
+        std::string name_str = name->value();
+        name_str[0] = toupper(name_str[0]);
+        auto img = set<C::Image>("Object_label:image", get<C::Font>("Interface:font"), "FFFFFF", name_str);
+        img->set_relative_origin(0, 0.5);
+        img->set_scale(0.5);
+        img->z() = Config::cursor_depth;
+
+        auto right_circle = get<C::Image>("Right_circle:image");
+        right_circle->on() = true;
+        right_circle->set_relative_origin(0, 0.5);
+        right_circle->set_alpha(100);
+        right_circle->z() = Config::cursor_depth - 1;
+        right_circle->set_collision(UNCLICKABLE);
+
+        auto img_back = set<C::Image>("Object_label_back:image",
+                                      20 + 0.5 * img->width(), right_circle->height());
+        img_back->set_relative_origin(0, 0.5);
+        img_back->set_alpha(100);
+        img_back->z() = Config::cursor_depth - 1;
+        img_back->set_collision(UNCLICKABLE);
+      }
+      set<C::Position>("Object_label:position",
+                       cursor->value() + Vector(30, 0));
+      set<C::Position>("Object_label_back:position", cursor->value());
+      set<C::Position>("Right_circle:position",
+                       cursor->value() + Vector(get<C::Image>("Object_label_back:image")->width(), 0));
+    }
+
   }
 }
 

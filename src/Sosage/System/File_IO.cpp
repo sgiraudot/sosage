@@ -406,6 +406,13 @@ void File_IO::read_init (const std::string& folder_name)
   std::string click_sound = input["click_sound"].string("sounds", "effects", "ogg");
   set<C::Sound>("Click:sound", local_file_name(click_sound));
 
+  std::string left_circle = input["circle"][0].string("images", "interface", "png");
+  auto left_circle_img = set<C::Image>("Left_circle:image", local_file_name(left_circle));
+  left_circle_img->on() = false;
+  std::string right_circle = input["circle"][1].string("images", "interface", "png");
+  auto right_circle_img = set<C::Image>("Right_circle:image", local_file_name(right_circle));
+  right_circle_img->on() = false;
+
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
   set<C::Font> ("Debug:font", local_file_name(debug_font), 40);
 
