@@ -44,7 +44,7 @@ inline std::shared_ptr<T> cast (Handle h)
 
   Conditional_base_handle cond = std::dynamic_pointer_cast<Conditional_base>(h);
   if (cond)
-    return std::dynamic_pointer_cast<T>(cond->get());
+    return cast<T>(cond->get());
 
   return std::shared_ptr<T>();
 }

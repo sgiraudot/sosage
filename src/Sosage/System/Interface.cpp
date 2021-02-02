@@ -344,6 +344,7 @@ void Interface::detect_collision (C::Position_handle cursor)
     {
       if (auto img = request<C::Image>(m_collision->entity() + ":image"))
         img->set_highlight(0);
+      get<C::String>("Cursor:state")->set("default");
     }
   }
 
@@ -405,7 +406,10 @@ void Interface::detect_collision (C::Position_handle cursor)
 
   if (m_collision &&
       request<C::String>(m_collision->entity() + ":name"))
+  {
     get<C::Image>(m_collision->entity() + ":image")->set_highlight(128);
+    get<C::String>("Cursor:state")->set("object");
+  }
 }
 
 void Interface::update_action ()

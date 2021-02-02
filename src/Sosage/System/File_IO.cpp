@@ -354,10 +354,20 @@ void File_IO::read_init (const std::string& folder_name)
   std::string icon = input["icon"].string("images", "interface", "png");
   set<C::String>("Icon:filename", local_file_name(icon));
 
-  std::string cursor = input["cursor"].string("images", "interface", "png");
-  auto cursor_img = C::make_handle<C::Image> ("Cursor:image", local_file_name(cursor),
+  std::string cursor = input["cursor"][0].string("images", "interface", "png");
+  auto cursor_default = C::make_handle<C::Image> ("Cursor:image", local_file_name(cursor),
                                                               Config::cursor_depth);
-  cursor_img->set_relative_origin(0.5, 0.5);
+  cursor_default->set_relative_origin(0.1, 0.1);
+
+  std::string cursor_o = input["cursor"][1].string("images", "interface", "png");
+  auto cursor_object = C::make_handle<C::Image> ("Cursor:image", local_file_name(cursor_o),
+                                                              Config::cursor_depth);
+  cursor_object->set_relative_origin(0.5, 0.5);
+
+  auto cursor_state = set<C::String>("Cursor:state", "default");
+  auto cursor_img = C::make_handle<C::String_conditional>("Cursor:image", cursor_state);
+  cursor_img->add("default", cursor_default);
+  cursor_img->add("object", cursor_object);
 
   auto status = get<C::Status>(GAME__STATUS);
 
