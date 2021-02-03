@@ -10,7 +10,7 @@ windows_sdl_folder = "/home/gee/local/i686-w64-mingw32/include/SDL2"
 libyaml_souce_path = "/home/gee/local/sources/libyaml-master"
 
 gamename = "superflu-riteurnz"
-version = "v1.0.0-xmas2020demo"
+version = "v1.1.0-modern-ui"
 
 data_dir = "TMP_data"
 linux_buildir = "TMP_build_linux"
