@@ -105,6 +105,15 @@ public:
     return new_component;
   }
 
+  template <typename T, typename ... Args>
+  std::shared_ptr<T> get_or_set (const std::string& id, Args&& ... args)
+  {
+    count_set_args();
+    if (auto out = request<T>(id))
+      return out;
+    return set<T> (id, args...);
+  }
+
   template <typename T>
   std::shared_ptr<T> request (const std::string& key)
   {

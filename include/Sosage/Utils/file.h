@@ -64,6 +64,22 @@ inline std::string pref_path()
   return Third_party::SDL_file::pref_path();
 }
 
+inline std::string assemble_path (const std::string& folder,
+                                  const std::string& filename,
+                                  const std::string& extension)
+{
+  return folder + Config::folder_separator + filename + '.' + extension;
+}
+
+inline std::string assemble_path (const std::string& folder,
+                                  const std::string& subfolder,
+                                  const std::string& filename,
+                                  const std::string& extension)
+{
+  return folder + Config::folder_separator + subfolder + Config::folder_separator
+    + filename + '.' + extension;
+}
+
 } // namespace Sosage
 
 #endif // SOSAGE_UTILS_FILE_H

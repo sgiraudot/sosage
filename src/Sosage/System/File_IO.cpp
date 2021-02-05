@@ -455,6 +455,7 @@ void File_IO::read_init (const std::string& folder_name)
     set<C::String>(id + ":text", itext["value"].string());
   }
 
+#if 0
   for (std::size_t i = 0; i < input["actions"].size(); ++ i)
   {
     const Core::File_IO::Node& idefault = input["actions"][i];
@@ -475,6 +476,7 @@ void File_IO::read_init (const std::string& folder_name)
     }
 
   }
+#endif
 
   std::string player = input["player"].string();
   set<C::String>("Player:name", player);
