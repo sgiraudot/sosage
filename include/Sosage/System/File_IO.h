@@ -77,7 +77,6 @@ public:
 private:
 
   void read_action (const Core::File_IO::Node& input);
-  void read_actions (const Core::File_IO::Node& input);
   void read_animation (const Core::File_IO::Node& input);
   void read_character (const Core::File_IO::Node& input);
   void read_code (const std::string& id);
@@ -85,6 +84,9 @@ private:
   void read_integer (const Core::File_IO::Node& input);
   void read_music (const Core::File_IO::Node& input);
   void read_object (const std::string& id);
+  std::pair<Component::Handle, Component::Handle>
+  read_object_action (const std::string& id, const std::string& action,
+                      const Core::File_IO::Node& input);
   void read_origin (const Core::File_IO::Node& input);
   void read_scenery (const Core::File_IO::Node& input);
   void read_sound (const Core::File_IO::Node& input);

@@ -42,8 +42,9 @@ constexpr int world_width = 1920;
 constexpr int world_height = 1080;
 constexpr int world_depth = 3240;
 
-constexpr int interface_height = 200;
-constexpr int action_height = 50;
+constexpr int label_height = 50;
+constexpr int label_margin = 20;
+constexpr int label_diff = 20;
 
 constexpr int camera_limit_left = world_width / 4;
 constexpr int camera_limit_right = (3 * world_width) / 4;
@@ -70,6 +71,16 @@ constexpr double virtual_cursor_speed = 2.0;
 
 constexpr int max_music_volume = 128;
 
+constexpr auto possible_actions = { "look", "primary", "secondary", "inventory", "use", "combine" };
+
+enum Orientation
+{
+  NORTH,
+  EAST,
+  SOUTH,
+  WEST
+};
+
 enum Depth
 {
   interface_depth = 1000000,
@@ -82,6 +93,8 @@ enum Depth
   menu_front_depth,
   menu_button_depth,
   menu_text_depth,
+  label_depth,
+  action_button_depth,
   cursor_depth,
   loading_depth
 };

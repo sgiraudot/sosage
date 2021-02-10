@@ -72,15 +72,18 @@ void Interface::run()
         menu_clicked();
       else if (status->value() == DIALOG_CHOICE)
         dialog_clicked();
+      else if (status->value() == ACTION_CHOICE)
+        action_clicked();
       else
       {
-        if (m_collision->entity().find("Verb_") == 0)
-          verb_clicked();
+        // Click on an object
+        if (request<C::String>(m_collision->entity() + ":name"))
+          generate_action_choice (m_collision->entity());
         else if (m_collision->entity().find("Inventory_arrow") == 0)
           arrow_clicked();
-        else
+        else // Click anywhere else
         {
-          action_clicked("goto");
+          emit ("Cursor:clicked"); // Logic handles this click
         }
       }
     }
@@ -187,108 +190,28 @@ void Interface::arrow_clicked()
     get<C::Inventory>("Game:inventory")->next();
 }
 
-void Interface::action_clicked(const std::string& verb)
+void Interface::action_clicked()
 {
-  bool action_found = false;
+  get<C::Status>(GAME__STATUS)->pop();
 
-  // If clicked target is an object
-  const std::string& entity = m_collision->character_entity();
-  if (request<C::String>(entity + ":name"))
-  {
-    // First try binary action
-    if (verb == "use" || verb == "give")
-    {
-      // If source was already cicked
-      if (auto source = request<C::String>("Action:source"))
-      {
-        // Don't use source on source
-        if (source->value() == entity)
-          return;
+  const std::string& id = m_collision->entity();
+  std::size_t pos = id.find("_button_");
+  if (pos == std::string::npos)
+    pos = id.find("_label");
 
-        // Find binary action
-        auto action
-          = request<C::Action> (source->value() + ":use_" + entity);
-        debug("Request ", source->value(), ":use_" , entity);
-        if (action)
-        {
-          set<C::Variable>("Character:action", action);
-          action_found = true;
-        }
-      }
-      // Else check if object can be source
-      else
-      {
-        auto state
-          = request<C::String>(entity + ":state");
-        if (state && (state->value() == "inventory"))
-        {
-          // Check if unary action exists
-          if (auto action = request<C::Action> (entity + ":use"))
-          {
-            set<C::Variable>("Character:action", action);
-            action_found = true;
-          }
-          else // Set object as source
-          {
-            set<C::String>("Action:source", entity);
-            return;
-          }
-        }
-      }
-    }
+  clear_action_ids();
 
-    remove ("Action:source", true);
+  if (pos == std::string::npos)
+    return;
 
-    if (!action_found)
-    {
-      // Then try to get unary action
-      auto action
-        = request<C::Action> (entity + ":" + verb);
-      if (action)
-      {
-        set<C::Variable>("Character:action", action);
-        action_found = true;
-      }
-    }
+  std::string object_id (id.begin(), id.begin() + pos);
 
-    if (!action_found)
-    {
-      // Finally fallback to default action
-      if (verb == "goto")
-      {
-        // If default action on inventory,  look
-        auto state = request<C::String>(entity + ":state");
-        if ((state && (state->value() == "inventory")) ||
-            !get<C::Boolean>("Click:left")->value())
-          set<C::Variable>("Character:action", request<C::Action> (entity + ":look"));
-        // Else, goto
-        else
-        {
-          set<C::Variable>("Cursor:target", m_collision);
-          emit ("Cursor:clicked"); // Logic handles this click
-        }
-        return;
-      }
-      // If no action found, use default
-      else
-        set<C::Variable>
-          ("Character:action",
-           get<C::Action> ("Default:" + verb));
-    }
-  }
-  else
-  {
-    remove ("Action:source", true);
-    if (verb == "goto")
-    {
-      set<C::Variable>("Cursor:target", m_collision);
-      emit ("Cursor:clicked"); // Logic handles this click
-      return;
-    }
-  }
+  pos = object_id.find_last_of('_');
+  check(pos != std::string::npos, "Ill-formed action entity " + object_id);
+  std::string target (object_id.begin(), object_id.begin() + pos);
+  std::string action (object_id.begin() + pos + 1, object_id.end());
 
-  get<C::Variable> ("Chosen_verb:text")
-    ->set(get<C::String>("Verb_goto:text"));
+  set<C::Variable>("Character:action", get<C::Action>(object_id + ":action"));
 }
 
 void Interface::update_pause_screen()
@@ -332,7 +255,6 @@ void Interface::update_pause_screen()
 
   set<C::Position>("Pause_text:position", Point(Config::world_width / 2,
                                                 Config::world_height / 2));
-
 }
 
 void Interface::detect_collision (C::Position_handle cursor)
@@ -404,52 +326,219 @@ void Interface::detect_collision (C::Position_handle cursor)
 
     }
 
-  if (previous_collision != m_collision)
+  bool object_mode = (get<C::Status>(GAME__STATUS)->value() == ACTION_CHOICE);
+  if (previous_collision && (previous_collision != m_collision))
   {
-    remove("Object_label:image", true);
-    remove("Object_label_back:image", true);
-    get<C::Image>("Right_circle:image")->on() = false;
+    const std::string& id = previous_collision->entity();
+    if (object_mode)
+    {
+      std::size_t pos = id.find("_button_");
+      if (pos == std::string::npos)
+        pos = id.find("_label");
+      if (pos != std::string::npos)
+      {
+        std::string object_id (id.begin(), id.begin() + pos);
+        get<C::Image>(object_id + "_button_left:image")->set_highlight(0);
+        get<C::Image>(object_id + "_button_right:image")->set_highlight(0);
+        get<C::Image>(object_id + "_button_left:image")->set_alpha(255);
+        get<C::Image>(object_id + "_button_right:image")->set_alpha(255);
+      }
+    }
+    else
+    {
+      clear_action_ids();
+    }
   }
 
   if (m_collision)
   {
-    if (auto name = request<C::String>(m_collision->entity() + ":name"))
+    const std::string& id = m_collision->entity();
+    if (object_mode)
     {
-      get<C::Image>(m_collision->entity() + ":image")->set_highlight(128);
-      get<C::String>("Cursor:state")->set("object");
-
-      if (previous_collision != m_collision)
+      std::size_t pos = id.find("_button_");
+      if (pos == std::string::npos)
+        pos = id.find("_label");
+      if (pos != std::string::npos)
       {
-        std::string name_str = name->value();
-        name_str[0] = toupper(name_str[0]);
-        auto img = set<C::Image>("Object_label:image", get<C::Font>("Interface:font"), "FFFFFF", name_str);
-        img->set_relative_origin(0, 0.5);
-        img->set_scale(0.5);
-        img->z() = Config::cursor_depth;
-
-        auto right_circle = get<C::Image>("Right_circle:image");
-        right_circle->on() = true;
-        right_circle->set_relative_origin(0, 0.5);
-        right_circle->set_alpha(100);
-        right_circle->z() = Config::cursor_depth - 1;
-        right_circle->set_collision(UNCLICKABLE);
-
-        auto img_back = set<C::Image>("Object_label_back:image",
-                                      20 + 0.5 * img->width(), right_circle->height());
-        img_back->set_relative_origin(0, 0.5);
-        img_back->set_alpha(100);
-        img_back->z() = Config::cursor_depth - 1;
-        img_back->set_collision(UNCLICKABLE);
+        std::string object_id (id.begin(), id.begin() + pos);
+        get<C::Image>(object_id + "_button_left:image")->set_highlight(255);
+        get<C::Image>(object_id + "_button_right:image")->set_highlight(255);
+        get<C::Image>(object_id + "_button_left:image")->set_alpha(192);
+        get<C::Image>(object_id + "_button_right:image")->set_alpha(192);
       }
-      set<C::Position>("Object_label:position",
-                       cursor->value() + Vector(30, 0));
-      set<C::Position>("Object_label_back:position", cursor->value());
-      set<C::Position>("Right_circle:position",
-                       cursor->value() + Vector(get<C::Image>("Object_label_back:image")->width(), 0));
     }
+    else
+    {
+      if (auto name = request<C::String>(id + ":name"))
+      {
+        get<C::Image>(m_collision->entity() + ":image")->set_highlight(128);
+        get<C::String>("Cursor:state")->set("object");
 
+        update_label(id, name->value(), false, true, cursor->value(), UNCLICKABLE);
+
+      }
+    }
   }
 }
+
+void Interface::clear_action_ids()
+{
+  for (const std::string& id : m_action_ids)
+    remove (id, true);
+  m_action_ids.clear();
+}
+
+void Interface::update_label (const std::string& id, std::string name,
+                              bool open_left, bool open_right, const Point& position,
+                              const Collision_type& collision)
+{
+  auto label = request<C::Image>(id + "_label:image");
+
+  C::Image_handle left, right, back;
+
+  if (label)
+  {
+    left = request<C::Image>(id + "_left_circle:image");
+    right = request<C::Image>(id + "_right_circle:image");
+    back = get<C::Image>(id + "_label_back:image");
+  }
+  else
+  {
+    name[0] = toupper(name[0]);
+    label = set<C::Image>(id + "_label:image", get<C::Font>("Interface:font"), "FFFFFF", name);
+    m_action_ids.push_back (label->id());
+
+    label->set_relative_origin(0.5, 0.5);
+    label->set_scale(0.5);
+    label->z() = Config::label_depth;
+    label->set_collision(collision);
+
+    if (!open_left)
+    {
+      left = set<C::Image>(id + "_left_circle:image", get<C::Image>("Left_circle:image"));
+      m_action_ids.push_back (left->id());
+      left->on() = true;
+      left->set_relative_origin(1, 0.5);
+      left->set_alpha(100);
+      left->z() = Config::label_depth - 1;
+      left->set_collision(collision);
+    }
+
+    if (!open_right)
+    {
+      right = set<C::Image>(id + "_right_circle:image", get<C::Image>("Right_circle:image"));
+      m_action_ids.push_back (right->id());
+      right->on() = true;
+      right->set_relative_origin(0, 0.5);
+      right->set_alpha(100);
+      right->z() = Config::label_depth - 1;
+      right->set_collision(collision);
+    }
+    back = set<C::Image>(id + "_label_back:image",
+                         Config::label_margin + label->width() / 2,
+                         Config::label_height);
+    m_action_ids.push_back (back->id());
+    back->set_relative_origin(0.5, 0.5);
+    back->set_alpha(100);
+    back->z() = Config::label_depth - 1;
+    back->set_collision(collision);
+  }
+
+  int half_width_minus = back->width() / 2;
+  int half_width_plus = back->width() - half_width_minus;
+
+  std::cerr << id << ": " << back->width() << " -> " << position.x() + Config::label_diff + half_width_plus
+            << " " << position.x() - Config::label_diff - half_width_minus << std::endl;
+  if (open_left)
+  {
+    set<C::Position>(id + "_label:position", position + Vector(Config::label_diff + half_width_plus, 0));
+    set<C::Position>(id + "_label_back:position", position + Vector(half_width_plus, 0));
+  }
+  else if (open_right)
+  {
+    set<C::Position>(id + "_label:position", position + Vector(-Config::label_diff - half_width_minus, 0));
+    set<C::Position>(id + "_label_back:position", position + Vector(-half_width_minus, 0));
+  }
+  else
+  {
+    set<C::Position>(id + "_label:position", position);
+    set<C::Position>(id + "_label_back:position", position);
+  }
+
+  if (left)
+    set<C::Position>(id + "_left_circle:position",
+                     get<C::Position>(id + "_label_back:position")->value() + Vector(-half_width_minus, 0));
+  if (right)
+    set<C::Position>(id + "_right_circle:position",
+                     get<C::Position>(id + "_label_back:position")->value() + Vector(half_width_plus, 0));
+}
+
+void Interface::generate_action_choice (const std::string& id)
+{
+  clear_action_ids();
+
+  generate_action (id, "primary", Config::NORTH);
+  generate_action (id, "look", Config::EAST);
+  generate_action (id, "inventory", Config::SOUTH);
+  generate_action (id, "secondary", Config::WEST);
+
+  get<C::Status>(GAME__STATUS)->push(ACTION_CHOICE);
+}
+
+void Interface::generate_action (const std::string& id, const std::string& action,
+                                 const Config::Orientation& orientation)
+{
+  auto label = get<C::String>(id + "_" + action + ":label");
+  bool open_left = false, open_right = false;
+  const Point& position = get<C::Position>(CURSOR__POSITION)->value();;
+  Point label_position;
+  Point button_position;
+
+  if (orientation == Config::NORTH)
+  {
+    label_position = position + Vector(0, -80);
+    button_position = position + Vector(0, -40);
+  }
+  else if (orientation == Config::SOUTH)
+  {
+    label_position = position + Vector(0, 80);
+    button_position = position + Vector(0, 40);
+  }
+  else if (orientation == Config::EAST)
+  {
+    label_position = position + Vector(40, 0);
+    button_position = position + Vector(40, 0);
+    open_left = true;
+  }
+  else if (orientation == Config::WEST)
+  {
+    label_position = position + Vector(-40, 0);
+    button_position = position + Vector(-40, 0);
+    open_right = true;
+  }
+
+  update_label (id + "_" + action, label->value(), open_left, open_right, label_position, BOX);
+
+  auto left = set<C::Image>(id + "_" + action + "_button_left:image", get<C::Image>("Left_circle:image"));
+  m_action_ids.push_back (left->id());
+  left->on() = true;
+  left->set_relative_origin(1, 0.5);
+  left->set_alpha(255);
+  left->z() = Config::action_button_depth;
+  left->set_collision(BOX);
+
+  auto right = set<C::Image>(id + "_" + action + "_button_right:image", get<C::Image>("Right_circle:image"));
+  m_action_ids.push_back (right->id());
+  right->on() = true;
+  right->set_relative_origin(0, 0.5);
+  right->set_alpha(255);
+  right->z() = Config::action_button_depth;
+  right->set_collision(BOX);
+
+  set<C::Position>(id + "_" + action + "_button_left:position", button_position);
+  set<C::Position>(id + "_" + action + "_button_right:position", button_position);
+}
+
 
 void Interface::update_action ()
 {

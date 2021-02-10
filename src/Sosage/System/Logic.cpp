@@ -114,18 +114,9 @@ void Logic::run ()
       new_timed_handle.insert(th);
   m_timed.swap(new_timed_handle);
 
-  auto collision = request<C::Image> ("Cursor:target");
-  if (collision && receive ("Cursor:clicked"))
+  if (receive ("Cursor:clicked"))
   {
-    if (auto name = request<C::String>(collision->entity() + ":name"))
-    {
-      if (get<C::String> ("Chosen_verb:text")->entity() == "Verb_goto")
-        compute_path_from_target(get<C::Position>(collision->entity() + ":view"));
-    }
-    else
-      compute_path_from_target(get<C::Position>(CURSOR__POSITION));
-
-    remove("Cursor:target");
+    compute_path_from_target(get<C::Position>(CURSOR__POSITION));
 
     // Cancel current action
     clear_timed(true);

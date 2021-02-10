@@ -407,10 +407,10 @@ void File_IO::read_init (const std::string& folder_name)
   set<C::Sound>("Click:sound", local_file_name(click_sound));
 
   std::string left_circle = input["circle"][0].string("images", "interface", "png");
-  auto left_circle_img = set<C::Image>("Left_circle:image", local_file_name(left_circle));
+  auto left_circle_img = set<C::Image>("Left_circle:image", local_file_name(left_circle), 1, BOX);
   left_circle_img->on() = false;
   std::string right_circle = input["circle"][1].string("images", "interface", "png");
-  auto right_circle_img = set<C::Image>("Right_circle:image", local_file_name(right_circle));
+  auto right_circle_img = set<C::Image>("Right_circle:image", local_file_name(right_circle), 1, BOX);
   right_circle_img->on() = false;
 
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
@@ -455,28 +455,31 @@ void File_IO::read_init (const std::string& folder_name)
     set<C::String>(id + ":text", itext["value"].string());
   }
 
-#if 0
-  for (std::size_t i = 0; i < input["actions"].size(); ++ i)
+  for (std::string id : Config::possible_actions)
   {
-    const Core::File_IO::Node& idefault = input["actions"][i];
-    std::string id = idefault["id"].string();
+    const Core::File_IO::Node& idefault = input["default"][id];
+    std::string label = idefault["label"].string();
 
-    auto action = set<C::Random_conditional>("Default:" + id);
+    set<C::String>("Default_" + id + ":label", label);
 
-    for (std::size_t j = 0; j < idefault["effect"].size(); ++ j)
+    if (idefault.has("effect"))
     {
-      const Core::File_IO::Node& iaction = idefault["effect"][j];
-      std::string function = iaction.nstring();
+      auto action = set<C::Random_conditional>("Default_" + id + ":action");
+      for (std::size_t j = 0; j < idefault["effect"].size(); ++ j)
+      {
+        const Core::File_IO::Node& iaction = idefault["effect"][j];
+        std::string function = iaction.nstring();
 
-      auto rnd_action = C::make_handle<C::Action>
-        ("Default:" + id + "_" + std::to_string(j));
-      rnd_action->add ("look", {});
-      rnd_action->add (function, iaction[function].string_array());
-      action->add (1.0, rnd_action);
+        auto rnd_action = C::make_handle<C::Action>
+                          ("Default_" + id + ":" + std::to_string(j));
+        rnd_action->add ("look", {});
+        rnd_action->add (function, iaction[function].string_array());
+        action->add (1.0, rnd_action);
+      }
     }
-
   }
-#endif
+
+  set<C::String>("Inventory:label", input["default"]["inventory_button"].string());
 
   std::string player = input["player"].string();
   set<C::String>("Player:name", player);

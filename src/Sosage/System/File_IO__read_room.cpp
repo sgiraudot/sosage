@@ -615,7 +615,10 @@ void File_IO::read_object (const std::string& id)
     if (j == 0)
     {
       if (state_handle->value() == "")
+      {
         state_handle->set(state);
+        std::cerr << "Set state " << state << " to " << id << std::endl;
+      }
       conditional_handle = set<C::String_conditional>(id + ":image", state_handle);
     }
     else
@@ -673,8 +676,30 @@ void File_IO::read_object (const std::string& id)
     }
   }
 
-  // TODO: read actions
-
+  for (std::string action : Config::possible_actions)
+    if (input.has(action))
+    {
+      if (action == "inventory")
+        for (std::size_t i = 0; i < input["inventory"].size(); ++ i)
+        {
+          auto act = read_object_action(id, action, input["inventory"][i]);
+          set(act.first);
+          set(act.second);
+        }
+      else
+      {
+        auto act = read_object_action(id, action, input[action]);
+        set(act.first);
+        set(act.second);
+      }
+    }
+    else
+    {
+      set<C::Variable>(id + "_" + action + ":label",
+                       get<C::String>("Default_" + action + ":label"));
+      set<C::Variable>(id + "_" + action + ":action",
+                       get<C::Action>("Default_" + action + ":action"));
+    }
 }
 
 void File_IO::read_action (const Core::File_IO::Node& node)
@@ -700,75 +725,6 @@ void File_IO::read_action (const Core::File_IO::Node& node)
     }
     conditional_handle->add(state, action);
   }
-}
-
-void File_IO::read_actions (const Core::File_IO::Node& node)
-{
-  std::string id = node["id"].string();
-  bool look_found = false;
-  bool has_default = false;
-  for (std::size_t i = 0; i < node["actions"].size(); ++ i)
-  {
-    const Core::File_IO::Node& iaction = node["actions"][i];
-
-    std::size_t nb_actions = iaction["id"].size();
-    std::size_t j = 0;
-    do
-    {
-      std::string a_id = (nb_actions == 0 ? iaction["id"].string() : iaction["id"][j].string());
-      if (a_id == "default")
-      {
-        has_default = true;
-        break;
-      }
-
-      std::string target_id = id;
-
-      if (iaction.has("target"))
-      {
-        target_id = iaction["target"].string();
-        a_id = a_id + "_" + target_id;
-      }
-
-      if (a_id == "look")
-        look_found = true;
-
-      C::Action_handle action;
-
-      debug("Read action ", id, ":", a_id);
-
-      if (iaction.has("state"))
-      {
-        std::string state = iaction["state"].string();
-        auto conditional_handle
-          = request<C::String_conditional>(id + ":" + a_id);
-
-        if (!conditional_handle)
-        {
-          auto state_handle
-            = get<C::String>(target_id + ":state");
-          conditional_handle
-            = set<C::String_conditional>(id + ":" + a_id, state_handle);
-        }
-
-        action = C::make_handle<C::Action>(id + ":" + a_id);
-        conditional_handle->add (state, action);
-      }
-      else
-        action = set<C::Action>(id + ":" + a_id);
-
-
-      for (std::size_t k = 0; k < iaction["effect"].size(); ++ k)
-      {
-        std::string function = iaction["effect"][k].nstring();
-        action->add (function, iaction["effect"][k][function].string_array());
-      }
-      ++ j;
-    }
-    while (j < nb_actions);
-  }
-
-  check (look_found, "Object " + id + " has no \"look\" action");
 }
 
 void File_IO::read_music(const Core::File_IO::Node& node)
@@ -803,6 +759,58 @@ void File_IO::read_music(const Core::File_IO::Node& node)
     set<C::Music>(id + ":music", local_file_name(music));
   }
 }
+
+std::pair<C::Handle, C::Handle>
+File_IO::read_object_action (const std::string& id, const std::string& action,
+                             const Core::File_IO::Node& node)
+{
+  if (node.size() != 0)
+  {
+    auto state_handle = get_or_set<C::String>(id + ":state");
+    auto label = set<C::String_conditional>(id + "_" + action + ":label", state_handle);
+    auto act = set<C::String_conditional>(id + "_" + action + ":action", state_handle);
+
+    for (std::size_t i = 0; i < node.size(); ++ i)
+    {
+      std::string state = node[i]["state"].string();
+      std::cerr << id << " with state " << state << " -> " << action << std::endl;
+
+      auto labelact = read_object_action(id, action, node[i]);
+      label->add (state, labelact.first);
+      act->add (state, labelact.second);
+    }
+
+    return std::make_pair(label, act);
+  }
+
+  std::pair<C::Handle, C::Handle> out;
+
+  std::string full_action = action;
+  if (node.has("object"))
+    full_action = action + "_" + node["object"].string();
+
+  if (node.has("label"))
+    out.first = C::make_handle<C::String>(id + "_" + full_action + ":label", node["label"].string());
+  else
+    out.first = C::make_handle<C::Variable>(id + "_" + action + ":label",
+                                 get<C::String>("Default_" + action + ":label"));
+  if (node.has("effect"))
+  {
+    auto act = C::make_handle<C::Action>(id + "_" + full_action + ":action");
+    for (std::size_t i = 0; i < node["effect"].size(); ++ i)
+    {
+      std::string function = node["effect"][i].nstring();
+      act->add (function, node["effect"][i][function].string_array());
+    }
+    out.second = act;
+  }
+  else
+    out.second = C::make_handle<C::Variable>(id + "_" + action + ":action",
+                                             get<C::Action>("Default_" + action + ":action"));
+
+  return out;
+}
+
 
 
 void File_IO::read_origin(const Core::File_IO::Node& node)

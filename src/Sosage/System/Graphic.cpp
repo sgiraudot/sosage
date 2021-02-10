@@ -108,9 +108,6 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
   auto status = get<C::Status>(GAME__STATUS);
   double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
-  int interface_width = 0;
-  int interface_height = Config::interface_height;
-
   for (const auto& img : images)
   {
     if (img->on())
@@ -138,11 +135,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
       int ymax_target = ymin_target + int(img->core().scaling * (ymax - ymin));
 
       int limit_width = Config::world_width;
-      if (position->absolute())
-        limit_width += interface_width;
       int limit_height = Config::world_height;
-      if (position->absolute())
-        limit_height += interface_height;
 
       // Skip out of boundaries images
       if ((xmax_target < 0 || xmin_target > limit_width)
