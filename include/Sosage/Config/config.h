@@ -42,6 +42,8 @@ constexpr int world_width = 1920;
 constexpr int world_height = 1080;
 constexpr int world_depth = 3240;
 
+constexpr int inventory_height = 150;
+
 constexpr int label_height = 50;
 constexpr int label_margin = 20;
 constexpr int label_diff = 20;
@@ -63,7 +65,7 @@ constexpr int animation_fps = 12;
 constexpr int character_speed = 34;
 
 constexpr int text_outline = 10;
-constexpr int displayed_inventory_size = 4;
+constexpr int displayed_inventory_size = 9;
 
 constexpr double button_click_duration = 0.1;
 constexpr double virtual_cursor_sensitivity = 5;
@@ -78,7 +80,14 @@ enum Orientation
   NORTH,
   EAST,
   SOUTH,
-  WEST
+  WEST,
+
+  NORTHER,
+  NORTH_EAST,
+  SOUTH_EAST,
+  SOUTHER,
+  SOUTH_WEST,
+  NORTH_WEST
 };
 
 enum Depth
