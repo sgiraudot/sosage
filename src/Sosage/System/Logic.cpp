@@ -131,7 +131,7 @@ void Logic::run ()
       = get<C::Cropped>(window->entity() + "_button:image");
 
     cropped->crop (code->xmin(), code->xmax(), code->ymin(), code->ymax());
-    set<C::Position>
+    set<C::Absolute_position>
       (window->entity() + "_button:position",
        get<C::Position>(window->entity() + ":position")->value()
        + Vector(code->xmin(), code->ymin()));
@@ -296,7 +296,7 @@ void Logic::run_cutscene()
       img->on() = true;
       img->z() = z;
       img->set_scale(zoom);
-      set<C::Position>(img->entity() + ":position", Point(x,y));
+      set<C::Absolute_position>(img->entity() + ":position", Point(x,y));
 
     }
     else if (auto music = request<C::Music>(el.id))
@@ -405,7 +405,7 @@ void Logic::update_debug_info (C::Debug_handle debug_info)
     auto dbg_img = set<C::Image> ("Debug:image",
                                                     debug_font, "FF0000",
                                                     debug_info->debug_str());
-    auto dbg_pos = set<C::Position>("Debug:position", Point(0,0));
+    auto dbg_pos = set<C::Absolute_position>("Debug:position", Point(0,0));
   }
   else
   {
@@ -574,7 +574,7 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
   if (args.size() == 2)
   {
     if (compute_path_from_target
-        (C::make_handle<C::Position>("Goto:view", Point (to_int(args[0]), to_int(args[1]))),
+        (C::make_handle<C::Absolute_position>("Goto:view", Point (to_int(args[0]), to_int(args[1]))),
          id))
       m_timed.insert (std::make_pair (0, get<C::Path>(id + ":path")));
   }
@@ -606,13 +606,13 @@ bool Logic::function_look (const std::vector<std::string>& args)
   const std::string& id = get<C::String>("Player:name")->value();
 
   if (target == "default" || !request<C::Position>(target + ":position"))
-    set<C::Position>(id + ":lookat",
+    set<C::Absolute_position>(id + ":lookat",
                                        get<C::Position>(CURSOR__POSITION)->value());
   else
   {
     auto state = request<C::String>(target + ":state");
     if (!state || state->value() != "inventory")
-      set<C::Position>(id + ":lookat",
+      set<C::Absolute_position>(id + ":lookat",
                                          get<C::Position>(target + ":position")->value());
   }
   return true;
@@ -702,7 +702,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
     if (current_state->value() == "inventory")
     {
       get<C::Inventory>("Game:inventory")->remove(target);
-      get<C::Position>(target + ":position")->absolute() = false;
+      get<C::Absolute_position>(target + ":position")->absolute() = false;
     }
 
     current_state->set (state);
@@ -839,7 +839,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 
   for (auto img : dialog)
   {
-    auto pos = set<C::Position> (img->entity() + ":position", Point(x,y));
+    auto pos = set<C::Absolute_position> (img->entity() + ":position", Point(x,y));
     y += img->height() * 1.1 * size_factor;
 
     m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), img));

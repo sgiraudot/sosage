@@ -243,7 +243,7 @@ void File_IO::read_savefile()
   {
     const Core::File_IO::Node& iposition = input["positions"][i];
     Point point (iposition["value"][0].floating(), iposition["value"][1].floating());
-    set<C::Position>(iposition["id"].string() + ":position", point);
+    set<C::Absolute_position>(iposition["id"].string() + ":position", point);
   }
 
   for (std::size_t i = 0; i < input["integers"].size(); ++ i)
@@ -390,9 +390,9 @@ void File_IO::read_init (const std::string& folder_name)
          cursor_img);
   }
 
-  set_fac<C::Position> (CURSOR__POSITION, "Cursor:position",
-                        (get<C::Boolean>("Interface:virtual_cursor")->value()
-                        ? Point(Config::world_width / 2, Config::world_height / 2) : Point(0,0)));
+  set_fac<C::Absolute_position> (CURSOR__POSITION, "Cursor:position",
+                                 (get<C::Boolean>("Interface:virtual_cursor")->value()
+                                  ? Point(Config::world_width / 2, Config::world_height / 2) : Point(0,0)));
 
   std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
   int nb_img = input["loading_spin"][1].integer();
@@ -400,8 +400,9 @@ void File_IO::read_init (const std::string& folder_name)
                                                                    Config::loading_depth, nb_img, 1, true);
   loading_spin_img->on() = false;
   loading_spin_img->set_relative_origin(0.5, 0.5);
-  set_fac<C::Position> (LOADING_SPIN__POSITION, "Loading_spin:position", Point(Config::world_width / 2,
-                                                                               Config::world_height / 2));
+  set_fac<C::Absolute_position> (LOADING_SPIN__POSITION, "Loading_spin:position",
+                                 Point(Config::world_width / 2,
+                                       Config::world_height / 2));
 
   std::string left_arrow = input["inventory_arrows"][0].string("images", "interface", "png");
   auto left_arrow_img = set<C::Image>("Left_arrow:image", local_file_name(left_arrow));

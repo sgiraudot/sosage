@@ -111,29 +111,29 @@ void File_IO::read_character (const Core::File_IO::Node& node)
   int hdx_right = input["head"]["dx_right"].integer();
   int hdx_left = input["head"]["dx_left"].integer();
   int hdy = input["head"]["dy"].integer();
-  set<C::Position>(id + "_head:gap_right", Point(hdx_right,hdy), false);
-  set<C::Position>(id + "_head:gap_left", Point(hdx_left,hdy), false);
+  set<C::Absolute_position>(id + "_head:gap_right", Point(hdx_right,hdy), false);
+  set<C::Absolute_position>(id + "_head:gap_left", Point(hdx_left,hdy), false);
 
   int mdx_right = input["mouth"]["dx_right"].integer();
   int mdx_left = input["mouth"]["dx_left"].integer();
   int mdy = input["mouth"]["dy"].integer();
-  set<C::Position>(id + "_mouth:gap_right", Point(mdx_right,mdy), false);
-  set<C::Position>(id + "_mouth:gap_left", Point(mdx_left,mdy), false);
+  set<C::Absolute_position>(id + "_mouth:gap_right", Point(mdx_right,mdy), false);
+  set<C::Absolute_position>(id + "_mouth:gap_left", Point(mdx_left,mdy), false);
 
   // Init position objects if they don't already exist
-  auto pbody = request<C::Position>(id + "_body:position");
+  auto pbody = request<C::Absolute_position>(id + "_body:position");
   if (!pbody)
   {
-    pbody = set<C::Position>(id + "_body:position", Point(x, y), false);
-    set<C::Position>(id + "_head:position", Point(x - hdx_right, y - hdy), false);
-    set<C::Position>(id + "_mouth:position", Point(x - hdx_right - mdx_right,
+    pbody = set<C::Absolute_position>(id + "_body:position", Point(x, y), false);
+    set<C::Absolute_position>(id + "_head:position", Point(x - hdx_right, y - hdy), false);
+    set<C::Absolute_position>(id + "_mouth:position", Point(x - hdx_right - mdx_right,
                                                    y - hdy - mdy), false);
   }
   else
   {
     pbody->absolute() = false;
-    get<C::Position>(id + "_head:position")->absolute() = false;
-    get<C::Position>(id + "_mouth:position")->absolute() = false;
+    get<C::Absolute_position>(id + "_head:position")->absolute() = false;
+    get<C::Absolute_position>(id + "_mouth:position")->absolute() = false;
   }
 
   set<C::Variable>(id + "_walking:position", pbody);
@@ -178,7 +178,7 @@ void File_IO::read_room (const std::string& file_name)
 
   callback->value()();
 
-  set<C::Position>("Background:position", Point(0, 0), false);
+  set<C::Absolute_position>("Background:position", Point(0, 0), false);
   set<C::Ground_map>("Background:ground_map", local_file_name(ground_map),
                                        front_z, back_z, callback->value());
 
@@ -367,7 +367,7 @@ void File_IO::read_animation (const Core::File_IO::Node& node)
     height = node["length"][1].integer();
   }
 
-  auto pos = set<C::Position>(id + ":position", Point(x,y), false);
+  auto pos = set<C::Absolute_position>(id + ":position", Point(x,y), false);
   auto img = set<C::Animation>(id + ":image", local_file_name(skin), z,
                                width, height, node["loop"].boolean());
 
@@ -440,7 +440,7 @@ void File_IO::read_code (const std::string& id)
     img_off->set_relative_origin(0.5, 0.5);
     img_off->on() = false;
 
-    set<C::Position>(id + ":position",
+    set<C::Absolute_position>(id + ":position",
                                        Point(Config::world_width / 2,
                                              Config::world_height / 2));
 
@@ -452,7 +452,7 @@ void File_IO::read_code (const std::string& id)
     img_on->set_relative_origin(0.5, 0.5);
     img_on->on() = false;
 
-    set<C::Position>(id + "_button:position",
+    set<C::Absolute_position>(id + "_button:position",
                                        Point(Config::world_width / 2,
                                              Config::world_height / 2));
 
@@ -596,13 +596,13 @@ void File_IO::read_object (const std::string& id)
   set<C::String>(id + ":name", name);
 
   // Position might already exists if room was already loaded
-  auto pos = request<C::Position>(id + ":position");
+  auto pos = request<C::Absolute_position>(id + ":position");
   if (!pos)
-    pos = set<C::Position>(id + ":position", Point(x,y), false);
+    pos = set<C::Absolute_position>(id + ":position", Point(x,y), false);
   else
     pos->absolute() = false;
 
-  set<C::Position>(id + ":view", Point(vx,vy), false);
+  set<C::Absolute_position>(id + ":view", Point(vx,vy), false);
 
   C::String_conditional_handle conditional_handle;
   for (std::size_t j = 0; j < input["states"].size(); ++ j)
@@ -820,7 +820,7 @@ void File_IO::read_origin(const Core::File_IO::Node& node)
   int y = node["coordinates"][1].integer();
   bool looking_right = node["looking_right"].boolean();
 
-  set<C::Position>(id + ":position", Point(x, y));
+  set<C::Absolute_position>(id + ":position", Point(x, y));
   set<C::Boolean>(id + ":looking_right", looking_right);
 
   auto action = set<C::Action>(id + ":action");
@@ -838,7 +838,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node)
   int y = node["coordinates"][1].integer();
   int z = node["coordinates"][2].integer();
 
-  auto pos = set<C::Position>(id + ":position", Point(x,y), false);
+  auto pos = set<C::Absolute_position>(id + ":position", Point(x,y), false);
 
   if (node.has("states"))
   {
@@ -900,7 +900,7 @@ void File_IO::read_window (const Core::File_IO::Node& node)
   img->set_relative_origin(0.5, 0.5);
   img->on() = false;
 
-  set<C::Position>(id + ":position",
+  set<C::Absolute_position>(id + ":position",
                                      Point(Config::world_width / 2,
                                            Config::world_height / 2));
 }

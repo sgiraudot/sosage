@@ -119,8 +119,9 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
       auto position = get<C::Position>(img->entity() + ":position");
       Point p = position->value();
 
-      if (!position->absolute())
-        p = p + Vector (-xcamera, 0);
+      if (auto absol = C::cast<C::Absolute_position>(position))
+        if (!absol->absolute())
+          p = p + Vector (-xcamera, 0);
 
       int xmin = img->xmin();
       int ymin = img->ymin();

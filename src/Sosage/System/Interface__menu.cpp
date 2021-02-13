@@ -145,7 +145,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
         img->on() = false;
         img->set_scale(0.75);
         img->set_relative_origin(0.5, 0.5);
-        auto pos = set<C::Position>(text->entity() + ":position", Point(0,0));
+        auto pos = set<C::Absolute_position>(text->entity() + ":position", Point(0,0));
         node.init(img, pos);
       }
       else
@@ -174,7 +174,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
           img->on() = false;
           img->set_scale(scale);
           img->set_relative_origin(0.5, 0.5);
-          auto pos = set<C::Position>(text->entity() + "_" + std::to_string(i)
+          auto pos = set<C::Absolute_position>(text->entity() + "_" + std::to_string(i)
                                       + ":position", Point(0, 0));
           node[i].init(img, pos);
         }
@@ -186,7 +186,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
       img->z() = Config::menu_text_depth;
       img->on() = false;
       img->set_relative_origin(0.5, 0.5);
-      auto pos = set<C::Position>(id + ":position", Point(0,0));
+      auto pos = set<C::Absolute_position>(id + ":position", Point(0,0));
       node.init(img, pos);
     }
   }
@@ -204,7 +204,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
       img->on() = false;
       img->set_scale(0.75);
       img->set_relative_origin(0.5, 0.5);
-      pos = set<C::Position>(text->entity() + ":position", Point(0,0));
+      pos = set<C::Absolute_position>(text->entity() + ":position", Point(0,0));
     }
     else
       pos = get<C::Position>(text->entity() + ":position");
@@ -224,14 +224,14 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
   left_arrow->z() = Config::menu_text_depth;
   left_arrow->set_relative_origin(0.5, 0.5);
   left_arrow->set_collision(BOX);
-  auto left_pos = set<C::Position>("Menu_" + effect + "_left_arrow:position", Point(0, 0));
+  auto left_pos = set<C::Absolute_position>("Menu_" + effect + "_left_arrow:position", Point(0, 0));
   node_left.init (left_arrow, left_pos);
   auto right_arrow = set<C::Image>("Menu_" + effect + "_right_arrow:image",
                                   get<C::Image>("Menu_right_arrow:image"));
   right_arrow->z() = Config::menu_text_depth;
   right_arrow->set_relative_origin(0.5, 0.5);
   right_arrow->set_collision(BOX);
-  auto right_pos = set<C::Position>("Menu_" + effect + "_right_arrow:position", Point(0, 0));
+  auto right_pos = set<C::Absolute_position>("Menu_" + effect + "_right_arrow:position", Point(0, 0));
   node_right.init (right_arrow, right_pos);
 
   std::vector<std::string> possible_values;
@@ -250,7 +250,7 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
 
   auto menu_font = get<C::Font>("Interface:font");
 
-  auto pos = set<C::Position>(effect + ":position", Point(0,0));
+  auto pos = set<C::Absolute_position>(effect + ":position", Point(0,0));
   for (std::size_t i = 0; i < possible_values.size(); ++ i)
   {
     std::string id = effect + '_' + possible_values[i];
@@ -296,7 +296,7 @@ void Interface::init_menu_buttons (Component::Menu::Node node)
           img->z() = Config::menu_button_depth;
           img->set_relative_origin(0.5, 0.5);
           img->on() = false;
-          pos = set<C::Position>(img->entity() + ":position", Point(0,0));
+          pos = set<C::Absolute_position>(img->entity() + ":position", Point(0,0));
         }
         else
           pos = get<C::Position>(img->entity() + ":position");
@@ -322,7 +322,7 @@ void Interface::init_menu_buttons (Component::Menu::Node node)
           img->z() = Config::menu_button_depth;
           img->set_relative_origin(0.5, 0.5);
           img->on() = false;
-          pos = set<C::Position>(img->entity() + ":position", Point(0,0));
+          pos = set<C::Absolute_position>(img->entity() + ":position", Point(0,0));
         }
         else
           pos = get<C::Position>(img->entity() + ":position");
@@ -388,9 +388,9 @@ void Interface::update_exit()
 
         int window_width = Config::world_width;
         int window_height = Config::world_height;
-        set<C::Position>("Exit_message:position", Point (window_width - 5,
+        set<C::Absolute_position>("Exit_message:position", Point (window_width - 5,
                                                          window_height - 5));
-        set<C::Position>("Exit_message_back:position", Point (window_width,
+        set<C::Absolute_position>("Exit_message_back:position", Point (window_width,
                                                               window_height));
       }
     }
@@ -489,7 +489,7 @@ create_menu (const std::string& id)
                            color[0], color[1], color[2]);
   img->set_relative_origin (0.5, 0.5);
   img->z() = Config::menu_front_depth;
-  set<C::Position>("Menu_foreground:position",
+  set<C::Absolute_position>("Menu_foreground:position",
                    Point (Config::world_width / 2,
                           Config::world_height / 2));
 
@@ -497,7 +497,7 @@ create_menu (const std::string& id)
 
   img2->set_relative_origin (0.5, 0.5);
   img2->z() = Config::menu_back_depth;
-  set<C::Position>("Menu_background:position",
+  set<C::Absolute_position>("Menu_background:position",
                    Point (Config::world_width / 2,
                           Config::world_height / 2));
 

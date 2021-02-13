@@ -96,7 +96,7 @@ void Interface::run()
 void Interface::init()
 {
   auto pause_screen_pos
-    = set<C::Position>("Pause_screen:position", Point(0, 0));
+    = set<C::Absolute_position>("Pause_screen:position", Point(0, 0));
   set<C::Variable>("Window_overlay:position", pause_screen_pos);
 
   auto blackscreen = set<C::Image>("Blackscreen:image",
@@ -107,7 +107,7 @@ void Interface::init()
   blackscreen->z() = Config::overlay_depth;
   blackscreen->set_collision(UNCLICKABLE);
 
-  set<C::Position>("Blackscreen:position", Point(0,0));
+  set<C::Absolute_position>("Blackscreen:position", Point(0,0));
 
   auto inventory_label = set<C::Image>("Inventory_label:image", get<C::Font>("Interface:font"),
                                        "FFFFFF", get<C::String>("Inventory:label")->value());
@@ -121,13 +121,13 @@ void Interface::init()
   inventory_label_background->z() = Config::interface_depth;
   int label_position
       = Config::world_height - inventory_label_background->height();
-  set<C::Position>("Inventory_label_background:position",
+  set<C::Absolute_position>("Inventory_label_background:position",
                    Point(0, label_position));
 
-  set<C::Position>("Chamfer:position", Point(inventory_label_background->width(),
+  set<C::Absolute_position>("Chamfer:position", Point(inventory_label_background->width(),
                                              label_position));
 
-  set<C::Position>("Inventory_label:position",
+  set<C::Absolute_position>("Inventory_label:position",
                    Point(inventory_label_background->width() / 2,
                          label_position + inventory_label_background->height() / 2));
 
@@ -135,10 +135,10 @@ void Interface::init()
   inventory_background->on() = false;
   inventory_background->z() = Config::interface_depth;
   inventory_background->set_collision(UNCLICKABLE);
-  set<C::Position>("Inventory_background:position", Point(0, Config::world_height - Config::inventory_height));
+  set<C::Absolute_position>("Inventory_background:position", Point(0, Config::world_height - Config::inventory_height));
 
-  set<C::Position>("Left_arrow:position", Point(Config::inventory_margin, Config::world_height - Config::inventory_height / 2));
-  set<C::Position>("Right_arrow:position", Point(Config::world_width - Config::inventory_margin, Config::world_height - Config::inventory_height / 2));
+  set<C::Absolute_position>("Left_arrow:position", Point(Config::inventory_margin, Config::world_height - Config::inventory_height / 2));
+  set<C::Absolute_position>("Right_arrow:position", Point(Config::world_width - Config::inventory_margin, Config::world_height - Config::inventory_height / 2));
 
   init_menus();
 }
@@ -284,7 +284,7 @@ void Interface::update_pause_screen()
                                             C::make_value_condition<Sosage::Status>(status, PAUSED),
                                             pause_text_img);
 
-  set<C::Position>("Pause_text:position", Point(Config::world_width / 2,
+  set<C::Absolute_position>("Pause_text:position", Point(Config::world_width / 2,
                                                 Config::world_height / 2));
 }
 
@@ -335,8 +335,9 @@ void Interface::detect_collision (C::Position_handle cursor)
       auto position = get<C::Position>(img->entity() + ":position");
       Point p = position->value();
 
-      if (!position->absolute())
-        p = p + Vector (-xcamera, 0);
+      if (auto absol = C::cast<C::Absolute_position>(position))
+        if (!absol->absolute())
+          p = p + Vector (-xcamera, 0);
 
       Point screen_position = p - img->core().scaling * Vector(img->origin());
       int xmin = screen_position.X();
@@ -508,25 +509,25 @@ void Interface::update_label (const std::string& id, std::string name,
             << " " << position.x() - Config::label_diff - half_width_minus << std::endl;
   if (open_left)
   {
-    set<C::Position>(id + "_label:position", position + Vector(Config::label_diff + half_width_plus, 0));
-    set<C::Position>(id + "_label_back:position", position + Vector(half_width_plus, 0));
+    set<C::Absolute_position>(id + "_label:position", position + Vector(Config::label_diff + half_width_plus, 0));
+    set<C::Absolute_position>(id + "_label_back:position", position + Vector(half_width_plus, 0));
   }
   else if (open_right)
   {
-    set<C::Position>(id + "_label:position", position + Vector(-Config::label_diff - half_width_minus, 0));
-    set<C::Position>(id + "_label_back:position", position + Vector(-half_width_minus, 0));
+    set<C::Absolute_position>(id + "_label:position", position + Vector(-Config::label_diff - half_width_minus, 0));
+    set<C::Absolute_position>(id + "_label_back:position", position + Vector(-half_width_minus, 0));
   }
   else
   {
-    set<C::Position>(id + "_label:position", position);
-    set<C::Position>(id + "_label_back:position", position);
+    set<C::Absolute_position>(id + "_label:position", position);
+    set<C::Absolute_position>(id + "_label_back:position", position);
   }
 
   if (left)
-    set<C::Position>(id + "_left_circle:position",
+    set<C::Absolute_position>(id + "_left_circle:position",
                      get<C::Position>(id + "_label_back:position")->value() + Vector(-half_width_minus, 0));
   if (right)
-    set<C::Position>(id + "_right_circle:position",
+    set<C::Absolute_position>(id + "_right_circle:position",
                      get<C::Position>(id + "_label_back:position")->value() + Vector(half_width_plus, 0));
 }
 
@@ -674,8 +675,8 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   right->z() = Config::action_button_depth;
   right->set_collision(BOX);
 
-  set<C::Position>(id + "_" + action + "_button_left:position", button_position);
-  set<C::Position>(id + "_" + action + "_button_right:position", button_position);
+  set<C::Absolute_position>(id + "_" + action + "_button_left:position", button_position);
+  set<C::Absolute_position>(id + "_" + action + "_button_right:position", button_position);
 }
 
 void Interface::update_inventory ()
@@ -728,7 +729,7 @@ void Interface::update_inventory ()
       int x = inv_pos->value().X() + int(relative_pos * background->width());
       int y = inv_pos->value().Y() + background->height() / 2;
 
-      set<C::Position>(inventory->get(i) + ":position", Point(x,y));
+      set<C::Absolute_position>(inventory->get(i) + ":position", Point(x,y));
     }
     else
       img->on() = false;
@@ -792,7 +793,7 @@ void Interface::update_dialog_choices()
     auto background = set<C::Image> ("Dialog_choice_background:image",
                                      Config::world_width, bottom - y + 20, 0, 0, 0);
     background->set_relative_origin(0., 1.);
-    set<C::Position>("Dialog_choice_background:position", Point(0,bottom));
+    set<C::Absolute_position>("Dialog_choice_background:position", Point(0,bottom));
   }
 
   int bottom
@@ -807,8 +808,8 @@ void Interface::update_dialog_choices()
     std::string entity = "Dialog_choice_" + std::to_string(c);
     auto img_off = get<C::Image>(entity + "_off:image");
     Point p (10, y);
-    set<C::Position>(entity + "_off:position", p);
-    set<C::Position>(entity + "_on:position", p);
+    set<C::Absolute_position>(entity + "_off:position", p);
+    set<C::Absolute_position>(entity + "_on:position", p);
     y -= img_off->height() * 0.75;
   }
 
