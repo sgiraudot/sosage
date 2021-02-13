@@ -712,7 +712,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
       auto img
         = get<C::Image>(target + ":image");
       img->set_relative_origin(0.5, 0.5);
-      img->z() = Config::inventory_back_depth;
+      img->z() = Config::inventory_depth;
       img->on() = false;
     }
   }
@@ -919,7 +919,7 @@ void Logic::create_dialog (const std::string& character,
                          color,
                          std::string(text.begin() + std::ptrdiff_t(begin),
                                      text.begin() + std::ptrdiff_t(end)), true);
-      img->z() = Config::inventory_over_depth;
+      img->z() = Config::inventory_depth;
       img->set_scale(size_factor);
       img->set_relative_origin(0.5, 0.5);
       dialog.push_back (img);

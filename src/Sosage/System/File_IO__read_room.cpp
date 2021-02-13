@@ -436,7 +436,7 @@ void File_IO::read_code (const std::string& id)
     std::string skin_off = istate["skin"][0].string("images", "windows", "png");
     auto img_off
       = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin_off),
-                                 Config::inventory_back_depth, BOX);
+                                 Config::interface_depth, BOX);
     img_off->set_relative_origin(0.5, 0.5);
     img_off->on() = false;
 
@@ -448,7 +448,7 @@ void File_IO::read_code (const std::string& id)
     auto img_on
       = C::make_handle<C::Cropped>(id + "_button:conditional_image",
                                    local_file_name(skin_on),
-                                   Config::inventory_front_depth);
+                                   Config::inventory_depth);
     img_on->set_relative_origin(0.5, 0.5);
     img_on->on() = false;
 
@@ -896,7 +896,7 @@ void File_IO::read_window (const Core::File_IO::Node& node)
   std::string skin = node["skin"].string("images", "windows", "png");
 
   auto img = set<C::Image>(id + ":image", local_file_name(skin),
-                                             Config::inventory_front_depth);
+                                             Config::interface_depth);
   img->set_relative_origin(0.5, 0.5);
   img->on() = false;
 

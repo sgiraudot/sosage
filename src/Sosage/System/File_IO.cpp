@@ -403,6 +403,17 @@ void File_IO::read_init (const std::string& folder_name)
   set_fac<C::Position> (LOADING_SPIN__POSITION, "Loading_spin:position", Point(Config::world_width / 2,
                                                                                Config::world_height / 2));
 
+  std::string left_arrow = input["inventory_arrows"][0].string("images", "interface", "png");
+  auto left_arrow_img = set<C::Image>("Left_arrow:image", local_file_name(left_arrow));
+  left_arrow_img->on() = false;
+  std::string right_arrow = input["inventory_arrows"][1].string("images", "interface", "png");
+  auto right_arrow_img = set<C::Image>("Left_arrow:image", local_file_name(right_arrow));
+  right_arrow_img->on() = false;
+
+  std::string chamfer = input["inventory_chamfer"].string("images", "interface", "png");
+  auto chamfer_img = set<C::Image>("Chamfer:image", local_file_name(chamfer));
+  chamfer_img->z() = Config::interface_depth;
+
   std::string click_sound = input["click_sound"].string("sounds", "effects", "ogg");
   set<C::Sound>("Click:sound", local_file_name(click_sound));
 
@@ -441,10 +452,12 @@ void File_IO::read_init (const std::string& folder_name)
 
   std::string left_arrow_id = input["menu_arrows"][0].string("images", "interface", "png");
   auto arrow_left = set<C::Image>("Menu_left_arrow:image", local_file_name(left_arrow_id));
+  arrow_left->set_relative_origin(0, 0.5);
   arrow_left->on() = false;
 
   std::string right_arrow_id = input["menu_arrows"][1].string("images", "interface", "png");
   auto arrow_right = set<C::Image>("Menu_right_arrow:image", local_file_name(right_arrow_id));
+  arrow_right->set_relative_origin(1, 0.5);
   arrow_right->on() = false;
 
   for (std::size_t i = 0; i < input["text"].size(); ++ i)

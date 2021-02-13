@@ -70,7 +70,6 @@ private:
                      bool open_right, const Point& position, const Collision_type& collision);
   void generate_action_choice (const std::string& id);
   void generate_action (const std::string& id, const std::string& action, const Config::Orientation& orientation);
-  void update_action ();
   void update_inventory ();
   void update_dialog_choices ();
 

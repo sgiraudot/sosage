@@ -43,6 +43,8 @@ constexpr int world_height = 1080;
 constexpr int world_depth = 3240;
 
 constexpr int inventory_height = 150;
+constexpr int inventory_active_zone = 5;
+constexpr int inventory_margin = 20;
 
 constexpr int label_height = 50;
 constexpr int label_margin = 20;
@@ -93,9 +95,7 @@ enum Orientation
 enum Depth
 {
   interface_depth = 1000000,
-  inventory_back_depth,
-  inventory_front_depth,
-  inventory_over_depth,
+  inventory_depth,
   dialog_depth,
   overlay_depth,
   menu_back_depth,
