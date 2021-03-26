@@ -42,6 +42,8 @@ namespace Sosage::System
 class Interface : public Base
 {
   Component::Image_handle m_collision;
+  std::string m_source;
+  std::string m_target;
   std::vector<std::string> m_action_ids;
   double m_latest_exit;
 
@@ -58,9 +60,11 @@ private:
   void window_clicked();
   void code_clicked (Component::Position_handle cursor);
   void dialog_clicked ();
-  void verb_clicked();
   void arrow_clicked();
   void action_clicked();
+  void object_clicked();
+  void inventory_clicked();
+  void idle_clicked();
 
   void update_pause_screen();
 
@@ -68,8 +72,8 @@ private:
   void clear_action_ids();
   void update_label (const std::string& id, std::string name, bool open_left,
                      bool open_right, const Point& position, const Collision_type& collision);
-  void generate_action_choice (const std::string& id);
-  void generate_action (const std::string& id, const std::string& action, const Config::Orientation& orientation);
+  void generate_action (const std::string& id, const std::string& action,
+                        const Config::Orientation& orientation, Point position = Point());
   void update_inventory ();
   void update_dialog_choices ();
 

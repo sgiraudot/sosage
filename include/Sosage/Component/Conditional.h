@@ -79,6 +79,7 @@ public:
   virtual ~String_conditional();
   virtual std::string str() const;
   void add (const std::string& state, Handle h);
+  void set (const std::string& state, Handle h);
   virtual Handle get() const;
 };
 

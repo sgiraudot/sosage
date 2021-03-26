@@ -74,18 +74,12 @@ void Interface::run()
         dialog_clicked();
       else if (status->value() == ACTION_CHOICE)
         action_clicked();
-      else
-      {
-        // Click on an object
-        if (request<C::String>(m_collision->entity() + ":name"))
-          generate_action_choice (m_collision->entity());
-        else if (m_collision->entity().find("Inventory_arrow") == 0)
-          arrow_clicked();
-        else // Click anywhere else
-        {
-          emit ("Cursor:clicked"); // Logic handles this click
-        }
-      }
+      else if (status->value() == OBJECT_CHOICE)
+        object_clicked();
+      else if (status->value() == IN_INVENTORY)
+        inventory_clicked();
+      else // IDLE
+        idle_clicked();
     }
   }
 
@@ -109,8 +103,11 @@ void Interface::init()
 
   set<C::Absolute_position>("Blackscreen:position", Point(0,0));
 
+  auto inventory_origin = set<C::Absolute_position>("Inventory:origin", Point(0, Config::world_height));
+
   auto inventory_label = set<C::Image>("Inventory_label:image", get<C::Font>("Interface:font"),
                                        "FFFFFF", get<C::String>("Inventory:label")->value());
+  inventory_label->set_collision(UNCLICKABLE);
   inventory_label->z() = Config::inventory_depth;
   inventory_label->set_scale(0.5);
   inventory_label->set_relative_origin (0.5, 0.5);
@@ -118,27 +115,22 @@ void Interface::init()
   auto inventory_label_background = set<C::Image>("Inventory_label_background:image",
                                                   Config::label_margin + inventory_label->width() / 2,
                                                   Config::label_height);
+  inventory_label_background->set_collision(BOX);
   inventory_label_background->z() = Config::interface_depth;
-  int label_position
-      = Config::world_height - inventory_label_background->height();
-  set<C::Absolute_position>("Inventory_label_background:position",
-                   Point(0, label_position));
-
-  set<C::Absolute_position>("Chamfer:position", Point(inventory_label_background->width(),
-                                             label_position));
-
-  set<C::Absolute_position>("Inventory_label:position",
-                   Point(inventory_label_background->width() / 2,
-                         label_position + inventory_label_background->height() / 2));
+  int label_width = inventory_label_background->width();
+  int label_height = inventory_label_background->height();
+  set<C::Relative_position>("Inventory_label_background:position", inventory_origin, Vector(0, -label_height));
+  set<C::Relative_position>("Chamfer:position", inventory_origin, Vector(label_width, -label_height));
+  get<C::Image>("Chamfer:image")->set_collision(BOX);
+  set<C::Relative_position>("Inventory_label:position", inventory_origin, Vector(label_width / 2, - 0.5 * label_height));
 
   auto inventory_background = set<C::Image>("Inventory_background:image", Config::world_width, Config::inventory_height);
-  inventory_background->on() = false;
   inventory_background->z() = Config::interface_depth;
   inventory_background->set_collision(UNCLICKABLE);
-  set<C::Absolute_position>("Inventory_background:position", Point(0, Config::world_height - Config::inventory_height));
+  set<C::Relative_position>("Inventory_background:position", inventory_origin);
 
-  set<C::Absolute_position>("Left_arrow:position", Point(Config::inventory_margin, Config::world_height - Config::inventory_height / 2));
-  set<C::Absolute_position>("Right_arrow:position", Point(Config::world_width - Config::inventory_margin, Config::world_height - Config::inventory_height / 2));
+  set<C::Relative_position>("Left_arrow:position", inventory_origin, Vector(Config::inventory_margin, Config::inventory_height / 2));
+  set<C::Relative_position>("Right_arrow:position", inventory_origin, Vector(Config::world_width - Config::inventory_margin, Config::inventory_height / 2));
 
   init_menus();
 }
@@ -204,14 +196,6 @@ void Interface::dialog_clicked ()
   get<C::Status>(GAME__STATUS)->pop();
 }
 
-void Interface::verb_clicked()
-{
-  get<C::Variable> ("Chosen_verb:text")
-    ->set(get<C::String>(m_collision->entity() + ":text"));
-  emit ("Click:play_sound");
-  remove ("Action:source", true);
-}
-
 void Interface::arrow_clicked()
 {
   if (m_collision->entity().find("_0") != std::string::npos ||
@@ -223,9 +207,11 @@ void Interface::arrow_clicked()
 
 void Interface::action_clicked()
 {
-  get<C::Status>(GAME__STATUS)->pop();
+  auto status = get<C::Status>(GAME__STATUS);
+  status->pop();
 
   const std::string& id = m_collision->entity();
+
   std::size_t pos = id.find("_button_");
   if (pos == std::string::npos)
     pos = id.find("_label");
@@ -242,7 +228,169 @@ void Interface::action_clicked()
   std::string target (object_id.begin(), object_id.begin() + pos);
   std::string action (object_id.begin() + pos + 1, object_id.end());
 
-  set<C::Variable>("Character:action", get<C::Action>(object_id + ":action"));
+  if (action == "inventory")
+  {
+    m_target = target;
+    get<C::Status>(GAME__STATUS)->push(OBJECT_CHOICE);
+  }
+  else if (action == "combine")
+  {
+    m_source = target;
+    get<C::String>("Cursor:state")->set("selected");
+    auto cursor_img = C::make_handle<C::Image>("Cursor:image", get<C::Image>(target + ":image"));
+    cursor_img->set_scale(0.5);
+    cursor_img->set_collision(UNCLICKABLE);
+    cursor_img->z() = Config::cursor_depth;
+    get<C::String_conditional>("Cursor:image")->set("selected", cursor_img);
+  }
+  else
+    set<C::Variable>("Character:action", get<C::Action>(object_id + ":action"));
+
+  emit ("Click:play_sound");
+}
+
+void Interface::object_clicked()
+{
+  // Click happen while OBJECT_CHOIE
+  std::string id = m_collision->entity();
+
+  // If object is clicked
+  if (request<C::String>(id + ":name"))
+  {
+    // and object is indeed inventory object!
+    auto state = request<C::String>(m_collision->entity() + ":state");
+    if (state && state->value() == "inventory")
+    {
+      std::string action_id = m_target + "_inventory_" + id;
+      std::cerr << action_id << std::endl;
+      if (auto action = request<C::Action>(action_id + ":action"))
+        set<C::Variable>("Character:action", action);
+      else
+        set<C::Variable>("Character:action", get<C::Action>("Default_inventory:action"));
+      m_target = "";
+      action_clicked();
+    }
+    else
+    {
+      get<C::Status>(GAME__STATUS)->pop();
+      m_target = "";
+    }
+  }
+  else if (m_collision->entity().find("Inventory_arrow") == 0)
+    arrow_clicked();
+  else
+  {
+    get<C::Status>(GAME__STATUS)->pop();
+    m_target = "";
+  }
+}
+
+void Interface::inventory_clicked()
+{
+  // Click happen while IN_INVENTORY
+  std::string id = m_collision->entity();
+
+  // If object is clicked
+  if (request<C::String>(id + ":name"))
+  {
+    if (m_source != "") // Source exists, search for action ID/source
+    {
+      std::string action_id = id + "_inventory_" + m_source;
+      std::cerr << action_id << std::endl;
+      if (auto action = request<C::Action>(action_id + ":action"))
+        set<C::Variable>("Character:action", action);
+      else
+        set<C::Variable>("Character:action", get<C::Action>("Default_inventory:action"));
+      m_source = "";
+      get<C::String>("Cursor:state")->set("default");
+    }
+    else // No target, no source, create actions for inventory object
+    {
+      clear_action_ids();
+      const Point& object_pos = get<C::Position>(id + ":position")->value();
+      Point position (object_pos.x(),
+                      get<C::Position>("Inventory:origin")->value().y() - 0.75 * Config::label_height);
+
+      generate_action (id, "combine", Config::WEST, position);
+      double diff = get<C::Position>(id + "_combine_left_circle:position")->value().x()
+                    - (get<C::Position>("Chamfer:position")->value().x() + Config::label_height);
+      if (diff < 0)
+      {
+        position = Point (position.x() - diff, position.y());
+        generate_action (id, "combine", Config::WEST, position);
+      }
+      generate_action (id, "use", Config::NORTH, position);
+      generate_action (id, "look", Config::EAST, position);
+      get<C::Status>(GAME__STATUS)->push(ACTION_CHOICE);
+      emit ("Click:play_sound");
+    }
+  }
+  else if (m_collision->entity().find("Inventory_arrow") == 0)
+    arrow_clicked();
+}
+
+void Interface::idle_clicked()
+{
+  std::string id = m_collision->entity();
+
+  // Click on an object
+  if (request<C::String>(id + ":name"))
+  {
+    // No source exists
+    if (m_source == "")
+    {
+      clear_action_ids();
+      generate_action (id, "secondary", Config::WEST);
+      if (get<C::Position>(id + "_secondary_left_circle:position")->value().x() < Config::label_height)
+      {
+        generate_action (id, "primary", Config::NORTHER);
+        generate_action (id, "secondary", Config::NORTH_EAST);
+        generate_action (id, "look", Config::SOUTH_EAST);
+        generate_action (id, "inventory", Config::SOUTHER);
+      }
+      else
+      {
+        generate_action (id, "look", Config::EAST);
+        if (get<C::Position>(id + "_secondary_right_circle:position")->value().x()
+            > Config::world_width - Config::label_height)
+        {
+          generate_action (id, "primary", Config::NORTHER);
+          generate_action (id, "secondary", Config::NORTH_WEST);
+          generate_action (id, "look", Config::SOUTH_WEST);
+          generate_action (id, "inventory", Config::SOUTHER);
+
+        }
+        else
+        {
+          generate_action (id, "primary", Config::NORTH);
+          generate_action (id, "inventory", Config::SOUTH);
+        }
+      }
+      get<C::Status>(GAME__STATUS)->push(ACTION_CHOICE);
+      emit ("Click:play_sound");
+    }
+    else // Source exist, search for action ID/source
+    {
+      std::string action_id = id + "_inventory_" + m_source;
+      std::cerr << action_id << std::endl;
+      if (auto action = request<C::Action>(action_id + ":action"))
+        set<C::Variable>("Character:action", action);
+      else
+        set<C::Variable>("Character:action", get<C::Action>("Default_inventory:action"));
+      m_source = "";
+      get<C::String>("Cursor:state")->set("default");
+    }
+  }
+  else // Click anywhere else
+  {
+    if (m_source == "") // No source
+      emit ("Cursor:clicked"); // Logic handles this click
+    else // If source, cancel it
+    {
+      m_source = "";
+      get<C::String>("Cursor:state")->set("default");
+    }
+  }
 }
 
 void Interface::update_pause_screen()
@@ -297,24 +445,12 @@ void Interface::detect_collision (C::Position_handle cursor)
     {
       if (auto img = request<C::Image>(m_collision->entity() + ":image"))
         img->set_highlight(0);
-      get<C::String>("Cursor:state")->set("default");
+      if (m_source == "") // Keep source cursor if it exists
+        get<C::String>("Cursor:state")->set("default");
     }
   }
 
   auto status = get<C::Status>(GAME__STATUS);
-
-  if (status->value() == IDLE
-      && cursor->value().y() > Config::world_height - Config::inventory_active_zone)
-  {
-    status->push (INVENTORY_CHOICE);
-    return;
-  }
-  if (status->value() == INVENTORY_CHOICE
-      && cursor->value().y() < Config::world_height - Config::inventory_height)
-  {
-    status->pop();
-    return;
-  }
 
   auto previous_collision = m_collision;
   m_collision = C::Image_handle();
@@ -373,21 +509,35 @@ void Interface::detect_collision (C::Position_handle cursor)
 
     }
 
-  if (status->value() == IDLE &&
-      (m_collision->id() == "Chamfer:image" ||
-       m_collision->id() == "Inventory_label_background:image"))
+  if (status->value() == IDLE
+      && cursor->value().y() > Config::world_height - Config::inventory_active_zone)
   {
-    status->push(INVENTORY_CHOICE);
+    status->push (IN_INVENTORY);
     return;
   }
 
-  if (status->value() != IDLE && status->value() != ACTION_CHOICE)
+  if (status->value() == IN_INVENTORY
+      && cursor->value().y() < Config::world_height - Config::inventory_height
+      && m_collision->id() != "Chamfer:image"
+      && m_collision->id() != "Inventory_label_background:image")
+  {
+    status->pop();
     return;
-  bool object_mode = (status->value() == ACTION_CHOICE);
+  }
+
+  if (status->value() == IDLE && m_collision &&
+      (m_collision->id() == "Chamfer:image" ||
+       m_collision->id() == "Inventory_label_background:image"))
+  {
+    status->push(IN_INVENTORY);
+    return;
+  }
+
+
   if (previous_collision && (previous_collision != m_collision))
   {
     const std::string& id = previous_collision->entity();
-    if (object_mode)
+    if (status->value() == ACTION_CHOICE)
     {
       std::size_t pos = id.find("_button_");
       if (pos == std::string::npos)
@@ -397,8 +547,6 @@ void Interface::detect_collision (C::Position_handle cursor)
         std::string object_id (id.begin(), id.begin() + pos);
         get<C::Image>(object_id + "_button_left:image")->set_highlight(0);
         get<C::Image>(object_id + "_button_right:image")->set_highlight(0);
-        get<C::Image>(object_id + "_button_left:image")->set_alpha(255);
-        get<C::Image>(object_id + "_button_right:image")->set_alpha(255);
       }
     }
     else
@@ -410,7 +558,7 @@ void Interface::detect_collision (C::Position_handle cursor)
   if (m_collision)
   {
     const std::string& id = m_collision->entity();
-    if (object_mode)
+    if (status->value() == ACTION_CHOICE)
     {
       std::size_t pos = id.find("_button_");
       if (pos == std::string::npos)
@@ -420,16 +568,22 @@ void Interface::detect_collision (C::Position_handle cursor)
         std::string object_id (id.begin(), id.begin() + pos);
         get<C::Image>(object_id + "_button_left:image")->set_highlight(255);
         get<C::Image>(object_id + "_button_right:image")->set_highlight(255);
-        get<C::Image>(object_id + "_button_left:image")->set_alpha(192);
-        get<C::Image>(object_id + "_button_right:image")->set_alpha(192);
       }
     }
-    else
+
+    bool display_label = status->value() == IDLE;
+    if (status->value() == OBJECT_CHOICE || status->value() == IN_INVENTORY)
+      if (auto state = request<C::String>(id + ":state"))
+        if (state->value() == "inventory")
+          display_label = true;
+
+    if (display_label)
     {
       if (auto name = request<C::String>(id + ":name"))
       {
         get<C::Image>(m_collision->entity() + ":image")->set_highlight(128);
-        get<C::String>("Cursor:state")->set("object");
+        if (m_source == "")
+          get<C::String>("Cursor:state")->set("object");
 
         update_label(id, name->value(), true, false, cursor->value(), UNCLICKABLE);
         if (get<C::Position>(id + "_right_circle:position")->value().x() >
@@ -505,8 +659,6 @@ void Interface::update_label (const std::string& id, std::string name,
   int half_width_minus = back->width() / 2;
   int half_width_plus = back->width() - half_width_minus;
 
-  std::cerr << id << ": " << back->width() << " -> " << position.x() + Config::label_diff + half_width_plus
-            << " " << position.x() - Config::label_diff - half_width_minus << std::endl;
   if (open_left)
   {
     set<C::Absolute_position>(id + "_label:position", position + Vector(Config::label_diff + half_width_plus, 0));
@@ -531,47 +683,14 @@ void Interface::update_label (const std::string& id, std::string name,
                      get<C::Position>(id + "_label_back:position")->value() + Vector(half_width_plus, 0));
 }
 
-void Interface::generate_action_choice (const std::string& id)
-{
-  clear_action_ids();
-
-  generate_action (id, "secondary", Config::WEST);
-  if (get<C::Position>(id + "_secondary_left_circle:position")->value().x() < Config::label_height)
-  {
-    generate_action (id, "primary", Config::NORTHER);
-    generate_action (id, "secondary", Config::NORTH_EAST);
-    generate_action (id, "look", Config::SOUTH_EAST);
-    generate_action (id, "inventory", Config::SOUTHER);
-  }
-  else
-  {
-    generate_action (id, "look", Config::EAST);
-    if (get<C::Position>(id + "_secondary_right_circle:position")->value().x()
-        > Config::world_width - Config::label_height)
-    {
-      generate_action (id, "primary", Config::NORTHER);
-      generate_action (id, "secondary", Config::NORTH_WEST);
-      generate_action (id, "look", Config::SOUTH_WEST);
-      generate_action (id, "inventory", Config::SOUTHER);
-
-    }
-    else
-    {
-      generate_action (id, "primary", Config::NORTH);
-      generate_action (id, "inventory", Config::SOUTH);
-
-    }
-  }
-
-  get<C::Status>(GAME__STATUS)->push(ACTION_CHOICE);
-}
-
 void Interface::generate_action (const std::string& id, const std::string& action,
-                                 const Config::Orientation& orientation)
+                                 const Config::Orientation& orientation,
+                                 Point position)
 {
   auto label = get<C::String>(id + "_" + action + ":label");
   bool open_left = false, open_right = false;
-  const Point& position = get<C::Position>(CURSOR__POSITION)->value();;
+  if (position == Point())
+    position = get<C::Position>(CURSOR__POSITION)->value();
   Point label_position;
   Point button_position;
 
@@ -684,23 +803,17 @@ void Interface::update_inventory ()
   Status status = get<C::Status>(GAME__STATUS)->value();
   //get<C::Image> ("Window_overlay:image")->on() = (status == IN_WINDOW);
 
-  bool images_on = false;
+  auto inventory_origin = get<C::Absolute_position>("Inventory:origin");
   int inventory_y = Config::world_height;
   if (status == IDLE)
-    images_on = false; // TO change
-  if (status == INVENTORY_CHOICE)
-  {
-    images_on = true;
-    inventory_y = Config::world_height - Config::inventory_height;
-  }
-
-  auto background = get<C::Image>("Inventory_background:image");
-  background->on() = images_on;
-  return;
+    inventory_origin->set (Point (0, Config::world_height));
+  if (status == IN_INVENTORY || status == OBJECT_CHOICE)
+    inventory_origin->set (Point (0, Config::world_height - Config::inventory_height));
 
   auto inventory = get<C::Inventory>("Game:inventory");
 
-  auto inv_pos = get<C::Position>("Interface_inventory:position");
+  constexpr int inventory_margin = 100;
+  constexpr int inventory_width = Config::world_width - inventory_margin * 2;
 
   std::size_t position = inventory->position();
   for (std::size_t i = 0; i < inventory->size(); ++ i)
@@ -718,34 +831,22 @@ void Interface::update_inventory ()
     {
       std::size_t pos = i - position;
       double relative_pos = (1 + pos) / double(Config::displayed_inventory_size + 1);
-      img->on() = images_on;
+      img->on() = true;
+      img->set_scale (0.8);
 
-      int height = img->height();
-      int inv_height = background->height();
-      int target_height = int(0.8 * inv_height);
+      int x = inventory_margin + int(relative_pos * inventory_width);
+      int y = Config::inventory_height / 2;
 
-      img->set_scale (factor * target_height / double(height));
-
-      int x = inv_pos->value().X() + int(relative_pos * background->width());
-      int y = inv_pos->value().Y() + background->height() / 2;
-
-      set<C::Absolute_position>(inventory->get(i) + ":position", Point(x,y));
+      set<C::Relative_position>(inventory->get(i) + ":position", inventory_origin, Vector(x,y));
     }
     else
       img->on() = false;
   }
 
-  bool left_on = images_on && (inventory->position() > 0);
-  bool right_on = images_on && (inventory->size() - inventory->position() > Config::displayed_inventory_size);
 
-  get<C::Image> ("Inventory_arrow_0:image")->on() = false;
-  get<C::Image> ("Inventory_arrow_background_0:image")->on() = false;
-  get<C::Image> ("Inventory_arrow_1:image")->on() = left_on;
-  get<C::Image> ("Inventory_arrow_background_1:image")->on() = left_on;
-  get<C::Image> ("Inventory_arrow_2:image")->on() = false;
-  get<C::Image> ("Inventory_arrow_background_2:image")->on() = false;
-  get<C::Image> ("Inventory_arrow_3:image")->on() = right_on;
-  get<C::Image> ("Inventory_arrow_background_3:image")->on() = right_on;
+  get<C::Image>("Left_arrow:image")->on() = (inventory->position() > 0);
+  get<C::Image>("Right_arrow:image")->on() = (inventory->size() - inventory->position()
+                                              > Config::displayed_inventory_size);
 }
 
 void Interface::update_dialog_choices()

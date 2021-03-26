@@ -702,7 +702,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
     if (current_state->value() == "inventory")
     {
       get<C::Inventory>("Game:inventory")->remove(target);
-      get<C::Absolute_position>(target + ":position")->absolute() = false;
+     //get<C::Absolute_position>(target + ":position")->absolute() = false;
     }
 
     current_state->set (state);

@@ -82,6 +82,13 @@ void String_conditional::add (const std::string& state, Handle h)
   m_handles.insert (std::make_pair (state, h));
 }
   
+void String_conditional::set (const std::string& state, Handle h)
+{
+  auto iter = m_handles.find(state);
+  dbg_check(iter != m_handles.end(), "State " + state + " not found in string conditional " + id());
+  iter->second = h;
+}
+
 Handle String_conditional::get() const
 {
   auto iter

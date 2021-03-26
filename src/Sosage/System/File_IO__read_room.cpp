@@ -680,12 +680,17 @@ void File_IO::read_object (const std::string& id)
     if (input.has(action))
     {
       if (action == "inventory")
+      {
         for (std::size_t i = 0; i < input["inventory"].size(); ++ i)
         {
           auto act = read_object_action(id, action, input["inventory"][i]);
           set(act.first);
           set(act.second);
+          std::cerr << "Set inventory " << act.first->id() << std::endl;
         }
+        set<C::Variable>(id + "_" + action + ":label",
+                         get<C::String>("Default_" + action + ":label"));
+      }
       else
       {
         auto act = read_object_action(id, action, input[action]);
@@ -766,15 +771,13 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
 {
   if (node.size() != 0)
   {
-    auto state_handle = get_or_set<C::String>(id + ":state");
+    auto state_handle = get<C::String>(id + ":state");
     auto label = set<C::String_conditional>(id + "_" + action + ":label", state_handle);
     auto act = set<C::String_conditional>(id + "_" + action + ":action", state_handle);
 
     for (std::size_t i = 0; i < node.size(); ++ i)
     {
       std::string state = node[i]["state"].string();
-      std::cerr << id << " with state " << state << " -> " << action << std::endl;
-
       auto labelact = read_object_action(id, action, node[i]);
       label->add (state, labelact.first);
       act->add (state, labelact.second);
@@ -790,7 +793,7 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
     full_action = action + "_" + node["object"].string();
 
   if (node.has("label"))
-    out.first = C::make_handle<C::String>(id + "_" + full_action + ":label", node["label"].string());
+    out.first = C::make_handle<C::String>(id + "_" + action + ":label", node["label"].string());
   else
     out.first = C::make_handle<C::Variable>(id + "_" + action + ":label",
                                  get<C::String>("Default_" + action + ":label"));
@@ -805,8 +808,21 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
     out.second = act;
   }
   else
-    out.second = C::make_handle<C::Variable>(id + "_" + action + ":action",
+    out.second = C::make_handle<C::Variable>(id + "_" + full_action + ":action",
                                              get<C::Action>("Default_" + action + ":action"));
+
+  if (node.has("state"))
+  {
+    auto state_handle = get<C::String>(id + ":state");
+    auto label = get_or_set<C::String_conditional>(id + "_" + action + ":label", state_handle);
+    auto act = get_or_set<C::String_conditional>(id + "_" + full_action + ":action", state_handle);
+    std::string state = node["state"].string();
+
+    label->add (state, out.first);
+    act->add (state, out.second);
+    out.first = label;
+    out.second = act;
+  }
 
   return out;
 }

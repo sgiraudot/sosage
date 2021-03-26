@@ -368,6 +368,7 @@ void File_IO::read_init (const std::string& folder_name)
   auto cursor_img = C::make_handle<C::String_conditional>("Cursor:image", cursor_state);
   cursor_img->add("default", cursor_default);
   cursor_img->add("object", cursor_object);
+  cursor_img->add("selected", C::Handle());
 
   auto status = get<C::Status>(GAME__STATUS);
 
@@ -375,7 +376,7 @@ void File_IO::read_init (const std::string& folder_name)
   {
     // Cursor displayed = NOT paused AND virtual
     set<C::Conditional>
-        ("Cursor:conditional",
+        ("Cursor:image",
          C::make_and
          (get<C::Condition>("Unlocked:condition"),
           get<C::Boolean>("Interface:virtual_cursor")),
@@ -385,7 +386,8 @@ void File_IO::read_init (const std::string& folder_name)
   {
     // Cursor displayed = NOT paused
     set<C::Conditional>
-        ("Cursor:conditional",
+        ("Cursor:image"
+         "",
          get<C::Condition>("Unlocked:condition"),
          cursor_img);
   }
@@ -406,10 +408,12 @@ void File_IO::read_init (const std::string& folder_name)
 
   std::string left_arrow = input["inventory_arrows"][0].string("images", "interface", "png");
   auto left_arrow_img = set<C::Image>("Left_arrow:image", local_file_name(left_arrow));
-  left_arrow_img->on() = false;
+  left_arrow_img->z() = Config::inventory_depth;
+  left_arrow_img->set_relative_origin (0, 0.5);
   std::string right_arrow = input["inventory_arrows"][1].string("images", "interface", "png");
-  auto right_arrow_img = set<C::Image>("Left_arrow:image", local_file_name(right_arrow));
-  right_arrow_img->on() = false;
+  auto right_arrow_img = set<C::Image>("Right_arrow:image", local_file_name(right_arrow));
+  right_arrow_img->z() = Config::inventory_depth;
+  right_arrow_img->set_relative_origin (1, 0.5);
 
   std::string chamfer = input["inventory_chamfer"].string("images", "interface", "png");
   auto chamfer_img = set<C::Image>("Chamfer:image", local_file_name(chamfer));
