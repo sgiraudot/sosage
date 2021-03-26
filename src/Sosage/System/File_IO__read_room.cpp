@@ -234,6 +234,18 @@ void File_IO::read_room (const std::string& file_name)
       read_code (input["codes"][i].string());
       callback->value()();
     }
+  if (input.has("dialogs"))
+    for (std::size_t i = 0; i < input["dialogs"].size(); ++ i)
+    {
+      read_dialog (input["dialogs"][i].string());
+      callback->value()();
+    }
+  if (input.has("integers"))
+    for (std::size_t i = 0; i < input["integers"].size(); ++ i)
+    {
+      read_integer (input["integers"][i]);
+      callback->value()();
+    }
   if (input.has("objects"))
     for (std::size_t i = 0; i < input["objects"].size(); ++ i)
     {
@@ -350,6 +362,7 @@ void File_IO::read_room (const std::string& file_name)
 void File_IO::read_animation (const Core::File_IO::Node& node)
 {
   std::string id = node["id"].string();
+  m_latest_room_entities.insert(id);
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
   int z = node["coordinates"][2].integer();
@@ -394,6 +407,7 @@ void File_IO::read_animation (const Core::File_IO::Node& node)
 
 void File_IO::read_code (const std::string& id)
 {
+  m_latest_room_entities.insert(id);
   std::string file_name = assemble_path("data", "codes", id, "yaml");
   Core::File_IO input (local_file_name(file_name));
   input.parse();
@@ -487,6 +501,7 @@ void File_IO::read_code (const std::string& id)
 
 void File_IO::read_dialog (const std::string& id)
 {
+  m_latest_room_entities.insert(id);
   std::string file_name = assemble_path("data", "dialogs", id, "yaml");
   Core::File_IO input (local_file_name(file_name));
   input.parse();
@@ -555,6 +570,8 @@ void File_IO::read_dialog (const std::string& id)
 void File_IO::read_integer (const Core::File_IO::Node& node)
 {
   std::string id = node["id"].string();
+  m_latest_room_entities.insert(id);
+
   int value = node["value"].integer();
   auto integer = request<C::Int>(id + ":value");
   if (!integer)
@@ -578,6 +595,8 @@ void File_IO::read_integer (const Core::File_IO::Node& node)
 
 void File_IO::read_object (const std::string& id)
 {
+  m_latest_room_entities.insert(id);
+
   std::string file_name = assemble_path("data", "objects", id, "yaml");
   Core::File_IO input (local_file_name(file_name));
   input.parse();
@@ -700,6 +719,8 @@ void File_IO::read_object (const std::string& id)
 void File_IO::read_action (const Core::File_IO::Node& node)
 {
   std::string id = node["id"].string();
+  m_latest_room_entities.insert(id);
+
   auto state_handle = get_or_set<C::String>(id + ":state");
   auto conditional_handle = set<C::String_conditional>(id + ":action", state_handle);
 
@@ -725,8 +746,11 @@ void File_IO::read_action (const Core::File_IO::Node& node)
 void File_IO::read_music(const Core::File_IO::Node& node)
 {
   std::string id = node["id"].string();
-  if (auto state_handle = request<C::String>(id + ":state"))
+  m_latest_room_entities.insert(id);
+
+  if (node.has("states"))
   {
+    auto state_handle = set<C::String>(id + ":state");
     C::String_conditional_handle conditional_handle;
     for (std::size_t j = 0; j < node["states"].size(); ++ j)
     {
@@ -817,6 +841,8 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
 void File_IO::read_origin(const Core::File_IO::Node& node)
 {
   std::string id = node["id"].string();
+  m_latest_room_entities.insert(id);
+
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
   bool looking_right = node["looking_right"].boolean();
@@ -835,6 +861,8 @@ void File_IO::read_origin(const Core::File_IO::Node& node)
 void File_IO::read_scenery (const Core::File_IO::Node& node)
 {
   std::string id = node["id"].string();
+  m_latest_room_entities.insert(id);
+
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
   int z = node["coordinates"][2].integer();
@@ -887,6 +915,8 @@ void File_IO::read_scenery (const Core::File_IO::Node& node)
 void File_IO::read_sound (const Core::File_IO::Node& node)
 {
   std::string id = node["id"].string();
+  m_latest_room_entities.insert(id);
+
   std::string sound = node["sound"].string("sounds", "effects", "ogg");
   set<C::Sound>(id + ":sound", local_file_name(sound));
 }
@@ -894,6 +924,8 @@ void File_IO::read_sound (const Core::File_IO::Node& node)
 void File_IO::read_window (const Core::File_IO::Node& node)
 {
   std::string id = node["id"].string();
+  m_latest_room_entities.insert(id);
+
   std::string skin = node["skin"].string("images", "windows", "png");
 
   auto img = set<C::Image>(id + ":image", local_file_name(skin),
