@@ -68,6 +68,8 @@ private:
 
   void update_pause_screen();
 
+  void set_action (const std::string& id, const std::string& default_id);
+
   void detect_collision (Component::Position_handle cursor);
   void clear_action_ids();
   void update_label (const std::string& id, std::string name, bool open_left,

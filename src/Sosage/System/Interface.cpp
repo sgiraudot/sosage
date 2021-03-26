@@ -237,15 +237,18 @@ void Interface::action_clicked()
   {
     m_source = target;
     get<C::String>("Cursor:state")->set("selected");
-    auto cursor_img = C::make_handle<C::Image>("Cursor:image", get<C::Image>(target + ":image"));
-    cursor_img->set_scale(0.5);
+
+    auto cursor_img = C::make_handle<C::Image>("Selected_object:image", get<C::Image>(target + ":image"));
+    cursor_img->set_scale(0.28);
     cursor_img->set_collision(UNCLICKABLE);
-    cursor_img->z() = Config::cursor_depth;
-    get<C::String_conditional>("Cursor:image")->set("selected", cursor_img);
+    cursor_img->z() = Config::cursor_depth+1;
+
+    auto cursor_cond = set<C::String_conditional>("Selected_object:image", get<C::String>("Cursor:state"));
+    cursor_cond->add("selected", cursor_img);
+    set<C::Variable>("Selected_object:position", get<C::Position>(CURSOR__POSITION));
   }
   else
-    set<C::Variable>("Character:action", get<C::Action>(object_id + ":action"));
-
+    set_action (object_id, "Default_" + action);
   emit ("Click:play_sound");
 }
 
@@ -263,10 +266,7 @@ void Interface::object_clicked()
     {
       std::string action_id = m_target + "_inventory_" + id;
       std::cerr << action_id << std::endl;
-      if (auto action = request<C::Action>(action_id + ":action"))
-        set<C::Variable>("Character:action", action);
-      else
-        set<C::Variable>("Character:action", get<C::Action>("Default_inventory:action"));
+      set_action (action_id, "Default_inventory");
       m_target = "";
       action_clicked();
     }
@@ -297,10 +297,7 @@ void Interface::inventory_clicked()
     {
       std::string action_id = id + "_inventory_" + m_source;
       std::cerr << action_id << std::endl;
-      if (auto action = request<C::Action>(action_id + ":action"))
-        set<C::Variable>("Character:action", action);
-      else
-        set<C::Variable>("Character:action", get<C::Action>("Default_inventory:action"));
+      set_action (action_id, "Default_inventory");
       m_source = "";
       get<C::String>("Cursor:state")->set("default");
     }
@@ -391,6 +388,14 @@ void Interface::idle_clicked()
       get<C::String>("Cursor:state")->set("default");
     }
   }
+}
+
+void Interface::set_action (const std::string& id, const std::string& default_id)
+{
+  if (auto action = request<C::Action>(id + ":action"))
+    set<C::Variable>("Character:action", action);
+  else
+    set<C::Variable>("Character:action", get<C::Action>(default_id + ":action"));
 }
 
 void Interface::update_pause_screen()
@@ -643,8 +648,12 @@ void Interface::update_label (const std::string& id, std::string name,
     right->z() = Config::label_depth - 1;
     right->set_collision(collision);
 
+    int margin = Config::label_margin;
+    if (m_source != "")
+      margin *= 2;
+
     back = set<C::Image>(id + "_label_back:image",
-                         Config::label_margin + label->width() / 2,
+                         margin + label->width() / 2,
                          Config::label_height);
     m_action_ids.push_back (back->id());
     back->set_relative_origin(0.5, 0.5);
@@ -687,7 +696,10 @@ void Interface::generate_action (const std::string& id, const std::string& actio
                                  const Config::Orientation& orientation,
                                  Point position)
 {
-  auto label = get<C::String>(id + "_" + action + ":label");
+  auto label = request<C::String>(id + "_" + action + ":label");
+  if (!label)
+    label = get<C::String>("Default_" + action + ":label");
+
   bool open_left = false, open_right = false;
   if (position == Point())
     position = get<C::Position>(CURSOR__POSITION)->value();

@@ -368,7 +368,6 @@ void File_IO::read_init (const std::string& folder_name)
   auto cursor_img = C::make_handle<C::String_conditional>("Cursor:image", cursor_state);
   cursor_img->add("default", cursor_default);
   cursor_img->add("object", cursor_object);
-  cursor_img->add("selected", C::Handle());
 
   auto status = get<C::Status>(GAME__STATUS);
 
@@ -428,6 +427,13 @@ void File_IO::read_init (const std::string& folder_name)
   std::string right_circle = input["circle"][1].string("images", "interface", "png");
   auto right_circle_img = set<C::Image>("Right_circle:image", local_file_name(right_circle), 1, BOX);
   right_circle_img->on() = false;
+  std::string big_circle = input["circle"][2].string("images", "interface", "png");
+  auto big_circle_img = C::make_handle<C::Image>("Cursor:image", local_file_name(big_circle),
+                                                 Config::cursor_depth);
+  big_circle_img->set_relative_origin(0.5, 0.5);
+
+  cursor_img->add("selected", big_circle_img);
+
 
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
   set<C::Font> ("Debug:font", local_file_name(debug_font), 40);

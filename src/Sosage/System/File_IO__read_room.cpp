@@ -684,26 +684,16 @@ void File_IO::read_object (const std::string& id)
         for (std::size_t i = 0; i < input["inventory"].size(); ++ i)
         {
           auto act = read_object_action(id, action, input["inventory"][i]);
-          set(act.first);
-          set(act.second);
-          std::cerr << "Set inventory " << act.first->id() << std::endl;
+          if (act.first) set(act.first);
+          if (act.second) set(act.second);
         }
-        set<C::Variable>(id + "_" + action + ":label",
-                         get<C::String>("Default_" + action + ":label"));
       }
       else
       {
         auto act = read_object_action(id, action, input[action]);
-        set(act.first);
-        set(act.second);
+        if (act.first) set(act.first);
+        if (act.second) set(act.second);
       }
-    }
-    else
-    {
-      set<C::Variable>(id + "_" + action + ":label",
-                       get<C::String>("Default_" + action + ":label"));
-      set<C::Variable>(id + "_" + action + ":action",
-                       get<C::Action>("Default_" + action + ":action"));
     }
 }
 
@@ -794,9 +784,7 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
 
   if (node.has("label"))
     out.first = C::make_handle<C::String>(id + "_" + action + ":label", node["label"].string());
-  else
-    out.first = C::make_handle<C::Variable>(id + "_" + action + ":label",
-                                 get<C::String>("Default_" + action + ":label"));
+
   if (node.has("effect"))
   {
     auto act = C::make_handle<C::Action>(id + "_" + full_action + ":action");
@@ -807,9 +795,6 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
     }
     out.second = act;
   }
-  else
-    out.second = C::make_handle<C::Variable>(id + "_" + full_action + ":action",
-                                             get<C::Action>("Default_" + action + ":action"));
 
   if (node.has("state"))
   {
