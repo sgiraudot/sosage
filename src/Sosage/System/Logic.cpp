@@ -295,7 +295,8 @@ void Logic::run_cutscene()
 
       img->on() = true;
       img->z() = z;
-      img->set_scale(zoom);
+      if (el.id.find("text") != 0)
+        img->set_scale(zoom);
       set<C::Absolute_position>(img->entity() + ":position", Point(x,y));
 
     }

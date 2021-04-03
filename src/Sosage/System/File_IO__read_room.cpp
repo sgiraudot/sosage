@@ -402,6 +402,7 @@ void File_IO::read_animation (const Core::File_IO::Node& node)
 
   img->on() = false;
   img->set_relative_origin(0.5, 1.0);
+  img->set_collision(UNCLICKABLE);
   debug("Animation ", id, " at position ", img->z());
 }
 

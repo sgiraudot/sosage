@@ -57,7 +57,7 @@ void Interface::run()
   if (status->value() == PAUSED)
     return;
 
-  if (status->value() != CUTSCENE)
+  if (status->value() != CUTSCENE && status->value() != LOCKED)
   {
     auto cursor = get<C::Position>(CURSOR__POSITION);
     detect_collision (cursor);
@@ -72,7 +72,7 @@ void Interface::run()
         menu_clicked();
       else if (status->value() == DIALOG_CHOICE)
         dialog_clicked();
-      else if (status->value() == ACTION_CHOICE)
+      else if (status->value() == ACTION_CHOICE || status->value() == INVENTORY_ACTION_CHOICE)
         action_clicked();
       else if (status->value() == OBJECT_CHOICE)
         object_clicked();
@@ -82,6 +82,8 @@ void Interface::run()
         idle_clicked();
     }
   }
+  else
+    clear_action_ids();
 
   update_inventory();
   update_dialog_choices();
@@ -318,7 +320,8 @@ void Interface::inventory_clicked()
       }
       generate_action (id, "use", Config::NORTH, position);
       generate_action (id, "look", Config::EAST, position);
-      get<C::Status>(GAME__STATUS)->push(ACTION_CHOICE);
+      get<C::Status>(GAME__STATUS)->pop();
+      get<C::Status>(GAME__STATUS)->push(INVENTORY_ACTION_CHOICE);
       emit ("Click:play_sound");
     }
   }
@@ -542,7 +545,7 @@ void Interface::detect_collision (C::Position_handle cursor)
   if (previous_collision && (previous_collision != m_collision))
   {
     const std::string& id = previous_collision->entity();
-    if (status->value() == ACTION_CHOICE)
+    if (status->value() == ACTION_CHOICE || status->value() == INVENTORY_ACTION_CHOICE)
     {
       std::size_t pos = id.find("_button_");
       if (pos == std::string::npos)
@@ -563,7 +566,7 @@ void Interface::detect_collision (C::Position_handle cursor)
   if (m_collision)
   {
     const std::string& id = m_collision->entity();
-    if (status->value() == ACTION_CHOICE)
+    if (status->value() == ACTION_CHOICE || status->value() == INVENTORY_ACTION_CHOICE)
     {
       std::size_t pos = id.find("_button_");
       if (pos == std::string::npos)
@@ -575,27 +578,31 @@ void Interface::detect_collision (C::Position_handle cursor)
         get<C::Image>(object_id + "_button_right:image")->set_highlight(255);
       }
     }
-
-    bool display_label = status->value() == IDLE;
-    if (status->value() == OBJECT_CHOICE || status->value() == IN_INVENTORY)
-      if (auto state = request<C::String>(id + ":state"))
-        if (state->value() == "inventory")
-          display_label = true;
-
-    if (display_label)
+    else
     {
-      if (auto name = request<C::String>(id + ":name"))
+      bool display_label = status->value() == IDLE;
+      if (status->value() == OBJECT_CHOICE || status->value() == IN_INVENTORY)
+        if (auto state = request<C::String>(id + ":state"))
+          if (state->value() == "inventory")
+            display_label = true;
+
+      if (display_label)
       {
-        get<C::Image>(m_collision->entity() + ":image")->set_highlight(128);
-        if (m_source == "")
-          get<C::String>("Cursor:state")->set("object");
+        if (auto name = request<C::String>(id + ":name"))
+        {
+          get<C::Image>(m_collision->entity() + ":image")->set_highlight(128);
+          if (m_source == "")
+            get<C::String>("Cursor:state")->set("object");
 
-        update_label(id, name->value(), true, false, cursor->value(), UNCLICKABLE);
-        if (get<C::Position>(id + "_right_circle:position")->value().x() >
-            Config::world_width - Config::label_height)
-          update_label(id, name->value(), false, true, cursor->value(), UNCLICKABLE);
+          update_label(id, name->value(), true, false, cursor->value(), UNCLICKABLE);
+          if (get<C::Position>(id + "_right_circle:position")->value().x() >
+              Config::world_width - Config::label_height)
+            update_label(id, name->value(), false, true, cursor->value(), UNCLICKABLE);
 
+        }
       }
+      else
+        clear_action_ids();
     }
   }
 }
@@ -816,11 +823,12 @@ void Interface::update_inventory ()
   //get<C::Image> ("Window_overlay:image")->on() = (status == IN_WINDOW);
 
   auto inventory_origin = get<C::Absolute_position>("Inventory:origin");
-  int inventory_y = Config::world_height;
-  if (status == IDLE)
-    inventory_origin->set (Point (0, Config::world_height));
-  if (status == IN_INVENTORY || status == OBJECT_CHOICE)
+  if (status == IN_INVENTORY || status == OBJECT_CHOICE || status == INVENTORY_ACTION_CHOICE)
     inventory_origin->set (Point (0, Config::world_height - Config::inventory_height));
+  else if (status == IDLE)
+    inventory_origin->set (Point (0, Config::world_height));
+  else
+    inventory_origin->set(Point (0, 2 * Config::world_height)); // hidden way at the bottom
 
   auto inventory = get<C::Inventory>("Game:inventory");
 
@@ -872,14 +880,10 @@ void Interface::update_dialog_choices()
   // Generate images if not done yet
   if (!request<C::Image>("Dialog_choice_background:image"))
   {
-    auto interface_font = get<C::Font> ("Interface:font");
+    auto interface_font = get<C::Font> ("Dialog:font");
     const std::string& player = get<C::String>("Player:name")->value();
 
-    int bottom
-        = std::max(get<C::Position>("Interface_action:position")->value().Y()
-                   + get<C::Image>("Interface_action:image")->height(),
-                   get<C::Position>("Interface_verbs:position")->value().Y()
-                   + get<C::Image>("Interface_verbs:image")->height());
+    int bottom = Config::world_height;
     int y = bottom - 10;
 
     for (int c = int(choices.size()) - 1; c >= 0; -- c)
@@ -904,16 +908,12 @@ void Interface::update_dialog_choices()
     }
 
     auto background = set<C::Image> ("Dialog_choice_background:image",
-                                     Config::world_width, bottom - y + 20, 0, 0, 0);
+                                     Config::world_width, bottom - y + 20, 0, 0, 0, 192);
     background->set_relative_origin(0., 1.);
     set<C::Absolute_position>("Dialog_choice_background:position", Point(0,bottom));
   }
 
-  int bottom
-      = std::max(get<C::Position>("Interface_action:position")->value().Y()
-                 + get<C::Image>("Interface_action:image")->height(),
-                 get<C::Position>("Interface_verbs:position")->value().Y()
-                 + get<C::Image>("Interface_verbs:image")->height());
+  int bottom = Config::world_height;
   int y = bottom - 10;
 
   for (int c = int(choices.size()) - 1; c >= 0; -- c)
