@@ -45,6 +45,8 @@ class Interface : public Base
   std::string m_source;
   std::string m_target;
   std::vector<std::string> m_action_ids;
+  std::unordered_set<std::string> m_close_objects;
+  std::string m_active_object;
   double m_latest_exit;
 
 public:
@@ -71,11 +73,15 @@ private:
   void set_action (const std::string& id, const std::string& default_id);
 
   void detect_collision (Component::Position_handle cursor);
-  void clear_action_ids();
+  bool detect_proximity ();
+  void switch_active_object (const bool& right);
+  void clear_action_ids(bool clear_highlight = false);
   void update_label (const std::string& id, std::string name, bool open_left,
-                     bool open_right, const Point& position, const Collision_type& collision);
+                     bool open_right, const Point& position, const Collision_type& collision,
+                     double scale = 1.0);
   void generate_action (const std::string& id, const std::string& action,
                         const Config::Orientation& orientation, Point position = Point());
+  void update_active_objects();
   void update_inventory ();
   void update_dialog_choices ();
 

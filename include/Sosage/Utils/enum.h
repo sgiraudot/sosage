@@ -60,19 +60,32 @@ enum Collision_type
   UNCLICKABLE
 };
 
+enum Input_mode
+{
+  MOUSE,
+  TOUCHSCREEN,
+  KEYBOARD,
+  GAMEPAD
+};
+
 enum Event_type
 {
   EMPTY,
 
   WINDOW,
 
-  CURSOR_DOWN,
-  CURSOR_MOVE,
-  CURSOR_UP,
+  MOUSE_DOWN,
+  MOUSE_MOVE,
+  MOUSE_UP,
+
+  TOUCH_DOWN,
+  TOUCH_MOVE,
+  TOUCH_UP,
 
   KEY_DOWN,
   KEY_UP,
 
+  NEW_GAMEPAD,
   BUTTON_DOWN,
   BUTTON_UP,
   STICK_MOVE
@@ -94,6 +107,9 @@ enum Event_value
 
   // Keys
   ALT,
+  CTRL,
+  SHIFT,
+  TAB,
   ANDROID_BACK,
   ENTER,
   ESCAPE,
@@ -114,7 +130,9 @@ enum Event_value
   SELECT,
 
   A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,
-  F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12
+  F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12,
+
+  NUMBER_OF_EVENT_VALUES
 };
 
 enum Fast_access_component
@@ -126,6 +144,7 @@ enum Fast_access_component
   GAME__STATUS,
   LOADING_SPIN__IMAGE,
   LOADING_SPIN__POSITION,
+  INTERFACE__INPUT_MODE,
 
   NUMBER_OF_KEYS
 };

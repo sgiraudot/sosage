@@ -70,9 +70,6 @@ void Interface::init_menus()
 #if !defined(SOSAGE_ANDROID) && !defined(SOSAGE_EMSCRIPTEN)
           { "Fullscreen", "fullscreen" },
 #endif
-#ifdef SOSAGE_ANDROID
-          { "Virtual_cursor", "virtual_cursor" },
-#endif
           { "Text_size", "text_size" },
           { "Text_speed", "text_speed" },
           { "Music_volume", "music_volume" },
@@ -91,20 +88,6 @@ void Interface::init_menus()
   init_menu_item ((*settings_menu)[1], "Ok", "ok");
   init_menu_buttons (settings_menu->root());
 #endif
-
-  auto cursor_menu = set<C::Menu>("Cursor:menu");
-  cursor_menu->split(VERTICALLY, 3);
-  (*cursor_menu)[2].split(HORIZONTALLY, 2);
-  (*cursor_menu)[2][0].split(VERTICALLY, 2);
-  (*cursor_menu)[2][1].split(VERTICALLY, 2);
-  init_menu_item ((*cursor_menu)[0], "Cursor_choice", "");
-  init_menu_item ((*cursor_menu)[1], "Cursor_choice_later", "");
-  init_menu_item ((*cursor_menu)[2][0][0], "Cursor_choice_virtual", "cursor_choice_virtual");
-  init_menu_item ((*cursor_menu)[2][1][0], "Cursor_choice_no", "cursor_choice_no");
-  init_menu_item ((*cursor_menu)[2][0][1], "Cursor_choice_virtual_text", "");
-  init_menu_item ((*cursor_menu)[2][1][1], "Cursor_choice_no_text", "");
-  init_menu_buttons ((*cursor_menu)[2][0]);
-  init_menu_buttons ((*cursor_menu)[2][1]);
 
   auto credits_menu = set<C::Menu>("Credits:menu");
   credits_menu->split(VERTICALLY, 3);
@@ -236,8 +219,6 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
 
   std::vector<std::string> possible_values;
   if (effect == "fullscreen")
-    possible_values = { "Yes", "No" };
-  else if (effect == "virtual_cursor")
     possible_values = { "Yes", "No" };
   else if (effect == "text_size")
     possible_values = { "Small", "Medium", "Large" };
@@ -457,9 +438,6 @@ create_menu (const std::string& id)
     menu->update_setting ("fullscreen",
                           get<C::Boolean>("Window:fullscreen")->value() ? "Yes" : "No");
 
-    menu->update_setting ("virtual_cursor",
-                          get<C::Boolean>("Interface:virtual_cursor")->value() ? "Yes" : "No");
-
     int speed = get<C::Int>("Dialog:speed")->value();
     if (speed == Config::SLOW)
       menu->update_setting ("text_speed", "Slow");
@@ -620,18 +598,6 @@ void Interface::menu_clicked()
     else if (menu == "Wanna_restart")
       create_menu("Exit");
   }
-  else if (effect->value() == "cursor_choice_virtual")
-  {
-    get<C::Boolean>("Interface:virtual_cursor")->set (true);
-    delete_menu("Cursor");
-    get<C::Status>(GAME__STATUS)->pop();
-  }
-  else if (effect->value() == "cursor_choice_no")
-  {
-    get<C::Boolean>("Interface:virtual_cursor")->set (false);
-    delete_menu("Cursor");
-    get<C::Status>(GAME__STATUS)->pop();
-  }
 }
 
 void Interface::apply_setting (const std::string& setting, const std::string& value)
@@ -642,8 +608,6 @@ void Interface::apply_setting (const std::string& setting, const std::string& va
     get<C::Boolean>("Window:fullscreen")->set(value == "Yes");
     emit ("Window:toggle_fullscreen");
   }
-  else if (setting == "virtual_cursor")
-    get<C::Boolean>("Interface:virtual_cursor")->set(value == "Yes");
   else if (setting == "text_size")
   {
     if (value == "Small")

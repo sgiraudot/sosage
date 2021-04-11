@@ -37,26 +37,23 @@ namespace Sosage::System
 class Input : public Base
 {
   Core::Input m_core;
-
-  struct Virtual_cursor
-  {
-    bool down = false;
-    bool has_moved = false;
-    Time::Unit time;
-    int x;
-    int y;
-    double cursor_x;
-    double cursor_y;
-  };
-
-  bool m_alt;
-  Virtual_cursor m_virtual_cursor;
+  std::vector<Event> m_current_events;
+  std::vector<bool> m_keys_on;
+  double m_x;
+  double m_y;
 
 public:
 
   Input (Content& content);
 
   virtual void run ();
+
+private:
+
+  typename std::vector<bool>::reference key_on(const Event_value& value)
+  {
+    return m_keys_on[std::size_t(value)];
+  }
 
 };
 

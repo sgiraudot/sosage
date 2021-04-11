@@ -127,7 +127,7 @@ void File_IO::read_config()
 
   // Default config values
   bool fullscreen = !Config::emscripten;
-  bool virtual_cursor = false;
+  int input_mode = (Config::android ? TOUCHSCREEN : MOUSE);
 
   int dialog_speed = Config::MEDIUM_SPEED;
   int dialog_size = Config::MEDIUM;
@@ -151,7 +151,7 @@ void File_IO::read_config()
     Core::File_IO input (file_name);
     input.parse();
     if (input.has("fullscreen")) fullscreen = input["fullscreen"].boolean();
-    if (input.has("virtual_cursor")) virtual_cursor = input["virtual_cursor"].boolean();
+    if (input.has("input_mode")) input_mode = input["input_mode"].integer();
     if (input.has("dialog_speed")) dialog_speed = input["dialog_speed"].floating();
     if (input.has("dialog_size")) dialog_size = input["dialog_size"].floating();
     if (input.has("music_volume")) music_volume = input["music_volume"].integer();
@@ -166,15 +166,10 @@ void File_IO::read_config()
   }
   catch (Sosage::No_such_file&)
   {
-    if constexpr (Config::android)
-    {
-      emit("Show:menu");
-      set<C::String>("Game:triggered_menu", "Cursor");
-    }
   }
 
   set<C::Boolean>("Window:fullscreen", fullscreen);
-  set<C::Boolean>("Interface:virtual_cursor", virtual_cursor);
+  set_fac<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE, "Interface:input_mode", Input_mode(input_mode));
 
   set<C::Int>("Dialog:speed", dialog_speed);
   set<C::Int>("Dialog:size", dialog_size);
@@ -194,7 +189,7 @@ void File_IO::write_config()
   Core::File_IO output (Sosage::pref_path() + "config.yaml", true);
 
   output.write ("fullscreen", get<C::Boolean>("Window:fullscreen")->value());
-  output.write ("virtual_cursor", get<C::Boolean>("Interface:virtual_cursor")->value());
+  output.write ("input_mode", get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value());
 
   output.write ("dialog_speed", get<C::Int>("Dialog:speed")->value());
   output.write ("dialog_size", get<C::Int>("Dialog:size")->value());
@@ -371,29 +366,17 @@ void File_IO::read_init (const std::string& folder_name)
 
   auto status = get<C::Status>(GAME__STATUS);
 
-  if constexpr (Config::android)
-  {
-    // Cursor displayed = NOT paused AND virtual
-    set<C::Conditional>
-        ("Cursor:image",
-         C::make_and
-         (get<C::Condition>("Unlocked:condition"),
-          get<C::Boolean>("Interface:virtual_cursor")),
-         cursor_img);
-  }
-  else
-  {
-    // Cursor displayed = NOT paused
-    set<C::Conditional>
-        ("Cursor:image"
-         "",
-         get<C::Condition>("Unlocked:condition"),
-         cursor_img);
-  }
+  // Cursor displayed = mouse mode AND NOT paused
+  set<C::Conditional>
+      ("Cursor:image"
+       "",
+       C::make_and
+       (C::make_simple_condition
+        (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE), MOUSE),
+        get<C::Condition>("Unlocked:condition")),
+       cursor_img);
 
-  set_fac<C::Absolute_position> (CURSOR__POSITION, "Cursor:position",
-                                 (get<C::Boolean>("Interface:virtual_cursor")->value()
-                                  ? Point(Config::world_width / 2, Config::world_height / 2) : Point(0,0)));
+  set_fac<C::Absolute_position> (CURSOR__POSITION, "Cursor:position", Point(0,0));
 
   std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
   int nb_img = input["loading_spin"][1].integer();

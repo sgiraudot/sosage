@@ -27,16 +27,19 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_EVENTS_H
 #define SOSAGE_THIRD_PARTY_SDL_EVENTS_H
 
-#include <utility>
-
 #include <SDL.h>
 #include <Sosage/Utils/Event.h>
+
+#include <utility>
+#include <unordered_map>
 
 namespace Sosage::Third_party
 {
 
 class SDL_events
 {
+  std::unordered_map<SDL_EventType, Event_type> m_type_map;
+
 public:
 
   SDL_events();
@@ -44,6 +47,13 @@ public:
   ~SDL_events();
 
   Event next_event();
+
+private:
+
+  Event mouse_event (const Event_type& type, const SDL_Event& ev) const;
+  Event keyboard_event (const Event_type& type, const SDL_Event& ev) const;
+  Event touch_event (const Event_type& type, const SDL_Event& ev) const;
+  Event gamepad_event (const Event_type& type, const SDL_Event& ev) const;
 };
 
 } // namespace Sosage::Third_party

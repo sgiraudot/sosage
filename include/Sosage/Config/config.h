@@ -29,6 +29,7 @@
 
 #include <Sosage/Config/platform.h>
 #include <memory>
+#include <limits>
 
 namespace Sosage
 {
@@ -45,6 +46,10 @@ constexpr int world_depth = 3240;
 constexpr int inventory_height = 150;
 constexpr int inventory_active_zone = 5;
 constexpr int inventory_margin = 20;
+
+constexpr int object_reach_x = 150;
+constexpr int object_reach_y = 65;
+constexpr int object_reach_hysteresis = 20;
 
 constexpr int label_height = 50;
 constexpr int label_margin = 20;
@@ -70,8 +75,9 @@ constexpr int text_outline = 10;
 constexpr int displayed_inventory_size = 9;
 
 constexpr double button_click_duration = 0.1;
-constexpr double virtual_cursor_sensitivity = 5;
-constexpr double virtual_cursor_speed = 2.0;
+
+constexpr double stick_max = 32767.5;
+constexpr int no_value = std::numeric_limits<int>::max();
 
 constexpr int max_music_volume = 128;
 

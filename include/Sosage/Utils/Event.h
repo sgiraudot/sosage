@@ -40,14 +40,17 @@ inline std::ostream& operator<< (std::ostream& os, const Event_type& type)
 {
   if (type == EMPTY) os << "EMPTY";
   else if (type == WINDOW) os << "WINDOW";
-  else if (type == CURSOR_DOWN) os << "CURSOR_DOWN";
-  else if (type == CURSOR_MOVE) os << "CURSOR_MOVE";
-  else if (type == CURSOR_UP) os << "CURSOR_UP";
+  else if (type == MOUSE_DOWN) os << "MOUSE_DOWN";
+  else if (type == MOUSE_MOVE) os << "MOUSE_MOVE";
+  else if (type == MOUSE_UP) os << "MOUSE_UP";
+  else if (type == TOUCH_DOWN) os << "TOUCH_DOWN";
+  else if (type == TOUCH_UP) os << "TOUCH_UP";
   else if (type == KEY_DOWN) os << "KEY_DOWN";
   else if (type == KEY_UP) os << "KEY_UP";
   else if (type == BUTTON_DOWN) os << "BUTTON_DOWN";
   else if (type == BUTTON_UP) os << "BUTTON_UP";
   else if (type == STICK_MOVE) os << "STICK_MOVE";
+  else if (type == NEW_GAMEPAD) os << "NEW_GAMEPAD";
   else os << "WTF";
   return os;
 }
@@ -61,6 +64,9 @@ inline std::ostream& operator<< (std::ostream& os, const Event_value& value)
   else if (value == LEFT) os << "LEFT";
   else if (value == RIGHT) os << "RIGHT";
   else if (value == ALT) os << "ALT";
+  else if (value == CTRL) os << "CTRL";
+  else if (value == SHIFT) os << "SHIFT";
+  else if (value == TAB) os << "TAB";
   else if (value == ANDROID_BACK) os << "ANDROID_BACK";
   else if (value == ENTER) os << "ENTER";
   else if (value == ESCAPE) os << "ESCAPE";

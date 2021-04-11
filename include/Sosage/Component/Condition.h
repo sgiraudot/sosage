@@ -28,6 +28,7 @@
 #define SOSAGE_COMPONENT_CONDITION_H
 
 #include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Simple.h>
 
 namespace Sosage::Component
 {
@@ -79,6 +80,24 @@ public:
 template <typename T>
 using Value_condition_handle = std::shared_ptr<Value_condition<T> >;
 
+template <typename T>
+class Simple_condition : public Condition
+{
+  Simple_handle<T> m_handle;
+  T m_value;
+
+public:
+
+  Simple_condition (const std::string& id, Simple_handle<T> handle, const T& value)
+    : Condition(id), m_handle (handle), m_value (value)
+  { }
+
+  virtual bool value() const { return m_handle->value() == m_value; }
+};
+
+template <typename T>
+using Simple_condition_handle = std::shared_ptr<Simple_condition<T> >;
+
 class And : public Condition
 {
   std::pair<Condition_handle, Condition_handle> m_values;
@@ -125,6 +144,11 @@ template <typename T>
 Value_condition_handle<T> make_value_condition (Value_handle<T> handle, const T& value)
 {
   return make_handle<Value_condition<T> >(handle->entity() + ":value_cond", handle, value);
+}
+template <typename T>
+Simple_condition_handle<T> make_simple_condition (Simple_handle<T> handle, const T& value)
+{
+  return make_handle<Simple_condition<T> >(handle->entity() + ":simple_cond", handle, value);
 }
 inline And_handle make_and (Condition_handle h0, Condition_handle h1)
 {

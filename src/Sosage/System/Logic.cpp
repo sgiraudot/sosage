@@ -122,6 +122,15 @@ void Logic::run ()
     clear_timed(true);
     m_current_action = nullptr;
   }
+  if (auto direction = request<C::Simple<Vector>>("Stick:direction"))
+  {
+    const std::string& id = get<C::String>("Player:name")->value();
+    auto position = get<C::Position>(id + "_body:position");
+    auto relative = C::make_handle<C::Relative_position>
+                    ("Target:position", position, 2. * Config::character_speed * direction->value());
+    std::cerr << direction->value() << std::endl;
+    compute_path_from_target(relative);
+  }
 
   if (receive ("code:button_clicked"))
   {

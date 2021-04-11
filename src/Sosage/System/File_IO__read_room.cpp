@@ -609,8 +609,6 @@ void File_IO::read_object (const std::string& id)
   int x = input["coordinates"][0].integer();
   int y = input["coordinates"][1].integer();
   int z = input["coordinates"][2].integer();
-  int vx = input["view"][0].integer();
-  int vy = input["view"][1].integer();
   bool box_collision = input["box_collision"].boolean();
 
   set<C::String>(id + ":name", name);
@@ -622,6 +620,15 @@ void File_IO::read_object (const std::string& id)
   else
     pos->absolute() = false;
 
+  if (input.has("label"))
+  {
+    int lx = input["label"][0].integer();
+    int ly = input["label"][1].integer();
+    set<C::Absolute_position>(id + ":label", Point(lx,ly), false);
+  }
+
+  int vx = input["view"][0].integer();
+  int vy = input["view"][1].integer();
   set<C::Absolute_position>(id + ":view", Point(vx,vy), false);
 
   C::String_conditional_handle conditional_handle;

@@ -45,6 +45,11 @@ inline double distance (double xa, double ya, double xb, double yb)
   return std::sqrt (square(xa - xb) + square(ya - yb));
 }
 
+inline double angle (double x, double y)
+{
+  return std::atan2 (y, x);
+}
+
 struct Box
 {
   double xmin;
