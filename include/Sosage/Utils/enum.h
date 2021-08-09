@@ -53,6 +53,22 @@ enum Orientation
   COUNTERCLOCKWISE
 };
 
+enum Button_orientation
+{
+  UP,
+  RIGHT_BUTTON,
+  DOWN,
+  LEFT_BUTTON,
+
+  UPPER,
+  UP_RIGHT,
+  DOWN_RIGHT,
+  DOWNER,
+  DOWN_LEFT,
+  UP_LEFT
+};
+
+
 enum Collision_type
 {
   PIXEL_PERFECT,
@@ -66,6 +82,14 @@ enum Input_mode
   TOUCHSCREEN,
   KEYBOARD,
   GAMEPAD
+};
+
+enum Gamepad_type
+{
+  NO_LABEL,
+  JAPAN,
+  USA,
+  KEYBOARD_PAD
 };
 
 enum Event_type

@@ -128,8 +128,9 @@ void Logic::run ()
     auto position = get<C::Position>(id + "_body:position");
     auto relative = C::make_handle<C::Relative_position>
                     ("Target:position", position, 2. * Config::character_speed * direction->value());
-    std::cerr << direction->value() << std::endl;
+   // std::cerr << direction->value() << std::endl;
     compute_path_from_target(relative);
+    remove("Stick:direction");
   }
 
   if (receive ("code:button_clicked"))
@@ -357,15 +358,15 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   Point origin = position->value();
   Point t = target->value();
 
-  debug("Target = ", t);
+  //debug("Target = ", t);
 
   if (target->component() != "view")
   {
-    debug ("Camera position = ", get<C::Double>(CAMERA__POSITION)->value());
+    //debug ("Camera position = ", get<C::Double>(CAMERA__POSITION)->value());
     t = t + Vector (get<C::Double>(CAMERA__POSITION)->value(), 0);
   }
 
-  debug("Computing path from ", origin, " to ", t);
+  //debug("Computing path from ", origin, " to ", t);
   std::vector<Point> path;
   ground_map->find_path (origin, t, path);
 

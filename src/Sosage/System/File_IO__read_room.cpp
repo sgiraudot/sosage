@@ -817,6 +817,9 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
   if (node.has("label"))
     out.first = C::make_handle<C::String>(id + "_" + action + ":label", node["label"].string());
 
+  if (node.has("right"))
+    set<C::Boolean>(id + "_" + action + ":right", node["right"].boolean());
+
   if (node.has("effect"))
   {
     auto act = C::make_handle<C::Action>(id + "_" + full_action + ":action");

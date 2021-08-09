@@ -26,6 +26,7 @@
 
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Code.h>
+#include <Sosage/Component/Group.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Menu.h>
 #include <Sosage/Component/Position.h>
@@ -34,6 +35,7 @@
 #include <Sosage/Component/Variable.h>
 #include <Sosage/System/Interface.h>
 #include <Sosage/Utils/color.h>
+#include <Sosage/Utils/gamepad_labels.h>
 
 #include <queue>
 
@@ -53,7 +55,8 @@ void Interface::run()
 {
   update_exit();
 
-  receive("Input_mode:changed");
+  if (receive("Input_mode:changed"))
+    update_active_objects();
 
   auto status = get<C::Status>(GAME__STATUS);
   if (status->value() == PAUSED)
@@ -102,8 +105,37 @@ void Interface::run()
         active_objects_changed = true;
       }
 
+      std::string received_key = "";
+      for (const std::string& key : {"move", "take", "inventory", "look"})
+        if (receive("Action:" + key))
+          received_key = key;
+
+      if (received_key != "")
+      {
+
+        if (status->value() == IN_WINDOW)
+          ;
+        else if (status->value() == IN_CODE)
+          ;
+        else if (status->value() == IN_MENU)
+          ;
+        else if (status->value() == DIALOG_CHOICE)
+          ;
+        else if (status->value() == ACTION_CHOICE || status->value() == INVENTORY_ACTION_CHOICE)
+          ;
+        else if (status->value() == OBJECT_CHOICE)
+          ;
+        else if (status->value() == IN_INVENTORY)
+          ;
+        else // IDLE
+          idle_triggered(received_key);
+      }
+
       if (active_objects_changed)
         update_active_objects();
+
+      update_action_selector();
+      update_switcher();
     }
   }
   else
@@ -334,16 +366,16 @@ void Interface::inventory_clicked()
       Point position (object_pos.x(),
                       get<C::Position>("Inventory:origin")->value().y() - 0.75 * Config::label_height);
 
-      generate_action (id, "combine", Config::WEST, position);
-      double diff = get<C::Position>(id + "_combine_left_circle:position")->value().x()
+      generate_action (id, "combine", LEFT_BUTTON, "", position);
+      double diff = get<C::Position>(id + "_combine_label_left_circle:position")->value().x()
                     - (get<C::Position>("Chamfer:position")->value().x() + Config::label_height);
       if (diff < 0)
       {
         position = Point (position.x() - diff, position.y());
-        generate_action (id, "combine", Config::WEST, position);
+        generate_action (id, "combine", LEFT_BUTTON, "", position);
       }
-      generate_action (id, "use", Config::NORTH, position);
-      generate_action (id, "look", Config::EAST, position);
+      generate_action (id, "use", UP, "", position);
+      generate_action (id, "look", RIGHT_BUTTON, "", position);
       get<C::Status>(GAME__STATUS)->pop();
       get<C::Status>(GAME__STATUS)->push(INVENTORY_ACTION_CHOICE);
       emit ("Click:play_sound");
@@ -360,34 +392,40 @@ void Interface::idle_clicked()
   // Click on an object
   if (request<C::String>(id + ":name"))
   {
+    // Object is a path to other room
+    if (auto right = request<C::Boolean>(id + "_goto:right"))
+    {
+      set_action(id + "_goto", "Default_goto");
+      emit ("Click:play_sound");
+    }
     // No source exists
-    if (m_source == "")
+    else if (m_source == "")
     {
       clear_action_ids();
-      generate_action (id, "secondary", Config::WEST);
-      if (get<C::Position>(id + "_secondary_left_circle:position")->value().x() < Config::label_height)
+      generate_action (id, "take", LEFT_BUTTON);
+      if (get<C::Position>(id + "_take_label_left_circle:position")->value().x() < Config::label_height)
       {
-        generate_action (id, "primary", Config::NORTHER);
-        generate_action (id, "secondary", Config::NORTH_EAST);
-        generate_action (id, "look", Config::SOUTH_EAST);
-        generate_action (id, "inventory", Config::SOUTHER);
+        generate_action (id, "move", UPPER);
+        generate_action (id, "take", UP_RIGHT);
+        generate_action (id, "look", DOWN_RIGHT);
+        generate_action (id, "inventory", DOWNER);
       }
       else
       {
-        generate_action (id, "look", Config::EAST);
-        if (get<C::Position>(id + "_secondary_right_circle:position")->value().x()
+        generate_action (id, "look", RIGHT_BUTTON);
+        if (get<C::Position>(id + "_take_label_right_circle:position")->value().x()
             > Config::world_width - Config::label_height)
         {
-          generate_action (id, "primary", Config::NORTHER);
-          generate_action (id, "secondary", Config::NORTH_WEST);
-          generate_action (id, "look", Config::SOUTH_WEST);
-          generate_action (id, "inventory", Config::SOUTHER);
+          generate_action (id, "move", UPPER);
+          generate_action (id, "take", UP_LEFT);
+          generate_action (id, "look", DOWN_LEFT);
+          generate_action (id, "inventory", DOWNER);
 
         }
         else
         {
-          generate_action (id, "primary", Config::NORTH);
-          generate_action (id, "inventory", Config::SOUTH);
+          generate_action (id, "move", UP);
+          generate_action (id, "inventory", DOWN);
         }
       }
       get<C::Status>(GAME__STATUS)->push(ACTION_CHOICE);
@@ -415,6 +453,18 @@ void Interface::idle_clicked()
       get<C::String>("Cursor:state")->set("default");
     }
   }
+}
+
+void Interface::idle_triggered (const std::string& action)
+{
+  if (m_active_object == "")
+  {
+    if (action == "inventory")
+      get<C::Status>(GAME__STATUS)->push (IN_INVENTORY);
+    return;
+  }
+
+  set_action (m_active_object + "_" + action, "Default_" + action);
 }
 
 void Interface::set_action (const std::string& id, const std::string& default_id)
@@ -577,8 +627,8 @@ void Interface::detect_collision (C::Position_handle cursor)
       if (pos != std::string::npos)
       {
         std::string object_id (id.begin(), id.begin() + pos);
-        get<C::Image>(object_id + "_button_left:image")->set_highlight(0);
-        get<C::Image>(object_id + "_button_right:image")->set_highlight(0);
+        get<C::Image>(object_id + "_button_left_circle:image")->set_highlight(0);
+        get<C::Image>(object_id + "_button_right_circle:image")->set_highlight(0);
       }
     }
     else
@@ -598,8 +648,8 @@ void Interface::detect_collision (C::Position_handle cursor)
       if (pos != std::string::npos)
       {
         std::string object_id (id.begin(), id.begin() + pos);
-        get<C::Image>(object_id + "_button_left:image")->set_highlight(255);
-        get<C::Image>(object_id + "_button_right:image")->set_highlight(255);
+        get<C::Image>(object_id + "_button_left_circle:image")->set_highlight(255);
+        get<C::Image>(object_id + "_button_right_circle:image")->set_highlight(255);
       }
     }
     else
@@ -615,14 +665,27 @@ void Interface::detect_collision (C::Position_handle cursor)
         if (auto name = request<C::String>(id + ":name"))
         {
           get<C::Image>(m_collision->entity() + ":image")->set_highlight(128);
+          bool force_right = false;
           if (m_source == "")
-            get<C::String>("Cursor:state")->set("object");
+          {
+            if (auto right = request<C::Boolean>(id + "_goto:right"))
+            {
+              if (right->value())
+              {
+                get<C::String>("Cursor:state")->set("goto_right");
+                force_right = true;
+              }
+              else
+                get<C::String>("Cursor:state")->set("goto_left");
+            }
+            else
+              get<C::String>("Cursor:state")->set("object");
+          }
 
-          update_label(id, name->value(), true, false, cursor->value(), UNCLICKABLE);
-          if (get<C::Position>(id + "_right_circle:position")->value().x() >
+          update_label(false, id + "_label", name->value(), true, false, cursor->value(), UNCLICKABLE);
+          if (force_right || get<C::Position>(id + "_label_right_circle:position")->value().x() >
               Config::world_width - Config::label_height)
-            update_label(id, name->value(), false, true, cursor->value(), UNCLICKABLE);
-
+              update_label(false, id + "_label", name->value(), false, true, cursor->value(), UNCLICKABLE);
         }
       }
       else
@@ -728,9 +791,10 @@ void Interface::switch_active_object (const bool& right)
 void Interface::clear_action_ids(bool clear_highlights)
 {
   if (clear_highlights)
-    for (const std::string& id : m_action_ids)
+    for (C::Group_handle group : m_labels)
     {
-      std::size_t pos = id.find("_label:image");
+      const std::string& id = group->id();
+      std::size_t pos = id.find("_label:group");
       if (pos != std::string::npos)
       {
         std::string img_id (id.begin(), id.begin() + pos);
@@ -739,107 +803,138 @@ void Interface::clear_action_ids(bool clear_highlights)
       }
     }
 
-  for (const std::string& id : m_action_ids)
-    remove (id, true);
-  m_action_ids.clear();
+  for (C::Group_handle group : m_labels)
+  {
+    std::cerr << "Remove group " << group->id() << std::endl;
+    group->apply<C::Base> ([&](auto h) { remove (h->id()); });
+    remove (group->id());
+  }
+  m_labels.clear();
 }
 
-void Interface::update_label (const std::string& id, std::string name,
+void Interface::update_label (bool is_button, const std::string& id, std::string name,
                               bool open_left, bool open_right, const Point& position,
                               const Collision_type& collision, double scale)
 {
-  auto label = request<C::Image>(id + "_label:image");
+  auto pos = set<C::Absolute_position>(id + ":global_position", position);
+  auto group = request<C::Group>(id + ":group");
+  C::Image_handle label, left, right, back;
 
-  C::Image_handle left, right, back;
+  unsigned char alpha = (is_button ? 255 : 100);
+  int depth = (is_button ? Config::action_button_depth : Config::label_depth);
 
-  if (label)
+  if (group)
   {
+    label = request<C::Image>(id + "_back:image");
     left = request<C::Image>(id + "_left_circle:image");
     right = request<C::Image>(id + "_right_circle:image");
-    back = get<C::Image>(id + "_label_back:image");
+    back = request<C::Image>(id + "_back:image");
   }
   else
   {
-    name[0] = toupper(name[0]);
-    label = set<C::Image>(id + "_label:image", get<C::Font>("Interface:font"), "FFFFFF", name);
-    m_action_ids.push_back (label->id());
+    group = set<C::Group>(id + ":group");
+    m_labels.push_back (group);
 
-    label->set_relative_origin(0.5, 0.5);
-    label->set_scale(scale * 0.5);
-    label->z() = Config::label_depth;
-    label->set_collision(collision);
-    label->set_alpha(scale * 255);
+    if (name != "")
+    {
+      name[0] = toupper(name[0]);
+      label = set<C::Image>(id + ":image", get<C::Font>("Interface:font"), "FFFFFF", name);
+      group->add(label);
+
+      label->set_relative_origin(0.5, 0.5);
+      label->set_scale(scale * 0.5);
+      label->z() = depth;
+      label->set_collision(collision);
+      label->set_alpha(scale * 255);
+    }
 
     left = set<C::Image>(id + "_left_circle:image", get<C::Image>("Left_circle:image"));
-    m_action_ids.push_back (left->id());
+    group->add(left);
+
     left->on() = true;
     left->set_relative_origin(1, 0.5);
     left->set_scale(scale);
-    left->set_alpha(100);
-    left->z() = Config::label_depth - 1;
+    left->set_alpha(alpha);
+    left->z() = depth - 1;
     left->set_collision(collision);
 
     right = set<C::Image>(id + "_right_circle:image", get<C::Image>("Right_circle:image"));
-    m_action_ids.push_back (right->id());
+    group->add(right);
+
     right->on() = true;
     right->set_relative_origin(0, 0.5);
     right->set_scale(scale);
-    right->set_alpha(100);
-    right->z() = Config::label_depth - 1;
+    right->set_alpha(alpha);
+    right->z() = depth - 1;
     right->set_collision(collision);
 
-    int margin = Config::label_margin;
-    if (m_source != "")
-      margin *= 2;
+    if (label)
+    {
+      int margin = Config::label_margin;
+      if (m_source != "")
+        margin *= 2;
+      else if (open_left && open_right)
+        margin *= 3;
 
-    back = set<C::Image>(id + "_label_back:image",
-                         margin + label->width() / 2,
-                         Config::label_height);
-    m_action_ids.push_back (back->id());
-    back->set_relative_origin(0.5, 0.5);
-    back->set_scale(scale);
-    back->set_alpha(100);
-    back->z() = Config::label_depth - 1;
-    back->set_collision(collision);
-  }
+      int width = margin + label->width() / 2;
+      if (is_button || name.size() == 1)
+        width = (name.size() - 1) * Config::label_margin;
 
-  left->on() = !open_left;
-  right->on() = !open_right;
+      if (width != 0)
+      {
+        back = set<C::Image>(id + "_back:image", width, Config::label_height);
+        group->add(back);
 
-  int half_width_minus = back->width() / 2;
-  int half_width_plus = back->width() - half_width_minus;
-
-  if (open_left)
-  {
-    set<C::Absolute_position>(id + "_label:position", position + scale * Vector(Config::label_diff + half_width_plus, 0));
-    set<C::Absolute_position>(id + "_label_back:position", position + scale * Vector(half_width_plus, 0));
-  }
-  else if (open_right)
-  {
-    set<C::Absolute_position>(id + "_label:position", position + scale * Vector(-Config::label_diff - half_width_minus, 0));
-    set<C::Absolute_position>(id + "_label_back:position", position + scale * Vector(-half_width_minus, 0));
-  }
-  else
-  {
-    set<C::Absolute_position>(id + "_label:position", position);
-    set<C::Absolute_position>(id + "_label_back:position", position);
+        back->set_relative_origin(0.5, 0.5);
+        back->set_scale(scale);
+        back->set_alpha(alpha);
+        back->z() = depth - 1;
+        back->set_collision(collision);
+      }
+    }
   }
 
   if (left)
-    set<C::Absolute_position>(id + "_left_circle:position",
-                     get<C::Position>(id + "_label_back:position")->value() + scale * Vector(-half_width_minus, 0));
+    left->on() = !open_left;
   if (right)
-    set<C::Absolute_position>(id + "_right_circle:position",
-                     get<C::Position>(id + "_label_back:position")->value() + scale * Vector(half_width_plus, 0));
+    right->on() = !open_right;
+
+  int half_width_minus = (back ? back->width() / 2 : 0);
+  int half_width_plus = (back ? back->width() - half_width_minus : 0);
+
+  if(open_left == open_right) // symmetric label
+  {
+    set<C::Relative_position>(id + ":position", pos);
+    set<C::Relative_position>(id + "_back:position", pos);
+  }
+  else if (open_left)
+  {
+    set<C::Relative_position>(id + ":position", pos, scale * Vector(Config::label_diff + half_width_plus, 0));
+    set<C::Relative_position>(id + "_back:position", pos, scale * Vector(half_width_plus, 0));
+  }
+  else if (open_right)
+  {
+    set<C::Relative_position>(id + ":position", pos, scale * Vector(-Config::label_diff - half_width_minus, 0));
+    set<C::Relative_position>(id + "_back:position", pos, scale * Vector(-half_width_minus, 0));
+  }
+
+  if (left)
+    set<C::Relative_position>(id + "_left_circle:position",
+                     get<C::Position>(id + "_back:position"), scale * Vector(-half_width_minus, 0));
+  if (right)
+    set<C::Relative_position>(id + "_right_circle:position",
+                               get<C::Position>(id + "_back:position"), scale * Vector(half_width_plus, 0));
 }
 
 void Interface::generate_action (const std::string& id, const std::string& action,
-                                 const Config::Orientation& orientation,
+                                 const Button_orientation& orientation, const std::string& button,
                                  Point position)
 {
   auto label = request<C::String>(id + "_" + action + ":label");
   if (!label)
-    label = get<C::String>("Default_" + action + ":label");
+      label = get<C::String>("Default_" + action + ":label");
+  if (id == "Default" && action == "inventory")
+    label = get<C::String>("Inventory:label");
 
   bool open_left = false, open_right = false;
   if (position == Point())
@@ -848,23 +943,23 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   Point button_position;
 
   // Default cross orientation
-  if (orientation == Config::NORTH)
+  if (orientation == UP)
   {
     label_position = position + Vector(0, -80);
     button_position = position + Vector(0, -40);
   }
-  else if (orientation == Config::SOUTH)
+  else if (orientation == DOWN)
   {
     label_position = position + Vector(0, 80);
     button_position = position + Vector(0, 40);
   }
-  else if (orientation == Config::EAST)
+  else if (orientation == RIGHT_BUTTON)
   {
     label_position = position + Vector(40, 0);
     button_position = position + Vector(40, 0);
     open_left = true;
   }
-  else if (orientation == Config::WEST)
+  else if (orientation == LEFT_BUTTON)
   {
     label_position = position + Vector(-40, 0);
     button_position = position + Vector(-40, 0);
@@ -872,88 +967,83 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   }
 
   // Side orientations
-  else if (orientation == Config::NORTHER)
+  else if (orientation == UPPER)
   {
     label_position = position + Vector(0, -100);
     button_position = position + Vector(0, -60);
   }
-  else if (orientation == Config::SOUTHER)
+  else if (orientation == DOWNER)
   {
     label_position = position + Vector(0, 100);
     button_position = position + Vector(0, 60);
   }
-  else if (orientation == Config::NORTH_EAST)
+  else if (orientation == UP_RIGHT)
   {
     label_position = position + Vector(50, -28.25);
     button_position = position + Vector(50, -28.25);
     open_left = true;
   }
-  else if (orientation == Config::NORTH_WEST)
+  else if (orientation == UP_LEFT)
   {
     label_position = position + Vector(-50, -28.25);
     button_position = position + Vector(-50, -28.25);
     open_right = true;
   }
-  else if (orientation == Config::SOUTH_EAST)
+  else if (orientation == DOWN_RIGHT)
   {
     label_position = position + Vector(50, 28.25);
     button_position = position + Vector(50, 28.25);
     open_left = true;
   }
-  else if (orientation == Config::SOUTH_WEST)
+  else if (orientation == DOWN_LEFT)
   {
     label_position = position + Vector(-50, 28.25);
     button_position = position + Vector(-50, 28.25);
     open_right = true;
   }
 
-
-  update_label (id + "_" + action, label->value(), open_left, open_right, label_position, BOX);
-
-  // NORTHER and SOUTHER configs might need to be moved to be on screen
-  if (orientation == Config::NORTHER || orientation == Config::SOUTHER)
+  if (id != "")
   {
-    int diff = 0;
-    auto lpos = get<C::Position>(id + "_" + action + "_left_circle:position");
-    if (lpos->value().x() < Config::label_height)
-      diff = Config::label_height - lpos->value().x();
-    else
+    update_label (false, id + "_" + action + "_label", label->value(), open_left, open_right,
+                  label_position, BOX);
+
+    // UPPER and DOWNER configs might need to be moved to be on screen
+    if (orientation == UPPER || orientation == DOWNER)
     {
-      auto rpos = get<C::Position>(id + "_" + action + "_right_circle:position");
-      if (rpos->value().x() > Config::world_width - Config::label_height)
-        diff = lpos->value().x() - (Config::world_width - Config::label_height);
-    }
-    if (diff != 0)
-      for (const std::string& element : { "left_circle", "right_circle", "label", "label_back" })
+      int diff = 0;
+      auto lpos = get<C::Position>(id + "_" + action + "_label_left_circle:position");
+      if (lpos->value().x() < Config::label_height)
+        diff = Config::label_height - lpos->value().x();
+      else
       {
-        auto pos = get<C::Position>(id + "_" + action + "_" + element + ":position");
+        auto rpos = get<C::Position>(id + "_" + action + "_label_right_circle:position");
+        if (rpos->value().x() > Config::world_width - Config::label_height)
+          diff = lpos->value().x() - (Config::world_width - Config::label_height);
+      }
+      if (diff != 0)
+      {
+        auto pos = get<C::Position>(id + "_" + action + "_label:global_position");
         pos->set (Point (pos->value().x() + diff, pos->value().y()));
       }
+    }
   }
 
-  auto left = set<C::Image>(id + "_" + action + "_button_left:image", get<C::Image>("Left_circle:image"));
-  m_action_ids.push_back (left->id());
-  left->on() = true;
-  left->set_relative_origin(1, 0.5);
-  left->set_alpha(255);
-  left->z() = Config::action_button_depth;
-  left->set_collision(BOX);
-
-  auto right = set<C::Image>(id + "_" + action + "_button_right:image", get<C::Image>("Right_circle:image"));
-  m_action_ids.push_back (right->id());
-  right->on() = true;
-  right->set_relative_origin(0, 0.5);
-  right->set_alpha(255);
-  right->z() = Config::action_button_depth;
-  right->set_collision(BOX);
-
-  set<C::Absolute_position>(id + "_" + action + "_button_left:position", button_position);
-  set<C::Absolute_position>(id + "_" + action + "_button_right:position", button_position);
+  if (id == "")
+    update_label (true, "Default_" + action + "_button", button, false, false, button_position, BOX);
+  else
+    update_label (true, id + "_" + action + "_button", button, false, false, button_position, BOX);
 }
 
 void Interface::update_active_objects()
 {
   clear_action_ids(true);
+
+  if (auto group = request<C::Group>("Action_selector:group"))
+  {
+    group->apply<C::Image>([&](auto img) { remove(img->id()); });
+    group->apply<C::Group>([&](auto g) { remove(g->id()); });
+    remove (group->id());
+  }
 
   for (const std::string& id : m_close_objects)
   {
@@ -964,7 +1054,7 @@ void Interface::update_active_objects()
     auto pos = get<C::Position>(id + ":label");
 
     double scale = (is_active ? 1.0 : 0.75);
-    update_label(id, name->value(), false, false, pos->value(), UNCLICKABLE, scale);
+    update_label(false, id + "_label", name->value(), false, false, pos->value(), UNCLICKABLE, scale);
   }
 
 }
@@ -1098,6 +1188,93 @@ void Interface::update_dialog_choices()
     img_off->on() = !on;
     img_on->on() = on;
   }
+}
+
+void Interface::update_action_selector()
+{
+  auto group = request<C::Group>("Action_selector:group");
+  if (!group)
+  {
+    group = set<C::Group>("Action_selector:group");
+
+    std::size_t nb_labels = m_labels.size();
+    Point origin (Config::world_width - 240, Config::world_height - 130);
+
+    Gamepad_type gamepad = KEYBOARD_PAD;
+    if (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD)
+      gamepad = get<C::Simple<Gamepad_type>>("Gamepad:type")->value();
+
+    if (m_active_object == "")
+    {
+      generate_action ("", "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), origin);
+      generate_action ("", "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), origin);
+      generate_action ("", "move", UP, gamepad_label(gamepad, NORTH), origin);
+      generate_action ("Default", "inventory", DOWN, gamepad_label(gamepad, SOUTH), origin);
+    }
+    else
+    {
+      generate_action (m_active_object, "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), origin);
+      generate_action (m_active_object, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), origin);
+      generate_action (m_active_object, "move", UP, gamepad_label(gamepad, NORTH), origin);
+      generate_action (m_active_object, "inventory", DOWN, gamepad_label(gamepad, SOUTH), origin);
+    }
+
+    for (std::size_t i = nb_labels; i < m_labels.size(); ++ i)
+      group->add(m_labels[i]);
+    m_labels.resize (nb_labels);
+  }
+}
+
+void Interface::update_switcher()
+{
+  auto group = request<C::Group>("Switcher:group");
+  if (!group)
+  {
+    bool gamepad = (get<C::Simple<Input_mode> >(INTERFACE__INPUT_MODE)->value() == GAMEPAD);
+
+    if (gamepad)
+      update_label (true, "Switcher_left", "L", false, false, Point(0,0), UNCLICKABLE);
+    else // if (mode->value() == GAMEPAD)
+      update_label (true, "Switcher_left", "Tab", false, false, Point(0,0), UNCLICKABLE);
+    m_labels.pop_back();
+
+    auto left_pos = get<C::Absolute_position>("Switcher_left:global_position");
+    left_pos->set (Point (Config::label_height - get<C::Position>("Switcher_left_left_circle:position")->value().x(),
+                          Config::world_height - Config::label_height));
+
+
+    update_label (false, "Switcher_label", get<C::String>("Switch_target:text")->value(),
+                  true, gamepad, Point(0,0), UNCLICKABLE);
+    m_labels.pop_back();
+
+    // Correct position of half-open label in keyboard mode (a bit hacky but meh…)
+    if (!gamepad)
+    {
+      get<C::Relative_position>("Switcher_label:position")->set(Vector(Config::label_margin,0));
+      get<C::Relative_position>("Switcher_label_back:position")->set(Vector(0,0));
+    }
+
+    auto img = get<C::Image>("Switcher_label_back:image");
+    auto pos = get<C::Absolute_position>("Switcher_label:global_position");
+    pos->set (Point (get<C::Position>("Switcher_left_right_circle:position")->value().x() + img->width() / 2,
+                     left_pos->value().y()));
+
+    if (gamepad)
+    {
+      update_label (true, "Switcher_right", "R", false, false, Point(0,0), UNCLICKABLE);
+      m_labels.pop_back();
+      auto right_pos = get<C::Absolute_position>("Switcher_right:global_position");
+      right_pos->set (Point (pos->value().x() + img->width() / 2, left_pos->value().y()));
+    }
+
+    group = set<C::Group>("Switcher:group");
+    group->add (get<C::Group>("Switcher_left:group"));
+    group->add (get<C::Group>("Switcher_label:group"));
+    if (auto g = request<C::Group>("Switcher_right:group"))
+      group->add(g);
+  }
+
+  group->apply<C::Image> ([&](auto img) { img->on() = (m_close_objects.size() >= 2); });
 }
 
 

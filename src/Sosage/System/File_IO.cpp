@@ -128,6 +128,7 @@ void File_IO::read_config()
   // Default config values
   bool fullscreen = !Config::emscripten;
   int input_mode = (Config::android ? TOUCHSCREEN : MOUSE);
+  int gamepad_type = NO_LABEL;
 
   int dialog_speed = Config::MEDIUM_SPEED;
   int dialog_size = Config::MEDIUM;
@@ -152,6 +153,7 @@ void File_IO::read_config()
     input.parse();
     if (input.has("fullscreen")) fullscreen = input["fullscreen"].boolean();
     if (input.has("input_mode")) input_mode = input["input_mode"].integer();
+    if (input.has("gamepad_type")) gamepad_type = input["gamepad_type"].integer();
     if (input.has("dialog_speed")) dialog_speed = input["dialog_speed"].floating();
     if (input.has("dialog_size")) dialog_size = input["dialog_size"].floating();
     if (input.has("music_volume")) music_volume = input["music_volume"].integer();
@@ -170,6 +172,7 @@ void File_IO::read_config()
 
   set<C::Boolean>("Window:fullscreen", fullscreen);
   set_fac<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE, "Interface:input_mode", Input_mode(input_mode));
+  set<C::Simple<Gamepad_type>>("Gamepad:type", Gamepad_type(gamepad_type));
 
   set<C::Int>("Dialog:speed", dialog_speed);
   set<C::Int>("Dialog:size", dialog_size);
@@ -190,6 +193,7 @@ void File_IO::write_config()
 
   output.write ("fullscreen", get<C::Boolean>("Window:fullscreen")->value());
   output.write ("input_mode", get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value());
+  output.write ("gamepad_type", get<C::Simple<Gamepad_type>>("Gamepad:type")->value());
 
   output.write ("dialog_speed", get<C::Int>("Dialog:speed")->value());
   output.write ("dialog_size", get<C::Int>("Dialog:size")->value());
@@ -359,10 +363,20 @@ void File_IO::read_init (const std::string& folder_name)
                                                               Config::cursor_depth);
   cursor_object->set_relative_origin(0.5, 0.5);
 
+  std::string goto_left = input["cursor"][2].string("images", "interface", "png");
+  auto goto_left_img = C::make_handle<C::Image>("Cursor:image", local_file_name(goto_left), Config::cursor_depth);
+  goto_left_img->set_relative_origin(1., 0.5);
+
+  std::string goto_right = input["cursor"][3].string("images", "interface", "png");
+  auto goto_right_img = C::make_handle<C::Image>("Cursor:image", local_file_name(goto_right), Config::cursor_depth);
+  goto_right_img->set_relative_origin(0., 0.5);
+
   auto cursor_state = set<C::String>("Cursor:state", "default");
   auto cursor_img = C::make_handle<C::String_conditional>("Cursor:image", cursor_state);
   cursor_img->add("default", cursor_default);
   cursor_img->add("object", cursor_object);
+  cursor_img->add("goto_left", goto_left_img);
+  cursor_img->add("goto_right", goto_right_img);
 
   auto status = get<C::Status>(GAME__STATUS);
 
@@ -410,6 +424,7 @@ void File_IO::read_init (const std::string& folder_name)
   std::string right_circle = input["circle"][1].string("images", "interface", "png");
   auto right_circle_img = set<C::Image>("Right_circle:image", local_file_name(right_circle), 1, BOX);
   right_circle_img->on() = false;
+
   std::string big_circle = input["circle"][2].string("images", "interface", "png");
   auto big_circle_img = C::make_handle<C::Image>("Cursor:image", local_file_name(big_circle),
                                                  Config::cursor_depth);

@@ -81,22 +81,7 @@ constexpr int no_value = std::numeric_limits<int>::max();
 
 constexpr int max_music_volume = 128;
 
-constexpr auto possible_actions = { "look", "primary", "secondary", "inventory", "use", "combine" };
-
-enum Orientation
-{
-  NORTH,
-  EAST,
-  SOUTH,
-  WEST,
-
-  NORTHER,
-  NORTH_EAST,
-  SOUTH_EAST,
-  SOUTHER,
-  SOUTH_WEST,
-  NORTH_WEST
-};
+constexpr auto possible_actions = { "look", "move", "take", "inventory", "use", "combine", "goto" };
 
 enum Depth
 {

@@ -106,7 +106,7 @@ void Input::run()
     if (ev == Event(WINDOW, EXIT))
       emit ("Game:exit");
 
-    if (ev == Event(KEY_UP, SPACE))
+   if (ev == Event(KEY_UP, SPACE))
     {
       if (status->value() == PAUSED)
         status->pop();
@@ -186,6 +186,14 @@ void Input::run()
         key_on(ev.value()) = true;
         if (ev.value() == TAB)
           set<C::Boolean>("Switch:right", true);
+        else if (ev.value() == I)
+          emit("Action:move");
+        else if (ev.value() == J)
+          emit("Action:take");
+        else if (ev.value() == L)
+          emit("Action:look");
+        else if (ev.value() == K)
+          emit("Action:inventory");
       }
       else if (ev.type() == KEY_UP)
         key_on(ev.value()) = false;
@@ -206,6 +214,14 @@ void Input::run()
           set<C::Boolean>("Switch:right", false);
         else if (ev.value() == RIGHT_SHOULDER)
           set<C::Boolean>("Switch:right", true);
+        else if (ev.value() == NORTH)
+          emit("Action:move");
+        else if (ev.value() == WEST)
+          emit("Action:take");
+        else if (ev.value() == EAST)
+          emit("Action:look");
+        else if (ev.value() == SOUTH)
+          emit("Action:inventory");
       }
       else if (ev.type() == BUTTON_UP)
         key_on(ev.value()) = false;

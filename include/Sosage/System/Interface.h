@@ -27,6 +27,7 @@
 #ifndef SOSAGE_SYSTEM_INTERFACE_H
 #define SOSAGE_SYSTEM_INTERFACE_H
 
+#include <Sosage/Component/Group.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Menu.h>
 #include <Sosage/Component/Position.h>
@@ -44,7 +45,7 @@ class Interface : public Base
   Component::Image_handle m_collision;
   std::string m_source;
   std::string m_target;
-  std::vector<std::string> m_action_ids;
+  std::vector<Component::Group_handle> m_labels;
   std::unordered_set<std::string> m_close_objects;
   std::string m_active_object;
   double m_latest_exit;
@@ -68,6 +69,8 @@ private:
   void inventory_clicked();
   void idle_clicked();
 
+  void idle_triggered(const std::string& action);
+
   void update_pause_screen();
 
   void set_action (const std::string& id, const std::string& default_id);
@@ -76,14 +79,17 @@ private:
   bool detect_proximity ();
   void switch_active_object (const bool& right);
   void clear_action_ids(bool clear_highlight = false);
-  void update_label (const std::string& id, std::string name, bool open_left,
+  void update_label (bool is_button, const std::string& id, std::string name, bool open_left,
                      bool open_right, const Point& position, const Collision_type& collision,
                      double scale = 1.0);
   void generate_action (const std::string& id, const std::string& action,
-                        const Config::Orientation& orientation, Point position = Point());
+                        const Button_orientation& orientation, const std::string& button = "",
+                        Point position = Point());
   void update_active_objects();
   void update_inventory ();
   void update_dialog_choices ();
+  void update_action_selector ();
+  void update_switcher();
 
   // Implemented in Interface__menu.cpp
   void init_menus();
