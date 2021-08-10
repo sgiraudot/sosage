@@ -173,6 +173,14 @@ public:
 
   Vertex source (const Edge& e) const { return m_edges[e].source; }
   Vertex target (const Edge& e) const { return m_edges[e].target; }
+  Vertex other (const Edge& e, const Vertex& v) const
+  {
+   if (m_edges[e].source == v)
+     return m_edges[e].target;
+   // else
+   check (m_edges[e].target == v, "Vertex does not belong to edge");
+   return m_edges[e].source;
+  }
 
   Edge incident_edge (const Vertex& v, std::size_t idx) const { return m_vertices[v].incident_edges[idx]; }
   Vertex incident_vertex (const Vertex& v, std::size_t idx) const

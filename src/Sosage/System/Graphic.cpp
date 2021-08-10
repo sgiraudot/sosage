@@ -132,8 +132,8 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
       int xmin_target = screen_position.X();
       int ymin_target = screen_position.y();
-      int xmax_target = xmin_target + int(img->core().scaling * (xmax - xmin));
-      int ymax_target = ymin_target + int(img->core().scaling * (ymax - ymin));
+      int xmax_target = xmin_target + round(img->core().scaling * (xmax - xmin));
+      int ymax_target = ymin_target + round(img->core().scaling * (ymax - ymin));
 
       int limit_width = Config::world_width;
       int limit_height = Config::world_height;

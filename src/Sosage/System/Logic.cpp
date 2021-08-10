@@ -122,15 +122,23 @@ void Logic::run ()
     clear_timed(true);
     m_current_action = nullptr;
   }
-  if (auto direction = request<C::Simple<Vector>>("Stick:direction"))
+  if (receive ("Stick:moved"))
   {
+    auto direction = get<C::Simple<Vector>>(STICK__DIRECTION);
     const std::string& id = get<C::String>("Player:name")->value();
-    auto position = get<C::Position>(id + "_body:position");
-    auto relative = C::make_handle<C::Relative_position>
-                    ("Target:position", position, 2. * Config::character_speed * direction->value());
-   // std::cerr << direction->value() << std::endl;
-    compute_path_from_target(relative);
-    remove("Stick:direction");
+    if (direction->value() == Vector(0,0))
+    {
+      remove(id + ":path", true);
+      emit(id + ":stop_walking");
+    }
+    else
+    {
+      auto position = get<C::Position>(id + "_body:position");
+      auto relative = C::make_handle<C::Relative_position>
+                      ("Target:position", position, 2. * Config::character_speed * direction->value());
+      // std::cerr << direction->value() << std::endl;
+      compute_path_from_direction(direction->value());
+    }
   }
 
   if (receive ("code:button_clicked"))
@@ -369,6 +377,27 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   //debug("Computing path from ", origin, " to ", t);
   std::vector<Point> path;
   ground_map->find_path (origin, t, path);
+
+  // Check if character is already at target
+  if (path.empty() || ((path.size() == 1) && (path[0] == origin)))
+    return false;
+
+  auto p = set<C::Path>(id + ":path", path);
+  if ((*p)[0] == origin)
+    p->current() ++;
+  return true;
+}
+
+bool Logic::compute_path_from_direction (const Vector& direction)
+{
+  auto ground_map = get<C::Ground_map>("Background:ground_map");
+  const std::string& id = get<C::String>("Player:name")->value();
+  auto position = get<C::Position>(id + "_body:position");
+  Point origin = position->value();
+
+  std::vector<Point> path;
+
+  ground_map->find_path (origin, direction, path);
 
   // Check if character is already at target
   if (path.empty() || ((path.size() == 1) && (path[0] == origin)))

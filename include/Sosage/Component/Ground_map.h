@@ -59,6 +59,7 @@ class Ground_map : public Base
   using Graph = Sosage::Graph<Vertex, Edge, false>;
   using GVertex = typename Graph::Vertex;
   using GEdge = typename Graph::Edge;
+  using Edge_condition = std::function<bool(const GEdge&)>;
 
   double deviation(GVertex v) const
   {
@@ -75,15 +76,23 @@ class Ground_map : public Base
 
   struct Neighbor_query
   {
-    const GVertex vertex;
-    const GEdge edge;
+    GVertex vertex;
+    GEdge edge;
     double dist;
     Point point;
+
+    Neighbor_query()
+      : vertex (Graph::null_vertex())
+      , edge (Graph::null_edge())
+      , dist (std::numeric_limits<double>::max())
+    { }
 
     Neighbor_query (const GVertex& vertex, const GEdge& edge,
                     double dist, const Point& point)
       : vertex (vertex), edge (edge), dist (dist), point (point)
     { }
+
+    operator bool() const { return (vertex != Graph::null_vertex() || edge != Graph::null_edge()); }
   };
 
   struct Compare_ordered_pair
@@ -102,7 +111,9 @@ class Ground_map : public Base
     }
   };
 
+  const double snapping_dist = 2.;
   Core::Graphic::Surface m_image;
+  int m_radius;
   int m_front_z;
   int m_back_z;
   Graph m_graph;
@@ -145,8 +156,8 @@ public:
     }
   }
 
-  void find_path (Point origin, Point target,
-                  std::vector<Point>& out);
+  void find_path (Point origin, Point target, std::vector<Point>& out);
+  void find_path (Point origin, Sosage::Vector direction, std::vector<Point>& out);
   double z_at_point (const Point& p) const;
 
   bool is_ground_point (const Point& p) const;
@@ -157,7 +168,10 @@ public:
 
   bool intersects_border (const Graph& g,
                           const Segment& seg,
-                          const std::function<bool(const GEdge&)>& condition) const;
+                          const Edge_condition& condition) const;
+
+  Neighbor_query closest_intersected_edge (const Point& p, const Sosage::Vector& direction,
+                                           const Edge_condition& condition) const;
 
 };
 

@@ -147,11 +147,17 @@ void Animation::run_one_frame()
     {
       std::string id = c->entity();
       if (c->component() == "stop_talking")
-      {
         generate_random_idle_head_animation (id,
                                              get<C::Animation>(id + "_head:image")
                                              ->frames().front().y == 0);
-        to_remove.push_back (c->id());
+      else if (c->component() == "stop_walking")
+      {
+        if (get<C::Animation>(id + "_walking:image")->on())
+        {
+          bool looking_right = (get<C::Animation>(id + "_walking:image")->frames().front().y != 2);
+          generate_random_idle_animation (id, looking_right);
+          place_and_scale_character(id, looking_right);
+        }
       }
       else if (c->component() == "stop_animation")
       {
@@ -160,8 +166,8 @@ void Animation::run_one_frame()
           generate_random_idle_body_animation (id, head->frames().front().y == 0);
         else
           get<C::Image>(id + ":image")->on() = false;
-        to_remove.push_back (c->id());
       }
+      to_remove.push_back (c->id());
     }
 
   bool has_moved = false;
