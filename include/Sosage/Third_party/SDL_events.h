@@ -48,6 +48,8 @@ public:
 
   Event next_event();
 
+  Gamepad_type gamepad_type() const;
+
 private:
 
   Event mouse_event (const Event_type& type, const SDL_Event& ev) const;

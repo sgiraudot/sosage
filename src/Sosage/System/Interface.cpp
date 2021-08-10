@@ -91,7 +91,7 @@ void Interface::run()
           idle_clicked();
       }
     }
-    else // if (mode->value() == KEYBOARD || mode->value() == GAMEPAD)
+    else // if (mode->value() == GAMEPAD)
     {
       bool active_objects_changed = false;
 
@@ -128,7 +128,10 @@ void Interface::run()
         else if (status->value() == IN_INVENTORY)
           ;
         else // IDLE
+        {
           idle_triggered(received_key);
+          active_objects_changed = true;
+        }
       }
 
       if (active_objects_changed)
@@ -460,10 +463,19 @@ void Interface::idle_triggered (const std::string& action)
   if (m_active_object == "")
   {
     if (action == "inventory")
+    {
       get<C::Status>(GAME__STATUS)->push (IN_INVENTORY);
+      m_active_object = get<C::Inventory>("Game:inventory")->get(0);
+    }
     return;
   }
 
+  if (action == "inventory")
+  {
+    m_target = m_active_object;
+    get<C::Status>(GAME__STATUS)->push (OBJECT_CHOICE);
+    m_active_object = get<C::Inventory>("Game:inventory")->get(0);
+  }
   set_action (m_active_object + "_" + action, "Default_" + action);
 }
 
@@ -719,6 +731,10 @@ bool Interface::detect_proximity()
         if (!request<C::Image>(label->entity() + ":image"))
           continue;
 
+        // Inventory objet
+        if (get<C::String>(label->entity() + ":state")->value() == "inventory")
+          continue;
+
         // Object in reach
         if (dx <= Config::object_reach_x && dy <= Config::object_reach_y)
           close_objects.insert (label->entity());
@@ -825,7 +841,7 @@ void Interface::update_label (bool is_button, const std::string& id, std::string
 
   if (group)
   {
-    label = request<C::Image>(id + "_back:image");
+    label = request<C::Image>(id + ":image");
     left = request<C::Image>(id + "_left_circle:image");
     right = request<C::Image>(id + "_right_circle:image");
     back = request<C::Image>(id + "_back:image");
@@ -899,8 +915,16 @@ void Interface::update_label (bool is_button, const std::string& id, std::string
   if (right)
     right->on() = !open_right;
 
-  int half_width_minus = (back ? back->width() / 2 : 0);
-  int half_width_plus = (back ? back->width() - half_width_minus : 0);
+
+  int half_width_minus = (back ? round(scale * back->width()) / 2 : 0);
+  int half_width_plus = (back ? round(scale * back->width()) - half_width_minus : 0);
+
+  // Dirty as fuck but I can't find a cleaner way to avoid gaps between circles and back in some configurations…
+  if (back && scale != 1.0 && round(scale * back->width()) % 2 == 1)
+  {
+   half_width_plus --;
+   half_width_minus ++;
+  }
 
   if(open_left == open_right) // symmetric label
   {
@@ -909,21 +933,21 @@ void Interface::update_label (bool is_button, const std::string& id, std::string
   }
   else if (open_left)
   {
-    set<C::Relative_position>(id + ":position", pos, scale * Vector(Config::label_diff + half_width_plus, 0));
-    set<C::Relative_position>(id + "_back:position", pos, scale * Vector(half_width_plus, 0));
+    set<C::Relative_position>(id + ":position", pos, Vector(scale * Config::label_diff + half_width_plus, 0));
+    set<C::Relative_position>(id + "_back:position", pos, Vector(half_width_plus, 0));
   }
   else if (open_right)
   {
-    set<C::Relative_position>(id + ":position", pos, scale * Vector(-Config::label_diff - half_width_minus, 0));
-    set<C::Relative_position>(id + "_back:position", pos, scale * Vector(-half_width_minus, 0));
+    set<C::Relative_position>(id + ":position", pos, Vector(-scale * Config::label_diff - half_width_minus, 0));
+    set<C::Relative_position>(id + "_back:position", pos, Vector(-half_width_minus, 0));
   }
 
   if (left)
     set<C::Relative_position>(id + "_left_circle:position",
-                     get<C::Position>(id + "_back:position"), scale * Vector(-half_width_minus, 0));
+                     get<C::Position>(id + "_back:position"), Vector(-half_width_minus, 0));
   if (right)
     set<C::Relative_position>(id + "_right_circle:position",
-                               get<C::Position>(id + "_back:position"), scale * Vector(half_width_plus, 0));
+                               get<C::Position>(id + "_back:position"), Vector(half_width_plus, 0));
 }
 
 void Interface::generate_action (const std::string& id, const std::string& action,
@@ -931,6 +955,8 @@ void Interface::generate_action (const std::string& id, const std::string& actio
                                  Point position)
 {
   auto label = request<C::String>(id + "_" + action + ":label");
+  if (action == "cancel")
+    label = get<C::String>("Cancel:text");
   if (!label)
       label = get<C::String>("Default_" + action + ":label");
   if (id == "Default" && action == "inventory")
@@ -1029,7 +1055,12 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   }
 
   if (id == "")
+  {
     update_label (true, "Default_" + action + "_button", button, false, false, button_position, BOX);
+    get<C::Image>("Default_" + action + "_button:image")->on() = false;
+    get<C::Image>("Default_" + action + "_button_left_circle:image")->set_alpha(128);
+    get<C::Image>("Default_" + action + "_button_right_circle:image")->set_alpha(128);
+  }
   else
     update_label (true, id + "_" + action + "_button", button, false, false, button_position, BOX);
 }
@@ -1059,7 +1090,7 @@ void Interface::update_active_objects()
 
 }
 
-void Interface::update_inventory ()
+void Interface:: update_inventory ()
 {
   Status status = get<C::Status>(GAME__STATUS)->value();
   Input_mode mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
@@ -1200,24 +1231,35 @@ void Interface::update_action_selector()
     std::size_t nb_labels = m_labels.size();
     Point origin (Config::world_width - 240, Config::world_height - 130);
 
-    Gamepad_type gamepad = KEYBOARD_PAD;
-    if (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD)
-      gamepad = get<C::Simple<Gamepad_type>>("Gamepad:type")->value();
+    const Gamepad_type& gamepad = get<C::Simple<Gamepad_type>>("Gamepad:type")->value();
 
-    if (m_active_object == "")
+    std::string take_id = "";
+    std::string look_id = "";
+    std::string move_id = "";
+    std::string inventory_id = "Default";
+    std::string take_action = "take";
+    std::string look_action = "look";
+    std::string move_action = "move";
+    std::string inventory_action = "inventory";
+    if (m_active_object != "")
     {
-      generate_action ("", "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), origin);
-      generate_action ("", "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), origin);
-      generate_action ("", "move", UP, gamepad_label(gamepad, NORTH), origin);
-      generate_action ("Default", "inventory", DOWN, gamepad_label(gamepad, SOUTH), origin);
+      take_id = m_active_object;
+      look_id = m_active_object;
+      move_id = m_active_object;
+      inventory_id = m_active_object;
     }
-    else
+    if (get<C::Status>(GAME__STATUS)->value() == IN_INVENTORY)
     {
-      generate_action (m_active_object, "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), origin);
-      generate_action (m_active_object, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), origin);
-      generate_action (m_active_object, "move", UP, gamepad_label(gamepad, NORTH), origin);
-      generate_action (m_active_object, "inventory", DOWN, gamepad_label(gamepad, SOUTH), origin);
+      origin = origin + Vector(0, -Config::inventory_height);
+      take_action = "combine";
+      move_action = "use";
+      inventory_action = "cancel";
     }
+
+    generate_action (take_id, take_action, LEFT_BUTTON, gamepad_label(gamepad, WEST), origin);
+    generate_action (look_id, look_action, RIGHT_BUTTON, gamepad_label(gamepad, EAST), origin);
+    generate_action (move_id, move_action, UP, gamepad_label(gamepad, NORTH), origin);
+    generate_action (inventory_id, inventory_action, DOWN, gamepad_label(gamepad, SOUTH), origin);
 
     for (std::size_t i = nb_labels; i < m_labels.size(); ++ i)
       group->add(m_labels[i]);
@@ -1230,12 +1272,12 @@ void Interface::update_switcher()
   auto group = request<C::Group>("Switcher:group");
   if (!group)
   {
-    bool gamepad = (get<C::Simple<Input_mode> >(INTERFACE__INPUT_MODE)->value() == GAMEPAD);
+    bool keyboard = (get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE)->value() == KEYBOARD);
 
-    if (gamepad)
-      update_label (true, "Switcher_left", "L", false, false, Point(0,0), UNCLICKABLE);
-    else // if (mode->value() == GAMEPAD)
+    if (keyboard)
       update_label (true, "Switcher_left", "Tab", false, false, Point(0,0), UNCLICKABLE);
+    else
+      update_label (true, "Switcher_left", "L", false, false, Point(0,0), UNCLICKABLE);
     m_labels.pop_back();
 
     auto left_pos = get<C::Absolute_position>("Switcher_left:global_position");
@@ -1244,11 +1286,11 @@ void Interface::update_switcher()
 
 
     update_label (false, "Switcher_label", get<C::String>("Switch_target:text")->value(),
-                  true, gamepad, Point(0,0), UNCLICKABLE);
+                  true, !keyboard, Point(0,0), UNCLICKABLE);
     m_labels.pop_back();
 
     // Correct position of half-open label in keyboard mode (a bit hacky but meh…)
-    if (!gamepad)
+    if (keyboard)
     {
       get<C::Relative_position>("Switcher_label:position")->set(Vector(Config::label_margin,0));
       get<C::Relative_position>("Switcher_label_back:position")->set(Vector(0,0));
@@ -1259,7 +1301,7 @@ void Interface::update_switcher()
     pos->set (Point (get<C::Position>("Switcher_left_right_circle:position")->value().x() + img->width() / 2,
                      left_pos->value().y()));
 
-    if (gamepad)
+    if (!keyboard)
     {
       update_label (true, "Switcher_right", "R", false, false, Point(0,0), UNCLICKABLE);
       m_labels.pop_back();

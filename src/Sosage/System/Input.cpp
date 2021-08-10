@@ -41,6 +41,7 @@ Input::Input (Content& content)
   , m_x(0)
   , m_y(0)
 {
+  set_fac<C::Simple<Vector>>(STICK__DIRECTION, "Stick:direction", Vector(0, 0));
 }
 
 void Input::run()
@@ -70,29 +71,25 @@ void Input::run()
   }
 
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
   Input_mode previous_mode = mode->value();
+  Gamepad_type previous_type = gamepad->value();
   if (touchscreen_used)
-  {
-    debug("Touchscreen mode activated");
     mode->set (TOUCHSCREEN);
-  }
   else if (mouse_used)
-  {
-    debug("Mouse mode activated");
     mode->set (MOUSE);
-  }
   else if (keyboard_used)
   {
-    debug("Keyboard mode activated");
-    mode->set (KEYBOARD);
+    mode->set (GAMEPAD);
+    gamepad->set (KEYBOARD);
   }
   else if (gamepad_used)
   {
-    debug("Gamepad mode activated");
     mode->set (GAMEPAD);
+    gamepad->set (m_core.gamepad_type());
   }
 
-  if (previous_mode != mode->value())
+  if (previous_mode != mode->value() || previous_type != gamepad->value())
     emit("Input_mode:changed");
 
   for (const Event& ev : m_current_events)
@@ -106,7 +103,7 @@ void Input::run()
     if (ev == Event(WINDOW, EXIT))
       emit ("Game:exit");
 
-   if (ev == Event(KEY_UP, SPACE))
+    if (ev == Event(KEY_UP, SPACE))
     {
       if (status->value() == PAUSED)
         status->pop();
@@ -116,10 +113,10 @@ void Input::run()
 
     if (ev == Event(WINDOW, FOREGROUND)
         && status->value() == PAUSED)
-        status->pop();
+      status->pop();
     if (ev == Event(WINDOW, BACKGROUND)
         && status->value() != PAUSED)
-        status->push(PAUSED);
+      status->push(PAUSED);
 
     if (status->value() == PAUSED)
       continue;
@@ -179,82 +176,87 @@ void Input::run()
     else if (mode->value() == TOUCHSCREEN)
     {
     }
-    else if (mode->value() == KEYBOARD)
-    {
-      if (ev.type() == KEY_DOWN)
-      {
-        key_on(ev.value()) = true;
-        if (ev.value() == TAB)
-          set<C::Boolean>("Switch:right", true);
-        else if (ev.value() == I)
-          emit("Action:move");
-        else if (ev.value() == J)
-          emit("Action:take");
-        else if (ev.value() == L)
-          emit("Action:look");
-        else if (ev.value() == K)
-          emit("Action:inventory");
-      }
-      else if (ev.type() == KEY_UP)
-        key_on(ev.value()) = false;
-    }
     else // if (mode->value() == GAMEPAD)
     {
-      if (ev == Event (STICK_MOVE, LEFT))
-      {
-        if (ev.y() == Config::no_value)
-          m_x = (ev.x() + 0.5) / Config::stick_max;
-        if (ev.x() == Config::no_value)
-          m_y = (ev.y() + 0.5) / Config::stick_max;
-      }
-      else if (ev.type() == BUTTON_DOWN)
-      {
-        key_on(ev.value()) = true;
-        if (ev.value() == LEFT_SHOULDER)
-          set<C::Boolean>("Switch:right", false);
-        else if (ev.value() == RIGHT_SHOULDER)
-          set<C::Boolean>("Switch:right", true);
-        else if (ev.value() == NORTH)
-          emit("Action:move");
-        else if (ev.value() == WEST)
-          emit("Action:take");
-        else if (ev.value() == EAST)
-          emit("Action:look");
-        else if (ev.value() == SOUTH)
-          emit("Action:inventory");
-      }
-      else if (ev.type() == BUTTON_UP)
-        key_on(ev.value()) = false;
-    }
-  }
+      Vector previous_stick = get<C::Simple<Vector>>(STICK__DIRECTION)->value();
 
-  if (mode->value() == KEYBOARD)
-  {
-    m_x = 0.;
-    m_y = 0.;
-    if (key_on(UP_ARROW)) m_y -= 1.;
-    if (key_on(DOWN_ARROW)) m_y += 1.;
-    if (key_on(LEFT_ARROW)) m_x -= 1.;
-    if (key_on(RIGHT_ARROW)) m_x += 1.;
-    set<C::Simple<Vector>>("Stick:direction", Vector(m_x, m_y));
-  }
-  else if (mode->value() == GAMEPAD)
-  {
-    /* TODO: add DPAD
-    if (key_on(UP_ARROW)) m_y = -1.;
-    if (key_on(DOWN_ARROW)) m_y = 1.;
-    if (key_on(LEFT_ARROW)) m_x = 1.;
-    if (key_on(RIGHT_ARROW)) m_x = -1.;
-    */
-    Vector vec (m_x, m_y);
-    if (vec.length() > 0.25)
-      vec.normalize();
-    else
-      vec = Vector(0,0);
-    set<C::Simple<Vector>>("Stick:direction", vec);
+      if (gamepad->value() == KEYBOARD)
+      {
+        if (ev.type() == KEY_DOWN)
+        {
+          key_on(ev.value()) = true;
+          if (ev.value() == TAB)
+            set<C::Boolean>("Switch:right", true);
+          else if (ev.value() == I)
+            emit("Action:move");
+          else if (ev.value() == J)
+            emit("Action:take");
+          else if (ev.value() == L)
+            emit("Action:look");
+          else if (ev.value() == K)
+            emit("Action:inventory");
+        }
+        else if (ev.type() == KEY_UP)
+          key_on(ev.value()) = false;
+
+        m_x = 0.;
+        m_y = 0.;
+        if (key_on(UP_ARROW)) m_y -= 1.;
+        if (key_on(DOWN_ARROW)) m_y += 1.;
+        if (key_on(LEFT_ARROW)) m_x -= 1.;
+        if (key_on(RIGHT_ARROW)) m_x += 1.;
+        get<C::Simple<Vector>>(STICK__DIRECTION)->set(Vector(m_x, m_y));
+      }
+      else // Real gamepad (no keyboard)
+      {
+        if (ev == Event (STICK_MOVE, LEFT))
+        {
+          if (ev.y() == Config::no_value)
+            m_x = (ev.x() + 0.5) / Config::stick_max;
+          if (ev.x() == Config::no_value)
+            m_y = (ev.y() + 0.5) / Config::stick_max;
+        }
+        else if (ev.type() == BUTTON_DOWN)
+        {
+          key_on(ev.value()) = true;
+          if (ev.value() == LEFT_SHOULDER)
+            set<C::Boolean>("Switch:right", false);
+          else if (ev.value() == RIGHT_SHOULDER)
+            set<C::Boolean>("Switch:right", true);
+          else if (ev.value() == NORTH)
+            emit("Action:move");
+          else if (ev.value() == WEST)
+            emit("Action:take");
+          else if (ev.value() == EAST)
+            emit("Action:look");
+          else if (ev.value() == SOUTH)
+            emit("Action:inventory");
+        }
+        else if (ev.type() == BUTTON_UP)
+          key_on(ev.value()) = false;
+        /* TODO: add DPAD
+        if (key_on(UP_ARROW)) m_y = -1.;
+        if (key_on(DOWN_ARROW)) m_y = 1.;
+        if (key_on(LEFT_ARROW)) m_x = 1.;
+        if (key_on(RIGHT_ARROW)) m_x = -1.;
+        */
+        Vector vec (m_x, m_y);
+        if (vec.length() > 0.25)
+          vec.normalize();
+        else
+          vec = Vector(0,0);
+        get<C::Simple<Vector>>(STICK__DIRECTION)->set(vec);
+      }
+
+      if (previous_stick != get<C::Simple<Vector>>(STICK__DIRECTION)->value())
+        emit("Stick:moved");
+    }
+
+
   }
 
   m_current_events.clear();
 }
+
 
 } // namespace Sosage::System

@@ -91,6 +91,33 @@ Event SDL_events::next_event ()
   return Event();
 }
 
+Gamepad_type SDL_events::gamepad_type() const
+{
+  for (int i = 0; i < SDL_NumJoysticks(); ++ i)
+    if (SDL_IsGameController(i))
+    {
+      SDL_GameController* controller = SDL_GameControllerOpen(i);
+      if (controller)
+      {
+        const char* name_str = SDL_GameControllerName(controller);
+        if (name_str)
+        {
+          std::string name = name_str;
+          if (name.find("Nintendo") != std::string::npos)
+            return JAPAN;
+          if (name.find("Steam") != std::string::npos)
+            return USA;
+          if (name.find("Xbox") != std::string::npos)
+            return USA;
+        }
+        break;
+      }
+  }
+
+  // Default controller, no label
+  return NO_LABEL;
+}
+
 Event SDL_events::mouse_event (const Event_type& type, const SDL_Event& ev) const
 {
   Event_value value;

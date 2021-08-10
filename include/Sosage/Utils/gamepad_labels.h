@@ -46,7 +46,7 @@ std::string gamepad_label (const Gamepad_type& type, const Event_value& value)
 
   if (type == JAPAN) return japan[value];
   if (type == USA) return usa[value];
-  if (type == KEYBOARD_PAD) return keyboard[value];
+  if (type == KEYBOARD) return keyboard[value];
 
   // no label
   return "";

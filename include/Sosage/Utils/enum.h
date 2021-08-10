@@ -80,7 +80,6 @@ enum Input_mode
 {
   MOUSE,
   TOUCHSCREEN,
-  KEYBOARD,
   GAMEPAD
 };
 
@@ -89,7 +88,7 @@ enum Gamepad_type
   NO_LABEL,
   JAPAN,
   USA,
-  KEYBOARD_PAD
+  KEYBOARD
 };
 
 enum Event_type
@@ -169,6 +168,8 @@ enum Fast_access_component
   LOADING_SPIN__IMAGE,
   LOADING_SPIN__POSITION,
   INTERFACE__INPUT_MODE,
+  GAMEPAD__TYPE,
+  STICK__DIRECTION,
 
   NUMBER_OF_KEYS
 };

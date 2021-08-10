@@ -172,7 +172,7 @@ void File_IO::read_config()
 
   set<C::Boolean>("Window:fullscreen", fullscreen);
   set_fac<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE, "Interface:input_mode", Input_mode(input_mode));
-  set<C::Simple<Gamepad_type>>("Gamepad:type", Gamepad_type(gamepad_type));
+  set_fac<C::Simple<Gamepad_type>>(GAMEPAD__TYPE, "Gamepad:type", Gamepad_type(gamepad_type));
 
   set<C::Int>("Dialog:speed", dialog_speed);
   set<C::Int>("Dialog:size", dialog_size);
@@ -193,7 +193,7 @@ void File_IO::write_config()
 
   output.write ("fullscreen", get<C::Boolean>("Window:fullscreen")->value());
   output.write ("input_mode", get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value());
-  output.write ("gamepad_type", get<C::Simple<Gamepad_type>>("Gamepad:type")->value());
+  output.write ("gamepad_type", get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE)->value());
 
   output.write ("dialog_speed", get<C::Int>("Dialog:speed")->value());
   output.write ("dialog_size", get<C::Int>("Dialog:size")->value());
