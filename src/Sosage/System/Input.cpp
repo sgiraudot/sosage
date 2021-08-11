@@ -95,7 +95,8 @@ void Input::run()
     //debug("New event ", ev.to_string());
 
     if (ev == Event(KEY_UP, ESCAPE) ||
-        ev == Event(KEY_UP, ANDROID_BACK))
+        ev == Event(KEY_UP, ANDROID_BACK) ||
+        ev == Event(BUTTON_UP, START))
       emit ("Game:escape");
 
     if (ev == Event(WINDOW, EXIT))
@@ -239,7 +240,7 @@ void Input::run()
         if (key_on(RIGHT_ARROW)) m_x = -1.;
         */
         Vector vec (m_x, m_y);
-        if (vec.length() > 0.25)
+        if (vec.length() > 1.0)
           vec.normalize();
         else
           vec = Vector(0,0);

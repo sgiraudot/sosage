@@ -43,6 +43,108 @@ namespace Sosage::System
 
 namespace C = Component;
 
+void Interface::window_triggered(const std::string& action)
+{
+  if (action == "look" || action == "inventory")
+  {
+    auto window = get<C::Image>("Game:window");
+    window->on() = false;
+    status()->pop();
+  }
+}
+
+void Interface::code_triggered(const std::string& action)
+{
+  auto code = get<C::Code>("Game:code");
+  auto window = get<C::Image>("Game:window");
+  if (action == "inventory")
+  {
+    window->on() = false;
+    code->reset();
+    remove("Code_hover:image");
+    status()->pop();
+  }
+  else if (action == "look")
+  {
+    if (code->click())
+      emit ("code:button_clicked");
+  }
+}
+
+void Interface::inventory_triggered(const std::string& action)
+{
+  if (status()->value() == OBJECT_CHOICE)
+  {
+    if (action == "look")
+    {
+      if (m_target != "")
+      {
+        std::string action_id = m_target + "_inventory_" + m_active_object;
+        set_action (action_id, "Default_inventory");
+        m_target = "";
+      }
+      else // if (m_source != "")
+      {
+        std::string action_id = m_active_object + "_inventory_" + m_source;
+        set_action (action_id, "Default_inventory");
+        m_source = "";
+      }
+      m_active_object = "";
+      status()->pop();
+    }
+    else if (action == "inventory")
+    {
+      status()->pop();
+      m_source = "";
+      m_target = "";
+      m_active_object = "";
+    }
+  }
+  else // if (status()->value() == INVENTORY)
+  {
+    if (action == "look")
+    {
+      std::string action_id = m_active_object + "_look";
+      set_action (action_id, "Default_look");
+      m_active_object = "";
+      status()->pop();
+    }
+    else if (action == "move") // use
+    {
+      std::string action_id = m_active_object + "_use";
+      set_action (action_id, "Default_use");
+      m_active_object = "";
+      status()->pop();
+    }
+    else if (action == "take") // combine
+    {
+      if (get<C::Inventory>("Game:inventory")->size() > 1)
+      {
+        m_source = m_active_object;
+        status()->pop();
+        status()->push(IN_INVENTORY);
+
+        auto inventory = get<C::Inventory>("Game:inventory");
+        for (std::size_t i = 0; i < inventory->size(); ++ i)
+          if (inventory->get(i) == m_active_object)
+          {
+            if (i == inventory->size() - 1)
+              m_active_object = inventory->get(i-1);
+            else
+              m_active_object = inventory->get(i+1);
+            break;
+          }
+      }
+    }
+    else // if (action == "inventory")
+    {
+      status()->pop();
+      m_active_object = "";
+      m_source = "";
+    }
+  }
+}
+
 void Interface::idle_triggered (const std::string& action)
 {
   if (m_active_object == "")
@@ -51,6 +153,7 @@ void Interface::idle_triggered (const std::string& action)
     {
       status()->push (IN_INVENTORY);
       m_active_object = get<C::Inventory>("Game:inventory")->get(0);
+      m_close_objects.clear();
     }
     return;
   }
@@ -60,6 +163,8 @@ void Interface::idle_triggered (const std::string& action)
     m_target = m_active_object;
     status()->push (OBJECT_CHOICE);
     m_active_object = get<C::Inventory>("Game:inventory")->get(0);
+    m_close_objects.clear();
+    return;
   }
   set_action (m_active_object + "_" + action, "Default_" + action);
 }
@@ -135,32 +240,60 @@ bool Interface::detect_proximity()
 
 void Interface::switch_active_object (const bool& right)
 {
-  if (m_close_objects.size() < 2)
-    return;
-
-  std::vector<std::string> close_objects;
-  close_objects.reserve (m_close_objects.size());
-  std::copy (m_close_objects.begin(), m_close_objects.end(),
-             std::back_inserter (close_objects));
-
-  // Sort close objects by X coordinate to switch to the immediate left or right
-  std::sort (close_objects.begin(), close_objects.end(),
-             [&](const std::string& a, const std::string& b) -> bool
-             {
-               auto pos_a = get<C::Position>(a + ":position");
-               auto pos_b = get<C::Position>(b + ":position");
-               return pos_a->value().x() < pos_b->value().x();
-             });
-
-  for (std::size_t i = 0; i < close_objects.size(); ++ i)
-    if (close_objects[i] == m_active_object)
-    {
-      m_active_object = (right ? close_objects[(i + 1) % close_objects.size()]
-                         : close_objects[(i + close_objects.size() - 1) % close_objects.size()]);
+  if (status()->value() == IDLE)
+  {
+    if (m_close_objects.size() < 2)
       return;
-    }
 
-  dbg_check(false, "Switch active object failed");
+    std::vector<std::string> close_objects;
+    close_objects.reserve (m_close_objects.size());
+    std::copy (m_close_objects.begin(), m_close_objects.end(),
+               std::back_inserter (close_objects));
+
+    // Sort close objects by X coordinate to switch to the immediate left or right
+    std::sort (close_objects.begin(), close_objects.end(),
+               [&](const std::string& a, const std::string& b) -> bool
+    {
+      auto pos_a = get<C::Position>(a + ":position");
+      auto pos_b = get<C::Position>(b + ":position");
+      return pos_a->value().x() < pos_b->value().x();
+    });
+
+    for (std::size_t i = 0; i < close_objects.size(); ++ i)
+      if (close_objects[i] == m_active_object)
+      {
+        m_active_object = (right ? close_objects[(i + 1) % close_objects.size()]
+                           : close_objects[(i + close_objects.size() - 1) % close_objects.size()]);
+        return;
+      }
+
+    dbg_check(false, "Switch active object failed");
+  }
+  else if (status()->value() == IN_INVENTORY || status()->value() == OBJECT_CHOICE)
+  {
+    auto inventory = get<C::Inventory>("Game:inventory");
+
+    for (std::size_t i = 0; i < inventory->size(); ++ i)
+      if (inventory->get(i) == m_active_object)
+      {
+        int diff = 0;
+        if (right && i < inventory->size() - 1)
+          diff = 1;
+        else if (!right && i > 0)
+          diff = -1;
+
+        if (inventory->get(i+diff) == m_source)
+        {
+          diff = 0;
+          if (right && i < inventory->size() - 2)
+            diff = 2;
+          else if (!right && i > 1)
+            diff = -2;
+        }
+        m_active_object = inventory->get(i+diff);
+        break;
+      }
+  }
 }
 
 void Interface::update_active_objects()
@@ -220,6 +353,24 @@ void Interface::update_action_selector()
       origin = origin + Vector(0, -Config::inventory_height);
       take_action = "combine";
       move_action = "use";
+      inventory_action = "cancel";
+      if (get<C::Inventory>("Game:inventory")->size() == 1)
+        take_id = "";
+    }
+    else if (status()->value() == OBJECT_CHOICE)
+    {
+      take_id = "";
+      move_id = "";
+      origin = origin + Vector(0, -Config::inventory_height);
+      look_action = "ok";
+      inventory_action = "cancel";
+    }
+    else if (status()->value() == IN_CODE || status()->value() == IN_WINDOW)
+    {
+      look_id = "code";
+      take_id = "";
+      move_id = "";
+      look_action = "ok";
       inventory_action = "cancel";
     }
 

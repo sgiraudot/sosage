@@ -49,6 +49,7 @@ class Interface : public Base
   std::unordered_set<std::string> m_close_objects;
   std::string m_active_object;
   double m_latest_exit;
+  bool m_stick_on;
 
 public:
 
@@ -71,6 +72,7 @@ private:
                         Point position = Point());
   void update_inventory ();
   void update_dialog_choices ();
+  void generate_code_hover();
 
   // Implemented in Interface__mouse.cpp
   void window_clicked();
@@ -84,7 +86,10 @@ private:
   void detect_collision (Component::Position_handle cursor);
 
   // Implemented in Interface__gamepad.cpp
-  void idle_triggered(const std::string& action);
+  void window_triggered (const std::string& action);
+  void code_triggered(const std::string& action);
+  void inventory_triggered (const std::string& action);
+  void idle_triggered (const std::string& action);
   bool detect_proximity ();
   void switch_active_object (const bool& right);
   void update_active_objects();

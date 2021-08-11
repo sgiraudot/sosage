@@ -44,6 +44,8 @@ class Code : public Base
     int y;
     int w;
     int h;
+    std::size_t x_index;
+    std::size_t y_index;
 
     Button (const std::string value, int x, int y, int w, int h)
       : value (value), x(x), y(y), w(w), h(h)
@@ -53,6 +55,8 @@ class Code : public Base
   std::vector<Button> m_buttons;
   std::vector<std::string> m_answer;
   std::vector<std::size_t> m_proposal;
+  std::size_t m_hover;
+  std::vector<std::vector<std::size_t>> m_indices;
   
 public:
 
@@ -60,15 +64,17 @@ public:
 
   void add_button (const std::string& value, int x, int y, int w, int h);
   void add_answer_item (const std::string& value);
-  bool click (int x, int y);
+  bool hover (int x = -1, int y = -1);
+  void move (double x, double y);
+  bool click (int x = -1, int y = -1);
   void reset();
   bool failure();
   bool success();
 
-  int xmin() { return m_buttons[m_proposal.back()].x; }
-  int xmax() { return m_buttons[m_proposal.back()].x + m_buttons[m_proposal.back()].w; }
-  int ymin() { return m_buttons[m_proposal.back()].y; }
-  int ymax() { return m_buttons[m_proposal.back()].y + m_buttons[m_proposal.back()].h; }
+  int xmin() { return m_buttons[m_hover].x; }
+  int xmax() { return m_buttons[m_hover].x + m_buttons[m_hover].w; }
+  int ymin() { return m_buttons[m_hover].y; }
+  int ymax() { return m_buttons[m_hover].y + m_buttons[m_hover].h; }
   
   
 };

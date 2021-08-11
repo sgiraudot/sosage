@@ -190,6 +190,7 @@ void Logic::run ()
     auto window = get<C::Image>("Game:window");
     window->on() = false;
     code->reset();
+    remove("Code_hover:image", true);
     status()->pop();
 
     m_current_action = get<C::Action>

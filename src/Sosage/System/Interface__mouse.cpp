@@ -434,6 +434,21 @@ void Interface::detect_collision (C::Position_handle cursor)
         get<C::Image>(object_id + "_button_right_circle:image")->set_highlight(255);
       }
     }
+    else if (status()->value() == IN_CODE)
+    {
+      auto code = get<C::Code>("Game:code");
+      auto window = get<C::Image>("Game:window");
+      auto position
+        = get<C::Position>(window->entity() + ":position");
+
+      Point p = cursor->value() - Vector(position->value()) + Vector (0.5  * window->width(),
+                                                                      0.5 * window->height());
+
+      if (code->hover(p.X(), p.Y()))
+        generate_code_hover();
+      else
+        remove("Code_hover:image", true);
+    }
     else
     {
       bool display_label = status()->value() == IDLE;

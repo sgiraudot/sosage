@@ -46,6 +46,7 @@ namespace C = Component;
 Interface::Interface (Content& content)
   : Base (content)
   , m_latest_exit (-10000)
+  , m_stick_on (false)
 {
 
 }
@@ -95,12 +96,59 @@ void Interface::run()
 
       if (status()->value() == IDLE)
         active_objects_changed = detect_proximity();
+      else if (status()->value() == IN_CODE)
+      {
+        if (!request<C::Image>("Code_hover:image"))
+        {
+          get<C::Code>("Game:code")->hover();
+          generate_code_hover();
+          m_close_objects.clear();
+          m_active_object = "";
+          active_objects_changed = true;
+        }
+      }
 
       if (auto right = request<C::Boolean>("Switch:right"))
       {
         switch_active_object (right->value());
         remove ("Switch:right");
         active_objects_changed = true;
+      }
+
+      if (status()->value() != IDLE)
+      {
+        if (receive("Stick:moved"))
+        {
+          if (m_stick_on)
+          {
+            if (get<C::Simple<Vector>>(STICK__DIRECTION)->value() == Vector(0,0))
+              m_stick_on = false;
+          }
+          else
+          {
+            m_stick_on = true;
+
+            if (status()->value() == IN_INVENTORY || status()->value() == OBJECT_CHOICE)
+            {
+              if (get<C::Simple<Vector>>(STICK__DIRECTION)->value().x() < 0)
+              {
+                switch_active_object (false);
+                active_objects_changed = true;
+              }
+              else if (get<C::Simple<Vector>>(STICK__DIRECTION)->value().x() > 0)
+              {
+                switch_active_object (true);
+                active_objects_changed = true;
+              }
+            }
+            else if (status()->value() == IN_CODE)
+            {
+              const Vector& direction = get<C::Simple<Vector>>(STICK__DIRECTION)->value();
+              get<C::Code>("Game:code")->move(direction.x(), direction.y());
+              generate_code_hover();
+            }
+          }
+        }
       }
 
       std::string received_key = "";
@@ -112,19 +160,18 @@ void Interface::run()
       {
 
         if (status()->value() == IN_WINDOW)
-          ;
+          window_triggered(received_key);
         else if (status()->value() == IN_CODE)
-          ;
+          code_triggered(received_key);
         else if (status()->value() == IN_MENU)
           ;
         else if (status()->value() == DIALOG_CHOICE)
           ;
-        else if (status()->value() == ACTION_CHOICE || status()->value() == INVENTORY_ACTION_CHOICE)
-          ;
-        else if (status()->value() == OBJECT_CHOICE)
-          ;
-        else if (status()->value() == IN_INVENTORY)
-          ;
+        else if (status()->value() == OBJECT_CHOICE || status()->value() == IN_INVENTORY)
+        {
+          inventory_triggered(received_key);
+          active_objects_changed = true;
+        }
         else // IDLE
         {
           idle_triggered(received_key);
@@ -396,6 +443,8 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   auto label = request<C::String>(id + "_" + action + ":label");
   if (action == "cancel")
     label = get<C::String>("Cancel:text");
+  else if (action == "ok")
+    label = get<C::String>("Ok:text");
   if (!label)
       label = get<C::String>("Default_" + action + ":label");
   if (id == "Default" && action == "inventory")
@@ -526,12 +575,20 @@ void Interface:: update_inventory ()
   for (std::size_t i = 0; i < inventory->size(); ++ i)
   {
     auto img = get<C::Image>(inventory->get(i) + ":image");
-    double factor = 1.;
+    double factor = 0.7;
+    unsigned char alpha = 255;
+    unsigned char highlight = 0;
 
-    if (img == m_collision)
+    if (img == m_collision || inventory->get(i) == m_active_object)
     {
-      img->set_highlight(0);
-      factor = 1.1;
+      highlight = 255;
+      factor = 0.9;
+    }
+    if (inventory->get(i) == m_source)
+    {
+      highlight = 0;
+      alpha = 128;
+      factor = 0.5;
     }
 
     if (position <= i && i < position + Config::displayed_inventory_size)
@@ -539,7 +596,9 @@ void Interface:: update_inventory ()
       std::size_t pos = i - position;
       double relative_pos = (1 + pos) / double(Config::displayed_inventory_size + 1);
       img->on() = true;
-      img->set_scale (0.8);
+      img->set_scale (factor);
+      img->set_alpha (alpha);
+      img->set_highlight(highlight);
 
       int x = inventory_margin + int(relative_pos * inventory_width);
       int y = Config::inventory_height / 2;
@@ -635,7 +694,26 @@ void Interface::update_dialog_choices()
   }
 }
 
+void Interface::generate_code_hover()
+{
+  const std::string& player = get<C::String>("Player:name")->value();
+  auto code = get<C::Code>("Game:code");
+  auto window = get<C::Image>("Game:window");
+  auto position
+    = get<C::Position>(window->entity() + ":position");
 
+  const std::string& color_str = get<C::String>(player + ":color")->value();
+  RGB_color color = color_from_string (color_str);
+  auto img = set<C::Image>("Code_hover:image", code->xmax() - code->xmin(), code->ymax() - code->ymin(),
+                           color[0], color[1], color[2], 128);
+  img->set_collision(UNCLICKABLE);
+  img->z() = Config::inventory_depth;
+  set<C::Absolute_position>
+      ("Code_hover:position", Point(code->xmin(), code->ymin())
+       + Vector(position->value())
+       - Vector (0.5  * window->width(),
+                 0.5 * window->height()));
 
+}
 
 } // namespace Sosage::System
