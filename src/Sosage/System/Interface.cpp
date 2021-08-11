@@ -57,13 +57,12 @@ void Interface::run()
   if (receive("Input_mode:changed"))
     update_active_objects();
 
-  auto status = get<C::Status>(GAME__STATUS);
-  if (status->value() == PAUSED)
+  if (status()->value() == PAUSED)
     return;
 
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
-  if (status->value() != CUTSCENE && status->value() != LOCKED)
+  if (status()->value() != CUTSCENE && status()->value() != LOCKED)
   {
     if (mode->value() == MOUSE || mode->value() == TOUCHSCREEN)
     {
@@ -72,19 +71,19 @@ void Interface::run()
 
       if (receive ("Cursor:clicked") && m_collision)
       {
-        if (status->value() == IN_WINDOW)
+        if (status()->value() == IN_WINDOW)
           window_clicked();
-        else if (status->value() == IN_CODE)
+        else if (status()->value() == IN_CODE)
           code_clicked(cursor);
-        else if (status->value() == IN_MENU)
+        else if (status()->value() == IN_MENU)
           menu_clicked();
-        else if (status->value() == DIALOG_CHOICE)
+        else if (status()->value() == DIALOG_CHOICE)
           dialog_clicked();
-        else if (status->value() == ACTION_CHOICE || status->value() == INVENTORY_ACTION_CHOICE)
+        else if (status()->value() == ACTION_CHOICE || status()->value() == INVENTORY_ACTION_CHOICE)
           action_clicked();
-        else if (status->value() == OBJECT_CHOICE)
+        else if (status()->value() == OBJECT_CHOICE)
           object_clicked();
-        else if (status->value() == IN_INVENTORY)
+        else if (status()->value() == IN_INVENTORY)
           inventory_clicked();
         else // IDLE
           idle_clicked();
@@ -94,7 +93,7 @@ void Interface::run()
     {
       bool active_objects_changed = false;
 
-      if (status->value() == IDLE)
+      if (status()->value() == IDLE)
         active_objects_changed = detect_proximity();
 
       if (auto right = request<C::Boolean>("Switch:right"))
@@ -112,19 +111,19 @@ void Interface::run()
       if (received_key != "")
       {
 
-        if (status->value() == IN_WINDOW)
+        if (status()->value() == IN_WINDOW)
           ;
-        else if (status->value() == IN_CODE)
+        else if (status()->value() == IN_CODE)
           ;
-        else if (status->value() == IN_MENU)
+        else if (status()->value() == IN_MENU)
           ;
-        else if (status->value() == DIALOG_CHOICE)
+        else if (status()->value() == DIALOG_CHOICE)
           ;
-        else if (status->value() == ACTION_CHOICE || status->value() == INVENTORY_ACTION_CHOICE)
+        else if (status()->value() == ACTION_CHOICE || status()->value() == INVENTORY_ACTION_CHOICE)
           ;
-        else if (status->value() == OBJECT_CHOICE)
+        else if (status()->value() == OBJECT_CHOICE)
           ;
-        else if (status->value() == IN_INVENTORY)
+        else if (status()->value() == IN_INVENTORY)
           ;
         else // IDLE
         {
@@ -217,12 +216,9 @@ void Interface::update_pause_screen()
   pause_screen_img->z() += 10;
 
   // Create pause screen
-  auto status
-    = get<C::Status>(GAME__STATUS);
-
   auto pause_screen
     = set<C::Conditional>("Pause_screen:conditional",
-                                            C::make_value_condition<Sosage::Status>(status, PAUSED),
+                                            C::make_value_condition<Sosage::Status>(status(), PAUSED),
                                             pause_screen_img);
 
   auto pause_text_img
@@ -240,7 +236,7 @@ void Interface::update_pause_screen()
 
   auto pause_text
     = set<C::Conditional>("Pause_text:conditional",
-                                            C::make_value_condition<Sosage::Status>(status, PAUSED),
+                                            C::make_value_condition<Sosage::Status>(status(), PAUSED),
                                             pause_text_img);
 
   set<C::Absolute_position>("Pause_text:position", Point(Config::world_width / 2,
@@ -511,13 +507,12 @@ void Interface::generate_action (const std::string& id, const std::string& actio
 
 void Interface:: update_inventory ()
 {
-  Status status = get<C::Status>(GAME__STATUS)->value();
   Input_mode mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
 
   auto inventory_origin = get<C::Absolute_position>("Inventory:origin");
-  if (status == IN_INVENTORY || status == OBJECT_CHOICE || status == INVENTORY_ACTION_CHOICE)
+  if (status()->value() == IN_INVENTORY || status()->value() == OBJECT_CHOICE || status()->value() == INVENTORY_ACTION_CHOICE)
     inventory_origin->set (Point (0, Config::world_height - Config::inventory_height));
-  else if ((mode == MOUSE || mode == TOUCHSCREEN) && status == IDLE)
+  else if ((mode == MOUSE || mode == TOUCHSCREEN) && status()->value() == IDLE)
     inventory_origin->set (Point (0, Config::world_height));
   else
     inventory_origin->set(Point (0, 2 * Config::world_height)); // hidden way at the bottom
@@ -563,7 +558,7 @@ void Interface:: update_inventory ()
 
 void Interface::update_dialog_choices()
 {
-  if (get<C::Status>(GAME__STATUS)->value() != DIALOG_CHOICE)
+  if (status()->value() != DIALOG_CHOICE)
     return;
 
   const std::vector<std::string>& choices

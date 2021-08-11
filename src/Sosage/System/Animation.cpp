@@ -47,9 +47,7 @@ void Animation::run()
 {
   std::size_t new_frame_id = frame_id(get<C::Double>(CLOCK__TIME)->value());
 
-  auto status = get<C::Status>(GAME__STATUS);
-
-  if (status->value() == PAUSED || status->value() == IN_MENU)
+  if (status()->value() == PAUSED || status()->value() == IN_MENU)
   {
     m_frame_id = new_frame_id;
     return;

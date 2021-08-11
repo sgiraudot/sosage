@@ -314,8 +314,7 @@ void Interface::init_menu_buttons (Component::Menu::Node node)
 
 void Interface::update_exit()
 {
-  auto status = get<C::Status>(GAME__STATUS);
-  if (status->value() == LOCKED)
+  if (status()->value() == LOCKED)
   {
     receive("Game:escape");
     return;
@@ -323,10 +322,10 @@ void Interface::update_exit()
   if (receive("Show:menu"))
   {
     create_menu (get<C::String>("Game:triggered_menu")->value());
-    status->push (IN_MENU);
+    status()->push (IN_MENU);
   }
 
-  if (status->value() == CUTSCENE)
+  if (status()->value() == CUTSCENE)
   {
     double time = get<C::Double>(CLOCK__TIME)->value();
     bool exit_message_exists = (request<C::Image>("Exit_message:image") != nullptr);
@@ -390,7 +389,7 @@ void Interface::update_exit()
   {
     if (receive("Game:escape"))
     {
-      if (status->value() == IN_MENU)
+      if (status()->value() == IN_MENU)
       {
         const std::string& menu = get<C::String>("Game:current_menu")->value();
         if (menu == "End")
@@ -398,13 +397,13 @@ void Interface::update_exit()
         else
         {
           delete_menu(menu);
-          status->pop();
+          status()->pop();
         }
       }
       else
       {
         create_menu("Exit");
-        status->push (IN_MENU);
+        status()->push (IN_MENU);
       }
     }
   }
@@ -548,7 +547,7 @@ void Interface::menu_clicked()
       emit ("Game:reset");
       remove("Game:music");
       emit ("Music:stop");
-      get<C::Status>(GAME__STATUS)->pop();
+      status()->pop();
     }
   }
   else if (effect->value() == "ok")
@@ -562,7 +561,7 @@ void Interface::menu_clicked()
       remove("Game:music");
       emit ("Music:stop");
       delete_menu("Wanna_restart");
-      get<C::Status>(GAME__STATUS)->pop();
+      status()->pop();
     }
     else if (menu == "Credits" || menu == "Settings")
     {
@@ -572,7 +571,7 @@ void Interface::menu_clicked()
     else if (menu == "Hint")
     {
       delete_menu("Hint");
-      get<C::Status>(GAME__STATUS)->pop();
+      status()->pop();
     }
   }
   else if (effect->value() == "settings")
@@ -594,7 +593,7 @@ void Interface::menu_clicked()
   {
     delete_menu(menu);
     if (menu == "Exit")
-      get<C::Status>(GAME__STATUS)->pop();
+      status()->pop();
     else if (menu == "Wanna_restart")
       create_menu("Exit");
   }

@@ -79,14 +79,13 @@ void Logic::run ()
 {
   m_current_time = get<C::Double> (CLOCK__TIME)->value();
 
-  auto status = get<C::Status>(GAME__STATUS);
-  if (status->value() == CUTSCENE || status->next_value() == CUTSCENE)
+  if (status()->value() == CUTSCENE || status()->next_value() == CUTSCENE)
   {
     run_cutscene();
     return;
   }
-  if (status->value() == PAUSED || status->value() == DIALOG_CHOICE ||
-      status->value() == IN_MENU)
+  if (status()->value() == PAUSED || status()->value() == DIALOG_CHOICE ||
+      status()->value() == IN_MENU)
     return;
   std::set<Timed_handle> new_timed_handle;
 
@@ -191,7 +190,7 @@ void Logic::run ()
     auto window = get<C::Image>("Game:window");
     window->on() = false;
     code->reset();
-    status->pop();
+    status()->pop();
 
     m_current_action = get<C::Action>
       (get<C::Code>("Game:code")->entity() + ":action");
@@ -240,8 +239,8 @@ void Logic::run ()
 void Logic::run_cutscene()
 {
   auto cutscene = get<C::Cutscene>("Game:cutscene");
-  bool paused = get<C::Status>(GAME__STATUS)->value() == PAUSED
-                || get<C::Status>(GAME__STATUS)->value() == IN_MENU;
+  bool paused = status()->value() == PAUSED
+                || status()->value() == IN_MENU;
   double current_time
       = cutscene->current_time (m_current_time, paused);
   if (current_time < 0)
@@ -265,7 +264,7 @@ void Logic::run_cutscene()
       C::Base dummy (el.id);
       set<C::String>("Game:new_room", dummy.entity());
       set<C::String>("Game:new_room_origin", dummy.component());
-      get<C::Status>(GAME__STATUS)->pop();
+      status()->pop();
       continue;
     }
     // If cutscene skipped, continue until a load case is reached
@@ -532,7 +531,7 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
 
   if (args.size() == 1)
   {
-    get<C::Status>(GAME__STATUS)->push(LOCKED);
+    status()->push(LOCKED);
     if (auto pos = request<C::Int>("Saved_game:dialog_position"))
     {
       dialog->init (pos->value());
@@ -557,7 +556,7 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
 
   if (dialog->is_over())
   {
-    get<C::Status>(GAME__STATUS)->pop();
+    status()->pop();
     if (dialog->line().first != "")
     {
       m_current_action = get<C::Action>(dialog->line().first + ":action");
@@ -579,7 +578,7 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
     // Keep track in case player saves and reload there
     set<C::Int>("Game:dialog_position", dialog->current());
 
-    get<C::Status>(GAME__STATUS)->push(DIALOG_CHOICE);
+    status()->push(DIALOG_CHOICE);
     auto choices = set<C::Vector<std::string> >("Dialog:choices");
     dialog->get_choices (*choices);
     action->add ("dialog", { args[0], "continue" });
@@ -770,11 +769,11 @@ bool Logic::function_set (const std::vector<std::string>& args)
       auto code = request<C::Code>(target + ":code");
       if (code)
       {
-        get<C::Status>(GAME__STATUS)->push (IN_CODE);
+        status()->push (IN_CODE);
         set<C::Variable>("Game:code", code);
       }
       else
-        get<C::Status>(GAME__STATUS)->push (IN_WINDOW);
+        status()->push (IN_WINDOW);
     }
   }
   else if (option == "hidden")
@@ -808,7 +807,7 @@ bool Logic::function_system (const std::vector<std::string>& args)
     set<C::String>("Game:new_room_origin", args[2]);
   }
   else if (option == "lock")
-    get<C::Status>(GAME__STATUS)->push(LOCKED);
+    status()->push(LOCKED);
   else if (option == "trigger")
   {
     std::string id = args[1];
@@ -821,7 +820,7 @@ bool Logic::function_system (const std::vector<std::string>& args)
     emit("Show:menu");
   }
   else if (option == "unlock")
-    get<C::Status>(GAME__STATUS)->pop();
+    status()->pop();
   else if (option == "wait")
   {
     if (args.size() == 2)

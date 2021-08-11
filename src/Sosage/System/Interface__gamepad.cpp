@@ -49,7 +49,7 @@ void Interface::idle_triggered (const std::string& action)
   {
     if (action == "inventory")
     {
-      get<C::Status>(GAME__STATUS)->push (IN_INVENTORY);
+      status()->push (IN_INVENTORY);
       m_active_object = get<C::Inventory>("Game:inventory")->get(0);
     }
     return;
@@ -58,7 +58,7 @@ void Interface::idle_triggered (const std::string& action)
   if (action == "inventory")
   {
     m_target = m_active_object;
-    get<C::Status>(GAME__STATUS)->push (OBJECT_CHOICE);
+    status()->push (OBJECT_CHOICE);
     m_active_object = get<C::Inventory>("Game:inventory")->get(0);
   }
   set_action (m_active_object + "_" + action, "Default_" + action);
@@ -215,7 +215,7 @@ void Interface::update_action_selector()
       move_id = m_active_object;
       inventory_id = m_active_object;
     }
-    if (get<C::Status>(GAME__STATUS)->value() == IN_INVENTORY)
+    if (status()->value() == IN_INVENTORY)
     {
       origin = origin + Vector(0, -Config::inventory_height);
       take_action = "combine";

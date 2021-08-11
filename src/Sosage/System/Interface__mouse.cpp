@@ -44,7 +44,7 @@ void Interface::window_clicked()
 {
   auto window = get<C::Image>("Game:window");
   window->on() = false;
-  get<C::Status>(GAME__STATUS)->pop();
+  status()->pop();
 }
 
 void Interface::code_clicked (C::Position_handle cursor)
@@ -55,7 +55,7 @@ void Interface::code_clicked (C::Position_handle cursor)
   {
     window->on() = false;
     code->reset();
-    get<C::Status>(GAME__STATUS)->pop();
+    status()->pop();
   }
   else
   {
@@ -98,7 +98,7 @@ void Interface::dialog_clicked ()
   remove("Dialog_choice_background:position");
   remove("Game:current_dialog");
 
-  get<C::Status>(GAME__STATUS)->pop();
+  status()->pop();
 }
 
 void Interface::arrow_clicked()
@@ -112,8 +112,7 @@ void Interface::arrow_clicked()
 
 void Interface::action_clicked()
 {
-  auto status = get<C::Status>(GAME__STATUS);
-  status->pop();
+  status()->pop();
 
   const std::string& id = m_collision->entity();
 
@@ -136,7 +135,7 @@ void Interface::action_clicked()
   if (action == "inventory")
   {
     m_target = target;
-    get<C::Status>(GAME__STATUS)->push(OBJECT_CHOICE);
+    status()->push(OBJECT_CHOICE);
   }
   else if (action == "combine")
   {
@@ -177,7 +176,7 @@ void Interface::object_clicked()
     }
     else
     {
-      get<C::Status>(GAME__STATUS)->pop();
+      status()->pop();
       m_target = "";
     }
   }
@@ -185,7 +184,7 @@ void Interface::object_clicked()
     arrow_clicked();
   else
   {
-    get<C::Status>(GAME__STATUS)->pop();
+    status()->pop();
     m_target = "";
   }
 }
@@ -223,8 +222,8 @@ void Interface::inventory_clicked()
       }
       generate_action (id, "use", UP, "", position);
       generate_action (id, "look", RIGHT_BUTTON, "", position);
-      get<C::Status>(GAME__STATUS)->pop();
-      get<C::Status>(GAME__STATUS)->push(INVENTORY_ACTION_CHOICE);
+      status()->pop();
+      status()->push(INVENTORY_ACTION_CHOICE);
       emit ("Click:play_sound");
     }
   }
@@ -275,7 +274,7 @@ void Interface::idle_clicked()
           generate_action (id, "inventory", DOWN);
         }
       }
-      get<C::Status>(GAME__STATUS)->push(ACTION_CHOICE);
+      status()->push(ACTION_CHOICE);
       emit ("Click:play_sound");
     }
     else // Source exist, search for action ID/source
@@ -316,8 +315,6 @@ void Interface::detect_collision (C::Position_handle cursor)
         get<C::String>("Cursor:state")->set("default");
     }
   }
-
-  auto status = get<C::Status>(GAME__STATUS);
 
   auto previous_collision = m_collision;
   m_collision = C::Image_handle();
@@ -376,27 +373,27 @@ void Interface::detect_collision (C::Position_handle cursor)
 
     }
 
-  if (status->value() == IDLE
+  if (status()->value() == IDLE
       && cursor->value().y() > Config::world_height - Config::inventory_active_zone)
   {
-    status->push (IN_INVENTORY);
+    status()->push (IN_INVENTORY);
     return;
   }
 
-  if (status->value() == IN_INVENTORY
+  if (status()->value() == IN_INVENTORY
       && cursor->value().y() < Config::world_height - Config::inventory_height
       && m_collision->id() != "Chamfer:image"
       && m_collision->id() != "Inventory_label_background:image")
   {
-    status->pop();
+    status()->pop();
     return;
   }
 
-  if (status->value() == IDLE && m_collision &&
+  if (status()->value() == IDLE && m_collision &&
       (m_collision->id() == "Chamfer:image" ||
        m_collision->id() == "Inventory_label_background:image"))
   {
-    status->push(IN_INVENTORY);
+    status()->push(IN_INVENTORY);
     return;
   }
 
@@ -404,7 +401,7 @@ void Interface::detect_collision (C::Position_handle cursor)
   if (previous_collision && (previous_collision != m_collision))
   {
     const std::string& id = previous_collision->entity();
-    if (status->value() == ACTION_CHOICE || status->value() == INVENTORY_ACTION_CHOICE)
+    if (status()->value() == ACTION_CHOICE || status()->value() == INVENTORY_ACTION_CHOICE)
     {
       std::size_t pos = id.find("_button_");
       if (pos == std::string::npos)
@@ -425,7 +422,7 @@ void Interface::detect_collision (C::Position_handle cursor)
   if (m_collision)
   {
     const std::string& id = m_collision->entity();
-    if (status->value() == ACTION_CHOICE || status->value() == INVENTORY_ACTION_CHOICE)
+    if (status()->value() == ACTION_CHOICE || status()->value() == INVENTORY_ACTION_CHOICE)
     {
       std::size_t pos = id.find("_button_");
       if (pos == std::string::npos)
@@ -439,8 +436,8 @@ void Interface::detect_collision (C::Position_handle cursor)
     }
     else
     {
-      bool display_label = status->value() == IDLE;
-      if (status->value() == OBJECT_CHOICE || status->value() == IN_INVENTORY)
+      bool display_label = status()->value() == IDLE;
+      if (status()->value() == OBJECT_CHOICE || status()->value() == IN_INVENTORY)
         if (auto state = request<C::String>(id + ":state"))
           if (state->value() == "inventory")
             display_label = true;

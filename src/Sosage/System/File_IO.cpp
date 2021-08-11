@@ -66,7 +66,7 @@ void File_IO::run()
     else
     {
       read_cutscene (new_room->value());
-      get<C::Status>(GAME__STATUS)->push (CUTSCENE);
+      status()->push (CUTSCENE);
     }
     remove ("Game:new_room");
   }
@@ -377,8 +377,6 @@ void File_IO::read_init (const std::string& folder_name)
   cursor_img->add("object", cursor_object);
   cursor_img->add("goto_left", goto_left_img);
   cursor_img->add("goto_right", goto_right_img);
-
-  auto status = get<C::Status>(GAME__STATUS);
 
   // Cursor displayed = mouse mode AND NOT paused
   set<C::Conditional>

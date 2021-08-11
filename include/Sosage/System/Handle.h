@@ -27,6 +27,7 @@
 #ifndef SOSAGE_SYSTEM_HANDLE_H
 #define SOSAGE_SYSTEM_HANDLE_H
 
+#include <Sosage/Component/Status.h>
 #include <Sosage/Content.h>
 
 #include <memory>
@@ -68,7 +69,7 @@ public:
   void remove (const std::string& key, bool optional = false) { m_content.remove(key, optional); }
   void emit (const std::string& signal) { m_content.emit (signal); }
   bool receive (const std::string& signal) { return m_content.receive(signal); }
-
+  Component::Status_handle status() { return get<Component::Status>(GAME__STATUS); }
 };
 
 using Handle = std::shared_ptr<Base>;

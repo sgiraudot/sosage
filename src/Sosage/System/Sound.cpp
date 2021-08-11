@@ -44,8 +44,6 @@ Sound::Sound (Content& content)
 
 void Sound::run()
 {
-  auto status = m_content.get<C::Status>(GAME__STATUS);
-
   auto music = m_content.request<C::Music>("Game:music");
 
   if (receive("Music:start"))
@@ -72,11 +70,11 @@ void Sound::run()
 
   if (music)
   {
-    bool paused = (status->value() == PAUSED);
+    bool paused = (status()->value() == PAUSED);
 
     if (paused && music->on())
     {
-      if (status->next_value() == CUTSCENE)
+      if (status()->next_value() == CUTSCENE)
         m_core.pause_music (music->core());
       else
         m_core.set_volume(0.15 * get<C::Int>("Music:volume")->value() / 10.);
@@ -84,7 +82,7 @@ void Sound::run()
     }
     else if (!paused && !music->on())
     {
-      if (status->value() == CUTSCENE)
+      if (status()->value() == CUTSCENE)
         m_core.resume_music(music->core());
       else
         m_core.set_volume (get<C::Int>("Music:volume")->value() / 10.);

@@ -105,14 +105,13 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
                return (a->z() < b->z());
              });
 
-  auto status = get<C::Status>(GAME__STATUS);
   double xcamera = get<C::Double>(CAMERA__POSITION)->value();
 
   for (const auto& img : images)
   {
     if (img->on())
     {
-      if (status->value() == LOCKED &&
+      if (status()->value() == LOCKED &&
            img->entity() == "Cursor")
         continue;
 
