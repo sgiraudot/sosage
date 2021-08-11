@@ -92,19 +92,14 @@ void Interface::run()
     }
     else // if (mode->value() == GAMEPAD)
     {
-      bool active_objects_changed = false;
+      bool active_objects_changed = detect_proximity();
 
-      if (status()->value() == IDLE)
-        active_objects_changed = detect_proximity();
-      else if (status()->value() == IN_CODE)
+      if (status()->value() == IN_CODE)
       {
         if (!request<C::Image>("Code_hover:image"))
         {
           get<C::Code>("Game:code")->hover();
           generate_code_hover();
-          m_close_objects.clear();
-          m_active_object = "";
-          active_objects_changed = true;
         }
       }
 
@@ -147,6 +142,19 @@ void Interface::run()
               get<C::Code>("Game:code")->move(direction.x(), direction.y());
               generate_code_hover();
             }
+            else if (status()->value() == DIALOG_CHOICE)
+            {
+              if (get<C::Simple<Vector>>(STICK__DIRECTION)->value().y() < 0)
+              {
+                switch_active_object (false);
+                active_objects_changed = true;
+              }
+              else if (get<C::Simple<Vector>>(STICK__DIRECTION)->value().y() > 0)
+              {
+                switch_active_object (true);
+                active_objects_changed = true;
+              }
+            }
           }
         }
       }
@@ -158,7 +166,6 @@ void Interface::run()
 
       if (received_key != "")
       {
-
         if (status()->value() == IN_WINDOW)
           window_triggered(received_key);
         else if (status()->value() == IN_CODE)
@@ -166,7 +173,7 @@ void Interface::run()
         else if (status()->value() == IN_MENU)
           ;
         else if (status()->value() == DIALOG_CHOICE)
-          ;
+          dialog_triggered(received_key);
         else if (status()->value() == OBJECT_CHOICE || status()->value() == IN_INVENTORY)
         {
           inventory_triggered(received_key);
@@ -674,23 +681,39 @@ void Interface::update_dialog_choices()
 
   auto cursor = get<C::Position>(CURSOR__POSITION);
 
-  for (int c = int(choices.size()) - 1; c >= 0; -- c)
+  if (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD)
   {
-    std::string entity = "Dialog_choice_" + std::to_string(c);
-    auto img_off = get<C::Image>(entity + "_off:image");
-    auto img_on = get<C::Image>(entity + "_on:image");
-    const Point& p = get<C::Position>(entity + "_off:position")->value();
+    for (int c = int(choices.size()) - 1; c >= 0; -- c)
+    {
+      std::string entity = "Dialog_choice_" + std::to_string(c);
+      auto img_off = get<C::Image>(entity + "_off:image");
+      auto img_on = get<C::Image>(entity + "_on:image");
 
-    Point screen_position = p - img_off->core().scaling * Vector(img_off->origin());
-    int xmin = screen_position.X();
-    int ymin = screen_position.Y();
-    int xmax = xmin + int(img_off->core().scaling * (img_off->xmax() - img_off->xmin()));
-    int ymax = ymin + int(img_off->core().scaling * (img_off->ymax() - img_off->ymin()));
+      bool on = (entity == m_active_object);
+      img_off->on() = !on;
+      img_on->on() = on;
+    }
+  }
+  else
+  {
+    for (int c = int(choices.size()) - 1; c >= 0; -- c)
+    {
+      std::string entity = "Dialog_choice_" + std::to_string(c);
+      auto img_off = get<C::Image>(entity + "_off:image");
+      auto img_on = get<C::Image>(entity + "_on:image");
+      const Point& p = get<C::Position>(entity + "_off:position")->value();
 
-    bool on = (xmin <= cursor->value().x() && cursor->value().x() <= xmax &&
-               ymin <= cursor->value().y() && cursor->value().y() <= ymax);
-    img_off->on() = !on;
-    img_on->on() = on;
+      Point screen_position = p - img_off->core().scaling * Vector(img_off->origin());
+      int xmin = screen_position.X();
+      int ymin = screen_position.Y();
+      int xmax = xmin + int(img_off->core().scaling * (img_off->xmax() - img_off->xmin()));
+      int ymax = ymin + int(img_off->core().scaling * (img_off->ymax() - img_off->ymin()));
+
+      bool on = (xmin <= cursor->value().x() && cursor->value().x() <= xmax &&
+                 ymin <= cursor->value().y() && cursor->value().y() <= ymax);
+      img_off->on() = !on;
+      img_on->on() = on;
+    }
   }
 }
 

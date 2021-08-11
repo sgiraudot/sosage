@@ -87,7 +87,8 @@ private:
 
   // Implemented in Interface__gamepad.cpp
   void window_triggered (const std::string& action);
-  void code_triggered(const std::string& action);
+  void code_triggered (const std::string& action);
+  void dialog_triggered (const std::string& action);
   void inventory_triggered (const std::string& action);
   void idle_triggered (const std::string& action);
   bool detect_proximity ();

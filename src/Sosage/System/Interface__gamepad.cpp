@@ -71,6 +71,37 @@ void Interface::code_triggered(const std::string& action)
   }
 }
 
+void Interface::dialog_triggered (const std::string& action)
+{
+  if (action != "look")
+    return;
+
+  std::size_t pos = m_active_object.find_last_of('_');
+  std::string current_str (m_active_object.begin() + pos + 1, m_active_object.end());
+  int choice = std::atoi(current_str.c_str());
+
+  set<C::Int>("Dialog:choice", choice);
+
+  const std::vector<std::string>& choices
+      = get<C::Vector<std::string> >("Dialog:choices")->value();
+
+  // Clean up
+  for (int c = int(choices.size()) - 1; c >= 0; -- c)
+  {
+    std::string entity = "Dialog_choice_" + std::to_string(c);
+    remove(entity + "_off:image");
+    remove(entity + "_off:position");
+    remove(entity + "_on:image");
+    remove(entity + "_on:position");
+  }
+  remove("Dialog_choice_background:image");
+  remove("Dialog_choice_background:position");
+  remove("Game:current_dialog");
+
+  m_active_object = "";
+  status()->pop();
+}
+
 void Interface::inventory_triggered(const std::string& action)
 {
   if (status()->value() == OBJECT_CHOICE)
@@ -172,70 +203,94 @@ void Interface::idle_triggered (const std::string& action)
 
 bool Interface::detect_proximity()
 {
-  const std::string& id = get<C::String>("Player:name")->value();
-  auto position = get<C::Position>(id + "_body:position");
-
-  // Find objects with labels close to player
-  std::unordered_set<std::string> close_objects;
-  for (const auto& e : m_content)
-    if (auto label = C::cast<C::Absolute_position>(e))
-      if (label->component() == "label")
-      {
-        auto pos = get<C::Position>(label->entity() + ":view");
-
-        double dx = std::abs(position->value().x() - pos->value().x());
-        double dy = std::abs(position->value().y() - pos->value().y());
-
-        // Object out of reach
-        if (dx > Config::object_reach_x + Config::object_reach_hysteresis ||
-            dy > Config::object_reach_y + Config::object_reach_hysteresis)
-          continue;
-
-        // Inactive object
-        if (!request<C::Image>(label->entity() + ":image"))
-          continue;
-
-        // Inventory objet
-        if (get<C::String>(label->entity() + ":state")->value() == "inventory")
-          continue;
-
-        // Object in reach
-        if (dx <= Config::object_reach_x && dy <= Config::object_reach_y)
-          close_objects.insert (label->entity());
-
-        // Object in hysteresis range
-        else if (m_close_objects.find(label->entity()) != m_close_objects.end())
-          close_objects.insert (label->entity());
-      }
-
-  if (close_objects == m_close_objects)
-    return false;
-
-  if (m_active_object == "" && !close_objects.empty())
-    m_active_object = *close_objects.begin();
-
-  // If active object is not in reach anymore, find closest to activate
-  else if (close_objects.find(m_active_object) == close_objects.end())
+  if (status()->value() == IDLE)
   {
-    std::string chosen = "";
-    double dx_min = std::numeric_limits<double>::max();
-    auto active_pos = get<C::Position>(m_active_object + ":label");
-    for (const std::string& id : close_objects)
+    const std::string& id = get<C::String>("Player:name")->value();
+    auto position = get<C::Position>(id + "_body:position");
+
+    // Find objects with labels close to player
+    std::unordered_set<std::string> close_objects;
+    for (const auto& e : m_content)
+      if (auto label = C::cast<C::Absolute_position>(e))
+        if (label->component() == "label")
+        {
+          auto pos = get<C::Position>(label->entity() + ":view");
+
+          double dx = std::abs(position->value().x() - pos->value().x());
+          double dy = std::abs(position->value().y() - pos->value().y());
+
+          // Object out of reach
+          if (dx > Config::object_reach_x + Config::object_reach_hysteresis ||
+              dy > Config::object_reach_y + Config::object_reach_hysteresis)
+            continue;
+
+          // Inactive object
+          if (!request<C::Image>(label->entity() + ":image"))
+            continue;
+
+          // Inventory objet
+          if (get<C::String>(label->entity() + ":state")->value() == "inventory")
+            continue;
+
+          // Object in reach
+          if (dx <= Config::object_reach_x && dy <= Config::object_reach_y)
+            close_objects.insert (label->entity());
+
+          // Object in hysteresis range
+          else if (m_close_objects.find(label->entity()) != m_close_objects.end())
+            close_objects.insert (label->entity());
+        }
+
+    if (close_objects == m_close_objects)
+      return false;
+
+    if (m_active_object == "" && !close_objects.empty())
+      m_active_object = *close_objects.begin();
+
+    // If active object is not in reach anymore, find closest to activate
+    else if (close_objects.find(m_active_object) == close_objects.end())
     {
-      auto pos = get<C::Position>(id + ":position");
-      double dx = std::abs (active_pos->value().x() - pos->value().x());
-      if (dx < dx_min)
+      std::string chosen = "";
+      double dx_min = std::numeric_limits<double>::max();
+      auto active_pos = get<C::Position>(m_active_object + ":label");
+      for (const std::string& id : close_objects)
       {
-        chosen = id;
-        dx_min = dx;
+        auto pos = get<C::Position>(id + ":position");
+        double dx = std::abs (active_pos->value().x() - pos->value().x());
+        if (dx < dx_min)
+        {
+          chosen = id;
+          dx_min = dx;
+        }
       }
+      m_active_object = chosen;
     }
-    m_active_object = chosen;
+
+    m_close_objects.swap(close_objects);
+    return true;
   }
-
-  m_close_objects.swap(close_objects);
-
-  return true;
+  else if (status()->value() == IN_WINDOW || status()->value() == IN_CODE)
+  {
+    if (!m_close_objects.empty())
+    {
+      m_close_objects.clear();
+      return true;
+    }
+    return false;
+  }
+  else if (status()->value() == DIALOG_CHOICE)
+  {
+    if (m_active_object == "")
+      m_active_object = "Dialog_choice_0";
+    if (!m_close_objects.empty())
+    {
+      m_close_objects.clear();
+      m_active_object = "Dialog_choice_0";
+      return true;
+    }
+    return false;
+  }
+  return false;
 }
 
 void Interface::switch_active_object (const bool& right)
@@ -293,6 +348,29 @@ void Interface::switch_active_object (const bool& right)
         m_active_object = inventory->get(i+diff);
         break;
       }
+  }
+  else if (status()->value() == DIALOG_CHOICE)
+  {
+    const std::vector<std::string>& choices
+        = get<C::Vector<std::string> >("Dialog:choices")->value();
+
+    std::size_t pos = m_active_object.find_last_of('_');
+    std::string current_str (m_active_object.begin() + pos + 1, m_active_object.end());
+    std::size_t current = std::atoi(current_str.c_str());
+    if (right)
+    {
+      if (current < choices.size() - 1)
+        m_active_object = "Dialog_choice_" + std::to_string(current+1);
+      else
+        m_active_object = "Dialog_choice_0";
+    }
+    else
+    {
+      if (current > 0)
+        m_active_object = "Dialog_choice_" + std::to_string(current-1);
+      else
+        m_active_object = "Dialog_choice_" + std::to_string(choices.size() - 1);
+    }
   }
 }
 
@@ -383,6 +461,11 @@ void Interface::update_action_selector()
       group->add(m_labels[i]);
     m_labels.resize (nb_labels);
   }
+
+  if (status()->value() == LOCKED || status()->value() == DIALOG_CHOICE)
+    group->apply<C::Image> ([&](auto img) { img->on() = false; });
+  else
+    group->apply<C::Image> ([&](auto img) { img->on() = true; });
 }
 
 void Interface::update_switcher()
