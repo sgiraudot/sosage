@@ -60,6 +60,19 @@ public:
 
 private:
 
+  void update_pause_screen();
+  void set_action (const std::string& id, const std::string& default_id);
+  void clear_action_ids(bool clear_highlight = false);
+  void update_label (bool is_button, const std::string& id, std::string name, bool open_left,
+                     bool open_right, const Point& position, const Collision_type& collision,
+                     double scale = 1.0);
+  void generate_action (const std::string& id, const std::string& action,
+                        const Button_orientation& orientation, const std::string& button = "",
+                        Point position = Point());
+  void update_inventory ();
+  void update_dialog_choices ();
+
+  // Implemented in Interface__mouse.cpp
   void window_clicked();
   void code_clicked (Component::Position_handle cursor);
   void dialog_clicked ();
@@ -68,26 +81,13 @@ private:
   void object_clicked();
   void inventory_clicked();
   void idle_clicked();
-
-  void idle_triggered(const std::string& action);
-
-  void update_pause_screen();
-
-  void set_action (const std::string& id, const std::string& default_id);
-
   void detect_collision (Component::Position_handle cursor);
+
+  // Implemented in Interface__gamepad.cpp
+  void idle_triggered(const std::string& action);
   bool detect_proximity ();
   void switch_active_object (const bool& right);
-  void clear_action_ids(bool clear_highlight = false);
-  void update_label (bool is_button, const std::string& id, std::string name, bool open_left,
-                     bool open_right, const Point& position, const Collision_type& collision,
-                     double scale = 1.0);
-  void generate_action (const std::string& id, const std::string& action,
-                        const Button_orientation& orientation, const std::string& button = "",
-                        Point position = Point());
   void update_active_objects();
-  void update_inventory ();
-  void update_dialog_choices ();
   void update_action_selector ();
   void update_switcher();
 
