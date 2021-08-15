@@ -48,6 +48,7 @@ class Interface : public Base
   std::vector<Component::Group_handle> m_labels;
   std::unordered_set<std::string> m_close_objects;
   std::string m_active_object;
+  Status m_latest_status;
   double m_latest_exit;
   bool m_stick_on;
 
@@ -66,7 +67,7 @@ private:
   void clear_action_ids(bool clear_highlight = false);
   void update_label (bool is_button, const std::string& id, std::string name, bool open_left,
                      bool open_right, const Point& position, const Collision_type& collision,
-                     double scale = 1.0);
+                     double scale = 1.0, bool arrow = false);
   void generate_action (const std::string& id, const std::string& action,
                         const Button_orientation& orientation, const std::string& button = "",
                         Point position = Point());
@@ -88,17 +89,20 @@ private:
   // Implemented in Interface__gamepad.cpp
   void window_triggered (const std::string& action);
   void code_triggered (const std::string& action);
+  void menu_triggered (const std::string& action);
   void dialog_triggered (const std::string& action);
   void inventory_triggered (const std::string& action);
   void idle_triggered (const std::string& action);
   bool detect_proximity ();
   void switch_active_object (const bool& right);
+  void clear_active_objects();
   void update_active_objects();
   void update_action_selector ();
   void update_switcher();
 
   // Implemented in Interface__menu.cpp
   void init_menus();
+  void update_menu();
   void update_exit();
   void init_menu_item (Component::Menu::Node node, const std::string& id,
                        const std::string& effect = std::string());
@@ -109,7 +113,7 @@ private:
   void init_menu_buttons (Component::Menu::Node node);
   void create_menu (const std::string& id);
   void delete_menu (const std::string& id);
-  void menu_clicked ();
+  void menu_clicked (std::string entity = "");
   void apply_setting (const std::string& setting, const std::string& value);
 
 };

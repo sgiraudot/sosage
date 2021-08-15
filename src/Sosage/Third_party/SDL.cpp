@@ -323,6 +323,10 @@ std::array<unsigned char, 3> SDL::get_color (SDL::Surface image, int x, int y)
   return out;
 }
 
+void SDL::display_error (const std::string& error)
+{
+  SDL_ShowSimpleMessageBox(0, "Error", error.c_str(), m_window);
+}
 
 SDL::SDL ()
 {
@@ -411,12 +415,26 @@ void SDL::update_window (const std::string& name, const std::string& icon_filena
 
 void SDL::update_view()
 {
+#if 1
   SDL_RenderSetLogicalSize(m_renderer, Config::world_width, Config::world_height);
+#else
+  int width, height;
+  SDL_GetWindowSize (m_window, &width, &height);
+  double ratio_w = width / double(Config::world_width);
+  double ratio_h = height / double(Config::world_height);
+  double ratio = std::min(ratio_w, ratio_h);
+  SDL_RenderSetScale (m_renderer, ratio, ratio);
+#endif
 }
 
 void SDL::toggle_fullscreen (bool fullscreen)
 {
   SDL_SetWindowFullscreen (m_window, (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
+}
+
+void SDL::toggle_cursor (bool visible)
+{
+  SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
 }
 
 void SDL::begin()

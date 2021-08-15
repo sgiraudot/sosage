@@ -71,6 +71,49 @@ void Interface::code_triggered(const std::string& action)
   }
 }
 
+void Interface::menu_triggered(const std::string& action)
+{
+  const std::string& menu = get<C::String>("Game:current_menu")->value();
+  bool settings = (menu == "Settings");
+
+  if (action == "up")
+    switch_active_object(false);
+  else if (action == "down")
+    switch_active_object(true);
+  else if (action == "left")
+  {
+    if (settings)
+    {
+      if (m_active_object.find("_button") == std::string::npos)
+        menu_clicked(m_active_object + "_left_arrow");
+    }
+    else
+      switch_active_object(false);
+  }
+  else if (action == "right")
+  {
+    if (settings)
+    {
+      if (m_active_object.find("_button") == std::string::npos)
+        menu_clicked(m_active_object + "_right_arrow");
+    }
+    else
+      switch_active_object(true);
+  }
+  else if (action == "look")
+  {
+    if (settings && m_active_object.find("_button") == std::string::npos)
+      menu_clicked(m_active_object + "_right_arrow");
+    else
+      menu_clicked();
+  }
+  else if (action == "inventory")
+  {
+    emit("Game:escape");
+    update_exit();
+  }
+}
+
 void Interface::dialog_triggered (const std::string& action)
 {
   if (action != "look")
@@ -78,7 +121,7 @@ void Interface::dialog_triggered (const std::string& action)
 
   std::size_t pos = m_active_object.find_last_of('_');
   std::string current_str (m_active_object.begin() + pos + 1, m_active_object.end());
-  int choice = std::atoi(current_str.c_str());
+  int choice = to_int(current_str);
 
   set<C::Int>("Dialog:choice", choice);
 
@@ -100,6 +143,7 @@ void Interface::dialog_triggered (const std::string& action)
 
   m_active_object = "";
   status()->pop();
+  emit ("Click:play_sound");
 }
 
 void Interface::inventory_triggered(const std::string& action)
@@ -122,6 +166,8 @@ void Interface::inventory_triggered(const std::string& action)
       }
       m_active_object = "";
       status()->pop();
+      emit("Click:play_sound");
+
     }
     else if (action == "inventory")
     {
@@ -129,6 +175,7 @@ void Interface::inventory_triggered(const std::string& action)
       m_source = "";
       m_target = "";
       m_active_object = "";
+      emit("Click:play_sound");
     }
   }
   else // if (status()->value() == INVENTORY)
@@ -139,6 +186,7 @@ void Interface::inventory_triggered(const std::string& action)
       set_action (action_id, "Default_look");
       m_active_object = "";
       status()->pop();
+      emit("Click:play_sound");
     }
     else if (action == "move") // use
     {
@@ -146,6 +194,7 @@ void Interface::inventory_triggered(const std::string& action)
       set_action (action_id, "Default_use");
       m_active_object = "";
       status()->pop();
+      emit("Click:play_sound");
     }
     else if (action == "take") // combine
     {
@@ -166,12 +215,14 @@ void Interface::inventory_triggered(const std::string& action)
             break;
           }
       }
+      emit("Click:play_sound");
     }
     else // if (action == "inventory")
     {
       status()->pop();
       m_active_object = "";
       m_source = "";
+      emit("Click:play_sound");
     }
   }
 }
@@ -184,7 +235,27 @@ void Interface::idle_triggered (const std::string& action)
     {
       status()->push (IN_INVENTORY);
       m_active_object = get<C::Inventory>("Game:inventory")->get(0);
-      m_close_objects.clear();
+      clear_active_objects();
+      emit("Click:play_sound");
+    }
+    return;
+  }
+
+  if (auto right = request<C::Boolean>(m_active_object + "_goto:right"))
+  {
+    if (action == "look")
+    {
+      set_action (m_active_object + "_goto", "Default_goto");
+      m_active_object = "";
+      clear_active_objects();
+      emit("Click:play_sound");
+    }
+    else if (action == "inventory")
+    {
+      status()->push (IN_INVENTORY);
+      m_active_object = get<C::Inventory>("Game:inventory")->get(0);
+      clear_active_objects();
+      emit("Click:play_sound");
     }
     return;
   }
@@ -194,10 +265,13 @@ void Interface::idle_triggered (const std::string& action)
     m_target = m_active_object;
     status()->push (OBJECT_CHOICE);
     m_active_object = get<C::Inventory>("Game:inventory")->get(0);
-    m_close_objects.clear();
+    clear_active_objects();
+    emit("Click:play_sound");
     return;
   }
   set_action (m_active_object + "_" + action, "Default_" + action);
+  clear_active_objects();
+  emit("Click:play_sound");
 }
 
 
@@ -248,7 +322,7 @@ bool Interface::detect_proximity()
       m_active_object = *close_objects.begin();
 
     // If active object is not in reach anymore, find closest to activate
-    else if (close_objects.find(m_active_object) == close_objects.end())
+    else if (m_active_object != "" && close_objects.find(m_active_object) == close_objects.end())
     {
       std::string chosen = "";
       double dx_min = std::numeric_limits<double>::max();
@@ -266,6 +340,7 @@ bool Interface::detect_proximity()
       m_active_object = chosen;
     }
 
+    clear_active_objects();
     m_close_objects.swap(close_objects);
     return true;
   }
@@ -273,7 +348,7 @@ bool Interface::detect_proximity()
   {
     if (!m_close_objects.empty())
     {
-      m_close_objects.clear();
+      clear_active_objects();
       return true;
     }
     return false;
@@ -284,7 +359,7 @@ bool Interface::detect_proximity()
       m_active_object = "Dialog_choice_0";
     if (!m_close_objects.empty())
     {
-      m_close_objects.clear();
+      clear_active_objects();
       m_active_object = "Dialog_choice_0";
       return true;
     }
@@ -309,8 +384,8 @@ void Interface::switch_active_object (const bool& right)
     std::sort (close_objects.begin(), close_objects.end(),
                [&](const std::string& a, const std::string& b) -> bool
     {
-      auto pos_a = get<C::Position>(a + ":position");
-      auto pos_b = get<C::Position>(b + ":position");
+      auto pos_a = get<C::Position>(a + "_label:global_position");
+      auto pos_b = get<C::Position>(b + "_label:global_position");
       return pos_a->value().x() < pos_b->value().x();
     });
 
@@ -356,7 +431,7 @@ void Interface::switch_active_object (const bool& right)
 
     std::size_t pos = m_active_object.find_last_of('_');
     std::string current_str (m_active_object.begin() + pos + 1, m_active_object.end());
-    std::size_t current = std::atoi(current_str.c_str());
+    std::size_t current = to_int(current_str);
     if (right)
     {
       if (current < choices.size() - 1)
@@ -372,6 +447,65 @@ void Interface::switch_active_object (const bool& right)
         m_active_object = "Dialog_choice_" + std::to_string(choices.size() - 1);
     }
   }
+  else if (status()->value() == IN_MENU)
+  {
+    const std::string& id = get<C::String>("Game:current_menu")->value();
+    auto menu = get<C::Menu>(id + ":menu");
+    bool settings = (id == "Settings");
+
+    std::queue<C::Menu::Node> todo;
+    todo.push (menu->root());
+    std::vector<std::string> nodes;
+    std::size_t nb_current = std::size_t(-1);
+    while (!todo.empty())
+    {
+      C::Menu::Node current = todo.front();
+      todo.pop();
+
+      if (current.nb_children() < 2)
+      {
+        std::string entity = current.image()->entity();
+
+        if (settings)
+        {
+          std::size_t pos = entity.find("_left_arrow");
+          if (pos != std::string::npos)
+           nodes.emplace_back(entity.begin(), entity.begin() + pos);
+        }
+        if (entity.find("_button") != std::string::npos)
+          nodes.push_back (current.image()->entity());
+        if (!nodes.empty() && nodes.back() == m_active_object)
+          nb_current = nodes.size() - 1;
+      }
+      for (std::size_t i = 0; i < current.nb_children(); ++ i)
+        todo.push (current[i]);
+    }
+
+    check (nb_current != std::size_t(-1), "Node " + m_active_object + " not found in menu");
+    if (right)
+    {
+      if (nb_current < nodes.size() - 1)
+        m_active_object = nodes[nb_current + 1];
+      else
+        m_active_object = nodes.front();
+    }
+    else
+    {
+      if (nb_current > 0)
+        m_active_object = nodes[nb_current - 1];
+      else
+        m_active_object = nodes.back();
+    }
+
+  }
+}
+
+void Interface::clear_active_objects()
+{
+  for (const std::string& id : m_close_objects)
+    if (auto img = request<C::Image>(id + ":image"))
+      img->set_highlight(0);
+  m_close_objects.clear();
 }
 
 void Interface::update_active_objects()
@@ -385,16 +519,28 @@ void Interface::update_active_objects()
     remove (group->id());
   }
 
+  bool touchmode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == TOUCHSCREEN;
+
+  std::cerr << "Update active object" << std::endl;
   for (const std::string& id : m_close_objects)
   {
-    bool is_active = (m_active_object == id);
+    bool is_active = touchmode || (m_active_object == id);
     auto name = get<C::String>(id + ":name");
     get<C::Image>(id + ":image")->set_highlight(is_active ? 192 : 64);
 
     auto pos = get<C::Position>(id + ":label");
 
     double scale = (is_active ? 1.0 : 0.75);
-    update_label(false, id + "_label", name->value(), false, false, pos->value(), UNCLICKABLE, scale);
+    if (auto right = request<C::Boolean>(id + "_goto:right"))
+    {
+      bool r = right->value();
+      update_label(false, id + "_label", name->value(), !r, r, pos->value(),
+                   touchmode ? BOX : UNCLICKABLE, scale, true);
+    }
+    else
+      update_label(false, id + "_label", name->value(), false, false, pos->value(),
+                   touchmode ? BOX : UNCLICKABLE, scale);
+    get<C::Absolute_position>(id + "_label:global_position")->absolute() = false;
   }
 
 }
@@ -425,13 +571,20 @@ void Interface::update_action_selector()
       look_id = m_active_object;
       move_id = m_active_object;
       inventory_id = m_active_object;
+      if (auto right = request<C::Boolean>(m_active_object + "_goto:right"))
+      {
+        take_id = "";
+        move_id = "";
+        inventory_id = "Default";
+        look_action = "goto";
+      }
     }
     if (status()->value() == IN_INVENTORY)
     {
       origin = origin + Vector(0, -Config::inventory_height);
       take_action = "combine";
       move_action = "use";
-      inventory_action = "cancel";
+      inventory_action = "Cancel";
       if (get<C::Inventory>("Game:inventory")->size() == 1)
         take_id = "";
     }
@@ -440,16 +593,24 @@ void Interface::update_action_selector()
       take_id = "";
       move_id = "";
       origin = origin + Vector(0, -Config::inventory_height);
-      look_action = "ok";
-      inventory_action = "cancel";
+      look_action = "Ok";
+      inventory_action = "Cancel";
     }
     else if (status()->value() == IN_CODE || status()->value() == IN_WINDOW)
     {
       look_id = "code";
       take_id = "";
       move_id = "";
-      look_action = "ok";
-      inventory_action = "cancel";
+      look_action = "Ok";
+      inventory_action = "Cancel";
+    }
+    else if (status()->value() == IN_MENU)
+    {
+      look_id = "menu";
+      take_id = "";
+      move_id = "";
+      look_action = "Ok";
+      inventory_action = "Continue";
     }
 
     generate_action (take_id, take_action, LEFT_BUTTON, gamepad_label(gamepad, WEST), origin);

@@ -45,7 +45,7 @@ inline double to_double (const std::string& str)
   return std::atof (str.c_str());
 }
 
-inline int to_bool (const std::string& str)
+inline bool  to_bool (const std::string& str)
 {
   return (str == "true");
 }

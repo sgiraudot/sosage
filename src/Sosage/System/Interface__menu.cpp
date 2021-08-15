@@ -32,6 +32,8 @@
 #include <Sosage/System/Interface.h>
 #include <Sosage/Utils/color.h>
 
+#include <queue>
+
 namespace Sosage::System
 {
 
@@ -128,6 +130,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
         img->on() = false;
         img->set_scale(0.75);
         img->set_relative_origin(0.5, 0.5);
+        img->set_collision(UNCLICKABLE);
         auto pos = set<C::Absolute_position>(text->entity() + ":position", Point(0,0));
         node.init(img, pos);
       }
@@ -157,6 +160,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
           img->on() = false;
           img->set_scale(scale);
           img->set_relative_origin(0.5, 0.5);
+          img->set_collision(UNCLICKABLE);
           auto pos = set<C::Absolute_position>(text->entity() + "_" + std::to_string(i)
                                       + ":position", Point(0, 0));
           node[i].init(img, pos);
@@ -187,6 +191,8 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
       img->on() = false;
       img->set_scale(0.75);
       img->set_relative_origin(0.5, 0.5);
+      img->set_collision(UNCLICKABLE);
+
       pos = set<C::Absolute_position>(text->entity() + ":position", Point(0,0));
     }
     else
@@ -247,6 +253,7 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
     img->on() = false;
     img->set_scale(0.75);
     img->set_relative_origin(0.5, 0.5);
+    img->set_collision(UNCLICKABLE);
     set<C::Variable>(id + ":position", pos);
     if (i == 0)
       node.init(img, pos);
@@ -309,6 +316,58 @@ void Interface::init_menu_buttons (Component::Menu::Node node)
           pos = get<C::Position>(img->entity() + ":position");
         node[i].init(img, pos);
       }
+  }
+}
+
+void Interface::update_menu()
+{
+  if (status()->value() != IN_MENU)
+    return;
+
+  bool gamepad = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD;
+
+  const std::string& id = get<C::String>("Game:current_menu")->value();
+  auto menu = get<C::Menu>(id + ":menu");
+  bool settings = (id == "Settings");
+
+  std::queue<C::Menu::Node> todo;
+  todo.push (menu->root());
+  while (!todo.empty())
+  {
+    C::Menu::Node current = todo.front();
+    todo.pop();
+
+    if (current.nb_children() < 2)
+    {
+      std::string entity = current.image()->entity();
+      if (gamepad && m_active_object == "")
+      {
+        if (settings)
+        {
+          std::size_t pos = entity.find("_left_arrow");
+          if (pos != std::string::npos)
+            m_active_object = std::string(entity.begin(), entity.begin() + pos);
+        }
+        else if (entity.find("_button") != std::string::npos)
+          m_active_object = entity;
+      }
+
+      bool active = (current.image() == m_collision || entity == m_active_object);
+      if (settings)
+        active = active ||(entity.find(m_active_object) != std::string::npos);
+
+      double scale = 1.0;
+      if (current.image()->scale() < 1.)
+        scale = 0.75;
+      if (active)
+        scale *= 1.05;
+      current.image()->set_scale(scale);
+
+      if (settings && entity.find("arrow") != std::string::npos)
+        current.image()->on() = active;
+    }
+    for (std::size_t i = 0; i < current.nb_children(); ++ i)
+      todo.push (current[i]);
   }
 }
 
@@ -410,8 +469,7 @@ void Interface::update_exit()
 
 }
 
-void Interface::
-create_menu (const std::string& id)
+void Interface::create_menu (const std::string& id)
 {
   set<C::String>("Game:current_menu", id);
 
@@ -482,6 +540,7 @@ create_menu (const std::string& id)
   menu->set_position(Config::world_width / 2,
                      Config::world_height / 2);
 
+  m_active_object = "";
 }
 
 void Interface::delete_menu (const std::string& id)
@@ -490,11 +549,14 @@ void Interface::delete_menu (const std::string& id)
   menu->hide();
   get<C::Image>("Menu_background:image")->on() = false;
   get<C::Image>("Menu_foreground:image")->on() = false;
+  m_active_object = "";
 }
 
-void Interface::menu_clicked()
+void Interface::menu_clicked (std::string entity)
 {
-  std::string entity = m_collision->entity();
+  bool gamepad = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD;
+  if (entity == "")
+    entity = gamepad ? m_active_object : m_collision->entity();
   std::size_t pos = entity.find("_button");
   if (pos != std::string::npos)
     entity.resize(pos);

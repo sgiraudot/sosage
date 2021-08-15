@@ -40,6 +40,7 @@ Input::Input (Content& content)
   , m_keys_on(NUMBER_OF_EVENT_VALUES, false)
   , m_x(0)
   , m_y(0)
+  , m_fake_touchscreen(false)
 {
   set_fac<C::Simple<Vector>>(STICK__DIRECTION, "Stick:direction", Vector(0, 0));
 }
@@ -65,6 +66,18 @@ void Input::run()
              ev.type() == BUTTON_UP || ev.type() == STICK_MOVE)
       gamepad_used = true;
 
+    if (ev.type() == KEY_DOWN && ev.value() == T)
+    {
+      if (m_fake_touchscreen)
+      {
+        emit("Fake_touchscreen:disable");
+        mouse_used = true;
+      }
+      else
+        emit("Fake_touchscreen:enable");
+      m_fake_touchscreen = !m_fake_touchscreen;
+    }
+
     m_current_events.emplace_back(ev);
   }
 
@@ -72,7 +85,7 @@ void Input::run()
   auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
   Input_mode previous_mode = mode->value();
   Gamepad_type previous_type = gamepad->value();
-  if (touchscreen_used)
+  if (touchscreen_used || m_fake_touchscreen)
     mode->set (TOUCHSCREEN);
   else if (mouse_used)
     mode->set (MOUSE);
@@ -174,6 +187,20 @@ void Input::run()
     }
     else if (mode->value() == TOUCHSCREEN)
     {
+      if (m_fake_touchscreen) // Simulate touchscreen with mouse for testing
+      {
+        if (ev == Event(MOUSE_DOWN, LEFT))
+        {
+          get<C::Position>
+              (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
+          emit ("Cursor:clicked");
+          set<C::Boolean>("Click:left", true);
+        }
+      }
+      else // Real touchscreen
+      {
+
+      }
     }
     else // if (mode->value() == GAMEPAD)
     {

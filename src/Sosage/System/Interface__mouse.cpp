@@ -78,10 +78,10 @@ void Interface::dialog_clicked ()
       = get<C::Vector<std::string> >("Dialog:choices")->value();
 
   int choice
-      = std::atoi(std::string(m_collision->id().begin() +
-                              std::ptrdiff_t(std::string("Dialog_choice_").size()),
-                              m_collision->id().begin() +
-                              std::ptrdiff_t(m_collision->id().find(':'))).c_str());
+      = to_int(std::string(m_collision->id().begin() +
+                           std::ptrdiff_t(std::string("Dialog_choice_").size()),
+                           m_collision->id().begin() +
+                           std::ptrdiff_t(m_collision->id().find(':'))));
 
   set<C::Int>("Dialog:choice", choice);
 
@@ -99,6 +99,7 @@ void Interface::dialog_clicked ()
   remove("Game:current_dialog");
 
   status()->pop();
+  emit ("Click:play_sound");
 }
 
 void Interface::arrow_clicked()
@@ -235,8 +236,17 @@ void Interface::idle_clicked()
 {
   std::string id = m_collision->entity();
 
+  bool object_is_active = true;
+  if (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == TOUCHSCREEN)
+  {
+    if (std::find(m_close_objects.begin(), m_close_objects.end(), id) == m_close_objects.end())
+      object_is_active = false;
+    else
+      m_close_objects.clear();
+  }
+
   // Click on an object
-  if (request<C::String>(id + ":name"))
+  if (request<C::String>(id + ":name") && object_is_active)
   {
     // Object is a path to other room
     if (auto right = request<C::Boolean>(id + "_goto:right"))
@@ -314,7 +324,10 @@ void Interface::detect_collision (C::Position_handle cursor)
       if (m_source == "") // Keep source cursor if it exists
         get<C::String>("Cursor:state")->set("default");
     }
+    std::cerr << "Collision = " << m_collision->entity() << std::endl;
   }
+
+  bool touchmode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == TOUCHSCREEN;
 
   auto previous_collision = m_collision;
   m_collision = C::Image_handle();
@@ -397,6 +410,17 @@ void Interface::detect_collision (C::Position_handle cursor)
     return;
   }
 
+  if (touchmode && status()->value() == IDLE)
+  {
+    std::string id = m_collision->entity();
+    std::size_t pos = id.find("_label");
+    if (pos != std::string::npos)
+    {
+      id.resize(pos);
+      m_collision = get<C::Image>(id + ":image");
+    }
+  }
+
 
   if (previous_collision && (previous_collision != m_collision))
   {
@@ -413,7 +437,7 @@ void Interface::detect_collision (C::Position_handle cursor)
         get<C::Image>(object_id + "_button_right_circle:image")->set_highlight(0);
       }
     }
-    else
+    else if (!touchmode)
     {
       clear_action_ids();
     }
@@ -434,7 +458,7 @@ void Interface::detect_collision (C::Position_handle cursor)
         get<C::Image>(object_id + "_button_right_circle:image")->set_highlight(255);
       }
     }
-    else if (status()->value() == IN_CODE)
+    else if (status()->value() == IN_CODE && !touchmode)
     {
       auto code = get<C::Code>("Game:code");
       auto window = get<C::Image>("Game:window");
@@ -451,7 +475,7 @@ void Interface::detect_collision (C::Position_handle cursor)
     }
     else
     {
-      bool display_label = status()->value() == IDLE;
+      bool display_label = !touchmode && status()->value() == IDLE;
       if (status()->value() == OBJECT_CHOICE || status()->value() == IN_INVENTORY)
         if (auto state = request<C::String>(id + ":state"))
           if (state->value() == "inventory")
@@ -485,7 +509,7 @@ void Interface::detect_collision (C::Position_handle cursor)
               update_label(false, id + "_label", name->value(), false, true, cursor->value(), UNCLICKABLE);
         }
       }
-      else
+      else if (!touchmode)
         clear_action_ids();
     }
   }

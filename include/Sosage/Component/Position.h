@@ -44,6 +44,7 @@ public:
 
   virtual void set (const Point& p) = 0;
   virtual Point value() const = 0;
+  virtual bool absolute() const = 0;
 };
 
 using Position_handle = std::shared_ptr<Position>;
@@ -78,6 +79,7 @@ public:
   virtual Point value() const { return m_ref->value() + m_diff; }
   virtual void set (const Point& p) { m_diff = Sosage::Vector(m_ref->value(), p); }
   void set (const Sosage::Vector& v) { m_diff = v; }
+  bool absolute() const { return m_ref->absolute(); }
 };
 
 } // namespace Sosage::Component

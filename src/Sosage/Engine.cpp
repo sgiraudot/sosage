@@ -30,6 +30,7 @@
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
 #include <Sosage/Component/Status.h>
+#include <Sosage/Config/options.h>
 #include <Sosage/Config/platform.h>
 #include <Sosage/Config/version.h>
 #include <Sosage/Engine.h>
@@ -155,8 +156,21 @@ int Engine::run (const std::string& folder_name)
 
 bool Engine::run()
 {
-  for (System::Handle system : m_systems)
-    system->run();
+#ifdef SOSAGE_ASSERTIONS_IN_DIALOG
+  try
+  {
+#endif
+    for (System::Handle system : m_systems)
+      system->run();
+#ifdef SOSAGE_ASSERTIONS_IN_DIALOG
+  }
+  catch (std::runtime_error& error)
+  {
+    std::dynamic_pointer_cast<System::Graphic>(m_systems[6])->display_error (error.what());
+    throw error;
+  }
+#endif
+
   return !m_content.receive("Game:exit");
 }
 

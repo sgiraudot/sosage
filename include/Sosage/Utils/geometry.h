@@ -191,6 +191,11 @@ public:
     *this = Vector(x() / l, y() / l);
   }
 
+  friend std::string to_string(const Vector& v)
+  {
+    return "Vector(" + std::to_string(v.x()) + ";" + std::to_string(v.y()) + ")";
+  }
+
   friend Point operator+ (const Point& a, const Vector& b)
   {
     return Point(a.x() + b.x(), a.y() + b.y());

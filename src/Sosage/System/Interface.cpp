@@ -45,6 +45,7 @@ namespace C = Component;
 
 Interface::Interface (Content& content)
   : Base (content)
+  , m_latest_status(IDLE)
   , m_latest_exit (-10000)
   , m_stick_on (false)
 {
@@ -65,7 +66,7 @@ void Interface::run()
 
   if (status()->value() != CUTSCENE && status()->value() != LOCKED)
   {
-    if (mode->value() == MOUSE || mode->value() == TOUCHSCREEN)
+    if (mode->value() == MOUSE)
     {
       auto cursor = get<C::Position>(CURSOR__POSITION);
       detect_collision (cursor);
@@ -90,9 +91,52 @@ void Interface::run()
           idle_clicked();
       }
     }
+    else if (mode->value() == TOUCHSCREEN)
+    {
+      auto cursor = get<C::Position>(CURSOR__POSITION);
+      bool active_objects_changed = false;
+      if (status()->value() != m_latest_status)
+      {
+        clear_active_objects();
+        active_objects_changed = true;
+      }
+      if (!active_objects_changed && status()->value() == IDLE)
+        active_objects_changed = detect_proximity();
+
+      if (receive ("Cursor:clicked"))
+      {
+        detect_collision (cursor);
+        if (status()->value() == IN_WINDOW)
+          window_clicked();
+        else if (status()->value() == IN_CODE)
+          code_clicked(cursor);
+        else if (status()->value() == IN_MENU)
+          menu_clicked();
+        else if (status()->value() == DIALOG_CHOICE)
+          dialog_clicked();
+        else if (status()->value() == ACTION_CHOICE || status()->value() == INVENTORY_ACTION_CHOICE)
+          action_clicked();
+        else if (status()->value() == OBJECT_CHOICE)
+          object_clicked();
+        else if (status()->value() == IN_INVENTORY)
+          inventory_clicked();
+        else // IDLE
+          idle_clicked();
+      }
+
+      if (active_objects_changed)
+        update_active_objects();
+    }
     else // if (mode->value() == GAMEPAD)
     {
-      bool active_objects_changed = detect_proximity();
+      bool active_objects_changed = false;
+      if (status()->value() != m_latest_status)
+      {
+        clear_active_objects();
+        active_objects_changed = true;
+      }
+      if (!active_objects_changed && status()->value() == IDLE)
+        active_objects_changed = detect_proximity();
 
       if (status()->value() == IN_CODE)
       {
@@ -105,7 +149,10 @@ void Interface::run()
 
       if (auto right = request<C::Boolean>("Switch:right"))
       {
-        switch_active_object (right->value());
+        if (status()->value() == IN_MENU)
+          menu_triggered (right ? "right" : "left");
+        else
+          switch_active_object (right->value());
         remove ("Switch:right");
         active_objects_changed = true;
       }
@@ -155,6 +202,25 @@ void Interface::run()
                 active_objects_changed = true;
               }
             }
+            else if (status()->value() == IN_MENU)
+            {
+              double x = get<C::Simple<Vector>>(STICK__DIRECTION)->value().x();
+              double y = get<C::Simple<Vector>>(STICK__DIRECTION)->value().y();
+              if (std::abs(x) > std::abs(y))
+              {
+                if (x < 0)
+                  menu_triggered("left");
+                else
+                  menu_triggered("right");
+              }
+              else
+              {
+                if (y < 0)
+                  menu_triggered("up");
+                else
+                  menu_triggered("down");
+              }
+            }
           }
         }
       }
@@ -171,7 +237,7 @@ void Interface::run()
         else if (status()->value() == IN_CODE)
           code_triggered(received_key);
         else if (status()->value() == IN_MENU)
-          ;
+          menu_triggered(received_key);
         else if (status()->value() == DIALOG_CHOICE)
           dialog_triggered(received_key);
         else if (status()->value() == OBJECT_CHOICE || status()->value() == IN_INVENTORY)
@@ -198,6 +264,9 @@ void Interface::run()
 
   update_inventory();
   update_dialog_choices();
+  update_menu();
+
+  m_latest_status = status()->value();
 }
 
 void Interface::init()
@@ -314,7 +383,6 @@ void Interface::clear_action_ids(bool clear_highlights)
 
   for (C::Group_handle group : m_labels)
   {
-    std::cerr << "Remove group " << group->id() << std::endl;
     group->apply<C::Base> ([&](auto h) { remove (h->id()); });
     remove (group->id());
   }
@@ -323,7 +391,7 @@ void Interface::clear_action_ids(bool clear_highlights)
 
 void Interface::update_label (bool is_button, const std::string& id, std::string name,
                               bool open_left, bool open_right, const Point& position,
-                              const Collision_type& collision, double scale)
+                              const Collision_type& collision, double scale, bool arrow)
 {
   auto pos = set<C::Absolute_position>(id + ":global_position", position);
   auto group = request<C::Group>(id + ":group");
@@ -357,23 +425,33 @@ void Interface::update_label (bool is_button, const std::string& id, std::string
       label->set_alpha(scale * 255);
     }
 
-    left = set<C::Image>(id + "_left_circle:image", get<C::Image>("Left_circle:image"));
+    if (open_left && arrow)
+      left = set<C::Image>(id + "_left_circle:image", get<C::Image>("Goto_left:image"));
+    else
+    {
+      left = set<C::Image>(id + "_left_circle:image", get<C::Image>("Left_circle:image"));
+      left->set_alpha(alpha);
+    }
     group->add(left);
 
     left->on() = true;
     left->set_relative_origin(1, 0.5);
     left->set_scale(scale);
-    left->set_alpha(alpha);
     left->z() = depth - 1;
     left->set_collision(collision);
 
-    right = set<C::Image>(id + "_right_circle:image", get<C::Image>("Right_circle:image"));
+    if (open_right && arrow)
+      right = set<C::Image>(id + "_right_circle:image", get<C::Image>("Goto_right:image"));
+    else
+    {
+      right = set<C::Image>(id + "_right_circle:image", get<C::Image>("Right_circle:image"));
+      right->set_alpha(alpha);
+    }
     group->add(right);
 
     right->on() = true;
     right->set_relative_origin(0, 0.5);
     right->set_scale(scale);
-    right->set_alpha(alpha);
     right->z() = depth - 1;
     right->set_collision(collision);
 
@@ -388,6 +466,13 @@ void Interface::update_label (bool is_button, const std::string& id, std::string
       int width = margin + label->width() / 2;
       if (is_button || name.size() == 1)
         width = (name.size() - 1) * Config::label_margin;
+      if (scale != 1.0)
+      {
+        // Avoid artefacts with bad divisions
+        int factor = round(1. / (1. - scale));
+        while (width % factor != 0)
+          ++ width;
+      }
 
       if (width != 0)
       {
@@ -404,19 +489,17 @@ void Interface::update_label (bool is_button, const std::string& id, std::string
   }
 
   if (left)
-    left->on() = !open_left;
+    left->on() = !open_left || arrow;
   if (right)
-    right->on() = !open_right;
+    right->on() = !open_right || arrow;
 
-
-  int half_width_minus = (back ? round(scale * back->width()) / 2 : 0);
-  int half_width_plus = (back ? round(scale * back->width()) - half_width_minus : 0);
-
-  // Dirty as fuck but I can't find a cleaner way to avoid gaps between circles and back in some configurations…
-  if (back && scale != 1.0 && round(scale * back->width()) % 2 == 1)
+  int half_width_minus = 0;
+  int half_width_plus = 0;
+  if (back)
   {
-   half_width_plus --;
-   half_width_minus ++;
+    int back_width = round (scale * back->width());
+    half_width_minus = back_width / 2;
+    half_width_plus = back_width - half_width_minus;
   }
 
   if(open_left == open_right) // symmetric label
@@ -448,12 +531,10 @@ void Interface::generate_action (const std::string& id, const std::string& actio
                                  Point position)
 {
   auto label = request<C::String>(id + "_" + action + ":label");
-  if (action == "cancel")
-    label = get<C::String>("Cancel:text");
-  else if (action == "ok")
-    label = get<C::String>("Ok:text");
+  if (isupper(action[0]))
+    label = get<C::String>(action + ":text");
   if (!label)
-      label = get<C::String>("Default_" + action + ":label");
+    label = get<C::String>("Default_" + action + ":label");
   if (id == "Default" && action == "inventory")
     label = get<C::String>("Inventory:label");
 
@@ -590,6 +671,15 @@ void Interface:: update_inventory ()
     {
       highlight = 255;
       factor = 0.9;
+
+      if (mode != TOUCHSCREEN)
+      {
+        auto name = get<C::String>(img->entity() + ":name");
+        auto position = get<C::Position>(img->entity() + ":position");
+
+        Point p = position->value() + Vector(0, -Config::inventory_height / 2 - 2 * Config::inventory_margin);
+        update_label(false, img->entity() + "_label", name->value(), false, false, p, UNCLICKABLE);
+      }
     }
     if (inventory->get(i) == m_source)
     {

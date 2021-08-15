@@ -41,6 +41,7 @@ class Input : public Base
   std::vector<bool> m_keys_on;
   double m_x;
   double m_y;
+  bool m_fake_touchscreen;
 
 public:
 

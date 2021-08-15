@@ -366,10 +366,14 @@ void File_IO::read_init (const std::string& folder_name)
   std::string goto_left = input["cursor"][2].string("images", "interface", "png");
   auto goto_left_img = C::make_handle<C::Image>("Cursor:image", local_file_name(goto_left), Config::cursor_depth);
   goto_left_img->set_relative_origin(1., 0.5);
+  auto goto_left_copy = set<C::Image>("Goto_left:image", goto_left_img);
+  goto_left_copy->on() = false;
 
   std::string goto_right = input["cursor"][3].string("images", "interface", "png");
   auto goto_right_img = C::make_handle<C::Image>("Cursor:image", local_file_name(goto_right), Config::cursor_depth);
   goto_right_img->set_relative_origin(0., 0.5);
+  auto goto_right_copy = set<C::Image>("Goto_right:image", goto_right_img);
+  goto_right_copy->on() = false;
 
   auto cursor_state = set<C::String>("Cursor:state", "default");
   auto cursor_img = C::make_handle<C::String_conditional>("Cursor:image", cursor_state);

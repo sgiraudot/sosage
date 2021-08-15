@@ -69,6 +69,8 @@ inline void check_impl (const char* file, int line, const std::string& str)
 #elif defined(SOSAGE_ASSERTIONS_AS_EXCEPTIONS)
 inline void check_impl (const char* file, int line, const std::string& str)
 {
+
+
   throw std::runtime_error(str + " [" + file + ":" + std::to_string(line) + "]");
 }
 #else

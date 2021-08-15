@@ -453,7 +453,7 @@ void Ground_map::find_path (Point origin, Sosage::Vector direction, std::vector<
                               {
                                 return false;
                               });
-      check(query, "Free point with no intersected edge");
+      check(query, "Free point " + to_string(origin) + " with no intersected edge in direction " + to_string(direction));
       vertex = query.vertex;
       edge = query.edge;
       origin = query.point;
