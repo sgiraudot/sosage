@@ -9,6 +9,8 @@ History of versions and modifications of the SOSAGE engine.
 - Fully reworked interface
 - Unique aspect ratio 16/9
 - Screen is 100% in-game, no permanent interface
+- Support for gamepads and keyboard input
+- Reworked support for touchscreens
 
 ## `v1.0.1 (xmas2020demo-bugfix1)` - TBD
 
