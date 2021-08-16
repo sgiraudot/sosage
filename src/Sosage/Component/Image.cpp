@@ -38,12 +38,11 @@ Image::Image (const std::string& id, int w, int h, int r, int g, int b, int a)
 }
 
 Image::Image (const std::string& id, const std::string& file_name, int z,
-              const Collision_type& collision)
+              const Collision_type& collision, bool with_highlight)
   : Base(id), m_origin(0,0), m_z(z), m_on(true),
     m_collision (collision)
 {
-  m_core = Core::Graphic::load_image (file_name, (collision == PIXEL_PERFECT),
-                                      (collision != UNCLICKABLE) && z != 0);
+  m_core = Core::Graphic::load_image (file_name, (collision == PIXEL_PERFECT), with_highlight);
 }
 
 Image::Image (const std::string& id, Font_handle font, const std::string& color_str,

@@ -132,6 +132,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
   SOSAGE_TIMER_STOP(SDL_Image__load_image_file);
 
   SDL_Surface* highlight = nullptr;
+
   if (with_highlight)
   {
     SOSAGE_TIMER_START(SDL_Image__load_image_create_highlight);

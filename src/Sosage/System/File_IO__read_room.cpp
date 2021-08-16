@@ -668,7 +668,8 @@ void File_IO::read_object (const std::string& id)
         auto anim = C::make_handle<C::Animation>(id + ":conditional_image",
                                                  skin, z,
                                                  nb_frames, 1, true,
-                                                 (box_collision ? BOX : PIXEL_PERFECT));
+                                                 (box_collision ? BOX : PIXEL_PERFECT),
+                                                 true);
         anim->reset(true, duration);
         img = anim;
       }
@@ -684,7 +685,8 @@ void File_IO::read_object (const std::string& id)
         }
         else
           img = C::make_handle<C::Image>(id + ":conditional_image", skin, z,
-                                         (box_collision ? BOX : PIXEL_PERFECT));
+                                         (box_collision ? BOX : PIXEL_PERFECT),
+                                         true);
       }
 
       if (state == "inventory")

@@ -414,10 +414,10 @@ void File_IO::read_init ()
   set<C::Sound>("Click:sound", click_sound);
 
   std::string left_circle = input["circle"][0].string("images", "interface", "png");
-  auto left_circle_img = set<C::Image>("Left_circle:image", left_circle, 1, BOX);
+  auto left_circle_img = set<C::Image>("Left_circle:image", left_circle, 1, BOX, true);
   left_circle_img->on() = false;
   std::string right_circle = input["circle"][1].string("images", "interface", "png");
-  auto right_circle_img = set<C::Image>("Right_circle:image", right_circle, 1, BOX);
+  auto right_circle_img = set<C::Image>("Right_circle:image", right_circle, 1, BOX, true);
   right_circle_img->on() = false;
 
   std::string big_circle = input["circle"][2].string("images", "interface", "png");

@@ -62,7 +62,7 @@ public:
 
   Animation (const std::string& id, const std::string& file_name, int z,
              int width_subdiv, int height_subdiv, bool loop,
-             const Collision_type& collision = BOX);
+             const Collision_type& collision = BOX, bool with_highlight = false);
   int width_subdiv() const { return m_width_subdiv; }
   int height_subdiv() const { return m_height_subdiv; }
   const std::vector<Frame>& frames() const { return m_frames; }
