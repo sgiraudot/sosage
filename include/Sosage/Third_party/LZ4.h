@@ -27,6 +27,7 @@
 #ifndef SOSAGE_THIRD_PARTY_LZ4_H
 #define SOSAGE_THIRD_PARTY_LZ4_H
 
+#include <Sosage/Utils/binary_io.h>
 #include <Sosage/Utils/error.h>
 
 #include <lz4.h>
@@ -35,8 +36,6 @@
 
 namespace Sosage
 {
-
-using Buffer = std::vector<char>;
 
 inline Buffer lz4_compress_buffer (void* data, std::size_t size)
 {

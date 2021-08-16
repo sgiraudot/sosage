@@ -18,6 +18,7 @@ sosage_option(SOSAGE_CFG_PROFILE "Profile and display timing info (requires debu
 sosage_option(SOSAGE_CFG_USE_SDL_TIME "Use SDL clock instead of STL clock" OFF)
 sosage_option(SOSAGE_CFG_ASSERTIONS_AS_EXCEPTIONS "Assertions treated as exceptions instead of triggering exit()" ON)
 sosage_option(SOSAGE_COMPILE_TESTS "Compile test executables" OFF)
+sosage_option(SOSAGE_COMPILE_SCAP "Compile Sosage Compressed Data Packager" OFF)
 
 ## Check all dependencies
 
@@ -81,6 +82,8 @@ include(Sosage_utils)
 ## Fetch sources and create executable
 
 file(GLOB_RECURSE SOSAGE_SRC "src/Sosage/*.cpp")
+get_filename_component(SOSAGE_SCAP ${CMAKE_CURRENT_SOURCE_DIR}/src/Sosage/SCAP.cpp ABSOLUTE)
+list(REMOVE_ITEM SOSAGE_SRC ${SOSAGE_SCAP})
 
 if(MINGW)
  set(SOSAGE_SRC ${SOSAGE_SRC} "${SOSAGE_DATA_FOLDER}/resources/sosage.rc")
@@ -113,6 +116,13 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 endif()
 
 include(CPack)
+
+if(SOSAGE_COMPILE_SCAP)
+  get_filename_component(SOSAGE_EXE_FULLNAME ${CMAKE_CURRENT_SOURCE_DIR}/src/Sosage/Sosage.cpp ABSOLUTE)
+  list(REMOVE_ITEM SOSAGE_SRC ${SOSAGE_EXE_FULLNAME})
+  add_executable("SCAP" "src/Sosage/SCAP.cpp" ${SOSAGE_SRC})
+  target_link_libraries("SCAP" PUBLIC sosage)
+endif()
 
 if(SOSAGE_COMPILE_TESTS)
 

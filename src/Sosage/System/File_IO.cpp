@@ -533,7 +533,7 @@ void File_IO::read_cutscene (const std::string& file_name)
 
   SOSAGE_TIMER_START(File_IO__read_cutscene);
 
-  Core::File_IO input ("cutscenes/" + file_name + ".yaml");
+  Core::File_IO input ("data/cutscenes/" + file_name + ".yaml");
   input.parse();
 
   callback->value()();

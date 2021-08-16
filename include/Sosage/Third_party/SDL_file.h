@@ -30,7 +30,7 @@
 #include <Sosage/Config/config.h>
 #include <Sosage/Config/options.h>
 #include <Sosage/Config/platform.h>
-#include <Sosage/Third_party/LZ4.h> // For Buffer, maybe something to clean up
+#include <Sosage/Utils/binary_io.h>
 #include <Sosage/Utils/error.h>
 
 #include <SDL.h>

@@ -120,9 +120,13 @@ public:
 
   static bool packaged() { return !buffers.empty(); }
 
-  static void init (const std::string& folder)
+  static void init (const std::string& folder, bool scap_mode = false)
   {
     folder_name = folder;
+    if (scap_mode)
+      return;
+
+
     try
     {
       Asset asset = open ("general.data");

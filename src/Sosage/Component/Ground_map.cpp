@@ -25,6 +25,8 @@
 */
 
 #include <Sosage/Component/Ground_map.h>
+#include <Sosage/Utils/Asset_manager.h>
+#include <Sosage/Utils/binary_io.h>
 #include <Sosage/Utils/profiling.h>
 
 #include <algorithm>
@@ -57,8 +59,27 @@ Ground_map::Ground_map (const std::string& id,
   int height = m_image->h;
   m_radius = int(distance(0, 0, width, height));
 
-  // Build border of ground area
+  if (Asset_manager::packaged())
+  {
+    std::string graph_file = file_name;
+    graph_file.resize (graph_file.size() - 3);
+    graph_file += "graph";
+    read(graph_file);
+  }
+  else
+    build_graph(callback);
   
+  m_latest_graph = m_graph;
+  
+  SOSAGE_TIMER_STOP(Ground_map__Ground_map);
+}
+
+void Ground_map::build_graph (const std::function<void()>& callback)
+{
+  int width = m_image->w;
+  int height = m_image->h;
+
+  // Build border of ground area
   std::map<Point, GVertex> map_p2v;
 
   for (int x = -1; x < width; ++ x)
@@ -84,7 +105,7 @@ Ground_map::Ground_map (const std::string& id,
       if (g != g_right)
       {
         unsigned char red = (g ? c[0] : c_right[0]);
-        
+
         GVertex source = add_vertex (map_p2v, Point (x + 0.5, y - 0.5), red);
         GVertex target = add_vertex (map_p2v, Point (x + 0.5, y + 0.5), red);
 
@@ -93,7 +114,7 @@ Ground_map::Ground_map (const std::string& id,
       if (g != g_down)
       {
         unsigned char red = (g ? c[0] : c_down[0]);
-        
+
         GVertex source = add_vertex (map_p2v, Point (x - 0.5, y + 0.5), red);
         GVertex target = add_vertex (map_p2v, Point (x + 0.5, y + 0.5), red);
 
@@ -114,7 +135,7 @@ Ground_map::Ground_map (const std::string& id,
               return a < b;
             return da < db;
           });
-  
+
   for (GVertex v : m_graph.vertices())
   {
     if (deviation(v) < Config::boundary_precision)
@@ -154,7 +175,7 @@ Ground_map::Ground_map (const std::string& id,
   m_graph.validity();
 
   debug("Edges = ", m_graph.num_edges());
-  
+
   for (auto it0 = m_graph.vertices().begin(); it0 != m_graph.vertices().end(); ++ it0)
   {
     GVertex v0 = *it0;
@@ -185,10 +206,57 @@ Ground_map::Ground_map (const std::string& id,
     callback();
   }
   debug("Edges = ", m_graph.num_edges());
-  
-  m_latest_graph = m_graph;
-  
-  SOSAGE_TIMER_STOP(Ground_map__Ground_map);
+}
+
+void Ground_map::write (const std::string& filename)
+{
+  std::ofstream ofile (filename, std::ios::binary);
+
+  auto nb_vertices = (unsigned short)(m_graph.vertices().size());
+  binary_write (ofile, nb_vertices);
+
+  for (GVertex v : m_graph.vertices())
+  {
+    binary_write (ofile, m_graph[v].point.X());
+    binary_write (ofile, m_graph[v].point.Y());
+    binary_write (ofile, m_graph[v].red);
+  }
+
+  auto nb_edges = (unsigned short)(m_graph.edges().size());
+  binary_write (ofile, nb_edges);
+
+  for (GEdge e : m_graph.edges())
+  {
+    auto s = (unsigned short)(m_graph.source(e));
+    binary_write (ofile, s);
+    auto t = (unsigned short)(m_graph.target(e));
+    binary_write (ofile, t);
+    auto b = (unsigned char)(m_graph[e].border);
+    binary_write (ofile, b);
+  }
+}
+
+void Ground_map::read (const std::string& filename)
+{
+  Asset asset = Asset_manager::open(filename);
+  auto nb_vertices = asset.binary_read<unsigned short>();
+  for (unsigned short v = 0; v < nb_vertices; ++ v)
+  {
+    auto x = asset.binary_read<int>();
+    auto y = asset.binary_read<int>();
+    auto red = asset.binary_read<unsigned char>();
+    m_graph.add_vertex (Vertex (Point(x,y), red));
+  }
+
+  auto nb_edges = asset.binary_read<unsigned short>();
+  for (unsigned short e = 0; e < nb_edges; ++ e)
+  {
+    auto s = asset.binary_read<unsigned short>();
+    auto t = asset.binary_read<unsigned short>();
+    auto b = bool(asset.binary_read<unsigned char>());
+    GEdge edge = m_graph.add_edge (s, t);
+    m_graph[edge].border = b;
+  }
 }
 
 void Ground_map::find_path (Point origin,
