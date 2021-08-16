@@ -78,6 +78,10 @@ void Graphic::run()
     m_core.update_view ();
   if (receive ("Window:toggle_fullscreen"))
     m_core.toggle_fullscreen (get<C::Boolean>("Window:fullscreen")->value());
+  if (receive ("Fake_touchscreen:enable"))
+    m_core.toggle_cursor(true);
+  if (receive ("Fake_touchscreen:disable"))
+    m_core.toggle_cursor(false);
 
   std::vector<C::Image_handle> images;
 
@@ -105,17 +109,13 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
                return (a->z() < b->z());
              });
 
-  auto status = get<C::Status>(GAME__STATUS);
   double xcamera = get<C::Double>(CAMERA__POSITION)->value();
-
-  int interface_width = 0;
-  int interface_height = Config::interface_height;
 
   for (const auto& img : images)
   {
     if (img->on())
     {
-      if (status->value() == LOCKED &&
+      if (status()->value() == LOCKED &&
            img->entity() == "Cursor")
         continue;
 
@@ -134,15 +134,11 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
       int xmin_target = screen_position.X();
       int ymin_target = screen_position.y();
-      int xmax_target = xmin_target + int(img->core().scaling * (xmax - xmin));
-      int ymax_target = ymin_target + int(img->core().scaling * (ymax - ymin));
+      int xmax_target = xmin_target + round(img->core().scaling * (xmax - xmin));
+      int ymax_target = ymin_target + round(img->core().scaling * (ymax - ymin));
 
       int limit_width = Config::world_width;
-      if (position->absolute())
-        limit_width += interface_width;
-      int limit_height = Config::world_height - Config::interface_height;
-      if (position->absolute())
-        limit_height += interface_height;
+      int limit_height = Config::world_height;
 
       // Skip out of boundaries images
       if ((xmax_target < 0 || xmin_target > limit_width)

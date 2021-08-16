@@ -66,7 +66,7 @@ void File_IO::run()
     else
     {
       read_cutscene (new_room->value());
-      get<C::Status>(GAME__STATUS)->push (CUTSCENE);
+      status()->push (CUTSCENE);
     }
     remove ("Game:new_room");
   }
@@ -127,7 +127,8 @@ void File_IO::read_config()
 
   // Default config values
   bool fullscreen = !Config::emscripten;
-  bool virtual_cursor = false;
+  int input_mode = (Config::android ? TOUCHSCREEN : MOUSE);
+  int gamepad_type = NO_LABEL;
 
   int dialog_speed = Config::MEDIUM_SPEED;
   int dialog_size = Config::MEDIUM;
@@ -151,7 +152,8 @@ void File_IO::read_config()
     Core::File_IO input (file_name);
     input.parse();
     if (input.has("fullscreen")) fullscreen = input["fullscreen"].boolean();
-    if (input.has("virtual_cursor")) virtual_cursor = input["virtual_cursor"].boolean();
+    if (input.has("input_mode")) input_mode = input["input_mode"].integer();
+    if (input.has("gamepad_type")) gamepad_type = input["gamepad_type"].integer();
     if (input.has("dialog_speed")) dialog_speed = input["dialog_speed"].floating();
     if (input.has("dialog_size")) dialog_size = input["dialog_size"].floating();
     if (input.has("music_volume")) music_volume = input["music_volume"].integer();
@@ -166,15 +168,11 @@ void File_IO::read_config()
   }
   catch (Sosage::No_such_file&)
   {
-    if constexpr (Config::android)
-    {
-      emit("Show:menu");
-      set<C::String>("Game:triggered_menu", "Cursor");
-    }
   }
 
   set<C::Boolean>("Window:fullscreen", fullscreen);
-  set<C::Boolean>("Interface:virtual_cursor", virtual_cursor);
+  set_fac<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE, "Interface:input_mode", Input_mode(input_mode));
+  set_fac<C::Simple<Gamepad_type>>(GAMEPAD__TYPE, "Gamepad:type", Gamepad_type(gamepad_type));
 
   set<C::Int>("Dialog:speed", dialog_speed);
   set<C::Int>("Dialog:size", dialog_size);
@@ -194,7 +192,8 @@ void File_IO::write_config()
   Core::File_IO output (Sosage::pref_path() + "config.yaml", true);
 
   output.write ("fullscreen", get<C::Boolean>("Window:fullscreen")->value());
-  output.write ("virtual_cursor", get<C::Boolean>("Interface:virtual_cursor")->value());
+  output.write ("input_mode", get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value());
+  output.write ("gamepad_type", get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE)->value());
 
   output.write ("dialog_speed", get<C::Int>("Dialog:speed")->value());
   output.write ("dialog_size", get<C::Int>("Dialog:size")->value());
@@ -243,7 +242,7 @@ void File_IO::read_savefile()
   {
     const Core::File_IO::Node& iposition = input["positions"][i];
     Point point (iposition["value"][0].floating(), iposition["value"][1].floating());
-    set<C::Position>(iposition["id"].string() + ":position", point);
+    set<C::Absolute_position>(iposition["id"].string() + ":position", point);
   }
 
   for (std::size_t i = 0; i < input["integers"].size(); ++ i)
@@ -354,40 +353,46 @@ void File_IO::read_init (const std::string& folder_name)
   std::string icon = input["icon"].string("images", "interface", "png");
   set<C::String>("Icon:filename", local_file_name(icon));
 
-  std::string cursor = input["cursor"].string("images", "interface", "png");
-  auto cursor_img = C::make_handle<C::Image> ("Cursor:image", local_file_name(cursor),
+  std::string cursor = input["cursor"][0].string("images", "interface", "png");
+  auto cursor_default = C::make_handle<C::Image> ("Cursor:image", local_file_name(cursor),
                                                               Config::cursor_depth);
-  cursor_img->set_relative_origin(0.5, 0.5);
+  cursor_default->set_relative_origin(0.1, 0.1);
 
-  auto status = get<C::Status>(GAME__STATUS);
+  std::string cursor_o = input["cursor"][1].string("images", "interface", "png");
+  auto cursor_object = C::make_handle<C::Image> ("Cursor:image", local_file_name(cursor_o),
+                                                              Config::cursor_depth);
+  cursor_object->set_relative_origin(0.5, 0.5);
 
-  if constexpr (Config::android)
-  {
-    // Cursor displayed = NOT paused AND virtual
-    set<C::Conditional>
-        ("Cursor:conditional",
-         C::make_and
-         (get<C::Condition>("Unlocked:condition"),
-          get<C::Boolean>("Interface:virtual_cursor")),
-         cursor_img);
-  }
-  else
-  {
-    // Cursor displayed = NOT paused
-    set<C::Conditional>
-        ("Cursor:conditional",
-         get<C::Condition>("Unlocked:condition"),
-         cursor_img);
-  }
+  std::string goto_left = input["cursor"][2].string("images", "interface", "png");
+  auto goto_left_img = C::make_handle<C::Image>("Cursor:image", local_file_name(goto_left), Config::cursor_depth);
+  goto_left_img->set_relative_origin(1., 0.5);
+  auto goto_left_copy = set<C::Image>("Goto_left:image", goto_left_img);
+  goto_left_copy->on() = false;
 
-  set_fac<C::Position> (CURSOR__POSITION, "Cursor:position",
-                        (get<C::Boolean>("Interface:virtual_cursor")->value()
-                        ? Point(Config::world_width / 2, Config::world_height / 2) : Point(0,0)));
+  std::string goto_right = input["cursor"][3].string("images", "interface", "png");
+  auto goto_right_img = C::make_handle<C::Image>("Cursor:image", local_file_name(goto_right), Config::cursor_depth);
+  goto_right_img->set_relative_origin(0., 0.5);
+  auto goto_right_copy = set<C::Image>("Goto_right:image", goto_right_img);
+  goto_right_copy->on() = false;
 
-  std::string turnicon = input["turnicon"].string("images", "interface", "png");
-  auto turnicon_img
-    = set<C::Image>("Turnicon:image", local_file_name(turnicon), 0);
-  turnicon_img->on() = false;
+  auto cursor_state = set<C::String>("Cursor:state", "default");
+  auto cursor_img = C::make_handle<C::String_conditional>("Cursor:image", cursor_state);
+  cursor_img->add("default", cursor_default);
+  cursor_img->add("object", cursor_object);
+  cursor_img->add("goto_left", goto_left_img);
+  cursor_img->add("goto_right", goto_right_img);
+
+  // Cursor displayed = mouse mode AND NOT paused
+  set<C::Conditional>
+      ("Cursor:image"
+       "",
+       C::make_and
+       (C::make_simple_condition
+        (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE), MOUSE),
+        get<C::Condition>("Unlocked:condition")),
+       cursor_img);
+
+  set_fac<C::Absolute_position> (CURSOR__POSITION, "Cursor:position", Point(0,0));
 
   std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
   int nb_img = input["loading_spin"][1].integer();
@@ -395,11 +400,40 @@ void File_IO::read_init (const std::string& folder_name)
                                                                    Config::loading_depth, nb_img, 1, true);
   loading_spin_img->on() = false;
   loading_spin_img->set_relative_origin(0.5, 0.5);
-  set_fac<C::Position> (LOADING_SPIN__POSITION, "Loading_spin:position", Point(Config::world_width / 2,
-                                                                               Config::world_height / 2));
+  set_fac<C::Absolute_position> (LOADING_SPIN__POSITION, "Loading_spin:position",
+                                 Point(Config::world_width / 2,
+                                       Config::world_height / 2));
+
+  std::string left_arrow = input["inventory_arrows"][0].string("images", "interface", "png");
+  auto left_arrow_img = set<C::Image>("Left_arrow:image", local_file_name(left_arrow));
+  left_arrow_img->z() = Config::inventory_depth;
+  left_arrow_img->set_relative_origin (0, 0.5);
+  std::string right_arrow = input["inventory_arrows"][1].string("images", "interface", "png");
+  auto right_arrow_img = set<C::Image>("Right_arrow:image", local_file_name(right_arrow));
+  right_arrow_img->z() = Config::inventory_depth;
+  right_arrow_img->set_relative_origin (1, 0.5);
+
+  std::string chamfer = input["inventory_chamfer"].string("images", "interface", "png");
+  auto chamfer_img = set<C::Image>("Chamfer:image", local_file_name(chamfer));
+  chamfer_img->z() = Config::interface_depth;
 
   std::string click_sound = input["click_sound"].string("sounds", "effects", "ogg");
   set<C::Sound>("Click:sound", local_file_name(click_sound));
+
+  std::string left_circle = input["circle"][0].string("images", "interface", "png");
+  auto left_circle_img = set<C::Image>("Left_circle:image", local_file_name(left_circle), 1, BOX);
+  left_circle_img->on() = false;
+  std::string right_circle = input["circle"][1].string("images", "interface", "png");
+  auto right_circle_img = set<C::Image>("Right_circle:image", local_file_name(right_circle), 1, BOX);
+  right_circle_img->on() = false;
+
+  std::string big_circle = input["circle"][2].string("images", "interface", "png");
+  auto big_circle_img = C::make_handle<C::Image>("Cursor:image", local_file_name(big_circle),
+                                                 Config::cursor_depth);
+  big_circle_img->set_relative_origin(0.5, 0.5);
+
+  cursor_img->add("selected", big_circle_img);
+
 
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
   set<C::Font> ("Debug:font", local_file_name(debug_font), 40);
@@ -407,12 +441,8 @@ void File_IO::read_init (const std::string& folder_name)
   std::string interface_font = input["interface_font"].string("fonts", "ttf");
   set<C::Font> ("Interface:font", local_file_name(interface_font), 80);
 
-  std::string interface_color = input["interface_color"].string();
-  set<C::String> ("Interface:color", interface_color);
-  std::array<unsigned char, 3> color = color_from_string (interface_color);
-
-  std::string menu_font = input["menu_font"].string("fonts", "ttf");
-  set<C::Font> ("Menu:font", local_file_name(menu_font), 80);
+  std::string dialog_font = input["dialog_font"].string("fonts", "ttf");
+  set<C::Font> ("Dialog:font", local_file_name(dialog_font), 80);
 
   std::string menu_color = input["menu_color"].string();
   set<C::String> ("Menu:color", menu_color);
@@ -431,29 +461,14 @@ void File_IO::read_init (const std::string& folder_name)
     = set<C::Image> ("Credits_text:image", local_file_name(credits_id));
   credits->on() = false;
 
-  for (std::size_t i = 0; i < input["inventory_arrows"].size(); ++ i)
-  {
-    std::string id = input["inventory_arrows" ][i].string("images", "interface", "png");
-    auto arrow
-      = set<C::Image> ("Inventory_arrow_" + std::to_string(i) + ":image",
-                                         local_file_name(id),
-                                         Config::inventory_front_depth);
-    arrow->set_relative_origin(0.5, 0.5);
-    auto arrow_background
-      = set<C::Image> ("Inventory_arrow_background_" + std::to_string(i)
-                                         + ":image",
-                                         arrow->width(), arrow->height(),
-                                         color[0], color[1], color[2]);
-    arrow_background->set_relative_origin(0.5, 0.5);
-    arrow_background->z() = Config::inventory_back_depth;
-  }
-
   std::string left_arrow_id = input["menu_arrows"][0].string("images", "interface", "png");
   auto arrow_left = set<C::Image>("Menu_left_arrow:image", local_file_name(left_arrow_id));
+  arrow_left->set_relative_origin(0, 0.5);
   arrow_left->on() = false;
 
   std::string right_arrow_id = input["menu_arrows"][1].string("images", "interface", "png");
   auto arrow_right = set<C::Image>("Menu_right_arrow:image", local_file_name(right_arrow_id));
+  arrow_right->set_relative_origin(1, 0.5);
   arrow_right->on() = false;
 
   for (std::size_t i = 0; i < input["text"].size(); ++ i)
@@ -464,26 +479,31 @@ void File_IO::read_init (const std::string& folder_name)
     set<C::String>(id + ":text", itext["value"].string());
   }
 
-  for (std::size_t i = 0; i < input["actions"].size(); ++ i)
+  for (std::string id : Config::possible_actions)
   {
-    const Core::File_IO::Node& idefault = input["actions"][i];
-    std::string id = idefault["id"].string();
+    const Core::File_IO::Node& idefault = input["default"][id];
+    std::string label = idefault["label"].string();
 
-    auto action = set<C::Random_conditional>("Default:" + id);
+    set<C::String>("Default_" + id + ":label", label);
 
-    for (std::size_t j = 0; j < idefault["effect"].size(); ++ j)
+    if (idefault.has("effect"))
     {
-      const Core::File_IO::Node& iaction = idefault["effect"][j];
-      std::string function = iaction.nstring();
+      auto action = set<C::Random_conditional>("Default_" + id + ":action");
+      for (std::size_t j = 0; j < idefault["effect"].size(); ++ j)
+      {
+        const Core::File_IO::Node& iaction = idefault["effect"][j];
+        std::string function = iaction.nstring();
 
-      auto rnd_action = C::make_handle<C::Action>
-        ("Default:" + id + "_" + std::to_string(j));
-      rnd_action->add ("look", {});
-      rnd_action->add (function, iaction[function].string_array());
-      action->add (1.0, rnd_action);
+        auto rnd_action = C::make_handle<C::Action>
+                          ("Default_" + id + ":" + std::to_string(j));
+        rnd_action->add ("look", {});
+        rnd_action->add (function, iaction[function].string_array());
+        action->add (1.0, rnd_action);
+      }
     }
-
   }
+
+  set<C::String>("Inventory:label", input["default"]["inventory_button"].string());
 
   std::string player = input["player"].string();
   set<C::String>("Player:name", player);
@@ -527,7 +547,7 @@ void File_IO::read_cutscene (const std::string& file_name)
 
   std::string name = input["name"].string();
 
-  auto interface_font = get<C::Font> ("Interface:font");
+  auto dialog_font = get<C::Font> ("Dialog:font");
   std::string color = "000000";
 
   std::unordered_map<std::string, const Core::File_IO::Node*> map_id2node;
@@ -590,7 +610,8 @@ void File_IO::read_cutscene (const std::string& file_name)
     {
       check (node.has("text"), "Node should either have music, image or text");
       std::string text = node["text"].string();
-      img = set<C::Image>(id + ":image", interface_font, color, text);
+      img = set<C::Image>(id + ":image", dialog_font, color, text);
+      img->set_scale(0.75);
     }
     img->set_collision(UNCLICKABLE);
     img->on() = false;

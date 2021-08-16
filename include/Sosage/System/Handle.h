@@ -27,6 +27,7 @@
 #ifndef SOSAGE_SYSTEM_HANDLE_H
 #define SOSAGE_SYSTEM_HANDLE_H
 
+#include <Sosage/Component/Status.h>
 #include <Sosage/Content.h>
 
 #include <memory>
@@ -60,12 +61,15 @@ public:
   template <typename T>
   void set (const std::shared_ptr<T>& t) { return m_content.set<T>(t); }
   template <typename T, typename ... Args>
+  std::shared_ptr<T> get_or_set (const std::string& id, Args&& ... args)
+  { return m_content.get_or_set<T>(id, std::forward<Args>(args)...); }
+  template <typename T, typename ... Args>
   std::shared_ptr<T> set_fac (const Fast_access_component& fac, Args&& ... args)
   { return m_content.set_fac<T>(fac, std::forward<Args>(args)...); }
   void remove (const std::string& key, bool optional = false) { m_content.remove(key, optional); }
   void emit (const std::string& signal) { m_content.emit (signal); }
   bool receive (const std::string& signal) { return m_content.receive(signal); }
-
+  Component::Status_handle status() { return get<Component::Status>(GAME__STATUS); }
 };
 
 using Handle = std::shared_ptr<Base>;

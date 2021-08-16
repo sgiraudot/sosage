@@ -55,21 +55,27 @@ Ground_map::Ground_map (const std::string& id,
 
   int width = m_image->w;
   int height = m_image->h;
+  m_radius = int(distance(0, 0, width, height));
 
   // Build border of ground area
   
   std::map<Point, GVertex> map_p2v;
 
-  for (int x = 0; x < width - 1; ++ x)
+  for (int x = -1; x < width; ++ x)
   {
-    for (int y = 0; y < height - 1; ++ y)
+    for (int y = -1; y < height; ++ y)
     {
-      std::array<unsigned char, 3> c
-        = Core::Graphic::get_color (m_image, x, y);
-      std::array<unsigned char, 3> c_right
-        = Core::Graphic::get_color (m_image, x+1, y);
-      std::array<unsigned char, 3> c_down
-        = Core::Graphic::get_color (m_image, x, y+1);
+      std::array<unsigned char, 3> c = { 0, 0, 255 };
+      if (x != -1 && y != -1)
+        c = Core::Graphic::get_color (m_image, x, y);
+
+      std::array<unsigned char, 3> c_right = { 0, 0, 255 };
+      if (x != width-1 && y != -1)
+        c_right = Core::Graphic::get_color (m_image, x+1, y);
+
+      std::array<unsigned char, 3> c_down = { 0, 0, 255 };
+      if (y != height-1 && x != -1)
+        c_down = Core::Graphic::get_color (m_image, x, y+1);
 
       bool g = (c[0] == c[1] && c[0] == c[2]);
       bool g_right = (c_right[0] == c_right[1] && c_right[0] == c_right[2]);
@@ -199,9 +205,6 @@ void Ground_map::find_path (Point origin,
   GEdge etarget = Graph::null_edge();
   std::set<std::pair<GVertex, GVertex>, Compare_ordered_pair> to_add;
 
-  // To avoid problems with inexact intersections, snap to closest
-  // vertex if we are less than 2 pixels away from it
-  double snapping_dist = 2.;
   {
     Neighbor_query query = closest_simplex(origin);
     if (!is_ground_point(origin) || query.dist < snapping_dist)
@@ -331,6 +334,137 @@ void Ground_map::find_path (Point origin,
   SOSAGE_TIMER_STOP(Ground_map__find_path);
 }
 
+void Ground_map::find_path (Point origin, Sosage::Vector direction, std::vector<Point>& out)
+{
+  SOSAGE_TIMER_START(Ground_map__find_path_gamepad);
+
+  m_latest_graph = m_graph;
+
+  GVertex vertex = Graph::null_vertex();
+  GEdge edge = Graph::null_edge();
+  Neighbor_query query = closest_simplex(origin);
+  if (!is_ground_point(origin) || query.dist < snapping_dist)
+  {
+    origin = query.point;
+    if (query.edge == Graph::null_edge())
+      vertex = query.vertex;
+    else
+      edge = query.edge;
+  }
+
+  while (true)
+  {
+    // if free point
+    //   edge = first intersected edge
+    //   out.push_back(snapping point)
+    // if edge point
+    //   find next intersected edge
+    //   if edge not reachable
+    //     vertex = edge in the direction
+    //     out.push_back(vertex)
+    //   else
+    //     edge = first intersected edge
+    //     out.push_back(snapping point)
+    // if vertex point
+    //   find next intersected edge
+    //   if edge not reachable
+    //      if adjacent edge in direction
+    //         vertex = next vertex in edge
+    //      else
+    //         break loop
+    //   else
+    //     edge = first intersected edge
+    //     out.push_back(snapping point)
+
+    if (vertex != Graph::null_vertex())
+    {
+      Neighbor_query query = closest_intersected_edge
+                             (origin, direction,
+                              [&](const GEdge& e) -> bool
+                              {
+                                return (m_latest_graph.edge_has_vertex(e, vertex)
+                                        || m_latest_graph.edge_has_vertex(e, vertex));
+                              });
+      if (query)
+      {
+        vertex = query.vertex;
+        edge = query.edge;
+        origin = query.point;
+        out.push_back(origin);
+      }
+      else
+      {
+        GVertex next_vertex = Graph::null_vertex();
+        double scalar_max = 0.;
+        for (GEdge e : m_latest_graph.incident_edges(vertex))
+        {
+          GVertex other = m_latest_graph.other(e, vertex);
+          Sosage::Vector dir (origin, m_latest_graph[other].point);
+          dir.normalize();
+
+          double scalar = direction * dir;
+          if (scalar > scalar_max)
+          {
+            scalar_max = scalar;
+            next_vertex = other;
+          }
+        }
+
+        if (next_vertex == Graph::null_vertex())
+          break;
+        vertex = next_vertex;
+        origin = m_latest_graph[vertex].point;
+        out.push_back(origin);
+      }
+    }
+    else if (edge != Graph::null_edge())
+    {
+      Neighbor_query query = closest_intersected_edge
+                             (origin, direction,
+                              [&](const GEdge& e) -> bool
+                              {
+                                return e == edge;
+                              });
+      if (query)
+      {
+        vertex = query.vertex;
+        edge = query.edge;
+        origin = query.point;
+        out.push_back(origin);
+      }
+      else
+      {
+        GVertex source = m_latest_graph.source(edge);
+        GVertex target = m_latest_graph.target(edge);
+        Sosage::Vector dir (m_latest_graph[source].point, m_latest_graph[target].point);
+        double scalar = dir * direction;
+        if (scalar == 0) // edge exactly perpendicular to direction, stop
+          break;
+        vertex = (scalar > 0 ? target : source);
+        origin = m_latest_graph[vertex].point;
+        out.push_back(origin);
+      }
+    }
+    else // free point
+    {
+      Neighbor_query query = closest_intersected_edge
+                             (origin, direction,
+                              [&](const GEdge&) -> bool
+                              {
+                                return false;
+                              });
+      check(query, "Free point " + to_string(origin) + " with no intersected edge in direction " + to_string(direction));
+      vertex = query.vertex;
+      edge = query.edge;
+      origin = query.point;
+      out.push_back(origin);
+    }
+
+  }
+
+  SOSAGE_TIMER_STOP(Ground_map__find_path_gamepad);
+}
+
 double Ground_map::z_at_point (const Point& p) const
 {
   std::array<unsigned char, 3> c = Core::Graphic::get_color (m_image, p.X(), p.Y());
@@ -348,7 +482,6 @@ double Ground_map::z_at_point (const Point& p) const
     {
       double dsource = distance (query.point, m_graph[m_graph.source(query.edge)].point);
       double dtarget = distance (query.point, m_graph[m_graph.target(query.edge)].point);
-
       red = static_cast<unsigned char>((m_graph[m_graph.source(query.edge)].red * dtarget
                                        + m_graph[m_graph.target(query.edge)].red * dsource)
                                        / (dsource + dtarget));
@@ -468,7 +601,7 @@ void Ground_map::shortest_path (GVertex vorigin, GVertex vtarget,
 
 bool Ground_map::intersects_border (const Graph& g,
                                     const Segment& seg,
-                                    const std::function<bool(const GEdge&)>& condition) const
+                                    const Edge_condition& condition) const
 {
   for (GEdge e : g.edges())
   {
@@ -480,6 +613,55 @@ bool Ground_map::intersects_border (const Graph& g,
       return true;
   }
   return false;
+}
+
+Ground_map::Neighbor_query Ground_map::closest_intersected_edge (const Point& p,
+                                                                 const Sosage::Vector& direction,
+                                                                 const Edge_condition& condition) const
+{
+  Segment seg (p, p + m_radius * direction);
+  Neighbor_query out;
+
+  const Graph& g = m_latest_graph;
+  for (GEdge e : g.edges())
+  {
+    if (!g.is_valid(e) || !g[e].border || condition(e))
+      continue;
+    Segment eseg (g[g.source(e)].point,
+                  g[g.target(e)].point);
+    if (intersect(seg, eseg))
+    {
+      Point inter = intersection(seg, eseg);
+      double dist = distance(p, inter);
+      if (dist < out.dist)
+      {
+        out.edge = e;
+        out.dist = dist;
+        out.point = inter;
+      }
+    }
+  }
+
+  if (out.edge == Graph::null_edge())
+    return Neighbor_query();
+
+  for (GVertex v : { g.source(out.edge), g.target(out.edge) })
+  {
+    double dist = distance (out.point, g[v].point);
+    if (dist < snapping_dist)
+    {
+      out.vertex = v;
+      out.edge = Graph::null_edge();
+      out.dist = dist;
+      out.point = g[v].point;
+    }
+  }
+
+  Point mid = midpoint(p, out.point);
+  if (!is_ground_point(mid))
+    return Neighbor_query();
+
+  return out;
 }
 
 } // namespace Sosage::Component

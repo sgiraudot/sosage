@@ -38,20 +38,49 @@ namespace Sosage::Component
 
 class Position : public Base
 {
+public:
+
+  Position (const std::string& id) : Base(id) { }
+
+  virtual void set (const Point& p) = 0;
+  virtual Point value() const = 0;
+  virtual bool absolute() const = 0;
+};
+
+using Position_handle = std::shared_ptr<Position>;
+
+class Absolute_position : public Position
+{
   Point m_pos;
   bool m_absolute;
 
 public:
 
-  Position (const std::string& id, const Point& coord, bool absolute = true);
+  Absolute_position (const std::string& id, const Point& coord, bool absolute = true);
   virtual std::string str() const;
-  Point value () const { return m_pos; }
-  void set (const Point& p) { m_pos = p; }
+  virtual Point value () const { return m_pos; }
+  virtual void set (const Point& p) { m_pos = p; }
   bool absolute() const { return m_absolute; }
   bool& absolute() { return m_absolute; }
 };
 
-using Position_handle = std::shared_ptr<Position>;
+using Absolute_position_handle = std::shared_ptr<Absolute_position>;
+
+
+class Relative_position : public Position
+{
+  Position_handle m_ref;
+  Sosage::Vector m_diff;
+
+public:
+
+  Relative_position (const std::string& id, Position_handle ref,
+                     const Sosage::Vector& diff = Sosage::Vector(0,0));
+  virtual Point value() const { return m_ref->value() + m_diff; }
+  virtual void set (const Point& p) { m_diff = Sosage::Vector(m_ref->value(), p); }
+  void set (const Sosage::Vector& v) { m_diff = v; }
+  bool absolute() const { return m_ref->absolute(); }
+};
 
 } // namespace Sosage::Component
 

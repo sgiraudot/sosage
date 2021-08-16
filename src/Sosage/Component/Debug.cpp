@@ -26,6 +26,7 @@
 
 #include <Sosage/Component/Debug.h>
 #include <Sosage/Component/Hints.h>
+#include <Sosage/Component/Status.h>
 
 #include <algorithm>
 #include <vector>
@@ -44,7 +45,8 @@ std::string Debug::debug_str()
 {
   std::string out = "[Debug info]\n";
   out += "FPS = " + std::to_string(m_clock.fps()) + "\n";
-  out += "CPU = " + std::to_string(m_clock.cpu()) + "%\n\n";
+  out += "CPU = " + std::to_string(m_clock.cpu()) + "%\n";
+  out += m_content.get<Component::Status>(GAME__STATUS)->str() + "\n\n";
 
   out += std::to_string(m_content.size()) + " components in memory\n";
   out += "Next hint: " + m_content.get<Component::Hints>("Game:hints")->next() + "\n";

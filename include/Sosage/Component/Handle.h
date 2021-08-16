@@ -68,13 +68,13 @@ public:
   // Special handling of entity for binary actions
   std::string target_entity() const
   {
-    for (const std::string& prefix : { ":use_" })
+    for (const std::string& prefix : { "_inventory_" })
     {
       std::size_t pos = m_id.find(prefix);
       if (pos != std::string::npos)
-        return std::string (m_id.begin() + pos + prefix.size(), m_id.end());
+        return std::string (m_id.begin(), m_id.begin() + pos);
     }
-    return std::string (m_id.begin(), m_id.begin() + m_id.find_first_of(':'));
+    return std::string (m_id.begin(), m_id.begin() + m_id.find_last_of('_'));
   }
 
   std::string component() const

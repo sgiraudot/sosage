@@ -31,6 +31,9 @@ namespace Sosage
 
 Content::Content()
   : m_data ()
+#ifdef SOSAGE_LOG_CONTENT
+  , m_log ("content.log")
+#endif
 {
 
 }

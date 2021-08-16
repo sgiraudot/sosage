@@ -47,9 +47,7 @@ void Animation::run()
 {
   std::size_t new_frame_id = frame_id(get<C::Double>(CLOCK__TIME)->value());
 
-  auto status = get<C::Status>(GAME__STATUS);
-
-  if (status->value() == PAUSED || status->value() == IN_MENU)
+  if (status()->value() == PAUSED || status()->value() == IN_MENU)
   {
     m_frame_id = new_frame_id;
     return;
@@ -151,6 +149,16 @@ void Animation::run_one_frame()
         generate_random_idle_head_animation (id,
                                              get<C::Animation>(id + "_head:image")
                                              ->frames().front().y == 0);
+        to_remove.push_back (c->id());
+      }
+      else if (c->component() == "stop_walking")
+      {
+        if (get<C::Animation>(id + "_walking:image")->on())
+        {
+          bool looking_right = (get<C::Animation>(id + "_walking:image")->frames().front().y != 2);
+          generate_random_idle_animation (id, looking_right);
+          place_and_scale_character(id, looking_right);
+        }
         to_remove.push_back (c->id());
       }
       else if (c->component() == "stop_animation")

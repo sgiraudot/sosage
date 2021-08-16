@@ -32,6 +32,8 @@
 #include <Sosage/System/Interface.h>
 #include <Sosage/Utils/color.h>
 
+#include <queue>
+
 namespace Sosage::System
 {
 
@@ -70,9 +72,6 @@ void Interface::init_menus()
 #if !defined(SOSAGE_ANDROID) && !defined(SOSAGE_EMSCRIPTEN)
           { "Fullscreen", "fullscreen" },
 #endif
-#ifdef SOSAGE_ANDROID
-          { "Virtual_cursor", "virtual_cursor" },
-#endif
           { "Text_size", "text_size" },
           { "Text_speed", "text_speed" },
           { "Music_volume", "music_volume" },
@@ -91,20 +90,6 @@ void Interface::init_menus()
   init_menu_item ((*settings_menu)[1], "Ok", "ok");
   init_menu_buttons (settings_menu->root());
 #endif
-
-  auto cursor_menu = set<C::Menu>("Cursor:menu");
-  cursor_menu->split(VERTICALLY, 3);
-  (*cursor_menu)[2].split(HORIZONTALLY, 2);
-  (*cursor_menu)[2][0].split(VERTICALLY, 2);
-  (*cursor_menu)[2][1].split(VERTICALLY, 2);
-  init_menu_item ((*cursor_menu)[0], "Cursor_choice", "");
-  init_menu_item ((*cursor_menu)[1], "Cursor_choice_later", "");
-  init_menu_item ((*cursor_menu)[2][0][0], "Cursor_choice_virtual", "cursor_choice_virtual");
-  init_menu_item ((*cursor_menu)[2][1][0], "Cursor_choice_no", "cursor_choice_no");
-  init_menu_item ((*cursor_menu)[2][0][1], "Cursor_choice_virtual_text", "");
-  init_menu_item ((*cursor_menu)[2][1][1], "Cursor_choice_no_text", "");
-  init_menu_buttons ((*cursor_menu)[2][0]);
-  init_menu_buttons ((*cursor_menu)[2][1]);
 
   auto credits_menu = set<C::Menu>("Credits:menu");
   credits_menu->split(VERTICALLY, 3);
@@ -126,8 +111,8 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
                                const std::string& effect)
 {
   const std::string& menu_color = get<C::String>("Menu:color")->value();
+  auto dialog_font = get<C::Font>("Dialog:font");
   auto interface_font = get<C::Font>("Interface:font");
-  auto menu_font = get<C::Font>("Menu:font");
 
   auto text = request<C::String>(id + ":text");
 
@@ -140,12 +125,13 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
       if (pos == std::string::npos)
       {
         auto img = set<C::Image>(text->entity() + ":image",
-                                 menu_font, "000000", text->value());
+                                 interface_font, "000000", text->value());
         img->z() = Config::menu_text_depth;
         img->on() = false;
         img->set_scale(0.75);
         img->set_relative_origin(0.5, 0.5);
-        auto pos = set<C::Position>(text->entity() + ":position", Point(0,0));
+        img->set_collision(UNCLICKABLE);
+        auto pos = set<C::Absolute_position>(text->entity() + ":position", Point(0,0));
         node.init(img, pos);
       }
       else
@@ -169,12 +155,13 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
         {
           auto img = set<C::Image>(text->entity() + "_" + std::to_string(i)
                                    + ":image",
-                                   menu_font, "000000", lines[i]);
+                                   interface_font, "000000", lines[i]);
           img->z() = Config::menu_text_depth;
           img->on() = false;
           img->set_scale(scale);
           img->set_relative_origin(0.5, 0.5);
-          auto pos = set<C::Position>(text->entity() + "_" + std::to_string(i)
+          img->set_collision(UNCLICKABLE);
+          auto pos = set<C::Absolute_position>(text->entity() + "_" + std::to_string(i)
                                       + ":position", Point(0, 0));
           node[i].init(img, pos);
         }
@@ -186,7 +173,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
       img->z() = Config::menu_text_depth;
       img->on() = false;
       img->set_relative_origin(0.5, 0.5);
-      auto pos = set<C::Position>(id + ":position", Point(0,0));
+      auto pos = set<C::Absolute_position>(id + ":position", Point(0,0));
       node.init(img, pos);
     }
   }
@@ -199,12 +186,14 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
     if (!img)
     {
       img = set<C::Image>(text->entity() + ":image",
-                          interface_font, menu_color, text->value());
+                          dialog_font, menu_color, text->value());
       img->z() = Config::menu_text_depth;
       img->on() = false;
       img->set_scale(0.75);
       img->set_relative_origin(0.5, 0.5);
-      pos = set<C::Position>(text->entity() + ":position", Point(0,0));
+      img->set_collision(UNCLICKABLE);
+
+      pos = set<C::Absolute_position>(text->entity() + ":position", Point(0,0));
     }
     else
       pos = get<C::Position>(text->entity() + ":position");
@@ -224,20 +213,18 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
   left_arrow->z() = Config::menu_text_depth;
   left_arrow->set_relative_origin(0.5, 0.5);
   left_arrow->set_collision(BOX);
-  auto left_pos = set<C::Position>("Menu_" + effect + "_left_arrow:position", Point(0, 0));
+  auto left_pos = set<C::Absolute_position>("Menu_" + effect + "_left_arrow:position", Point(0, 0));
   node_left.init (left_arrow, left_pos);
   auto right_arrow = set<C::Image>("Menu_" + effect + "_right_arrow:image",
                                   get<C::Image>("Menu_right_arrow:image"));
   right_arrow->z() = Config::menu_text_depth;
   right_arrow->set_relative_origin(0.5, 0.5);
   right_arrow->set_collision(BOX);
-  auto right_pos = set<C::Position>("Menu_" + effect + "_right_arrow:position", Point(0, 0));
+  auto right_pos = set<C::Absolute_position>("Menu_" + effect + "_right_arrow:position", Point(0, 0));
   node_right.init (right_arrow, right_pos);
 
   std::vector<std::string> possible_values;
   if (effect == "fullscreen")
-    possible_values = { "Yes", "No" };
-  else if (effect == "virtual_cursor")
     possible_values = { "Yes", "No" };
   else if (effect == "text_size")
     possible_values = { "Small", "Medium", "Large" };
@@ -248,9 +235,9 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
                         "50", "60", "70", "80", "90",
                         "100" };
 
-  auto menu_font = get<C::Font>("Menu:font");
+  auto menu_font = get<C::Font>("Interface:font");
 
-  auto pos = set<C::Position>(effect + ":position", Point(0,0));
+  auto pos = set<C::Absolute_position>(effect + ":position", Point(0,0));
   for (std::size_t i = 0; i < possible_values.size(); ++ i)
   {
     std::string id = effect + '_' + possible_values[i];
@@ -266,6 +253,7 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
     img->on() = false;
     img->set_scale(0.75);
     img->set_relative_origin(0.5, 0.5);
+    img->set_collision(UNCLICKABLE);
     set<C::Variable>(id + ":position", pos);
     if (i == 0)
       node.init(img, pos);
@@ -296,7 +284,7 @@ void Interface::init_menu_buttons (Component::Menu::Node node)
           img->z() = Config::menu_button_depth;
           img->set_relative_origin(0.5, 0.5);
           img->on() = false;
-          pos = set<C::Position>(img->entity() + ":position", Point(0,0));
+          pos = set<C::Absolute_position>(img->entity() + ":position", Point(0,0));
         }
         else
           pos = get<C::Position>(img->entity() + ":position");
@@ -322,7 +310,7 @@ void Interface::init_menu_buttons (Component::Menu::Node node)
           img->z() = Config::menu_button_depth;
           img->set_relative_origin(0.5, 0.5);
           img->on() = false;
-          pos = set<C::Position>(img->entity() + ":position", Point(0,0));
+          pos = set<C::Absolute_position>(img->entity() + ":position", Point(0,0));
         }
         else
           pos = get<C::Position>(img->entity() + ":position");
@@ -331,10 +319,61 @@ void Interface::init_menu_buttons (Component::Menu::Node node)
   }
 }
 
+void Interface::update_menu()
+{
+  if (status()->value() != IN_MENU)
+    return;
+
+  bool gamepad = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD;
+
+  const std::string& id = get<C::String>("Game:current_menu")->value();
+  auto menu = get<C::Menu>(id + ":menu");
+  bool settings = (id == "Settings");
+
+  std::queue<C::Menu::Node> todo;
+  todo.push (menu->root());
+  while (!todo.empty())
+  {
+    C::Menu::Node current = todo.front();
+    todo.pop();
+
+    if (current.nb_children() < 2)
+    {
+      std::string entity = current.image()->entity();
+      if (gamepad && m_active_object == "")
+      {
+        if (settings)
+        {
+          std::size_t pos = entity.find("_left_arrow");
+          if (pos != std::string::npos)
+            m_active_object = std::string(entity.begin(), entity.begin() + pos);
+        }
+        else if (entity.find("_button") != std::string::npos)
+          m_active_object = entity;
+      }
+
+      bool active = (current.image() == m_collision || entity == m_active_object);
+      if (settings)
+        active = active ||(entity.find(m_active_object) != std::string::npos);
+
+      double scale = 1.0;
+      if (current.image()->scale() < 1.)
+        scale = 0.75;
+      if (active)
+        scale *= 1.05;
+      current.image()->set_scale(scale);
+
+      if (settings && entity.find("arrow") != std::string::npos)
+        current.image()->on() = active;
+    }
+    for (std::size_t i = 0; i < current.nb_children(); ++ i)
+      todo.push (current[i]);
+  }
+}
+
 void Interface::update_exit()
 {
-  auto status = get<C::Status>(GAME__STATUS);
-  if (status->value() == LOCKED)
+  if (status()->value() == LOCKED)
   {
     receive("Game:escape");
     return;
@@ -342,10 +381,10 @@ void Interface::update_exit()
   if (receive("Show:menu"))
   {
     create_menu (get<C::String>("Game:triggered_menu")->value());
-    status->push (IN_MENU);
+    status()->push (IN_MENU);
   }
 
-  if (status->value() == CUTSCENE)
+  if (status()->value() == CUTSCENE)
   {
     double time = get<C::Double>(CLOCK__TIME)->value();
     bool exit_message_exists = (request<C::Image>("Exit_message:image") != nullptr);
@@ -388,9 +427,9 @@ void Interface::update_exit()
 
         int window_width = Config::world_width;
         int window_height = Config::world_height;
-        set<C::Position>("Exit_message:position", Point (window_width - 5,
+        set<C::Absolute_position>("Exit_message:position", Point (window_width - 5,
                                                          window_height - 5));
-        set<C::Position>("Exit_message_back:position", Point (window_width,
+        set<C::Absolute_position>("Exit_message_back:position", Point (window_width,
                                                               window_height));
       }
     }
@@ -409,7 +448,7 @@ void Interface::update_exit()
   {
     if (receive("Game:escape"))
     {
-      if (status->value() == IN_MENU)
+      if (status()->value() == IN_MENU)
       {
         const std::string& menu = get<C::String>("Game:current_menu")->value();
         if (menu == "End")
@@ -417,21 +456,20 @@ void Interface::update_exit()
         else
         {
           delete_menu(menu);
-          status->pop();
+          status()->pop();
         }
       }
       else
       {
         create_menu("Exit");
-        status->push (IN_MENU);
+        status()->push (IN_MENU);
       }
     }
   }
 
 }
 
-void Interface::
-create_menu (const std::string& id)
+void Interface::create_menu (const std::string& id)
 {
   set<C::String>("Game:current_menu", id);
 
@@ -456,9 +494,6 @@ create_menu (const std::string& id)
   {
     menu->update_setting ("fullscreen",
                           get<C::Boolean>("Window:fullscreen")->value() ? "Yes" : "No");
-
-    menu->update_setting ("virtual_cursor",
-                          get<C::Boolean>("Interface:virtual_cursor")->value() ? "Yes" : "No");
 
     int speed = get<C::Int>("Dialog:speed")->value();
     if (speed == Config::SLOW)
@@ -489,7 +524,7 @@ create_menu (const std::string& id)
                            color[0], color[1], color[2]);
   img->set_relative_origin (0.5, 0.5);
   img->z() = Config::menu_front_depth;
-  set<C::Position>("Menu_foreground:position",
+  set<C::Absolute_position>("Menu_foreground:position",
                    Point (Config::world_width / 2,
                           Config::world_height / 2));
 
@@ -497,7 +532,7 @@ create_menu (const std::string& id)
 
   img2->set_relative_origin (0.5, 0.5);
   img2->z() = Config::menu_back_depth;
-  set<C::Position>("Menu_background:position",
+  set<C::Absolute_position>("Menu_background:position",
                    Point (Config::world_width / 2,
                           Config::world_height / 2));
 
@@ -505,6 +540,7 @@ create_menu (const std::string& id)
   menu->set_position(Config::world_width / 2,
                      Config::world_height / 2);
 
+  m_active_object = "";
 }
 
 void Interface::delete_menu (const std::string& id)
@@ -513,11 +549,14 @@ void Interface::delete_menu (const std::string& id)
   menu->hide();
   get<C::Image>("Menu_background:image")->on() = false;
   get<C::Image>("Menu_foreground:image")->on() = false;
+  m_active_object = "";
 }
 
-void Interface::menu_clicked()
+void Interface::menu_clicked (std::string entity)
 {
-  std::string entity = m_collision->entity();
+  bool gamepad = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD;
+  if (entity == "")
+    entity = gamepad ? m_active_object : m_collision->entity();
   std::size_t pos = entity.find("_button");
   if (pos != std::string::npos)
     entity.resize(pos);
@@ -570,7 +609,7 @@ void Interface::menu_clicked()
       emit ("Game:reset");
       remove("Game:music");
       emit ("Music:stop");
-      get<C::Status>(GAME__STATUS)->pop();
+      status()->pop();
     }
   }
   else if (effect->value() == "ok")
@@ -584,7 +623,7 @@ void Interface::menu_clicked()
       remove("Game:music");
       emit ("Music:stop");
       delete_menu("Wanna_restart");
-      get<C::Status>(GAME__STATUS)->pop();
+      status()->pop();
     }
     else if (menu == "Credits" || menu == "Settings")
     {
@@ -594,7 +633,7 @@ void Interface::menu_clicked()
     else if (menu == "Hint")
     {
       delete_menu("Hint");
-      get<C::Status>(GAME__STATUS)->pop();
+      status()->pop();
     }
   }
   else if (effect->value() == "settings")
@@ -616,21 +655,9 @@ void Interface::menu_clicked()
   {
     delete_menu(menu);
     if (menu == "Exit")
-      get<C::Status>(GAME__STATUS)->pop();
+      status()->pop();
     else if (menu == "Wanna_restart")
       create_menu("Exit");
-  }
-  else if (effect->value() == "cursor_choice_virtual")
-  {
-    get<C::Boolean>("Interface:virtual_cursor")->set (true);
-    delete_menu("Cursor");
-    get<C::Status>(GAME__STATUS)->pop();
-  }
-  else if (effect->value() == "cursor_choice_no")
-  {
-    get<C::Boolean>("Interface:virtual_cursor")->set (false);
-    delete_menu("Cursor");
-    get<C::Status>(GAME__STATUS)->pop();
   }
 }
 
@@ -642,8 +669,6 @@ void Interface::apply_setting (const std::string& setting, const std::string& va
     get<C::Boolean>("Window:fullscreen")->set(value == "Yes");
     emit ("Window:toggle_fullscreen");
   }
-  else if (setting == "virtual_cursor")
-    get<C::Boolean>("Interface:virtual_cursor")->set(value == "Yes");
   else if (setting == "text_size")
   {
     if (value == "Small")

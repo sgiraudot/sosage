@@ -37,12 +37,19 @@
 namespace Sosage
 {
 
+inline int round (const double& x) { return int(std::lround(x)); }
+
 template <typename T>
 inline T square (const T& t) { return t*t; }
 
 inline double distance (double xa, double ya, double xb, double yb)
 {
   return std::sqrt (square(xa - xb) + square(ya - yb));
+}
+
+inline double angle (double x, double y)
+{
+  return std::atan2 (y, x);
 }
 
 struct Box
@@ -93,8 +100,8 @@ public:
 
   double x() const { return m_x; }
   double y() const { return m_y; }
-  int X() const { return std::lround(m_x); }
-  int Y() const { return std::lround(m_y); }
+  int X() const { return round(m_x); }
+  int Y() const { return round(m_y); }
 
   Box box() const { return Box(m_x, m_y, m_x, m_y); }
 
@@ -184,6 +191,11 @@ public:
     *this = Vector(x() / l, y() / l);
   }
 
+  friend std::string to_string(const Vector& v)
+  {
+    return "Vector(" + std::to_string(v.x()) + ";" + std::to_string(v.y()) + ")";
+  }
+
   friend Point operator+ (const Point& a, const Vector& b)
   {
     return Point(a.x() + b.x(), a.y() + b.y());
@@ -199,6 +211,14 @@ public:
   friend Vector operator* (const double& a, const Vector& b)
   {
     return Vector (a * b.x(), a * b.y());
+  }
+  friend bool operator== (const Vector& a, const Vector& b)
+  {
+    return a.x() == b.x() && a.y() == b.y();
+  }
+  friend bool operator!= (const Vector& a, const Vector& b)
+  {
+    return a.x() != b.x() || a.y() != b.y();
   }
 };
 
@@ -274,7 +294,6 @@ public:
     return os;
   }
 
-
   friend bool intersect (const Segment& a, const Segment& b)
   {
     // Quick test with boxes
@@ -298,6 +317,28 @@ public:
       return true;
 
     return false;
+  }
+
+  friend Point intersection (const Segment& a, const Segment& b)
+  {
+    const Point& as = a.m_source;
+    const Point& at = a.m_target;
+    const Point& bs = b.m_source;
+    const Point& bt = b.m_target;
+    const double& x1 = as.x();
+    const double& y1 = as.y();
+    const double& x2 = at.x();
+    const double& y2 = at.y();
+    const double& x3 = bs.x();
+    const double& y3 = bs.y();
+    const double& x4 = bt.x();
+    const double& y4 = bt.y();
+
+    double D = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    check(D != 0, "Segments do not intersect");
+
+    return Point (((x1*y2 - y1*x2) * (x3 - x4) - (x1 - x2) * (x3*y4 - y3*x4)) / D,
+                  ((x1*y2 - y1*x2) * (y3 - y4) - (y1 - y2) * (x3*y4 - y3*x4)) / D);
   }
 };
 

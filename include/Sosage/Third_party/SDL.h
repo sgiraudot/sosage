@@ -210,6 +210,8 @@ public:
   static Surface load_surface (const std::string& file_name);
   static std::array<unsigned char, 3> get_color (Surface image, int x, int y);
 
+  static void display_error(const std::string& error);
+
   SDL ();
   ~SDL ();
 
@@ -220,6 +222,7 @@ public:
   void update_window (const std::string& name, const std::string& icon_filename);
   void update_view();
   void toggle_fullscreen(bool fullscreen);
+  void toggle_cursor(bool visible);
   void get_window_size (int& w, int& h);
   void begin();
   void draw (const Image& image,

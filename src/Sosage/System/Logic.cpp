@@ -79,14 +79,13 @@ void Logic::run ()
 {
   m_current_time = get<C::Double> (CLOCK__TIME)->value();
 
-  auto status = get<C::Status>(GAME__STATUS);
-  if (status->value() == CUTSCENE || status->next_value() == CUTSCENE)
+  if (status()->value() == CUTSCENE || status()->next_value() == CUTSCENE)
   {
     run_cutscene();
     return;
   }
-  if (status->value() == PAUSED || status->value() == DIALOG_CHOICE ||
-      status->value() == IN_MENU)
+  if (status()->value() == PAUSED || status()->value() == DIALOG_CHOICE ||
+      status()->value() == IN_MENU)
     return;
   std::set<Timed_handle> new_timed_handle;
 
@@ -114,22 +113,31 @@ void Logic::run ()
       new_timed_handle.insert(th);
   m_timed.swap(new_timed_handle);
 
-  auto collision = request<C::Image> ("Cursor:target");
-  if (collision && receive ("Cursor:clicked"))
+  if (receive ("Cursor:clicked"))
   {
-    if (auto name = request<C::String>(collision->entity() + ":name"))
-    {
-      if (get<C::String> ("Chosen_verb:text")->entity() == "Verb_goto")
-        compute_path_from_target(get<C::Position>(collision->entity() + ":view"));
-    }
-    else
-      compute_path_from_target(get<C::Position>(CURSOR__POSITION));
-
-    remove("Cursor:target");
+    compute_path_from_target(get<C::Position>(CURSOR__POSITION));
 
     // Cancel current action
     clear_timed(true);
     m_current_action = nullptr;
+  }
+  if (receive ("Stick:moved"))
+  {
+    auto direction = get<C::Simple<Vector>>(STICK__DIRECTION);
+    const std::string& id = get<C::String>("Player:name")->value();
+    if (direction->value() == Vector(0,0))
+    {
+      remove(id + ":path", true);
+      emit(id + ":stop_walking");
+    }
+    else
+    {
+      auto position = get<C::Position>(id + "_body:position");
+      auto relative = C::make_handle<C::Relative_position>
+                      ("Target:position", position, 2. * Config::character_speed * direction->value());
+      // std::cerr << direction->value() << std::endl;
+      compute_path_from_direction(direction->value());
+    }
   }
 
   if (receive ("code:button_clicked"))
@@ -140,7 +148,7 @@ void Logic::run ()
       = get<C::Cropped>(window->entity() + "_button:image");
 
     cropped->crop (code->xmin(), code->xmax(), code->ymin(), code->ymax());
-    set<C::Position>
+    set<C::Absolute_position>
       (window->entity() + "_button:position",
        get<C::Position>(window->entity() + ":position")->value()
        + Vector(code->xmin(), code->ymin()));
@@ -182,7 +190,8 @@ void Logic::run ()
     auto window = get<C::Image>("Game:window");
     window->on() = false;
     code->reset();
-    status->pop();
+    remove("Code_hover:image", true);
+    status()->pop();
 
     m_current_action = get<C::Action>
       (get<C::Code>("Game:code")->entity() + ":action");
@@ -231,8 +240,8 @@ void Logic::run ()
 void Logic::run_cutscene()
 {
   auto cutscene = get<C::Cutscene>("Game:cutscene");
-  bool paused = get<C::Status>(GAME__STATUS)->value() == PAUSED
-                || get<C::Status>(GAME__STATUS)->value() == IN_MENU;
+  bool paused = status()->value() == PAUSED
+                || status()->value() == IN_MENU;
   double current_time
       = cutscene->current_time (m_current_time, paused);
   if (current_time < 0)
@@ -256,7 +265,7 @@ void Logic::run_cutscene()
       C::Base dummy (el.id);
       set<C::String>("Game:new_room", dummy.entity());
       set<C::String>("Game:new_room_origin", dummy.component());
-      get<C::Status>(GAME__STATUS)->pop();
+      status()->pop();
       continue;
     }
     // If cutscene skipped, continue until a load case is reached
@@ -304,8 +313,9 @@ void Logic::run_cutscene()
 
       img->on() = true;
       img->z() = z;
-      img->set_scale(zoom);
-      set<C::Position>(img->entity() + ":position", Point(x,y));
+      if (el.id.find("text") != 0)
+        img->set_scale(zoom);
+      set<C::Absolute_position>(img->entity() + ":position", Point(x,y));
 
     }
     else if (auto music = request<C::Music>(el.id))
@@ -356,17 +366,38 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   Point origin = position->value();
   Point t = target->value();
 
-  debug("Target = ", t);
+  //debug("Target = ", t);
 
   if (target->component() != "view")
   {
-    debug ("Camera position = ", get<C::Double>(CAMERA__POSITION)->value());
+    //debug ("Camera position = ", get<C::Double>(CAMERA__POSITION)->value());
     t = t + Vector (get<C::Double>(CAMERA__POSITION)->value(), 0);
   }
 
-  debug("Computing path from ", origin, " to ", t);
+  //debug("Computing path from ", origin, " to ", t);
   std::vector<Point> path;
   ground_map->find_path (origin, t, path);
+
+  // Check if character is already at target
+  if (path.empty() || ((path.size() == 1) && (path[0] == origin)))
+    return false;
+
+  auto p = set<C::Path>(id + ":path", path);
+  if ((*p)[0] == origin)
+    p->current() ++;
+  return true;
+}
+
+bool Logic::compute_path_from_direction (const Vector& direction)
+{
+  auto ground_map = get<C::Ground_map>("Background:ground_map");
+  const std::string& id = get<C::String>("Player:name")->value();
+  auto position = get<C::Position>(id + "_body:position");
+  Point origin = position->value();
+
+  std::vector<Point> path;
+
+  ground_map->find_path (origin, direction, path);
 
   // Check if character is already at target
   if (path.empty() || ((path.size() == 1) && (path[0] == origin)))
@@ -414,7 +445,7 @@ void Logic::update_debug_info (C::Debug_handle debug_info)
     auto dbg_img = set<C::Image> ("Debug:image",
                                                     debug_font, "FF0000",
                                                     debug_info->debug_str());
-    auto dbg_pos = set<C::Position>("Debug:position", Point(0,0));
+    auto dbg_pos = set<C::Absolute_position>("Debug:position", Point(0,0));
   }
   else
   {
@@ -501,7 +532,7 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
 
   if (args.size() == 1)
   {
-    get<C::Status>(GAME__STATUS)->push(LOCKED);
+    status()->push(LOCKED);
     if (auto pos = request<C::Int>("Saved_game:dialog_position"))
     {
       dialog->init (pos->value());
@@ -526,7 +557,7 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
 
   if (dialog->is_over())
   {
-    get<C::Status>(GAME__STATUS)->pop();
+    status()->pop();
     if (dialog->line().first != "")
     {
       m_current_action = get<C::Action>(dialog->line().first + ":action");
@@ -548,7 +579,7 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
     // Keep track in case player saves and reload there
     set<C::Int>("Game:dialog_position", dialog->current());
 
-    get<C::Status>(GAME__STATUS)->push(DIALOG_CHOICE);
+    status()->push(DIALOG_CHOICE);
     auto choices = set<C::Vector<std::string> >("Dialog:choices");
     dialog->get_choices (*choices);
     action->add ("dialog", { args[0], "continue" });
@@ -583,7 +614,7 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
   if (args.size() == 2)
   {
     if (compute_path_from_target
-        (C::make_handle<C::Position>("Goto:view", Point (to_int(args[0]), to_int(args[1]))),
+        (C::make_handle<C::Absolute_position>("Goto:view", Point (to_int(args[0]), to_int(args[1]))),
          id))
       m_timed.insert (std::make_pair (0, get<C::Path>(id + ":path")));
   }
@@ -615,13 +646,13 @@ bool Logic::function_look (const std::vector<std::string>& args)
   const std::string& id = get<C::String>("Player:name")->value();
 
   if (target == "default" || !request<C::Position>(target + ":position"))
-    set<C::Position>(id + ":lookat",
+    set<C::Absolute_position>(id + ":lookat",
                                        get<C::Position>(CURSOR__POSITION)->value());
   else
   {
     auto state = request<C::String>(target + ":state");
     if (!state || state->value() != "inventory")
-      set<C::Position>(id + ":lookat",
+      set<C::Absolute_position>(id + ":lookat",
                                          get<C::Position>(target + ":position")->value());
   }
   return true;
@@ -711,7 +742,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
     if (current_state->value() == "inventory")
     {
       get<C::Inventory>("Game:inventory")->remove(target);
-      get<C::Position>(target + ":position")->absolute() = false;
+     //get<C::Absolute_position>(target + ":position")->absolute() = false;
     }
 
     current_state->set (state);
@@ -721,7 +752,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
       auto img
         = get<C::Image>(target + ":image");
       img->set_relative_origin(0.5, 0.5);
-      img->z() = Config::inventory_back_depth;
+      img->z() = Config::inventory_depth;
       img->on() = false;
     }
   }
@@ -739,11 +770,11 @@ bool Logic::function_set (const std::vector<std::string>& args)
       auto code = request<C::Code>(target + ":code");
       if (code)
       {
-        get<C::Status>(GAME__STATUS)->push (IN_CODE);
+        status()->push (IN_CODE);
         set<C::Variable>("Game:code", code);
       }
       else
-        get<C::Status>(GAME__STATUS)->push (IN_WINDOW);
+        status()->push (IN_WINDOW);
     }
   }
   else if (option == "hidden")
@@ -777,7 +808,7 @@ bool Logic::function_system (const std::vector<std::string>& args)
     set<C::String>("Game:new_room_origin", args[2]);
   }
   else if (option == "lock")
-    get<C::Status>(GAME__STATUS)->push(LOCKED);
+    status()->push(LOCKED);
   else if (option == "trigger")
   {
     std::string id = args[1];
@@ -790,7 +821,7 @@ bool Logic::function_system (const std::vector<std::string>& args)
     emit("Show:menu");
   }
   else if (option == "unlock")
-    get<C::Status>(GAME__STATUS)->pop();
+    status()->pop();
   else if (option == "wait")
   {
     if (args.size() == 2)
@@ -848,7 +879,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 
   for (auto img : dialog)
   {
-    auto pos = set<C::Position> (img->entity() + ":position", Point(x,y));
+    auto pos = set<C::Absolute_position> (img->entity() + ":position", Point(x,y));
     y += img->height() * 1.1 * size_factor;
 
     m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), img));
@@ -870,14 +901,14 @@ void Logic::create_dialog (const std::string& character,
 
   double size_factor = 0.75 * (get<C::Int>("Dialog:size")->value() / double(Config::MEDIUM));
 
-  auto interface_font = get<C::Font> ("Interface:font");
+  auto font = get<C::Font> ("Dialog:font");
   const std::string& color = get<C::String> (character + ":color")->value();
 
   auto img
     = set<C::Image> ("Comment:image",
-                                       interface_font,
-                                       color,
-                                       text, true);
+                     font,
+                     color,
+                     text, true);
   img->set_scale(size_factor);
   img->set_relative_origin(0.5, 0.5);
 
@@ -924,11 +955,11 @@ void Logic::create_dialog (const std::string& character,
       std::size_t end = (i == nb_imgs - 1 ? text.size() : cuts[std::size_t(i)]);
       auto img
         = set<C::Image> ("Comment_" + std::to_string(i) + ":image",
-                                           interface_font,
-                                           color,
-                                           std::string(text.begin() + std::ptrdiff_t(begin),
-                                                       text.begin() + std::ptrdiff_t(end)), true);
-      img->z() = Config::inventory_over_depth;
+                         font,
+                         color,
+                         std::string(text.begin() + std::ptrdiff_t(begin),
+                                     text.begin() + std::ptrdiff_t(end)), true);
+      img->z() = Config::inventory_depth;
       img->set_scale(size_factor);
       img->set_relative_origin(0.5, 0.5);
       dialog.push_back (img);

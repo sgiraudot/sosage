@@ -29,6 +29,7 @@
 
 #include <Sosage/Config/platform.h>
 #include <memory>
+#include <limits>
 
 namespace Sosage
 {
@@ -39,11 +40,20 @@ namespace Config
 constexpr char folder_separator = (windows ? '\\' : '/');
 
 constexpr int world_width = 1920;
-constexpr int world_height = 1200;
+constexpr int world_height = 1080;
 constexpr int world_depth = 3240;
 
-constexpr int interface_height = 200;
-constexpr int action_height = 50;
+constexpr int inventory_height = 150;
+constexpr int inventory_active_zone = 5;
+constexpr int inventory_margin = 20;
+
+constexpr int object_reach_x = 150;
+constexpr int object_reach_y = 65;
+constexpr int object_reach_hysteresis = 20;
+
+constexpr int label_height = 50;
+constexpr int label_margin = 20;
+constexpr int label_diff = 20;
 
 constexpr int camera_limit_left = world_width / 4;
 constexpr int camera_limit_right = (3 * world_width) / 4;
@@ -62,26 +72,29 @@ constexpr int animation_fps = 12;
 constexpr int character_speed = 34;
 
 constexpr int text_outline = 10;
-constexpr int displayed_inventory_size = 4;
+constexpr int displayed_inventory_size = 9;
 
 constexpr double button_click_duration = 0.1;
-constexpr double virtual_cursor_sensitivity = 5;
-constexpr double virtual_cursor_speed = 2.0;
+
+constexpr double stick_max = 32767.5;
+constexpr int no_value = std::numeric_limits<int>::max();
 
 constexpr int max_music_volume = 128;
+
+constexpr auto possible_actions = { "look", "move", "take", "inventory", "use", "combine", "goto" };
 
 enum Depth
 {
   interface_depth = 1000000,
-  inventory_back_depth,
-  inventory_front_depth,
-  inventory_over_depth,
+  inventory_depth,
   dialog_depth,
   overlay_depth,
   menu_back_depth,
   menu_front_depth,
   menu_button_depth,
   menu_text_depth,
+  label_depth,
+  action_button_depth,
   cursor_depth,
   loading_depth
 };

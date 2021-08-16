@@ -53,23 +53,29 @@ public:
   {
   public:
     using Ptr = std::shared_ptr<Node>;
-    
+    using Map = std::map<std::string, Ptr>;
+    using Vec = std::vector<Ptr>;
+    using iterator = typename Map::const_iterator;
+
     bool sequence;
-    std::map<std::string, Ptr> map;
-    std::vector<Ptr> vec;
+    Map map;
+    Vec vec;
     std::string value;
 
     Node() : sequence(false) { }
 
+    iterator begin() const { return map.begin(); }
+    iterator end() const { return map.end(); }
+
     const Node& operator[] (const std::string& key) const
     {
-      check(has(key), "Value " + key + " not found in Yaml node " + value);
+      check(has(key), "Value " + key + " not found in Yaml input " + value);
       return *(map.find(key)->second);
     }
 
     const Node& operator[] (const char* key) const
     {
-      check(has(key), "Value " + std::string(key) + " not found in Yaml node " + value);
+      check(has(key), "Value " + std::string(key) + " not found in Yaml input " + value);
       return *(map.find(std::string(key))->second);
     }
 
@@ -97,21 +103,20 @@ public:
 
     std::string nstring () const
     {
-      check(map.size() == 1, "Checking for nstring in non-singular node");
+      check(map.size() == 1, "Checking for nstring in non-singular input");
       return map.begin()->first;
     }
 
     std::string string (const std::string& folder,
                         const std::string& extension) const
     {
-      return folder + Config::folder_separator + value + '.' + extension;
+      return assemble_path (folder, value, extension);
     }
 
     std::string string (const std::string& folder, const std::string& subfolder,
                         const std::string& extension) const
     {
-      return folder + Config::folder_separator + subfolder + Config::folder_separator
-        + value + '.' + extension;
+      return assemble_path (folder, subfolder, value, extension);
     }
 
     int integer () const
@@ -222,7 +227,7 @@ public:
 
     Node::Ptr n;
     std::string key = "";
-    std::stack<Node::Ptr> nodes;
+    std::stack<Node::Ptr> inputs;
 
     yaml_event_t event;
     do
@@ -244,51 +249,51 @@ public:
         case YAML_SEQUENCE_START_EVENT:
           n = std::make_shared<Node>();
           n->sequence = true;
-          if (!nodes.empty())
+          if (!inputs.empty())
           {
-            if (nodes.top()->sequence)
-              nodes.top()->vec.push_back (n);
+            if (inputs.top()->sequence)
+              inputs.top()->vec.push_back (n);
             else
-              nodes.top()->map.insert (std::make_pair (key, n));
+              inputs.top()->map.insert (std::make_pair (key, n));
           }
           key = "";
-          nodes.push(n);
+          inputs.push(n);
           break;
         
         case YAML_SEQUENCE_END_EVENT:
-          nodes.pop();
+          inputs.pop();
           break;
 
         case YAML_MAPPING_START_EVENT:
           if (key == "")
           {
             n = std::make_shared<Node>();
-            if (!nodes.empty())
-              nodes.top()->vec.push_back (n);
-            nodes.push(n);
+            if (!inputs.empty())
+              inputs.top()->vec.push_back (n);
+            inputs.push(n);
           }
           else
           {
             n = std::make_shared<Node>();
-            if (!nodes.empty())
-              nodes.top()->map.insert (std::make_pair (key, n));
+            if (!inputs.empty())
+              inputs.top()->map.insert (std::make_pair (key, n));
             key = "";
-            nodes.push(n);
+            inputs.push(n);
           }
           break;
         
         case YAML_MAPPING_END_EVENT:
-          m_root = nodes.top();
-          nodes.pop();
+          m_root = inputs.top();
+          inputs.pop();
           break;
 
         case YAML_SCALAR_EVENT:
           std::string v = std::string(reinterpret_cast<const char*>(event.data.scalar.value));
-          if (nodes.top()->sequence)
+          if (inputs.top()->sequence)
           {
             Node::Ptr n = std::make_shared<Node>();
             n->value = v;
-            nodes.top()->vec.push_back(n);
+            inputs.top()->vec.push_back(n);
           }
           else if (key == "")
             key = v;
@@ -296,7 +301,7 @@ public:
           {
             Node::Ptr n = std::make_shared<Node>();
             n->value = v;
-            nodes.top()->map.insert (std::make_pair(key, n));
+            inputs.top()->map.insert (std::make_pair(key, n));
             key = "";
           }
           break;
@@ -311,6 +316,8 @@ public:
     delete[] buffer;
 //    m_root->print();
   }
+
+  const Node& root() const { return *m_root; }
 
   const Node& operator[] (const std::string& key) const
   {

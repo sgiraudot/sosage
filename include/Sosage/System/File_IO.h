@@ -76,19 +76,21 @@ public:
   void read_room (const std::string& file_name);
 private:
 
-  void read_action (const Core::File_IO::Node& node, const std::string& id);
-  void read_actions (const Core::File_IO::Node& node, const std::string& id);
-  void read_animation (const Core::File_IO::Node& node, const std::string& id);
-  void read_character (const Core::File_IO::Node& node, const std::string& id);
-  void read_code (const Core::File_IO::Node& node, const std::string& id);
-  void read_dialog (const Core::File_IO::Node& node, const std::string& id);
-  void read_integer (const Core::File_IO::Node& node, const std::string& id);
-  void read_music (const Core::File_IO::Node& node, const std::string& id);
-  void read_object (const Core::File_IO::Node& node, const std::string& id);
-  void read_origin (const Core::File_IO::Node& node, const std::string& id);
-  void read_scenery (const Core::File_IO::Node& node, const std::string& id);
-  void read_sound (const Core::File_IO::Node& node, const std::string& id);
-  void read_window (const Core::File_IO::Node& node, const std::string& id);
+  void read_action (const Core::File_IO::Node& input);
+  void read_animation (const Core::File_IO::Node& input);
+  void read_character (const Core::File_IO::Node& input);
+  void read_code (const std::string& id);
+  void read_dialog (const std::string& id);
+  void read_integer (const Core::File_IO::Node& input);
+  void read_music (const Core::File_IO::Node& input);
+  void read_object (const std::string& id);
+  std::pair<Component::Handle, Component::Handle>
+  read_object_action (const std::string& id, const std::string& action,
+                      const Core::File_IO::Node& input);
+  void read_origin (const Core::File_IO::Node& input);
+  void read_scenery (const Core::File_IO::Node& input);
+  void read_sound (const Core::File_IO::Node& input);
+  void read_window (const Core::File_IO::Node& input);
 
 };
 

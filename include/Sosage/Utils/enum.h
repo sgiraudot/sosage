@@ -36,7 +36,11 @@ enum Status
   CUTSCENE,
   PAUSED,
   LOCKED,
+  ACTION_CHOICE,
+  INVENTORY_ACTION_CHOICE,
   DIALOG_CHOICE,
+  OBJECT_CHOICE,
+  IN_INVENTORY,
   IN_MENU,
   IN_WINDOW,
   IN_CODE
@@ -49,11 +53,42 @@ enum Orientation
   COUNTERCLOCKWISE
 };
 
+enum Button_orientation
+{
+  UP,
+  RIGHT_BUTTON,
+  DOWN,
+  LEFT_BUTTON,
+
+  UPPER,
+  UP_RIGHT,
+  DOWN_RIGHT,
+  DOWNER,
+  DOWN_LEFT,
+  UP_LEFT
+};
+
+
 enum Collision_type
 {
   PIXEL_PERFECT,
   BOX,
   UNCLICKABLE
+};
+
+enum Input_mode
+{
+  MOUSE,
+  TOUCHSCREEN,
+  GAMEPAD
+};
+
+enum Gamepad_type
+{
+  NO_LABEL,
+  JAPAN,
+  USA,
+  KEYBOARD
 };
 
 enum Event_type
@@ -62,12 +97,21 @@ enum Event_type
 
   WINDOW,
 
-  CURSOR_DOWN,
-  CURSOR_MOVE,
-  CURSOR_UP,
+  MOUSE_DOWN,
+  MOUSE_MOVE,
+  MOUSE_UP,
+
+  TOUCH_DOWN,
+  TOUCH_MOVE,
+  TOUCH_UP,
 
   KEY_DOWN,
-  KEY_UP
+  KEY_UP,
+
+  NEW_GAMEPAD,
+  BUTTON_DOWN,
+  BUTTON_UP,
+  STICK_MOVE
 };
 
 enum Event_value
@@ -86,13 +130,32 @@ enum Event_value
 
   // Keys
   ALT,
+  CTRL,
+  SHIFT,
+  TAB,
   ANDROID_BACK,
   ENTER,
   ESCAPE,
   SPACE,
+  UP_ARROW,
+  LEFT_ARROW,
+  RIGHT_ARROW,
+  DOWN_ARROW,
+
+  // Controller
+  NORTH,
+  WEST,
+  EAST,
+  SOUTH,
+  LEFT_SHOULDER,
+  RIGHT_SHOULDER,
+  START,
+  SELECT,
 
   A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,
-  F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12
+  F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12,
+
+  NUMBER_OF_EVENT_VALUES
 };
 
 enum Fast_access_component
@@ -104,6 +167,9 @@ enum Fast_access_component
   GAME__STATUS,
   LOADING_SPIN__IMAGE,
   LOADING_SPIN__POSITION,
+  INTERFACE__INPUT_MODE,
+  GAMEPAD__TYPE,
+  STICK__DIRECTION,
 
   NUMBER_OF_KEYS
 };

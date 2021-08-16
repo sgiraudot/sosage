@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/Third_party/SDL_events.h]
-  Wrapper for SDL library (event handling).
+  [include/Sosage/Utils/gamepad_labels.h]
+  Handle different types of Gamepad.
 
   =====================================================================
 
@@ -24,40 +24,34 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_THIRD_PARTY_SDL_EVENTS_H
-#define SOSAGE_THIRD_PARTY_SDL_EVENTS_H
+#ifndef SOSAGE_UTILS_GAMEPAD_LABELS_H
+#define SOSAGE_UTILS_GAMEPAD_LABELS_H
 
-#include <SDL.h>
-#include <Sosage/Utils/Event.h>
+#include <Sosage/Utils/enum.h>
 
-#include <utility>
+#include <string>
 #include <unordered_map>
 
-namespace Sosage::Third_party
+namespace Sosage
 {
 
-class SDL_events
+std::string gamepad_label (const Gamepad_type& type, const Event_value& value)
 {
-  std::unordered_map<SDL_EventType, Event_type> m_type_map;
+  static std::unordered_map<Event_value, std::string>
+      japan = { {NORTH, "X"}, {EAST, "A"}, {SOUTH, "B"}, {WEST, "Y"} };
+  static std::unordered_map<Event_value, std::string>
+      usa = { {NORTH, "Y"}, {EAST, "B"}, {SOUTH, "A"}, {WEST, "X"} };
+  static std::unordered_map<Event_value, std::string>
+      keyboard = { {NORTH, "I"}, {EAST, "L"}, {SOUTH, "K"}, {WEST, "J"} };
 
-public:
+  if (type == JAPAN) return japan[value];
+  if (type == USA) return usa[value];
+  if (type == KEYBOARD) return keyboard[value];
 
-  SDL_events();
+  // no label
+  return "";
+}
 
-  ~SDL_events();
+}
 
-  Event next_event();
-
-  Gamepad_type gamepad_type() const;
-
-private:
-
-  Event mouse_event (const Event_type& type, const SDL_Event& ev) const;
-  Event keyboard_event (const Event_type& type, const SDL_Event& ev) const;
-  Event touch_event (const Event_type& type, const SDL_Event& ev) const;
-  Event gamepad_event (const Event_type& type, const SDL_Event& ev) const;
-};
-
-} // namespace Sosage::Third_party
-
-#endif // SOSAGE_THIRD_PARTY_SDL_EVENTS_H
+#endif // SOSAGE_UTILS_GAMEPAD_LABELS_H

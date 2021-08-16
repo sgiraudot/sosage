@@ -68,6 +68,7 @@ private:
 
   bool compute_path_from_target (Component::Position_handle target,
                                  std::string id = "");
+  bool compute_path_from_direction (const Vector& direction);
   void update_camera();
   void update_debug_info (Component::Debug_handle debug_info);
 

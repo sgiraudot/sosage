@@ -48,7 +48,7 @@ Image::Image (const std::string& id, const std::string& file_name, int z,
 
 Image::Image (const std::string& id, Font_handle font, const std::string& color_str,
               const std::string& text, bool outlined)
-  : Base(id), m_origin(0,0), m_z(Config::inventory_back_depth), m_on(true),
+  : Base(id), m_origin(0,0), m_z(Config::inventory_depth), m_on(true),
     m_collision (BOX)
 {
   if (outlined)

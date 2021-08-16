@@ -37,6 +37,8 @@
 #include <array>
 #include <functional>
 
+//#define SOSAGE_LOG_CONTENT
+
 namespace Sosage
 {
 
@@ -46,6 +48,12 @@ private:
 
   Component::Handle_set m_data;
   std::array<Component::Handle, NUMBER_OF_KEYS> m_fast_access_components;
+#ifdef SOSAGE_LOG_CONTENT
+  std::ofstream m_log;
+  inline void log (const std::string& str) { m_log << str << std::endl; }
+#else
+  inline void log (const std::string&) { }
+#endif
 
 public:
 
@@ -91,9 +99,14 @@ public:
   {
     count_set_ptr();
     Component::Handle_set::iterator iter = m_data.find(t);
+    log ("find " + t->id());
     if (iter != m_data.end())
+    {
       m_data.erase(iter);
+      log ("erase " + t->id());
+    }
     m_data.insert(t);
+    log ("insert " + t->id());
   }
 
   template <typename T, typename ... Args>
@@ -105,12 +118,22 @@ public:
     return new_component;
   }
 
+  template <typename T, typename ... Args>
+  std::shared_ptr<T> get_or_set (const std::string& id, Args&& ... args)
+  {
+    count_set_args();
+    if (auto out = request<T>(id))
+      return out;
+    return set<T> (id, args...);
+  }
+
   template <typename T>
   std::shared_ptr<T> request (const std::string& key)
   {
     count_access(key);
     count_request();
     Component::Handle_set::iterator iter = m_data.find(std::make_shared<Component::Base>(key));
+    log ("find " + key);
     if (iter == m_data.end())
       return std::shared_ptr<T>();
 
@@ -163,11 +186,13 @@ public:
     count_request();
     Component::Handle_set::iterator iter
         = m_data.find(std::make_shared<Component::Base>(signal));
+    log ("find " + signal);
     if (iter == m_data.end())
       return false;
     if (!Component::cast<Component::Signal>(*iter))
       return false;
     m_data.erase (iter);
+    log ("erase " + signal);
     return true;
   }
 

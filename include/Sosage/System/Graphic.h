@@ -53,6 +53,8 @@ public:
 
   void run_loading();
 
+  void display_error (const std::string& error) { m_core.display_error(error); }
+
 private:
 
   void get_images (std::vector<Component::Image_handle>& images);

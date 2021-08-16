@@ -29,14 +29,19 @@
 namespace Sosage::Component
 {
 
-Position::Position (const std::string& id, const Point& point, bool absolute)
-  : Base(id), m_pos (point), m_absolute (absolute)
+Absolute_position::Absolute_position (const std::string& id, const Point& point, bool absolute)
+  : Position(id), m_pos (point), m_absolute (absolute)
 { }
 
-std::string Position::str() const
+std::string Absolute_position::str() const
 {
   return this->id() + " (" + std::to_string (m_pos.x())
     + ";" + std::to_string(m_pos.y()) + ")";
 }
+
+Relative_position::Relative_position (const std::string& id, Position_handle ref,
+                                      const Sosage::Vector& diff)
+  : Position(id), m_ref(ref), m_diff(diff)
+{ }
   
 } // namespace Sosage::Component
