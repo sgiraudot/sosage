@@ -30,6 +30,7 @@
 #include <Sosage/Config/config.h>
 #include <Sosage/Config/options.h>
 #include <Sosage/Config/platform.h>
+#include <Sosage/Third_party/LZ4.h> // For Buffer, maybe something to clean up
 #include <Sosage/Utils/error.h>
 
 #include <SDL.h>
@@ -59,6 +60,20 @@ inline Asset open (const std::string& filename, bool write = false)
   return out;
 }
 
+inline Asset open (const void* memory, std::size_t size)
+{
+  Asset out;
+  out.buffer = SDL_RWFromConstMem(memory, int(size));
+  if (out.buffer == nullptr)
+  {
+    debug ("Can't read memory buffer");
+    throw Sosage::No_such_file();
+  }
+
+  out.size = std::size_t(SDL_RWsize (out.buffer));
+  return out;
+}
+
 inline std::size_t read (Asset asset, void* ptr, std::size_t max_num)
 {
   return std::size_t(SDL_RWread(asset.buffer, ptr, 1, max_num));
@@ -67,6 +82,16 @@ inline std::size_t read (Asset asset, void* ptr, std::size_t max_num)
 inline void write (Asset asset, const char* str)
 {
   SDL_RWwrite (asset.buffer, str, 1, SDL_strlen(str));
+}
+
+inline std::size_t tell (Asset asset)
+{
+  return std::size_t(SDL_RWtell(asset.buffer));
+}
+
+inline void seek (Asset asset, std::size_t pos)
+{
+  SDL_RWseek (asset.buffer, Sint64(pos), RW_SEEK_SET);
 }
 
 inline void close (Asset asset)

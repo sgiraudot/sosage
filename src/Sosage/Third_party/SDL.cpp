@@ -30,6 +30,7 @@
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/geometry.h>
 #include <Sosage/Utils/error.h>
+#include <Sosage/Utils/profiling.h>
 
 #include <functional>
 #include <queue>
@@ -46,6 +47,8 @@ SDL::Font_manager SDL::m_fonts (TTF_CloseFont);
 
 SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
 {
+  SOSAGE_TIMER_START(SDL_Image__create_rectangle);
+
   Uint32 rmask, gmask, bmask, amask;
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
   rmask = 0xff000000;
@@ -95,25 +98,43 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
   }
 
   SDL_FreeSurface(surf);
+
+  SOSAGE_TIMER_STOP(SDL_Image__create_rectangle);
+
   return out;
 }
 
 SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool with_highlight)
 {
-  if (Asset_manager::packaged)
+  SOSAGE_TIMER_START(SDL_Image__load_image);
+
+  SOSAGE_TIMER_START(SDL_Image__load_image_file);
+  SDL_Surface* surf;
+  if (Asset_manager::packaged())
   {
-    check(false, "TODO: implement packaged version");
-    return SDL::Image();
+    int width, height;
+    int format_int;
+    std::tie (width, height, format_int) = Asset_manager::image_info (file_name);
+
+    surf = SDL_CreateRGBSurfaceWithFormat (0, width, height, 32, format_int);
+    SDL_LockSurface (surf);
+    Asset_manager::open (file_name, surf->pixels);
+    SDL_UnlockSurface (surf);
   }
-  // else
-  Asset asset = Asset_manager::open(file_name);
-  SDL_Surface* surf = IMG_Load_RW (asset.base(), 1);
+  else
+  {
+    Asset asset = Asset_manager::open(file_name);
+    surf = IMG_Load_RW (asset.base(), 1);
+  }
   check (surf != nullptr, "Cannot load image " + file_name
          + " (" + std::string(SDL_GetError()) + ")");
+
+  SOSAGE_TIMER_STOP(SDL_Image__load_image_file);
 
   SDL_Surface* highlight = nullptr;
   if (with_highlight)
   {
+    SOSAGE_TIMER_START(SDL_Image__load_image_create_highlight);
     highlight = SDL_CreateRGBSurface (0, surf->w,
                                       surf->h, 32, rmask, gmask, bmask, amask);
 
@@ -126,7 +147,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
 
     source.release();
     target.release();
-
+    SOSAGE_TIMER_STOP(SDL_Image__load_image_create_highlight);
   }
 
   int height = surf->h;
@@ -136,6 +157,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
   double texture_downscale = 1.;
   if (surf->w > width_max || surf->h > height_max)
   {
+    SOSAGE_TIMER_START(SDL_Image__load_image_texture_downscale);
     texture_downscale = std::min (double(width_max) / surf->w,
                                   double(height_max) / surf->h);
     debug (file_name, " is too large and will be downscaled by a factor ",
@@ -158,26 +180,38 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
     check (result == 0, "Couldn't blit surface ("
            + std::string(SDL_GetError()) + ")");
     SDL_FreeSurface(old);
+    SOSAGE_TIMER_STOP(SDL_Image__load_image_texture_downscale);
   }
 
 
+  SOSAGE_TIMER_START(SDL_Image__load_image_texture);
   Texture text = m_textures.make_mapped (file_name, SDL_CreateTextureFromSurface, m_renderer, surf);
   check (text != Texture(), "Cannot create texture from " + file_name
          + " (" + std::string(SDL_GetError()) + ")");
+  SOSAGE_TIMER_STOP(SDL_Image__load_image_texture);
   Bitmap mask = nullptr;
   if (with_mask)
+  {
+    SOSAGE_TIMER_START(SDL_Image__load_image_mask);
     mask = m_masks.make_mapped (file_name, create_mask, surf);
+    SOSAGE_TIMER_STOP(SDL_Image__load_image_mask);
+  }
 
   Image out (text, mask, width, height, 1);
   if (with_highlight)
   {
+    SOSAGE_TIMER_START(SDL_Image__load_image_hightlight_2);
     out.highlight = m_textures.make_mapped (file_name + "highlight",
                                             SDL_CreateTextureFromSurface, m_renderer, highlight);
     SDL_FreeSurface (highlight);
+    SOSAGE_TIMER_STOP(SDL_Image__load_image_hightlight_2);
   }
 
   out.texture_downscale = texture_downscale;
   SDL_FreeSurface(surf);
+
+  SOSAGE_TIMER_STOP(SDL_Image__load_image);
+
   return out;
 }
 
@@ -292,14 +326,23 @@ int SDL::height (SDL::Image image)
 
 SDL::Surface SDL::load_surface (const std::string& file_name)
 {
-  if (Asset_manager::packaged)
+  Surface surf;
+  if (Asset_manager::packaged())
   {
-    check(false, "TODO: implement packaged version");
-    return SDL::Surface();
+    int width, height;
+    int format_int;
+    std::tie (width, height, format_int) = Asset_manager::image_info (file_name);
+
+    surf = Surface(SDL_CreateRGBSurfaceWithFormat (0, width, height, 32, format_int));
+    SDL_LockSurface (surf.get());
+    Asset_manager::open (file_name, surf->pixels);
+    SDL_UnlockSurface (surf.get());
   }
-  // else
-  Asset asset = Asset_manager::open(file_name);
-  Surface surf (IMG_Load_RW(asset.base(), 1), SDL_FreeSurface);
+  else
+  {
+    Asset asset = Asset_manager::open(file_name);
+    surf = Surface(IMG_Load_RW(asset.base(), 1), SDL_FreeSurface);
+  }
   check (surf != Surface(), "Cannot load image " + file_name);
   return surf;
 }

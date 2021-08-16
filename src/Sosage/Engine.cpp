@@ -56,7 +56,8 @@ namespace Sosage
 
 // Global variables
 std::string Asset_manager::folder_name = "";
-bool Asset_manager::packaged = false;
+std::vector<Buffer> Asset_manager::buffers;
+Package_asset_map Asset_manager::package_asset_map;
 
 #ifdef SOSAGE_EMSCRIPTEN
 Engine* emscripten_global_engine_ptr;

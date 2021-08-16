@@ -113,12 +113,16 @@ public:
         ofile << t << std::endl;
     }
 
+    Time::Duration total = 0;
+    for (const auto& d : m_duration)
+      total += d;
     std::sort(m_duration.begin(), m_duration.end());
     debug ("Min = ", to_string(m_duration.front()),
            ", 10% = ", to_string(m_duration[m_duration.size() / 10]),
-           ", median = ", to_string(m_duration[m_duration.size() / 2]),
-           ", 90% = ", to_string(m_duration[9 * m_duration.size() / 10]),
-           ", ma x= ", to_string(m_duration.back()));
+        ", median = ", to_string(m_duration[m_duration.size() / 2]),
+        ", 90% = ", to_string(m_duration[9 * m_duration.size() / 10]),
+        ", max = ", to_string(m_duration.back()),
+        ", total = ", to_string(total));
   }
 #else
   double mean_duration() const { return m_duration / double(m_nb); }

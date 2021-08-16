@@ -52,6 +52,12 @@ if (NOT SDL2_ttf_FOUND)
   set(SOSAGE_DEPENDENCIES_OKAY false)
 endif()
 
+find_package(LZ4 REQUIRED)
+if (NOT LZ4_FOUND)
+  message(STATUS "LZ4 is required and not found")
+  set(SOSAGE_DEPENDENCIES_OKAY false)
+endif()
+
 ## Abort if at least one dependency is missing
 
 if (NOT SOSAGE_DEPENDENCIES_OKAY)
