@@ -41,7 +41,6 @@ class File_IO : public Base
 {
 private:
 
-  std::string m_folder_name;
   std::unordered_set<std::string> m_latest_room_entities;
 
 public:
@@ -55,10 +54,7 @@ public:
   void read_config();
   void write_config();
 
-  void test_init_folder (const std::string& folder_name)
-  { Core::File_IO input (folder_name + "data" + Config::folder_separator + "init.yaml"); }
-
-  void read_init (const std::string& folder_name);
+  void read_init ();
 
   void read_cutscene (const std::string& file_name);
 
@@ -67,14 +63,8 @@ public:
 
 private:
 
-  std::string local_file_name (const std::string& file_name) const;
-  std::string local_file_name (const std::string& folder, const std::string& subfolder,
-                               const std::string& file_name, const std::string& extension) const;
-
   // Implemented in File_IO__read_room.cpp:
-public:
   void read_room (const std::string& file_name);
-private:
 
   void read_action (const Core::File_IO::Node& input);
   void read_animation (const Core::File_IO::Node& input);

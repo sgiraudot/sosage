@@ -39,15 +39,15 @@
 namespace Sosage::Third_party::SDL_file
 {
 
-struct File
+struct Asset
 {
   SDL_RWops* buffer;
   std::size_t size;
 };
 
-inline File open (const std::string& filename, bool write = false)
+inline Asset open (const std::string& filename, bool write = false)
 {
-  File out;
+  Asset out;
   out.buffer = SDL_RWFromFile(filename.c_str(), write ? "w" : "r");
   if (out.buffer == nullptr)
   {
@@ -59,19 +59,19 @@ inline File open (const std::string& filename, bool write = false)
   return out;
 }
 
-inline std::size_t read (File file, void* ptr, std::size_t max_num)
+inline std::size_t read (Asset asset, void* ptr, std::size_t max_num)
 {
-  return std::size_t(SDL_RWread(file.buffer, ptr, 1, max_num));
+  return std::size_t(SDL_RWread(asset.buffer, ptr, 1, max_num));
 }
 
-inline void write (File file, const char* str)
+inline void write (Asset asset, const char* str)
 {
-  SDL_RWwrite (file.buffer, str, 1, SDL_strlen(str));
+  SDL_RWwrite (asset.buffer, str, 1, SDL_strlen(str));
 }
 
-inline void close (File file)
+inline void close (Asset asset)
 {
-  SDL_RWclose (file.buffer);
+  SDL_RWclose (asset.buffer);
 }
 
 inline std::string base_path()

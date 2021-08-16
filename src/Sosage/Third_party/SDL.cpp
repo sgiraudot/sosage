@@ -26,6 +26,7 @@
 
 #include <Sosage/Config/platform.h>
 #include <Sosage/Third_party/SDL.h>
+#include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/geometry.h>
 #include <Sosage/Utils/error.h>
@@ -99,7 +100,14 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
 
 SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool with_highlight)
 {
-  SDL_Surface* surf = IMG_Load (file_name.c_str());
+  if (Asset_manager::packaged)
+  {
+    check(false, "TODO: implement packaged version");
+    return SDL::Image();
+  }
+  // else
+  Asset asset = Asset_manager::open(file_name);
+  SDL_Surface* surf = IMG_Load_RW (asset.base(), 1);
   check (surf != nullptr, "Cannot load image " + file_name
          + " (" + std::string(SDL_GetError()) + ")");
 
@@ -175,9 +183,12 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
 
 SDL::Font SDL::load_font (const std::string& file_name, int size)
 {
-  Font_base out = m_fonts.make_mapped (file_name, TTF_OpenFont, file_name.c_str(), size);
+  Asset asset = Asset_manager::open(file_name);
+  Font_base out = m_fonts.make_mapped (file_name, TTF_OpenFontRW, asset.base(), 1, size);
   check (out != Font_base(), "Cannot load font " + file_name);
-  Font_base out2 = m_fonts.make_mapped (file_name + ".outlined", TTF_OpenFont, file_name.c_str(), size);
+
+  asset = Asset_manager::open(file_name);
+  Font_base out2 = m_fonts.make_mapped (file_name + ".outlined", TTF_OpenFontRW, asset.base(), 1, size);
   check (out2 != Font_base(), "Cannot load font " + file_name);
   TTF_SetFontOutline(out2.get(), Config::text_outline);
 
@@ -281,7 +292,14 @@ int SDL::height (SDL::Image image)
 
 SDL::Surface SDL::load_surface (const std::string& file_name)
 {
-  Surface surf (IMG_Load(file_name.c_str()), SDL_FreeSurface);
+  if (Asset_manager::packaged)
+  {
+    check(false, "TODO: implement packaged version");
+    return SDL::Surface();
+  }
+  // else
+  Asset asset = Asset_manager::open(file_name);
+  Surface surf (IMG_Load_RW(asset.base(), 1), SDL_FreeSurface);
   check (surf != Surface(), "Cannot load image " + file_name);
   return surf;
 }
