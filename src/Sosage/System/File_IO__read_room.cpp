@@ -45,7 +45,6 @@
 #include <Sosage/System/File_IO.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/profiling.h>
-#include <Sosage/Utils/file.h>
 
 namespace Sosage::System
 {
@@ -60,7 +59,7 @@ void File_IO::read_character (const Core::File_IO::Node& node)
   int y = node["coordinates"][1].integer();
   bool looking_right = node["looking_right"].boolean();
 
-  Core::File_IO input (local_file_name(file_name));
+  Core::File_IO input (file_name);
   input.parse();
 
   std::string name = input["name"].string();
@@ -75,7 +74,7 @@ void File_IO::read_character (const Core::File_IO::Node& node)
 
   std::string mouth = input["mouth"]["skin"].string("images", "characters", "png");
   auto amouth
-    = C::make_handle<C::Animation>(id + "_mouth:image", local_file_name(mouth),
+    = C::make_handle<C::Animation>(id + "_mouth:image", mouth,
                                           0, 11, 2, true);
   set<C::Conditional>(amouth->id(), visible, amouth);
   amouth->set_relative_origin(0.5, 1.0);
@@ -83,13 +82,13 @@ void File_IO::read_character (const Core::File_IO::Node& node)
   std::string head = input["head"]["skin"].string("images", "characters", "png");
   int head_size = input["head"]["size"].integer();
   auto ahead
-    = C::make_handle<C::Animation>(id + "_head:image", local_file_name(head),
+    = C::make_handle<C::Animation>(id + "_head:image", head,
                                    0, head_size, 2, true);
   set<C::Conditional>(ahead->id(), visible, ahead);
   ahead->set_relative_origin(0.5, 1.0);
 
   std::string walk = input["walk"]["skin"].string("images", "characters", "png");
-  auto awalk = C::make_handle<C::Animation>(id + "_walking:image", local_file_name(walk),
+  auto awalk = C::make_handle<C::Animation>(id + "_walking:image", walk,
                                             0, 8, 4, true);
   set<C::Conditional>(awalk->id(), visible, awalk);
   awalk->set_relative_origin(0.5, 0.95);
@@ -102,7 +101,7 @@ void File_IO::read_character (const Core::File_IO::Node& node)
 
   set<C::Vector<std::string> >(id + "_idle:values", positions);
 
-  auto aidle = C::make_handle<C::Animation>(id + "_idle:image", local_file_name(idle),
+  auto aidle = C::make_handle<C::Animation>(id + "_idle:image", idle,
                                             0, positions.size(), 2, true);
   set<C::Conditional>(aidle->id(), visible, aidle);
   aidle->set_relative_origin(0.5, 0.95);
@@ -157,7 +156,7 @@ void File_IO::read_room (const std::string& file_name)
 
   callback->value()();
 
-  Core::File_IO input (local_file_name("data", "rooms", file_name, "yaml"));
+  Core::File_IO input ("data/rooms/" + file_name + ".yaml");
   input.parse();
 
   callback->value()();
@@ -173,13 +172,13 @@ void File_IO::read_room (const std::string& file_name)
   int back_z = input["back_z"].integer();
 
   auto background_img
-    = set<C::Image>("Background:image", local_file_name(background), 0, BOX);
+    = set<C::Image>("Background:image", background, 0, BOX);
   m_latest_room_entities.insert ("Background");
 
   callback->value()();
 
   set<C::Absolute_position>("Background:position", Point(0, 0), false);
-  set<C::Ground_map>("Background:ground_map", local_file_name(ground_map),
+  set<C::Ground_map>("Background:ground_map", ground_map,
                                        front_z, back_z, callback->value());
 
   callback->value()();
@@ -381,7 +380,7 @@ void File_IO::read_animation (const Core::File_IO::Node& node)
   }
 
   auto pos = set<C::Absolute_position>(id + ":position", Point(x,y), false);
-  auto img = set<C::Animation>(id + ":image", local_file_name(skin), z,
+  auto img = set<C::Animation>(id + ":image", skin, z,
                                width, height, node["loop"].boolean());
 
   int duration = (node.has("duration") ? node["duration"].integer() : 1);
@@ -409,16 +408,15 @@ void File_IO::read_animation (const Core::File_IO::Node& node)
 void File_IO::read_code (const std::string& id)
 {
   m_latest_room_entities.insert(id);
-  std::string file_name = assemble_path("data", "codes", id, "yaml");
-  Core::File_IO input (local_file_name(file_name));
+  Core::File_IO input ("data/codes/" + id + ".yaml");
   input.parse();
 
   std::string button_sound = input["button_sound"].string("sounds", "effects", "ogg");
-  set<C::Sound>(id + "_button:sound", local_file_name(button_sound));
+  set<C::Sound>(id + "_button:sound", button_sound);
   std::string success_sound = input["success_sound"].string("sounds", "effects", "ogg");
-  set<C::Sound>(id + "_success:sound", local_file_name(success_sound));
+  set<C::Sound>(id + "_success:sound", success_sound);
   std::string failure_sound = input["failure_sound"].string("sounds", "effects", "ogg");
-  set<C::Sound>(id + "_failure:sound", local_file_name(failure_sound));
+  set<C::Sound>(id + "_failure:sound", failure_sound);
 
   auto code = set<C::Code>(id + ":code");
 
@@ -450,7 +448,7 @@ void File_IO::read_code (const std::string& id)
 
     std::string skin_off = istate["skin"][0].string("images", "windows", "png");
     auto img_off
-      = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin_off),
+      = C::make_handle<C::Image>(id + ":conditional_image", skin_off,
                                  Config::interface_depth, BOX);
     img_off->set_relative_origin(0.5, 0.5);
     img_off->on() = false;
@@ -462,7 +460,7 @@ void File_IO::read_code (const std::string& id)
     std::string skin_on = istate["skin"][1].string("images", "windows", "png");
     auto img_on
       = C::make_handle<C::Cropped>(id + "_button:conditional_image",
-                                   local_file_name(skin_on),
+                                   skin_on,
                                    Config::inventory_depth);
     img_on->set_relative_origin(0.5, 0.5);
     img_on->on() = false;
@@ -503,8 +501,7 @@ void File_IO::read_code (const std::string& id)
 void File_IO::read_dialog (const std::string& id)
 {
   m_latest_room_entities.insert(id);
-  std::string file_name = assemble_path("data", "dialogs", id, "yaml");
-  Core::File_IO input (local_file_name(file_name));
+  Core::File_IO input ("data/dialogs/" + id + ".yaml");
   input.parse();
 
   auto dialog = set<C::Dialog>(id + ":dialog",
@@ -598,8 +595,7 @@ void File_IO::read_object (const std::string& id)
 {
   m_latest_room_entities.insert(id);
 
-  std::string file_name = assemble_path("data", "objects", id, "yaml");
-  Core::File_IO input (local_file_name(file_name));
+  Core::File_IO input ("data/objects/" + id + ".yaml");
   input.parse();
 
   // First, check if object already exists in inventory (if so, skip)
@@ -670,9 +666,10 @@ void File_IO::read_object (const std::string& id)
         int nb_frames = istate["frames"].integer();
         int duration = istate["duration"].integer();
         auto anim = C::make_handle<C::Animation>(id + ":conditional_image",
-                                                 local_file_name(skin), z,
+                                                 skin, z,
                                                  nb_frames, 1, true,
-                                                 (box_collision ? BOX : PIXEL_PERFECT));
+                                                 (box_collision ? BOX : PIXEL_PERFECT),
+                                                 true);
         anim->reset(true, duration);
         img = anim;
       }
@@ -687,8 +684,9 @@ void File_IO::read_object (const std::string& id)
           img->z() = z;
         }
         else
-          img = C::make_handle<C::Image>(id + ":conditional_image", local_file_name(skin), z,
-                                         (box_collision ? BOX : PIXEL_PERFECT));
+          img = C::make_handle<C::Image>(id + ":conditional_image", skin, z,
+                                         (box_collision ? BOX : PIXEL_PERFECT),
+                                         true);
       }
 
       if (state == "inventory")
@@ -777,13 +775,13 @@ void File_IO::read_music(const Core::File_IO::Node& node)
         conditional_handle = get<C::String_conditional>(id + ":music");
 
       std::string music = istate["sound"].string("sounds", "musics", "ogg");
-      conditional_handle->add(state, C::make_handle<C::Music>(id + ":music", local_file_name(music)));
+      conditional_handle->add(state, C::make_handle<C::Music>(id + ":music", music));
     }
   }
   else
   {
     std::string music = node["sound"].string("sounds", "musics", "ogg");
-    set<C::Music>(id + ":music", local_file_name(music));
+    set<C::Music>(id + ":music", music);
   }
 }
 
@@ -905,7 +903,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node)
       {
         std::string skin = istate["skin"].string("images", "scenery", "png");
         auto img = C::make_handle<C::Image>(id + ":conditional_image",
-                                            local_file_name(skin), z);
+                                            skin, z);
         img->set_collision(UNCLICKABLE);
         img->set_relative_origin(0.5, 1.0);
         conditional_handle->add (state, img);
@@ -916,7 +914,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node)
   {
     std::string skin = node["skin"].string("images", "scenery", "png");
 
-    auto img = set<C::Image>(id + ":image", local_file_name(skin), z);
+    auto img = set<C::Image>(id + ":image", skin, z);
     img->set_collision(UNCLICKABLE);
     img->set_relative_origin(0.5, 1.0);
     debug("Scenery ", id, " at position ", img->z());
@@ -929,7 +927,7 @@ void File_IO::read_sound (const Core::File_IO::Node& node)
   m_latest_room_entities.insert(id);
 
   std::string sound = node["sound"].string("sounds", "effects", "ogg");
-  set<C::Sound>(id + ":sound", local_file_name(sound));
+  set<C::Sound>(id + ":sound", sound);
 }
 
 void File_IO::read_window (const Core::File_IO::Node& node)
@@ -939,7 +937,7 @@ void File_IO::read_window (const Core::File_IO::Node& node)
 
   std::string skin = node["skin"].string("images", "windows", "png");
 
-  auto img = set<C::Image>(id + ":image", local_file_name(skin),
+  auto img = set<C::Image>(id + ":image", skin,
                                              Config::interface_depth);
   img->set_relative_origin(0.5, 0.5);
   img->on() = false;

@@ -170,7 +170,6 @@ void Interface::object_clicked()
     if (state && state->value() == "inventory")
     {
       std::string action_id = m_target + "_inventory_" + id;
-      std::cerr << action_id << std::endl;
       set_action (action_id, "Default_inventory");
       m_target = "";
       action_clicked();
@@ -201,7 +200,6 @@ void Interface::inventory_clicked()
     if (m_source != "") // Source exists, search for action ID/source
     {
       std::string action_id = id + "_inventory_" + m_source;
-      std::cerr << action_id << std::endl;
       set_action (action_id, "Default_inventory");
       m_source = "";
       get<C::String>("Cursor:state")->set("default");
@@ -290,7 +288,6 @@ void Interface::idle_clicked()
     else // Source exist, search for action ID/source
     {
       std::string action_id = id + "_inventory_" + m_source;
-      std::cerr << action_id << std::endl;
       if (auto action = request<C::Action>(action_id + ":action"))
         set<C::Variable>("Character:action", action);
       else
@@ -324,7 +321,6 @@ void Interface::detect_collision (C::Position_handle cursor)
       if (m_source == "") // Keep source cursor if it exists
         get<C::String>("Cursor:state")->set("default");
     }
-    std::cerr << "Collision = " << m_collision->entity() << std::endl;
   }
 
   bool touchmode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == TOUCHSCREEN;

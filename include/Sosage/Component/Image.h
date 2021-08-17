@@ -49,7 +49,7 @@ public:
 
   Image (const std::string& id, int w, int h, int r = 0, int g = 0, int b = 0, int a = 255);
   Image (const std::string& id, const std::string& file_name, int z = 0,
-         const Collision_type& collision = UNCLICKABLE);
+         const Collision_type& collision = UNCLICKABLE, bool with_highlight = false);
   Image (const std::string& id, Font_handle font, const std::string& color_str,
          const std::string& text, bool outlined = false);
   Image (const std::string& id, std::shared_ptr<Image> copy);

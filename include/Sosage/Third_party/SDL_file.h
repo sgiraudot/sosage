@@ -30,6 +30,7 @@
 #include <Sosage/Config/config.h>
 #include <Sosage/Config/options.h>
 #include <Sosage/Config/platform.h>
+#include <Sosage/Utils/binary_io.h>
 #include <Sosage/Utils/error.h>
 
 #include <SDL.h>
@@ -39,15 +40,15 @@
 namespace Sosage::Third_party::SDL_file
 {
 
-struct File
+struct Asset
 {
   SDL_RWops* buffer;
   std::size_t size;
 };
 
-inline File open (const std::string& filename, bool write = false)
+inline Asset open (const std::string& filename, bool write = false)
 {
-  File out;
+  Asset out;
   out.buffer = SDL_RWFromFile(filename.c_str(), write ? "w" : "r");
   if (out.buffer == nullptr)
   {
@@ -59,19 +60,43 @@ inline File open (const std::string& filename, bool write = false)
   return out;
 }
 
-inline std::size_t read (File file, void* ptr, std::size_t max_num)
+inline Asset open (const void* memory, std::size_t size)
 {
-  return std::size_t(SDL_RWread(file.buffer, ptr, 1, max_num));
+  Asset out;
+  out.buffer = SDL_RWFromConstMem(memory, int(size));
+  if (out.buffer == nullptr)
+  {
+    debug ("Can't read memory buffer");
+    throw Sosage::No_such_file();
+  }
+
+  out.size = std::size_t(SDL_RWsize (out.buffer));
+  return out;
 }
 
-inline void write (File file, const char* str)
+inline std::size_t read (Asset asset, void* ptr, std::size_t max_num)
 {
-  SDL_RWwrite (file.buffer, str, 1, SDL_strlen(str));
+  return std::size_t(SDL_RWread(asset.buffer, ptr, 1, max_num));
 }
 
-inline void close (File file)
+inline void write (Asset asset, const char* str)
 {
-  SDL_RWclose (file.buffer);
+  SDL_RWwrite (asset.buffer, str, 1, SDL_strlen(str));
+}
+
+inline std::size_t tell (Asset asset)
+{
+  return std::size_t(SDL_RWtell(asset.buffer));
+}
+
+inline void seek (Asset asset, std::size_t pos)
+{
+  SDL_RWseek (asset.buffer, Sint64(pos), RW_SEEK_SET);
+}
+
+inline void close (Asset asset)
+{
+  SDL_RWclose (asset.buffer);
 }
 
 inline std::string base_path()

@@ -18,6 +18,7 @@ sosage_option(SOSAGE_CFG_PROFILE "Profile and display timing info (requires debu
 sosage_option(SOSAGE_CFG_USE_SDL_TIME "Use SDL clock instead of STL clock" OFF)
 sosage_option(SOSAGE_CFG_ASSERTIONS_AS_EXCEPTIONS "Assertions treated as exceptions instead of triggering exit()" ON)
 sosage_option(SOSAGE_COMPILE_TESTS "Compile test executables" OFF)
+sosage_option(SOSAGE_COMPILE_SCAP "Compile Sosage Compressed Data Packager" OFF)
 
 ## Check all dependencies
 
@@ -49,6 +50,12 @@ endif()
 find_package(SDL2_ttf REQUIRED)
 if (NOT SDL2_ttf_FOUND)
   message(STATUS "SDL2 TTF is required and not found")
+  set(SOSAGE_DEPENDENCIES_OKAY false)
+endif()
+
+find_package(LZ4 REQUIRED)
+if (NOT LZ4_FOUND)
+  message(STATUS "LZ4 is required and not found")
   set(SOSAGE_DEPENDENCIES_OKAY false)
 endif()
 
@@ -107,6 +114,13 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 endif()
 
 include(CPack)
+
+if(SOSAGE_COMPILE_SCAP)
+  set(SCAP_SRC "src/Sosage/Component/Ground_map.cpp" "src/Sosage/Third_party/SDL.cpp")
+  add_executable("SCAP" "src/Sosage/SCAP.cpp" ${SCAP_SRC})
+  target_link_libraries("SCAP" PUBLIC sosage)
+  target_compile_options("SCAP" PUBLIC -DSOSAGE_SCAP)
+endif()
 
 if(SOSAGE_COMPILE_TESTS)
 

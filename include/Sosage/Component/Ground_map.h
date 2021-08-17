@@ -131,12 +131,17 @@ class Ground_map : public Base
     return it.first->second;
   }
 
+  void build_graph (const std::function<void()>& callback);
+
 public:
 
   Ground_map (const std::string& id, const std::string& file_name, int front_z, int back_z,
               const std::function<void()>& callback);
 
   ~Ground_map () { }
+
+  void write (const std::string& filename);
+  void read (const std::string& filename);
 
   template <typename Functor>
   void for_each_vertex (const Functor& functor) const

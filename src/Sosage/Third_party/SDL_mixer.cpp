@@ -26,6 +26,7 @@
 
 #include <Sosage/Config/config.h>
 #include <Sosage/Third_party/SDL_mixer.h>
+#include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/error.h>
 
 #ifdef SOSAGE_LINKED_WITH_SDL_MIXER
@@ -47,7 +48,8 @@ SDL_mixer::~SDL_mixer()
 
 SDL_mixer::Music SDL_mixer::load_music (const std::string& file_name)
 {
-  Mix_Music* music = Mix_LoadMUS (file_name.c_str());
+  Asset asset = Asset_manager::open(file_name);
+  Mix_Music* music = Mix_LoadMUS_RW (asset.base(), 1);
   Mix_VolumeMusic(64);
   check (music != nullptr, "Cannot load music " + file_name);
   return music;
@@ -55,7 +57,8 @@ SDL_mixer::Music SDL_mixer::load_music (const std::string& file_name)
 
 SDL_mixer::Sound SDL_mixer::load_sound (const std::string& file_name)
 {
-  Mix_Chunk* sound = Mix_LoadWAV (file_name.c_str());
+  Asset asset = Asset_manager::open(file_name);
+  Mix_Chunk* sound = Mix_LoadWAV_RW (asset.base(), 1);
   check (sound != nullptr, "Cannot load sound " + file_name);
   return sound;
 }

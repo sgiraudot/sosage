@@ -42,8 +42,8 @@
 #include <Sosage/System/Logic.h>
 #include <Sosage/System/Sound.h>
 #include <Sosage/System/Time.h>
+#include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/profiling.h>
-#include <Sosage/Utils/file.h>
 
 #include <ctime>
 
@@ -53,6 +53,11 @@
 
 namespace Sosage
 {
+
+// Global variables
+std::string Asset_manager::folder_name = "";
+std::vector<Buffer> Asset_manager::buffers;
+Package_asset_map Asset_manager::package_asset_map;
 
 #ifdef SOSAGE_EMSCRIPTEN
 Engine* emscripten_global_engine_ptr;
@@ -80,6 +85,8 @@ Engine::~Engine()
 
 int Engine::run (const std::string& folder_name)
 {
+  Asset_manager::init(folder_name);
+
   // Init main variables
   auto status = m_content.set_fac<Component::Status>(GAME__STATUS, "Game:status");
   m_content.set_fac<Component::Double>(CAMERA__POSITION, "Camera:position", 0.0);
@@ -95,9 +102,6 @@ int Engine::run (const std::string& folder_name)
         (Component::make_value_condition<Sosage::Status> (status, CUTSCENE)));
 
   auto file_io = System::make_handle<System::File_IO>(m_content);
-  // Raise exception now if folder does not exit
-  file_io->test_init_folder (folder_name);
-
   auto graphic = System::make_handle<System::Graphic>(m_content);
   auto interface = System::make_handle<System::Interface>(m_content);
   auto time = System::make_handle<System::Time>(m_content);
@@ -131,7 +135,7 @@ int Engine::run (const std::string& folder_name)
        });
 
 
-  file_io->read_init (folder_name);
+  file_io->read_init ();
   interface->init(); // init interface
 
   debug("Init done, entering main loop");

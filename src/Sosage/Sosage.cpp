@@ -1,5 +1,5 @@
+#include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/error.h>
-#include <Sosage/Utils/file.h>
 #include <Sosage/Engine.h>
 
 int main (int, char**)
@@ -9,7 +9,7 @@ int main (int, char**)
 #ifdef SOSAGE_INSTALL_DATA_FOLDER
   try
   {
-    return sosage.run(Sosage::base_path() + SOSAGE_INSTALL_DATA_FOLDER);
+    return sosage.run(Sosage::Third_party::SDL_file::base_path() + SOSAGE_INSTALL_DATA_FOLDER);
   }
   catch(Sosage::No_such_file&)
   {

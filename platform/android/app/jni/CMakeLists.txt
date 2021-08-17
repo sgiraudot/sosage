@@ -17,5 +17,8 @@ add_subdirectory(SDL_ttf)
 # Libyaml
 add_subdirectory(yaml)
 
+# LZ4
+add_subdirectory(LZ4)
+
 # My files
 add_subdirectory(../../../../)

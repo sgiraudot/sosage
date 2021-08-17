@@ -43,9 +43,9 @@
 #include <Sosage/Config/platform.h>
 #include <Sosage/Config/version.h>
 #include <Sosage/System/File_IO.h>
+#include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/profiling.h>
-#include <Sosage/Utils/file.h>
 
 namespace Sosage::System
 {
@@ -123,8 +123,6 @@ void File_IO::clean_content()
 
 void File_IO::read_config()
 {
-  std::string file_name = Sosage::pref_path() + "config.yaml";
-
   // Default config values
   bool fullscreen = !Config::emscripten;
   int input_mode = (Config::android ? TOUCHSCREEN : MOUSE);
@@ -149,7 +147,7 @@ void File_IO::read_config()
 
   try
   {
-    Core::File_IO input (file_name);
+    Core::File_IO input ("config.yaml", true);
     input.parse();
     if (input.has("fullscreen")) fullscreen = input["fullscreen"].boolean();
     if (input.has("input_mode")) input_mode = input["input_mode"].integer();
@@ -189,7 +187,7 @@ void File_IO::read_config()
 
 void File_IO::write_config()
 {
-  Core::File_IO output (Sosage::pref_path() + "config.yaml", true);
+  Core::File_IO output ("config.yaml", true, true);
 
   output.write ("fullscreen", get<C::Boolean>("Window:fullscreen")->value());
   output.write ("input_mode", get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value());
@@ -211,8 +209,7 @@ void File_IO::write_config()
 
 void File_IO::read_savefile()
 {
-  std::string file_name = Sosage::pref_path() + "save.yaml";
-  Core::File_IO input (file_name);
+  Core::File_IO input ("save.yaml", true);
   input.parse();
   set<C::String>("Game:new_room", input["room"].string());
   set<C::String>("Game:new_room_origin", "Saved_game");
@@ -273,7 +270,7 @@ void File_IO::read_savefile()
 
 void File_IO::write_savefile()
 {
-  Core::File_IO output (Sosage::pref_path() + "save.yaml", true);
+  Core::File_IO output ("save.yaml", true, true);
 
   output.write("room", get<C::String>("Game:current_room")->value());
   output.write("camera", get<C::Double>(CAMERA__POSITION)->value());
@@ -335,12 +332,9 @@ void File_IO::write_savefile()
 }
 
 
-void File_IO::read_init (const std::string& folder_name)
+void File_IO::read_init ()
 {
-  m_folder_name = folder_name;
-  std::string file_name = folder_name + "data" + Config::folder_separator + "init.yaml";
-
-  Core::File_IO input (file_name);
+  Core::File_IO input ("data/init.yaml");
   input.parse();
 
   std::string v = input["version"].string();
@@ -351,26 +345,25 @@ void File_IO::read_init (const std::string& folder_name)
   set<C::String>("Game:name", game_name);
 
   std::string icon = input["icon"].string("images", "interface", "png");
-  set<C::String>("Icon:filename", local_file_name(icon));
+  set<C::String>("Icon:filename", icon);
 
   std::string cursor = input["cursor"][0].string("images", "interface", "png");
-  auto cursor_default = C::make_handle<C::Image> ("Cursor:image", local_file_name(cursor),
-                                                              Config::cursor_depth);
+  auto cursor_default = C::make_handle<C::Image> ("Cursor:image", cursor, Config::cursor_depth);
   cursor_default->set_relative_origin(0.1, 0.1);
 
   std::string cursor_o = input["cursor"][1].string("images", "interface", "png");
-  auto cursor_object = C::make_handle<C::Image> ("Cursor:image", local_file_name(cursor_o),
+  auto cursor_object = C::make_handle<C::Image> ("Cursor:image", cursor_o,
                                                               Config::cursor_depth);
   cursor_object->set_relative_origin(0.5, 0.5);
 
   std::string goto_left = input["cursor"][2].string("images", "interface", "png");
-  auto goto_left_img = C::make_handle<C::Image>("Cursor:image", local_file_name(goto_left), Config::cursor_depth);
+  auto goto_left_img = C::make_handle<C::Image>("Cursor:image", goto_left, Config::cursor_depth);
   goto_left_img->set_relative_origin(1., 0.5);
   auto goto_left_copy = set<C::Image>("Goto_left:image", goto_left_img);
   goto_left_copy->on() = false;
 
   std::string goto_right = input["cursor"][3].string("images", "interface", "png");
-  auto goto_right_img = C::make_handle<C::Image>("Cursor:image", local_file_name(goto_right), Config::cursor_depth);
+  auto goto_right_img = C::make_handle<C::Image>("Cursor:image", goto_right, Config::cursor_depth);
   goto_right_img->set_relative_origin(0., 0.5);
   auto goto_right_copy = set<C::Image>("Goto_right:image", goto_right_img);
   goto_right_copy->on() = false;
@@ -396,7 +389,7 @@ void File_IO::read_init (const std::string& folder_name)
 
   std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
   int nb_img = input["loading_spin"][1].integer();
-  auto loading_spin_img = set_fac<C::Animation> (LOADING_SPIN__IMAGE, "Loading_spin:image", local_file_name(loading_spin),
+  auto loading_spin_img = set_fac<C::Animation> (LOADING_SPIN__IMAGE, "Loading_spin:image", loading_spin,
                                                                    Config::loading_depth, nb_img, 1, true);
   loading_spin_img->on() = false;
   loading_spin_img->set_relative_origin(0.5, 0.5);
@@ -405,30 +398,30 @@ void File_IO::read_init (const std::string& folder_name)
                                        Config::world_height / 2));
 
   std::string left_arrow = input["inventory_arrows"][0].string("images", "interface", "png");
-  auto left_arrow_img = set<C::Image>("Left_arrow:image", local_file_name(left_arrow));
+  auto left_arrow_img = set<C::Image>("Left_arrow:image", left_arrow);
   left_arrow_img->z() = Config::inventory_depth;
   left_arrow_img->set_relative_origin (0, 0.5);
   std::string right_arrow = input["inventory_arrows"][1].string("images", "interface", "png");
-  auto right_arrow_img = set<C::Image>("Right_arrow:image", local_file_name(right_arrow));
+  auto right_arrow_img = set<C::Image>("Right_arrow:image", right_arrow);
   right_arrow_img->z() = Config::inventory_depth;
   right_arrow_img->set_relative_origin (1, 0.5);
 
   std::string chamfer = input["inventory_chamfer"].string("images", "interface", "png");
-  auto chamfer_img = set<C::Image>("Chamfer:image", local_file_name(chamfer));
+  auto chamfer_img = set<C::Image>("Chamfer:image", chamfer);
   chamfer_img->z() = Config::interface_depth;
 
   std::string click_sound = input["click_sound"].string("sounds", "effects", "ogg");
-  set<C::Sound>("Click:sound", local_file_name(click_sound));
+  set<C::Sound>("Click:sound", click_sound);
 
   std::string left_circle = input["circle"][0].string("images", "interface", "png");
-  auto left_circle_img = set<C::Image>("Left_circle:image", local_file_name(left_circle), 1, BOX);
+  auto left_circle_img = set<C::Image>("Left_circle:image", left_circle, 1, BOX, true);
   left_circle_img->on() = false;
   std::string right_circle = input["circle"][1].string("images", "interface", "png");
-  auto right_circle_img = set<C::Image>("Right_circle:image", local_file_name(right_circle), 1, BOX);
+  auto right_circle_img = set<C::Image>("Right_circle:image", right_circle, 1, BOX, true);
   right_circle_img->on() = false;
 
   std::string big_circle = input["circle"][2].string("images", "interface", "png");
-  auto big_circle_img = C::make_handle<C::Image>("Cursor:image", local_file_name(big_circle),
+  auto big_circle_img = C::make_handle<C::Image>("Cursor:image", big_circle,
                                                  Config::cursor_depth);
   big_circle_img->set_relative_origin(0.5, 0.5);
 
@@ -436,38 +429,38 @@ void File_IO::read_init (const std::string& folder_name)
 
 
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
-  set<C::Font> ("Debug:font", local_file_name(debug_font), 40);
+  set<C::Font> ("Debug:font", debug_font, 40);
 
   std::string interface_font = input["interface_font"].string("fonts", "ttf");
-  set<C::Font> ("Interface:font", local_file_name(interface_font), 80);
+  set<C::Font> ("Interface:font", interface_font, 80);
 
   std::string dialog_font = input["dialog_font"].string("fonts", "ttf");
-  set<C::Font> ("Dialog:font", local_file_name(dialog_font), 80);
+  set<C::Font> ("Dialog:font", dialog_font, 80);
 
   std::string menu_color = input["menu_color"].string();
   set<C::String> ("Menu:color", menu_color);
 
   std::string logo_id = input["menu_logo"].string("images", "interface", "png");
   auto logo
-    = set<C::Image> ("Menu_logo:image", local_file_name(logo_id));
+    = set<C::Image> ("Menu_logo:image", logo_id);
   logo->on() = false;
   auto credits_logo
-    = set<C::Image> ("Credits_logo:image", local_file_name(logo_id));
+    = set<C::Image> ("Credits_logo:image", logo_id);
   credits_logo->on() = false;
 
 
   std::string credits_id = input["credits_image"].string("images", "interface", "png");
   auto credits
-    = set<C::Image> ("Credits_text:image", local_file_name(credits_id));
+    = set<C::Image> ("Credits_text:image", credits_id);
   credits->on() = false;
 
   std::string left_arrow_id = input["menu_arrows"][0].string("images", "interface", "png");
-  auto arrow_left = set<C::Image>("Menu_left_arrow:image", local_file_name(left_arrow_id));
+  auto arrow_left = set<C::Image>("Menu_left_arrow:image", left_arrow_id);
   arrow_left->set_relative_origin(0, 0.5);
   arrow_left->on() = false;
 
   std::string right_arrow_id = input["menu_arrows"][1].string("images", "interface", "png");
-  auto arrow_right = set<C::Image>("Menu_right_arrow:image", local_file_name(right_arrow_id));
+  auto arrow_right = set<C::Image>("Menu_right_arrow:image", right_arrow_id);
   arrow_right->set_relative_origin(1, 0.5);
   arrow_right->on() = false;
 
@@ -540,7 +533,7 @@ void File_IO::read_cutscene (const std::string& file_name)
 
   SOSAGE_TIMER_START(File_IO__read_cutscene);
 
-  Core::File_IO input (local_file_name("data", "cutscenes", file_name, "yaml"));
+  Core::File_IO input ("data/cutscenes/" + file_name + ".yaml");
   input.parse();
 
   callback->value()();
@@ -562,7 +555,7 @@ void File_IO::read_cutscene (const std::string& file_name)
     if (node.has("music")) // Music
     {
       std::string music = node["music"].string("sounds", "musics", "ogg");
-      set<C::Music>(id + ":music", local_file_name(music));
+      set<C::Music>(id + ":music", music);
       callback->value()();
       continue;
     }
@@ -582,7 +575,7 @@ void File_IO::read_cutscene (const std::string& file_name)
         width = node["length"][0].integer();
         height = node["length"][1].integer();
       }
-      auto anim = set<C::Animation>(id + ":image", local_file_name(skin), 1,
+      auto anim = set<C::Animation>(id + ":image", skin, 1,
                                     width, height, node["loop"].boolean());
       int duration = (node.has("duration") ? node["duration"].integer() : 1);
 
@@ -604,7 +597,7 @@ void File_IO::read_cutscene (const std::string& file_name)
     else if (node.has("skin")) // Image
     {
       std::string skin = node["skin"].string("images", "cutscenes", "png");
-      img = set<C::Image>(id + ":image", local_file_name(skin));
+      img = set<C::Image>(id + ":image", skin);
     }
     else // Text
     {
@@ -703,16 +696,5 @@ void File_IO::read_cutscene (const std::string& file_name)
   SOSAGE_TIMER_STOP(File_IO__read_cutscene);
 }
 
-std::string File_IO::local_file_name (const std::string& file_name) const
-{
-  return m_folder_name + file_name;
-}
-
-std::string File_IO::local_file_name (const std::string& folder, const std::string& subfolder,
-                                      const std::string& file_name, const std::string& extension) const
-{
-  return m_folder_name + folder + Config::folder_separator + subfolder + Config::folder_separator
-    + file_name + '.' + extension;
-}
 
 } // namespace Sosage::System

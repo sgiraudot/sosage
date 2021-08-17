@@ -663,7 +663,6 @@ void Interface::menu_clicked (std::string entity)
 
 void Interface::apply_setting (const std::string& setting, const std::string& value)
 {
-  std::cerr << value << std::endl;
   if (setting == "fullscreen")
   {
     get<C::Boolean>("Window:fullscreen")->set(value == "Yes");
