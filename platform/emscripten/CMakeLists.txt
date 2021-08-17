@@ -9,8 +9,10 @@ include(Sosage_version)
 ## Fetch sources and create executable
 
 file(GLOB_RECURSE SOSAGE_SRC "../../src/Sosage/*.cpp")
+
 file(GLOB_RECURSE YAML_SRC "libyaml/src/*.c")
-add_executable(superflu-riteurnz ${SOSAGE_SRC} ${YAML_SRC})
+file(GLOB_RECURSE LZ4_SRC "lz4/lib/*.c")
+add_executable(superflu-riteurnz ${SOSAGE_SRC} ${YAML_SRC} ${LZ4_SRC})
 target_compile_options(superflu-riteurnz PUBLIC -DSOSAGE_DATA_FOLDER="data/")
 target_compile_options(superflu-riteurnz PUBLIC -DSOSAGE_INSTALL_DATA_FOLDER="data/")
 target_compile_definitions(superflu-riteurnz PUBLIC
@@ -21,7 +23,8 @@ target_compile_definitions(superflu-riteurnz PUBLIC
 target_include_directories (superflu-riteurnz PUBLIC
   "../../include"
   "libyaml/include"
-  "libyaml/src")
+  "libyaml/src"
+  "lz4/lib")
 
 # Yaml config
 target_compile_definitions(superflu-riteurnz PUBLIC

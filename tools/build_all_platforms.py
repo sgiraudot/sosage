@@ -4,10 +4,11 @@ import subprocess
 import time
 
 # Local config
-data_folder = "/home/gee/art/superflu-pnc-data"
+data_folder = "/home/gee/art/superflu_riteurnz/release"
 linuxdeploy = "/home/gee/download/linuxdeploy-x86_64.AppImage"
 windows_sdl_folder = "/home/gee/local/i686-w64-mingw32/include/SDL2"
-libyaml_souce_path = "/home/gee/local/sources/libyaml-master"
+libyaml_source_path = "/home/gee/local/sources/libyaml-master"
+lz4_source_path = "/home/gee/local/sources/lz4"
 
 gamename = "superflu-riteurnz"
 version = "v1.1.0-modern-ui"
@@ -135,7 +136,8 @@ try:
     run_cmd(["mkdir", "emscripten"])
     os.chdir("emscripten")
     run_cmd(["cp", "../../platform/emscripten/CMakeLists.txt", "."])
-    run_cmd(["ln", "-s", libyaml_souce_path, "libyaml"])
+    run_cmd(["ln", "-s", libyaml_source_path, "libyaml"])
+    run_cmd(["ln", "-s", lz4_source_path, "lz4"])
     run_cmd(["mkdir", "build"])
     os.chdir("build")
     run_cmd(["ln", "-s", data_folder + "/data/", "data"])

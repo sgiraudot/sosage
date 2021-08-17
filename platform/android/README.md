@@ -9,5 +9,6 @@
 5. `$ ln -s [sdl_mixer_source_path] app/jni/SDL_mixer`
 6. `$ ln -s [sdl_ttf_source_path] app/jni/SDL_ttf`
 7. `$ ln -s [libyaml_source_path] app/jni/yaml/libyaml`
+7. `$ ln -s [liblz4_source_path] app/jni/LZ4/lz4`
 8. `$ ln -s [where_the_data_is]/data app/src/main/assets/data`
 9. `$ ./gradlew assemble`
