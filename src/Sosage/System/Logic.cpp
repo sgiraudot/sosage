@@ -855,6 +855,8 @@ bool Logic::function_talk (const std::vector<std::string>& args)
     text = args[1];
   }
 
+  text = locale(text);
+
   std::vector<C::Image_handle> dialog;
   create_dialog (id, text, dialog);
 

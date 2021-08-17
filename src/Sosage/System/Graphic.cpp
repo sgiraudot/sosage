@@ -63,7 +63,7 @@ void Graphic::run()
 {
   if (auto name = request<C::String>("Game:name"))
   {
-    m_core.update_window (name->value(), get<C::String>("Icon:filename")->value());
+    m_core.update_window (locale(name->value()), get<C::String>("Icon:filename")->value());
     remove ("Game:name");
   }
 

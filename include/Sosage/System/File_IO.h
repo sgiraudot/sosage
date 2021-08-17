@@ -55,6 +55,7 @@ public:
   void write_config();
 
   void read_init ();
+  void read_locale ();
 
   void read_cutscene (const std::string& file_name);
 

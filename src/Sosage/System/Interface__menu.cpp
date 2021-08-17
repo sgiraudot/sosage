@@ -120,12 +120,12 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
   {
     if (text)
     {
-      const std::string& str = text->value();
+      const std::string& str = locale(text->value());
       std::size_t pos = str.find('\n');
       if (pos == std::string::npos)
       {
         auto img = set<C::Image>(text->entity() + ":image",
-                                 interface_font, "000000", text->value());
+                                 interface_font, "000000", locale(text->value()));
         img->z() = Config::menu_text_depth;
         img->on() = false;
         img->set_scale(0.75);
@@ -186,7 +186,7 @@ void Interface::init_menu_item (Component::Menu::Node node, const std::string& i
     if (!img)
     {
       img = set<C::Image>(text->entity() + ":image",
-                          dialog_font, menu_color, text->value());
+                          dialog_font, menu_color, locale(text->value()));
       img->z() = Config::menu_text_depth;
       img->on() = false;
       img->set_scale(0.75);
@@ -243,7 +243,7 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
     std::string id = effect + '_' + possible_values[i];
     std::string text;
     if (auto t = request<C::String>(possible_values[i] + ":text"))
-      text = t->value();
+      text = locale(t->value());
     else
       text = possible_values[i] + " %";
 

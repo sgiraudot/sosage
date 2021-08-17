@@ -34,6 +34,7 @@
 #include <Sosage/Component/Hints.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Inventory.h>
+#include <Sosage/Component/Locale.h>
 #include <Sosage/Component/Music.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
@@ -46,6 +47,8 @@
 #include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/profiling.h>
+
+#include <locale>
 
 namespace Sosage::System
 {
@@ -124,6 +127,7 @@ void File_IO::clean_content()
 void File_IO::read_config()
 {
   // Default config values
+  std::string locale = "";
   bool fullscreen = !Config::emscripten;
   int input_mode = (Config::android ? TOUCHSCREEN : MOUSE);
   int gamepad_type = NO_LABEL;
@@ -149,6 +153,7 @@ void File_IO::read_config()
   {
     Core::File_IO input ("config.yaml", true);
     input.parse();
+    if (input.has("locale")) locale = input["locale"].string();
     if (input.has("fullscreen")) fullscreen = input["fullscreen"].boolean();
     if (input.has("input_mode")) input_mode = input["input_mode"].integer();
     if (input.has("gamepad_type")) gamepad_type = input["gamepad_type"].integer();
@@ -168,6 +173,7 @@ void File_IO::read_config()
   {
   }
 
+  set_fac<C::String>(GAME__CURRENT_LOCAL, "Game:current_locale", locale);
   set<C::Boolean>("Window:fullscreen", fullscreen);
   set_fac<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE, "Interface:input_mode", Input_mode(input_mode));
   set_fac<C::Simple<Gamepad_type>>(GAMEPAD__TYPE, "Gamepad:type", Gamepad_type(gamepad_type));
@@ -189,6 +195,7 @@ void File_IO::write_config()
 {
   Core::File_IO output ("config.yaml", true, true);
 
+  output.write ("locale", get<C::String>(GAME__CURRENT_LOCAL)->value());
   output.write ("fullscreen", get<C::Boolean>("Window:fullscreen")->value());
   output.write ("input_mode", get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value());
   output.write ("gamepad_type", get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE)->value());
@@ -496,7 +503,7 @@ void File_IO::read_init ()
     }
   }
 
-  set<C::String>("Inventory:label", input["default"]["inventory_button"].string());
+  set<C::String>("Inventory:label", input["default"]["inventory_button"]["label"].string());
 
   std::string player = input["player"].string();
   set<C::String>("Player:name", player);
@@ -521,6 +528,90 @@ void File_IO::read_init ()
     set<C::Variable>("Game:new_room", get<C::String>("Game:init_new_room"));
     if (auto orig = request<C::String>("Game:init_new_room_origin"))
       set<C::Variable>("Game:new_room_origin", orig);
+  }
+
+  read_locale();
+}
+
+void File_IO::read_locale()
+{
+  Core::File_IO input ("data/locale.yaml");
+  input.parse();
+
+  auto available = set<C::Vector<std::string>>("Game:available_locales");
+  std::vector<std::pair<std::string, C::Locale_handle>> map;
+
+  auto locales = set_fac<C::String_conditional>(GAME__LOCALE, "Game:locale",
+                                                get<C::String>(GAME__CURRENT_LOCAL));
+  std::string base;
+  for (std::size_t i = 0; i < input["locales"].size(); ++ i)
+  {
+    std::string id = input["locales"][i]["id"].string();
+    std::string description = input["locales"][i]["description"].string();
+    available->push_back (id);
+    if (i == 0)
+    {
+      base = id;
+      locales->add (id, C::Handle());
+    }
+    else
+    {
+      auto locale = C::make_handle<C::Locale>("Game:locale");
+      map.emplace_back (id, locale);
+      locales->add (id, locale);
+    }
+    set<C::String>(id + ":description", description);
+  }
+
+  Core::File_IO::Node lines = input["lines"];
+  for (std::size_t i = 0; i < lines.size(); ++ i)
+  {
+    Core::File_IO::Node l = lines[i];
+    std::string line = l[base].string();
+    for (const auto& m : map)
+    {
+      std::string translation = l[m.first].string();
+      m.second->add(line, translation);
+    }
+  }
+
+  if (get<C::String>(GAME__CURRENT_LOCAL)->value() == "")
+  {
+    std::string prefered = "";
+    std::string user_locale = std::locale("").name();
+    if (user_locale.size() > 5)
+      user_locale.resize(5);
+
+    for (const std::string& l : available->value())
+      if (user_locale == l)
+      {
+        debug("Locale exactly detected as " + l);
+        prefered = l;
+        break;
+      }
+    if (prefered == "")
+    {
+      std::string reduced_locale = user_locale;
+      if (reduced_locale.size() > 2)
+        reduced_locale.resize(2);
+      for (const std::string& l : available->value())
+      {
+        std::string reduced = l;
+        reduced.resize(2);
+        if (reduced_locale == reduced)
+        {
+          debug("Locale partly detected as " + l + " (instead of " + user_locale + ")");
+          prefered = l;
+          break;
+        }
+      }
+    }
+    if (prefered == "")
+    {
+      debug("No available locale detected, fallback to en_US");
+      prefered = "en_US";
+    }
+    get<C::String>(GAME__CURRENT_LOCAL)->set(prefered);
   }
 }
 

@@ -533,11 +533,11 @@ void Interface::update_active_objects()
     if (auto right = request<C::Boolean>(id + "_goto:right"))
     {
       bool r = right->value();
-      update_label(false, id + "_label", name->value(), !r, r, pos->value(),
+      update_label(false, id + "_label", locale(name->value()), !r, r, pos->value(),
                    touchmode ? BOX : UNCLICKABLE, scale, true);
     }
     else
-      update_label(false, id + "_label", name->value(), false, false, pos->value(),
+      update_label(false, id + "_label", locale(name->value()), false, false, pos->value(),
                    touchmode ? BOX : UNCLICKABLE, scale);
     get<C::Absolute_position>(id + "_label:global_position")->absolute() = false;
   }
@@ -646,7 +646,7 @@ void Interface::update_switcher()
                           Config::world_height - Config::label_height));
 
 
-    update_label (false, "Switcher_label", get<C::String>("Switch_target:text")->value(),
+    update_label (false, "Switcher_label", locale_get("Switch_target:text"),
                   true, !keyboard, Point(0,0), UNCLICKABLE);
     m_labels.pop_back();
 
