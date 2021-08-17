@@ -220,7 +220,6 @@ public:
 
   static Asset open_pref (const std::string& filename, bool write = false)
   {
-    std::cerr << "Open " << IO::pref_path() + filename << std::endl;
     return Asset (IO::pref_path() + filename, write);
   }
 

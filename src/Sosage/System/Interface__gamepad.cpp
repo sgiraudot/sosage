@@ -521,7 +521,6 @@ void Interface::update_active_objects()
 
   bool touchmode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == TOUCHSCREEN;
 
-  std::cerr << "Update active object" << std::endl;
   for (const std::string& id : m_close_objects)
   {
     bool is_active = touchmode || (m_active_object == id);

@@ -240,7 +240,6 @@ class Menu : public Base
           {
             std::string entity = tree[vertex].image[i]->entity();
             std::string v (entity.begin() + setting.size() + 1, entity.end());
-            std::cerr << v << std::endl;
             if (v == value)
             {
               tree[vertex].current = i;
