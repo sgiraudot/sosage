@@ -69,6 +69,7 @@ void Interface::init_menus()
 #if 1
   std::vector<std::array<std::string, 2> > settings_list
       = {
+          { "Language", "language" },
 #if !defined(SOSAGE_ANDROID) && !defined(SOSAGE_EMSCRIPTEN)
           { "Fullscreen", "fullscreen" },
 #endif
@@ -224,7 +225,13 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
   node_right.init (right_arrow, right_pos);
 
   std::vector<std::string> possible_values;
-  if (effect == "fullscreen")
+  if (effect == "language")
+  {
+    auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+    for (const std::string& a : available)
+      possible_values.push_back (get<C::String>(a + ":description")->value());
+  }
+  else if (effect == "fullscreen")
     possible_values = { "Yes", "No" };
   else if (effect == "text_size")
     possible_values = { "Small", "Medium", "Large" };
@@ -244,8 +251,10 @@ void Interface::init_setting_item (Component::Menu::Node node_left,
     std::string text;
     if (auto t = request<C::String>(possible_values[i] + ":text"))
       text = locale(t->value());
-    else
+    else if (is_int(possible_values[i]))
       text = possible_values[i] + " %";
+    else
+      text = possible_values[i];
 
     auto img = set<C::Image>(id + ":image",
                              menu_font, "000000", text);
@@ -492,6 +501,9 @@ void Interface::create_menu (const std::string& id)
   // Update settings menu with current settings
   if (id == "Settings")
   {
+    menu->update_setting ("language",
+                          get<C::String>(get<C::String>(GAME__CURRENT_LOCAL)->value() + ":description")->value());
+
     menu->update_setting ("fullscreen",
                           get<C::Boolean>("Window:fullscreen")->value() ? "Yes" : "No");
 
@@ -663,7 +675,34 @@ void Interface::menu_clicked (std::string entity)
 
 void Interface::apply_setting (const std::string& setting, const std::string& value)
 {
-  if (setting == "fullscreen")
+  if (setting == "language")
+  {
+    auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+    for (const std::string& a : available)
+      if (get<C::String>(a + ":description")->value() == value)
+      {
+        get<C::String>(GAME__CURRENT_LOCAL)->set(a);
+        break;
+      }
+
+    // Delete all menus
+    for (const std::string& id : { "Exit", "Settings", "Credits", "End" })
+    {
+      auto menu = get<C::Menu>(id + ":menu");
+      menu->apply([&](C::Image_handle img)
+      {
+        std::string id = img->entity();
+        if (id.find ("_button") != std::string::npos
+            || request<C::String>(id + ":text"))
+          remove(img->id(), true);
+      });
+    }
+
+    // Reinit interface
+    init();
+    create_menu ("Settings");
+  }
+  else if (setting == "fullscreen")
   {
     get<C::Boolean>("Window:fullscreen")->set(value == "Yes");
     emit ("Window:toggle_fullscreen");

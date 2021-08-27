@@ -229,6 +229,14 @@ class Menu : public Base
           (*this)[i].hide();
     }
 
+    void apply (const std::function<void(Image_handle)>& func)
+    {
+      if (nb_children() < 2)
+        func(image());
+      for (std::size_t i = 0; i < nb_children(); ++ i)
+        (*this)[i].apply(func);
+    }
+
     void update_setting (const std::string& setting, const std::string& value)
     {
       if (nb_children() == 0)
@@ -286,6 +294,8 @@ public:
   void set_position (double x, double y) { root().set_position(x, y); }
 
   void hide() { root().hide(); }
+
+  void apply (const std::function<void(Image_handle)>& func) { root().apply(func); }
 
   void update_setting (const std::string& setting, const std::string& value)
   {
