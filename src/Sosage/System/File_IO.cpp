@@ -688,9 +688,15 @@ void File_IO::read_cutscene (const std::string& file_name)
     else if (node.has("skin")) // Image
     {
       std::string skin = node["skin"].string("images", "cutscenes", "png");
-      auto img = set<C::Image>(id + ":image", skin);
-      img->set_collision(UNCLICKABLE);
-      img->on() = false;
+      load_locale_dependent_image
+          (id + ":image", skin,
+           [&](const std::string& skin) -> C::Image_handle
+      {
+        auto img = C::make_handle<C::Image>(id + ":image", skin);
+        img->set_collision(UNCLICKABLE);
+        img->on() = false;
+        return img;
+      });
     }
     else // Text
     {
@@ -786,6 +792,75 @@ void File_IO::read_cutscene (const std::string& file_name)
 
   SOSAGE_TIMER_STOP(File_IO__read_cutscene);
 }
+
+void File_IO::create_locale_dependent_text (const std::string& id, Component::Font_handle font,
+                                            const std::string& color, const std::string& text)
+{
+  auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+  if (available.size() == 1)
+  {
+    auto img = set<C::Image>(id + ":image", font, color, text);
+    img->set_scale(0.75);
+    img->set_collision(UNCLICKABLE);
+    img->on() = false;
+    return;
+  }
+
+  auto cond_img = set<C::String_conditional>(id + ":image", get<C::String>(GAME__CURRENT_LOCAL));
+
+  // Save current locale to put it back after
+  std::string current = get<C::String>(GAME__CURRENT_LOCAL)->value();
+
+  for (const std::string& l : available)
+  {
+    get<C::String>(GAME__CURRENT_LOCAL)->set(l);
+    auto img = C::make_handle<C::Image>(id + ":image", font, color, locale(text));
+    img->set_scale(0.75);
+    img->set_collision(UNCLICKABLE);
+    img->on() = false;
+    cond_img->add(l, img);
+  }
+  get<C::String>(GAME__CURRENT_LOCAL)->set(current);
+}
+
+void File_IO::load_locale_dependent_image (const std::string& id, const std::string& filename,
+                                           const std::function<C::Image_handle(std::string)>& func)
+{
+  auto img = func (filename);
+
+  auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+  if (available.size() == 1)
+  {
+    set<C::Image>(id, img);
+    return;
+  }
+
+  auto cond_img = set<C::String_conditional>(id, get<C::String>(GAME__CURRENT_LOCAL));
+  cond_img->add(available[0], img);
+
+  bool has_locale = true;
+  for (std::size_t i = 1; i < available.size(); ++ i)
+  {
+    std::string locale_filename
+        = std::string (filename.begin(), filename.begin() + filename.size() - 3)
+          + available[i] + ".png";
+    if (!Asset_manager::exists (locale_filename))
+    {
+      has_locale = false;
+      break;
+    }
+
+    auto img = func (locale_filename);
+    cond_img->add(available[i], img);
+  }
+
+  if (!has_locale)
+  {
+    remove (id);
+    set<C::Image> (id, img);
+  }
+}
+
 
 
 } // namespace Sosage::System
