@@ -27,6 +27,7 @@
 #ifndef SOSAGE_SYSTEM_FILE_IO_H
 #define SOSAGE_SYSTEM_FILE_IO_H
 
+#include <Sosage/Component/Font.h>
 #include <Sosage/Config/config.h>
 #include <Sosage/Content.h>
 #include <Sosage/Core/File_IO.h>
@@ -82,6 +83,9 @@ private:
   void read_scenery (const Core::File_IO::Node& input);
   void read_sound (const Core::File_IO::Node& input);
   void read_window (const Core::File_IO::Node& input);
+
+  void create_locale_dependent_text (const std::string& id, Component::Font_handle font,
+                                     const std::string& color, const std::string& text);
 
 };
 

@@ -947,4 +947,35 @@ void File_IO::read_window (const Core::File_IO::Node& node)
                                            Config::world_height / 2));
 }
 
+void File_IO::create_locale_dependent_text (const std::string& id, Component::Font_handle font,
+                                            const std::string& color, const std::string& text)
+{
+  auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+  if (available.size() == 1)
+  {
+    auto img = set<C::Image>(id + ":image", font, color, text);
+    img->set_scale(0.75);
+    img->set_collision(UNCLICKABLE);
+    img->on() = false;
+    return;
+  }
+
+  auto cond_img = set<C::String_conditional>(id + ":image", get<C::String>(GAME__CURRENT_LOCAL));
+
+  // Save current locale to put it back after
+  std::string current = get<C::String>(GAME__CURRENT_LOCAL)->value();
+
+  for (const std::string& l : available)
+  {
+    get<C::String>(GAME__CURRENT_LOCAL)->set(l);
+    auto img = C::make_handle<C::Image>(id + ":image", font, color, locale(text));
+    img->set_scale(0.75);
+    img->set_collision(UNCLICKABLE);
+    img->on() = false;
+    cond_img->add(l, img);
+  }
+  get<C::String>(GAME__CURRENT_LOCAL)->set(current);
+}
+
+
 } // namespace Sosage::System

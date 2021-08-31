@@ -651,7 +651,6 @@ void File_IO::read_cutscene (const std::string& file_name)
       continue;
     }
 
-    C::Image_handle img;
     if (node.has("loop")) // Animation
     {
       std::string skin = node["skin"].string("images", "cutscenes", "png");
@@ -683,23 +682,23 @@ void File_IO::read_cutscene (const std::string& file_name)
       }
       else
         anim->reset(true, duration);
-      img = anim;
+      anim->set_collision(UNCLICKABLE);
+      anim->on() = false;
     }
     else if (node.has("skin")) // Image
     {
       std::string skin = node["skin"].string("images", "cutscenes", "png");
-      img = set<C::Image>(id + ":image", skin);
+      auto img = set<C::Image>(id + ":image", skin);
+      img->set_collision(UNCLICKABLE);
+      img->on() = false;
     }
     else // Text
     {
       check (node.has("text"), "Node should either have music, image or text");
       std::string text = node["text"].string();
       std::string color = (node.has("color") ? node["color"].string() : default_color);
-      img = set<C::Image>(id + ":image", dialog_font, color, text);
-      img->set_scale(0.75);
+      create_locale_dependent_text (id, dialog_font, color, text);
     }
-    img->set_collision(UNCLICKABLE);
-    img->on() = false;
     callback->value()();
   }
 
