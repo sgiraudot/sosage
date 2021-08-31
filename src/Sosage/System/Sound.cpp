@@ -44,7 +44,7 @@ Sound::Sound (Content& content)
 
 void Sound::run()
 {
-  auto music = m_content.request<C::Music>("Game:music");
+  auto music = request<C::Music>("Game:music");
 
   if (receive("Music:start"))
   {
@@ -96,18 +96,18 @@ void Sound::run()
 
   if (receive ("code:play_failure"))
     m_core.play_sound
-      (m_content.get<C::Sound>
-       (m_content.get<C::Code>("Game:code")->entity() +"_failure:sound")->core(),
+      (get<C::Sound>
+       (get<C::Code>("Game:code")->entity() +"_failure:sound")->core(),
        get<C::Int>("Sounds:volume")->value() / 10.);
   else if (receive ("code:play_success"))
     m_core.play_sound
-      (m_content.get<C::Sound>
-       (m_content.get<C::Code>("Game:code")->entity() +"_success:sound")->core(),
+      (get<C::Sound>
+       (get<C::Code>("Game:code")->entity() +"_success:sound")->core(),
        get<C::Int>("Sounds:volume")->value() / 10.);
   else if (receive ("code:play_click"))
     m_core.play_sound
-      (m_content.get<C::Sound>
-       (m_content.get<C::Code>("Game:code")->entity() +"_button:sound")->core(),
+      (get<C::Sound>
+       (get<C::Code>("Game:code")->entity() +"_button:sound")->core(),
        get<C::Int>("Sounds:volume")->value() / 10.);
 
   std::vector<std::string> to_remove;
@@ -115,7 +115,7 @@ void Sound::run()
     if (auto ev = C::cast<C::Signal>(h))
       if (ev->entity() == "play_sound")
       {
-        m_core.play_sound (m_content.get<C::Sound> (ev->component() + ":sound")->core(),
+        m_core.play_sound (get<C::Sound> (ev->component() + ":sound")->core(),
                            get<C::Int>("Sounds:volume")->value() / 10.);
         to_remove.push_back (ev->id());
       }

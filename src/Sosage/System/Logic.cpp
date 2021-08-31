@@ -494,7 +494,8 @@ bool Logic::function_camera (const std::vector<std::string>& args)
     auto begin = set<C::Double> ("Fade:begin", m_current_time);
     auto end = set<C::Double> ("Fade:end", m_current_time + duration);
     auto out = set<C::Boolean> ("Fade:in", fadein);
-    emit ("Music:fade");
+    if (request<C::Music>("Game:music"))
+      emit ("Music:fade");
     m_timed.insert (std::make_pair (m_current_time + duration, begin));
     m_timed.insert (std::make_pair (m_current_time + duration, end));
     m_timed.insert (std::make_pair (m_current_time + duration, out));

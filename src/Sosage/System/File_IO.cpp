@@ -632,7 +632,7 @@ void File_IO::read_cutscene (const std::string& file_name)
   std::string name = input["name"].string();
 
   auto dialog_font = get<C::Font> ("Dialog:font");
-  std::string color = "000000";
+  std::string default_color = "000000";
 
   std::unordered_map<std::string, const Core::File_IO::Node*> map_id2node;
 
@@ -694,6 +694,7 @@ void File_IO::read_cutscene (const std::string& file_name)
     {
       check (node.has("text"), "Node should either have music, image or text");
       std::string text = node["text"].string();
+      std::string color = (node.has("color") ? node["color"].string() : default_color);
       img = set<C::Image>(id + ":image", dialog_font, color, text);
       img->set_scale(0.75);
     }
