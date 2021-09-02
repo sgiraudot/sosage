@@ -2,7 +2,11 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v1.1.0 (modern-ui) - TBD
+## `v1.1.0 (modern-ui)` - TBD
+
+### Release Management
+
+- Integration of LZ4 library
 
 ### Interface and Menus
 
@@ -12,7 +16,11 @@ History of versions and modifications of the SOSAGE engine.
 - Support for gamepads and keyboard input
 - Reworked support for touchscreens
 
-## `v1.0.1 (xmas2020demo-bugfix1)` - TBD
+### Game Engine
+
+- SCAP program (Sosage Compressed Asset Packager)
+- Handle packaged data with compressed custom image formats
+- Precompute ground map borders
 
 ### Bug fixes
 

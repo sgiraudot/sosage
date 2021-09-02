@@ -27,6 +27,7 @@
 #ifndef SOSAGE_SYSTEM_HANDLE_H
 #define SOSAGE_SYSTEM_HANDLE_H
 
+#include <Sosage/Component/Locale.h>
 #include <Sosage/Component/Status.h>
 #include <Sosage/Content.h>
 
@@ -70,6 +71,19 @@ public:
   void emit (const std::string& signal) { m_content.emit (signal); }
   bool receive (const std::string& signal) { return m_content.receive(signal); }
   Component::Status_handle status() { return get<Component::Status>(GAME__STATUS); }
+
+  const std::string& locale (const std::string& line)
+  {
+    if (auto l = request<Component::Locale>("Game:locale"))
+      return l->get(line);
+    // else
+    return line;
+  }
+
+  const std::string& locale_get (const std::string& id)
+  {
+    return locale (get<Component::String>(id)->value());
+  }
 };
 
 using Handle = std::shared_ptr<Base>;

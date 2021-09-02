@@ -34,6 +34,7 @@
 #include <Sosage/Component/Hints.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Inventory.h>
+#include <Sosage/Component/Locale.h>
 #include <Sosage/Component/Music.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
@@ -46,6 +47,8 @@
 #include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/profiling.h>
+
+#include <locale>
 
 namespace Sosage::System
 {
@@ -124,6 +127,7 @@ void File_IO::clean_content()
 void File_IO::read_config()
 {
   // Default config values
+  std::string locale = "";
   bool fullscreen = !Config::emscripten;
   int input_mode = (Config::android ? TOUCHSCREEN : MOUSE);
   int gamepad_type = NO_LABEL;
@@ -149,6 +153,7 @@ void File_IO::read_config()
   {
     Core::File_IO input ("config.yaml", true);
     input.parse();
+    if (input.has("locale")) locale = input["locale"].string();
     if (input.has("fullscreen")) fullscreen = input["fullscreen"].boolean();
     if (input.has("input_mode")) input_mode = input["input_mode"].integer();
     if (input.has("gamepad_type")) gamepad_type = input["gamepad_type"].integer();
@@ -168,6 +173,7 @@ void File_IO::read_config()
   {
   }
 
+  set_fac<C::String>(GAME__CURRENT_LOCAL, "Game:current_locale", locale);
   set<C::Boolean>("Window:fullscreen", fullscreen);
   set_fac<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE, "Interface:input_mode", Input_mode(input_mode));
   set_fac<C::Simple<Gamepad_type>>(GAMEPAD__TYPE, "Gamepad:type", Gamepad_type(gamepad_type));
@@ -189,6 +195,7 @@ void File_IO::write_config()
 {
   Core::File_IO output ("config.yaml", true, true);
 
+  output.write ("locale", get<C::String>(GAME__CURRENT_LOCAL)->value());
   output.write ("fullscreen", get<C::Boolean>("Window:fullscreen")->value());
   output.write ("input_mode", get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value());
   output.write ("gamepad_type", get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE)->value());
@@ -496,7 +503,7 @@ void File_IO::read_init ()
     }
   }
 
-  set<C::String>("Inventory:label", input["default"]["inventory_button"].string());
+  set<C::String>("Inventory:label", input["default"]["inventory_button"]["label"].string());
 
   std::string player = input["player"].string();
   set<C::String>("Player:name", player);
@@ -522,6 +529,90 @@ void File_IO::read_init ()
     if (auto orig = request<C::String>("Game:init_new_room_origin"))
       set<C::Variable>("Game:new_room_origin", orig);
   }
+
+  read_locale();
+}
+
+void File_IO::read_locale()
+{
+  Core::File_IO input ("data/locale.yaml");
+  input.parse();
+
+  auto available = set<C::Vector<std::string>>("Game:available_locales");
+  std::vector<std::pair<std::string, C::Locale_handle>> map;
+
+  auto locales = set_fac<C::String_conditional>(GAME__LOCALE, "Game:locale",
+                                                get<C::String>(GAME__CURRENT_LOCAL));
+  std::string base;
+  for (std::size_t i = 0; i < input["locales"].size(); ++ i)
+  {
+    std::string id = input["locales"][i]["id"].string();
+    std::string description = input["locales"][i]["description"].string();
+    available->push_back (id);
+    if (i == 0)
+    {
+      base = id;
+      locales->add (id, C::Handle());
+    }
+    else
+    {
+      auto locale = C::make_handle<C::Locale>("Game:locale");
+      map.emplace_back (id, locale);
+      locales->add (id, locale);
+    }
+    set<C::String>(id + ":description", description);
+  }
+
+  Core::File_IO::Node lines = input["lines"];
+  for (std::size_t i = 0; i < lines.size(); ++ i)
+  {
+    Core::File_IO::Node l = lines[i];
+    std::string line = l[base].string();
+    for (const auto& m : map)
+    {
+      std::string translation = l[m.first].string();
+      m.second->add(line, translation);
+    }
+  }
+
+  if (get<C::String>(GAME__CURRENT_LOCAL)->value() == "")
+  {
+    std::string prefered = "";
+    std::string user_locale = std::locale("").name();
+    if (user_locale.size() > 5)
+      user_locale.resize(5);
+
+    for (const std::string& l : available->value())
+      if (user_locale == l)
+      {
+        debug("Locale exactly detected as " + l);
+        prefered = l;
+        break;
+      }
+    if (prefered == "")
+    {
+      std::string reduced_locale = user_locale;
+      if (reduced_locale.size() > 2)
+        reduced_locale.resize(2);
+      for (const std::string& l : available->value())
+      {
+        std::string reduced = l;
+        reduced.resize(2);
+        if (reduced_locale == reduced)
+        {
+          debug("Locale partly detected as " + l + " (instead of " + user_locale + ")");
+          prefered = l;
+          break;
+        }
+      }
+    }
+    if (prefered == "")
+    {
+      debug("No available locale detected, fallback to en_US");
+      prefered = "en_US";
+    }
+    get<C::String>(GAME__CURRENT_LOCAL)->set(prefered);
+  }
 }
 
 void File_IO::read_cutscene (const std::string& file_name)
@@ -541,7 +632,7 @@ void File_IO::read_cutscene (const std::string& file_name)
   std::string name = input["name"].string();
 
   auto dialog_font = get<C::Font> ("Dialog:font");
-  std::string color = "000000";
+  std::string default_color = "000000";
 
   std::unordered_map<std::string, const Core::File_IO::Node*> map_id2node;
 
@@ -560,7 +651,6 @@ void File_IO::read_cutscene (const std::string& file_name)
       continue;
     }
 
-    C::Image_handle img;
     if (node.has("loop")) // Animation
     {
       std::string skin = node["skin"].string("images", "cutscenes", "png");
@@ -592,22 +682,29 @@ void File_IO::read_cutscene (const std::string& file_name)
       }
       else
         anim->reset(true, duration);
-      img = anim;
+      anim->set_collision(UNCLICKABLE);
+      anim->on() = false;
     }
     else if (node.has("skin")) // Image
     {
       std::string skin = node["skin"].string("images", "cutscenes", "png");
-      img = set<C::Image>(id + ":image", skin);
+      load_locale_dependent_image
+          (id + ":image", skin,
+           [&](const std::string& skin) -> C::Image_handle
+      {
+        auto img = C::make_handle<C::Image>(id + ":image", skin);
+        img->set_collision(UNCLICKABLE);
+        img->on() = false;
+        return img;
+      });
     }
     else // Text
     {
       check (node.has("text"), "Node should either have music, image or text");
       std::string text = node["text"].string();
-      img = set<C::Image>(id + ":image", dialog_font, color, text);
-      img->set_scale(0.75);
+      std::string color = (node.has("color") ? node["color"].string() : default_color);
+      create_locale_dependent_text (id, dialog_font, color, text);
     }
-    img->set_collision(UNCLICKABLE);
-    img->on() = false;
     callback->value()();
   }
 
@@ -695,6 +792,75 @@ void File_IO::read_cutscene (const std::string& file_name)
 
   SOSAGE_TIMER_STOP(File_IO__read_cutscene);
 }
+
+void File_IO::create_locale_dependent_text (const std::string& id, Component::Font_handle font,
+                                            const std::string& color, const std::string& text)
+{
+  auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+  if (available.size() == 1)
+  {
+    auto img = set<C::Image>(id + ":image", font, color, text);
+    img->set_scale(0.75);
+    img->set_collision(UNCLICKABLE);
+    img->on() = false;
+    return;
+  }
+
+  auto cond_img = set<C::String_conditional>(id + ":image", get<C::String>(GAME__CURRENT_LOCAL));
+
+  // Save current locale to put it back after
+  std::string current = get<C::String>(GAME__CURRENT_LOCAL)->value();
+
+  for (const std::string& l : available)
+  {
+    get<C::String>(GAME__CURRENT_LOCAL)->set(l);
+    auto img = C::make_handle<C::Image>(id + ":image", font, color, locale(text));
+    img->set_scale(0.75);
+    img->set_collision(UNCLICKABLE);
+    img->on() = false;
+    cond_img->add(l, img);
+  }
+  get<C::String>(GAME__CURRENT_LOCAL)->set(current);
+}
+
+void File_IO::load_locale_dependent_image (const std::string& id, const std::string& filename,
+                                           const std::function<C::Image_handle(std::string)>& func)
+{
+  auto img = func (filename);
+
+  auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+  if (available.size() == 1)
+  {
+    set<C::Image>(id, img);
+    return;
+  }
+
+  auto cond_img = set<C::String_conditional>(id, get<C::String>(GAME__CURRENT_LOCAL));
+  cond_img->add(available[0], img);
+
+  bool has_locale = true;
+  for (std::size_t i = 1; i < available.size(); ++ i)
+  {
+    std::string locale_filename
+        = std::string (filename.begin(), filename.begin() + filename.size() - 3)
+          + available[i] + ".png";
+    if (!Asset_manager::exists (locale_filename))
+    {
+      has_locale = false;
+      break;
+    }
+
+    auto img = func (locale_filename);
+    cond_img->add(available[i], img);
+  }
+
+  if (!has_locale)
+  {
+    remove (id);
+    set<C::Image> (id, img);
+  }
+}
+
 
 
 } // namespace Sosage::System

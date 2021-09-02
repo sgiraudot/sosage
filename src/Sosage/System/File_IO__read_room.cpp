@@ -937,14 +937,19 @@ void File_IO::read_window (const Core::File_IO::Node& node)
 
   std::string skin = node["skin"].string("images", "windows", "png");
 
-  auto img = set<C::Image>(id + ":image", skin,
-                                             Config::interface_depth);
-  img->set_relative_origin(0.5, 0.5);
-  img->on() = false;
-
+  load_locale_dependent_image
+      (id + ":image", skin,
+       [&](const std::string& skin) -> C::Image_handle
+  {
+    auto img = C::make_handle<C::Image>(id + ":image", skin,
+                                        Config::interface_depth);
+    img->set_relative_origin(0.5, 0.5);
+    img->on() = false;
+    return img;
+  });
   set<C::Absolute_position>(id + ":position",
-                                     Point(Config::world_width / 2,
-                                           Config::world_height / 2));
+                            Point(Config::world_width / 2,
+                                  Config::world_height / 2));
 }
 
 } // namespace Sosage::System

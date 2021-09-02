@@ -288,7 +288,7 @@ void Interface::init()
   auto inventory_origin = set<C::Absolute_position>("Inventory:origin", Point(0, Config::world_height));
 
   auto inventory_label = set<C::Image>("Inventory_label:image", get<C::Font>("Interface:font"),
-                                       "FFFFFF", get<C::String>("Inventory:label")->value());
+                                       "FFFFFF", locale_get("Inventory:label"));
   inventory_label->set_collision(UNCLICKABLE);
   inventory_label->z() = Config::inventory_depth;
   inventory_label->set_scale(0.5);
@@ -606,7 +606,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
 
   if (id != "")
   {
-    update_label (false, id + "_" + action + "_label", label->value(), open_left, open_right,
+    update_label (false, id + "_" + action + "_label", locale(label->value()), open_left, open_right,
                   label_position, BOX);
 
     // UPPER and DOWNER configs might need to be moved to be on screen
@@ -678,7 +678,7 @@ void Interface:: update_inventory ()
         auto position = get<C::Position>(img->entity() + ":position");
 
         Point p = position->value() + Vector(0, -Config::inventory_height / 2 - 2 * Config::inventory_margin);
-        update_label(false, img->entity() + "_label", name->value(), false, false, p, UNCLICKABLE);
+        update_label(false, img->entity() + "_label", locale(name->value()), false, false, p, UNCLICKABLE);
       }
     }
     if (inventory->get(i) == m_source)
@@ -734,7 +734,7 @@ void Interface::update_dialog_choices()
       std::string entity = "Dialog_choice_" + std::to_string(c);
       auto img_off
         = set<C::Image>(entity + "_off:image", interface_font, "FFFFFF",
-                        choices[std::size_t(c)]);
+                        locale(choices[std::size_t(c)]));
       img_off->z() = Config::dialog_depth;
       img_off->set_scale(0.75);
       img_off->set_relative_origin(0., 1.);
@@ -742,7 +742,7 @@ void Interface::update_dialog_choices()
       auto img_on
         = set<C::Image>(entity + "_on:image", interface_font,
                         get<C::String>(player + ":color")->value(),
-                        choices[std::size_t(c)]);
+                        locale(choices[std::size_t(c)]));
       img_on->z() = Config::dialog_depth;
       img_on->set_scale(0.75);
       img_on->set_relative_origin(0., 1.);

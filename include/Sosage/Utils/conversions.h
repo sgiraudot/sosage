@@ -35,6 +35,14 @@
 namespace Sosage
 {
 
+inline bool is_int (const std::string& str)
+{
+  for (const char& c : str)
+    if (!std::isdigit(c))
+      return false;
+  return true;
+}
+
 inline int to_int (const std::string& str)
 {
   return std::atoi (str.c_str());

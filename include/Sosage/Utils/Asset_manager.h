@@ -242,6 +242,19 @@ public:
     return Asset (local_file_name(filename));
   }
 
+  static bool exists (const std::string& filename)
+  {
+    try
+    {
+      open (filename);
+    }
+    catch (No_such_file&)
+    {
+      return false;
+    }
+    return true;
+  }
+
   static std::tuple<int, int, int> image_info (const std::string& filename)
   {
     auto iter = package_asset_map.find(filename);

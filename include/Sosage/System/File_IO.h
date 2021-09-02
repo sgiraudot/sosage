@@ -27,6 +27,8 @@
 #ifndef SOSAGE_SYSTEM_FILE_IO_H
 #define SOSAGE_SYSTEM_FILE_IO_H
 
+#include <Sosage/Component/Font.h>
+#include <Sosage/Component/Image.h>
 #include <Sosage/Config/config.h>
 #include <Sosage/Content.h>
 #include <Sosage/Core/File_IO.h>
@@ -55,6 +57,7 @@ public:
   void write_config();
 
   void read_init ();
+  void read_locale ();
 
   void read_cutscene (const std::string& file_name);
 
@@ -62,6 +65,11 @@ public:
   void write_savefile();
 
 private:
+
+  void create_locale_dependent_text (const std::string& id, Component::Font_handle font,
+                                     const std::string& color, const std::string& text);
+  void load_locale_dependent_image (const std::string& id, const std::string& filename,
+                                    const std::function<Component::Image_handle(std::string)>& func);
 
   // Implemented in File_IO__read_room.cpp:
   void read_room (const std::string& file_name);
