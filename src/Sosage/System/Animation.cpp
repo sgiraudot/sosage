@@ -390,15 +390,15 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
 
   int angle = (int(180 * std::atan2 (direction.y(), direction.x()) / M_PI) + 360) % 360;
 
-  const int limit = 18;
+  const int limit = 33;
   if (angle < limit || angle >= (360 - limit))
-    row_index = 1;
+    row_index = 1; // right
   else if (angle < (180 - limit))
-    row_index = 0;
+    row_index = 0; // down
   else if (angle < (180 + limit))
-    row_index = 2;
+    row_index = 2; // left
   else
-    row_index = 3;
+    row_index = 3; // up
 
   image->frames().resize(8);
   for (std::size_t i = 0; i < 8; ++ i)
