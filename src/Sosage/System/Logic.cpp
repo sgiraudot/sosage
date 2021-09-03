@@ -133,10 +133,11 @@ void Logic::run ()
     else
     {
       auto position = get<C::Position>(id + "_body:position");
-      auto relative = C::make_handle<C::Relative_position>
-                      ("Target:position", position, 2. * Config::character_speed * direction->value());
-      // std::cerr << direction->value() << std::endl;
-      compute_path_from_direction(direction->value());
+
+      // Make direction "flatter" (45° becomes 30°, etc.)
+      Vector dir = direction->value();
+      dir = Vector (dir.x() * 1.22, dir.y() / 1.41);
+      compute_path_from_direction(dir);
     }
   }
 

@@ -231,7 +231,11 @@ void Input::run()
         if (key_on(DOWN_ARROW)) m_y += 1.;
         if (key_on(LEFT_ARROW)) m_x -= 1.;
         if (key_on(RIGHT_ARROW)) m_x += 1.;
-        get<C::Simple<Vector>>(STICK__DIRECTION)->set(Vector(m_x, m_y));
+        Vector vec (m_x, m_y);
+        if (vec.length() > 1.0)
+          vec.normalize();
+
+        get<C::Simple<Vector>>(STICK__DIRECTION)->set(vec);
       }
       else // Real gamepad (no keyboard)
       {
