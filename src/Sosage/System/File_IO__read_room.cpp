@@ -507,62 +507,68 @@ void File_IO::read_dialog (const std::string& id)
   auto dialog = set<C::Dialog>(id + ":dialog",
                                input.has("end") ? input["end"].string() : "");
 
-  // First, instantiate all vertices
-  std::vector<C::Dialog::GVertex> vec_vertices;
-  std::unordered_map<std::string, C::Dialog::GVertex> map_vertices;
+  // First, instantiate all vertices and regular edges
+  std::unordered_map<std::string, C::Dialog::GVertex> targets;
+  targets.insert (std::make_pair ("end", dialog->vertex_out()));
+
+  std::vector<std::tuple<int, std::string, bool, std::string>> go_to;
+  std::string target = "";
+
+  C::Dialog::GVertex latest_vertex = dialog->vertex_in();
   for (std::size_t i = 0; i < input["lines"].size(); ++ i)
   {
     const Core::File_IO::Node& l = input["lines"][i];
 
-    C::Dialog::GVertex vertex;
     if (l.has("choices"))
-      vertex = dialog->add_vertex ();
-    else
     {
-      std::string character = l["character"].string();
-      std::string line = l["line"].string();
-      vertex = dialog->add_vertex (character, line);
-    }
-
-    if (l.has("id"))
-      map_vertices.insert (std::make_pair (l["id"].string(), vertex));
-    vec_vertices.push_back (vertex);
-  }
-
-  // Then, edges
-  dialog->add_edge (dialog->vertex_in(), vec_vertices.front());
-  for (std::size_t i = 0; i < input["lines"].size(); ++ i)
-  {
-    const Core::File_IO::Node& l = input["lines"][i];
-
-    if (l.has("choices"))
+      C::Dialog::GVertex vertex = dialog->add_vertex ();
       for (std::size_t j = 0; j < l["choices"].size(); ++ j)
       {
         const Core::File_IO::Node& c = l["choices"][j];
         bool once = c["once"].boolean();
         std::string line = c["line"].string();
         const std::string& target = c["goto"].string();
-        if (target == "end")
-          dialog->add_edge (vec_vertices[i], dialog->vertex_out(), once, line);
-        else
-          dialog->add_edge (vec_vertices[i], map_vertices[target], once, line);
+        go_to.emplace_back (vertex, target, once, line);
       }
-    else
-    {
-      if (l.has("goto"))
+
+      if (latest_vertex != C::Dialog::GVertex())
+        dialog->add_edge (latest_vertex, vertex);
+      if (target != "")
       {
-        const std::string& target = l["goto"].string();
-        if (target == "end")
-          dialog->add_edge (vec_vertices[i], dialog->vertex_out());
-        else
-          dialog->add_edge (vec_vertices[i], map_vertices[target]);
+        targets.insert (std::make_pair (target, vertex));
+        target = "";
       }
-      else if (i != input["lines"].size() - 1)
-        dialog->add_edge (vec_vertices[i], vec_vertices[i+1]);
-      else
-        dialog->add_edge (vec_vertices[i], dialog->vertex_out());
+      latest_vertex = C::Dialog::GVertex();
+    }
+    else if (l.has("line"))
+    {
+      std::string character = l["line"][0].string();
+      std::string line = l["line"][1].string();
+      C::Dialog::GVertex vertex = dialog->add_vertex (character, line);
+      if (latest_vertex != C::Dialog::GVertex())
+        dialog->add_edge (latest_vertex, vertex);
+      if (target != "")
+      {
+        targets.insert (std::make_pair (target, vertex));
+        target = "";
+      }
+      latest_vertex = vertex;
+    }
+
+    if (l.has("target"))
+      target = l["target"].string();
+
+    if (l.has("goto"))
+    {
+      go_to.emplace_back (latest_vertex, l["goto"].string(), false, "");
+      latest_vertex = C::Dialog::GVertex();
     }
   }
+
+  // Then, add jump edges
+  for (const auto& g : go_to)
+    dialog->add_edge (std::get<0>(g), targets[std::get<1>(g)],
+        std::get<2>(g), std::get<3>(g));
 }
 
 void File_IO::read_integer (const Core::File_IO::Node& node)
