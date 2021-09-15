@@ -85,14 +85,6 @@ void File_IO::clean_content()
   {
     for (const std::string& entity : *inventory)
       force_keep.insert (entity);
-
-    const std::string& player = get<C::String>("Player:name")->value();
-    force_keep.insert (player);
-    force_keep.insert (player + "_body");
-    force_keep.insert (player + "_head");
-    force_keep.insert (player + "_mouth");
-    force_keep.insert (player + "_walking");
-    force_keep.insert (player + "_idle");
   }
   else
   {
@@ -504,9 +496,6 @@ void File_IO::read_init ()
   }
 
   set<C::String>("Inventory:label", input["default"]["inventory_button"]["label"].string());
-
-  std::string player = input["player"].string();
-  set<C::String>("Player:name", player);
 
   if (input.has("load_room"))
   {

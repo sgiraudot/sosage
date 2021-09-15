@@ -633,7 +633,8 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   if (id == "")
   {
     update_label (true, "Default_" + action + "_button", button, false, false, button_position, BOX);
-    get<C::Image>("Default_" + action + "_button:image")->on() = false;
+    if (auto img = request<C::Image>("Default_" + action + "_button:image"))
+      img->on() = false;
     get<C::Image>("Default_" + action + "_button_left_circle:image")->set_alpha(128);
     get<C::Image>("Default_" + action + "_button_right_circle:image")->set_alpha(128);
   }

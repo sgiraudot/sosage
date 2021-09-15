@@ -48,6 +48,7 @@ constexpr int inventory_margin = 20;
 constexpr int object_reach_x = 150;
 constexpr int object_reach_y = 65;
 constexpr int object_reach_hysteresis = 20;
+constexpr int follow_factor = 1500;
 
 constexpr int label_height = 50;
 constexpr int label_margin = 20;

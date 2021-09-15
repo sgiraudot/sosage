@@ -319,7 +319,8 @@ void File_IO::read_room (const std::string& file_name)
   {
     auto origin_coord = get<C::Position>(origin + ":position");
     auto origin_looking = get<C::Boolean>(origin + ":looking_right");
-    const std::string& player = get<C::String>("Player:name")->value();
+    const std::string& player = get<C::String>(origin + ":player")->value();
+    set<C::String>("Player:name", player);
     get<C::Position>(player + "_body:position")->set(origin_coord->value());
     set<C::Boolean>("Game:in_new_room", origin_looking->value());
     // Reset camera
@@ -858,10 +859,12 @@ void File_IO::read_origin(const Core::File_IO::Node& node)
   std::string id = node["id"].string();
   m_latest_room_entities.insert(id);
 
+  std::string player = node["player"].string();
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
   bool looking_right = node["looking_right"].boolean();
 
+  set<C::String>(id + ":player", player);
   set<C::Absolute_position>(id + ":position", Point(x, y));
   set<C::Boolean>(id + ":looking_right", looking_right);
 

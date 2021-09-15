@@ -199,6 +199,9 @@ void Logic::run ()
     m_next_step = 0;
   }
 
+  if (auto follower = request<C::String>("Follower:name"))
+    follow (follower->value());
+
   if (auto new_room_origin = request<C::String>("Game:new_room_origin"))
   {
     m_current_action = get<C::Action>(new_room_origin->value() + ":action");
@@ -408,6 +411,39 @@ bool Logic::compute_path_from_direction (const Vector& direction)
   if ((*p)[0] == origin)
     p->current() ++;
   return true;
+}
+
+void Logic::follow (const std::string& follower)
+{
+  const std::string& player = get<C::String>("Player:name")->value();
+
+  auto pos_player = get<C::Position>(player + "_idle:position");
+  auto pos_follower = get<C::Position>(follower + "_idle:position");
+
+  double dx = std::abs(pos_player->value().x() - pos_follower->value().x());
+  double dy = std::abs(pos_player->value().y() - pos_follower->value().y());
+
+  bool is_moving = get<C::Image>(follower + "_walking:image")->on();
+
+  double z = get<C::Image>(player + "_walking:image")->z();
+
+  int reach_x = Config::object_reach_x * z / Config::follow_factor;
+  int reach_y = Config::object_reach_y * z / Config::follow_factor;
+  int reach_hysteresis = 0;
+  if (!is_moving)
+    reach_hysteresis = Config::object_reach_hysteresis * z / Config::follow_factor;
+
+  std::cerr << reach_x << " " << reach_y << " " << reach_hysteresis << std::endl;
+
+  // Object out of reach
+  if (dx > reach_x + reach_hysteresis ||
+      dy > reach_y + reach_hysteresis)
+    compute_path_from_target (pos_player, follower);
+  else
+  {
+    remove(follower + ":path", true);
+    emit(follower + ":stop_walking");
+  }
 }
 
 void Logic::update_camera()
@@ -727,6 +763,15 @@ bool Logic::function_set (const std::vector<std::string>& args)
     get<C::Position>(target + ":position")->set (Point(x, y));
     get<C::Image>(target + ":image")->z() = z;
   }
+  else if (option == "follower")
+  {
+    if (target == "")
+      remove ("Follower:name");
+    else
+      set<C::String>("Follower:name", target);
+  }
+  else if (option == "player")
+    set<C::String>("Player:name", target);
   else if (option == "state")
   {
     auto current_state = get<C::String>(target + ":state");
