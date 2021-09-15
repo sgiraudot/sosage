@@ -124,6 +124,8 @@ if (SOSAGE_ANDROID)
   
   file(COPY "${CMAKE_SOURCE_DIR}/platform/android/" DESTINATION "${CMAKE_BINARY_DIR}/android/")
   
+  file(COPY "${SOSAGE_DATA_FOLDER}/data/" DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/assets/data/")
+  
   file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon.png"
     DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxxhdpi/")
   file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon144x144.png"
@@ -150,8 +152,12 @@ if (SOSAGE_ANDROID)
     "${CMAKE_BINARY_DIR}/android/app/build.gradle")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_Android.mk.in"
     "${CMAKE_BINARY_DIR}/android/app/jni/Android.mk")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_LZ4_Android.mk.in"
+    "${CMAKE_BINARY_DIR}/android/app/jni/LZ4/Android.mk")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_src_Android.mk.in"
     "${CMAKE_BINARY_DIR}/android/app/jni/src/Android.mk")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_yaml_Android.mk.in"
+    "${CMAKE_BINARY_DIR}/android/app/jni/yaml/Android.mk")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_AndroidManifest.xml.in"
     "${CMAKE_BINARY_DIR}/android/app/src/main/AndroidManifest.xml")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_java_net_main.java.in"

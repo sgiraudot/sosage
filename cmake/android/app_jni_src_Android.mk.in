@@ -1,5 +1,3 @@
-LOCAL_PATH := $(call my-dir)
-
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := main
@@ -12,7 +10,7 @@ YAML_PATH := ${YAML_SOURCE_PATH}
 LZ4_PATH := ${LZ4_SOURCE_PATH}
 SRC_PATH := ${CMAKE_SOURCE_DIR}
 
-LOCAL_CPPFLAGS := -DSOSAGE_DATA_FOLDER=\"${SOSAGE_DATA_FOLDER}/data/\" -std=c++17 \
+LOCAL_CPPFLAGS := -DSOSAGE_DATA_FOLDER=\"data/\" -std=c++17 \
   -frtti \
   -DSOSAGE_LINKED_WITH_SDL_MIXER \
   -DSOSAGE_VERSION_MAJOR=1 \
@@ -22,18 +20,18 @@ LOCAL_CPPFLAGS := -DSOSAGE_DATA_FOLDER=\"${SOSAGE_DATA_FOLDER}/data/\" -std=c++1
 	-O3 -DNDEBUG
 
 LOCAL_C_INCLUDES := \
-  $(LOCAL_PATH)/$(SRC_PATH)/include \
-  $(LOCAL_PATH)/$(SDL_PATH)/include \
-  $(LOCAL_PATH)/$(SDL_IMAGE_PATH)/include \
-  $(LOCAL_PATH)/$(SDL_MIXER_PATH)/include \
-  $(LOCAL_PATH)/$(SDL_TTF_PATH)/include \
-  $(LOCAL_PATH)/$(YAML_PATH)/include \
-  $(LOCAL_PATH)/$(LZ4)/lz4/lib \
+  $(SRC_PATH)/include \
+  $(SDL_PATH)/include \
+  $(SDL_IMAGE_PATH)/include \
+  $(SDL_MIXER_PATH)/include \
+  $(SDL_TTF_PATH)/include \
+  $(YAML_PATH)/include \
+  $(LZ4_PATH)/lib \
 
 LOCAL_SRC_FILES := \
-  $(wildcard $(LOCAL_PATH)/$(SRC_PATH)/src/*.cpp) \
-  $(wildcard $(LOCAL_PATH)/$(SRC_PATH)/src/*/*.cpp) \
-  $(wildcard $(LOCAL_PATH)/$(SRC_PATH)/src/*/*/*.cpp)
+  $(wildcard $(SRC_PATH)/src/*.cpp) \
+  $(wildcard $(SRC_PATH)/src/*/*.cpp) \
+  $(wildcard $(SRC_PATH)/src/*/*/*.cpp)
 
 LOCAL_SHARED_LIBRARIES := SDL2 SDL2_image SDL2_mixer SDL2_ttf yaml lz4
 

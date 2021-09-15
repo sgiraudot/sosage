@@ -4,9 +4,9 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := yaml
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/libyaml/include $(LOCAL_PATH)/libyaml/src
+LOCAL_C_INCLUDES := ${YAML_SOURCE_PATH}/include ${YAML_SOURCE_PATH}/src
 
-LOCAL_SRC_FILES := $(wildcard $(LOCAL_PATH)/libyaml/src/*.c)
+LOCAL_SRC_FILES := $(wildcard ${YAML_SOURCE_PATH}/src/*.c)
 
 LOCAL_EXPORT_C_INCLUDES += $(LOCAL_C_INCLUDES)
 
