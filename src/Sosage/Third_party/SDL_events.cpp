@@ -103,11 +103,12 @@ Gamepad_type SDL_events::gamepad_type() const
         if (name_str)
         {
           std::string name = name_str;
+//          std::cerr << "CONTROLLER NAME = " << name << std::endl;
           if (name.find("Nintendo") != std::string::npos)
             return JAPAN;
           if (name.find("Steam") != std::string::npos)
             return USA;
-          if (name.find("Xbox") != std::string::npos)
+          if (name.find("X-Box") != std::string::npos)
             return USA;
         }
         break;
@@ -217,4 +218,3 @@ Event SDL_events::gamepad_event (const Event_type& type, const SDL_Event& ev) co
 }
 
 } // namespace Sosage::Third_party
-
