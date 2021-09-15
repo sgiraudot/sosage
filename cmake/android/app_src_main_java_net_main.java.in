@@ -1,0 +1,9 @@
+package ${SOSAGE_EDITOR_EXT}.${SOSAGE_EDITOR_PATH}.${SOSAGE_ACTIVITY};
+    
+import org.libsdl.app.SDLActivity; 
+    
+/**
+ * A sample wrapper class that just calls SDLActivity 
+ */ 
+    
+public class ${SOSAGE_ACTIVITY} extends SDLActivity { }

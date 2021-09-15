@@ -19,6 +19,7 @@ sosage_option(SOSAGE_CFG_USE_SDL_TIME "Use SDL clock instead of STL clock" OFF)
 sosage_option(SOSAGE_CFG_ASSERTIONS_AS_EXCEPTIONS "Assertions treated as exceptions instead of triggering exit()" ON)
 sosage_option(SOSAGE_COMPILE_TESTS "Compile test executables" OFF)
 sosage_option(SOSAGE_COMPILE_SCAP "Compile Sosage Compressed Data Packager" OFF)
+sosage_option(SOSAGE_ANDROID "Compile Sosage for Android" OFF)
 
 ## Check all dependencies
 
@@ -111,6 +112,52 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
   set(CPACK_GENERATOR "NSIS")
 elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 
+endif()
+
+if (SOSAGE_ANDROID)
+  set(SDL_SOURCE_PATH "" CACHE PATH "Source of the SDL library")
+  set(SDL_IMAGE_SOURCE_PATH "" CACHE PATH "Source of the SDL Image library")
+  set(SDL_MIXER_SOURCE_PATH "" CACHE PATH "Source of the SDL Mixer library")
+  set(SDL_TTF_SOURCE_PATH "" CACHE PATH "Source of the SDL TTF library")
+  set(YAML_SOURCE_PATH "" CACHE PATH "Source of the YAML library")
+  set(LZ4_SOURCE_PATH "" CACHE PATH "Source of the LZ4 library")
+  
+  file(COPY "${CMAKE_SOURCE_DIR}/platform/android/" DESTINATION "${CMAKE_BINARY_DIR}/android/")
+  
+  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon.png"
+    DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxxhdpi/")
+  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon144x144.png"
+    DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxhdpi/")
+  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon96x96.png"
+    DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xhdpi/")
+  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon72x72.png"
+    DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-hdpi/")
+  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon48x48.png"
+    DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-mdpi/")
+  
+  file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxxhdpi/icon.png"
+    "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png")
+  file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxhdpi/icon144x144.png"
+    "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png")
+  file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xhdpi/icon96x96.png"
+    "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png")
+  file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-hdpi/icon72x72.png"
+    "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-hdpi/ic_launcher.png")
+  file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-mdpi//icon48x48.png"
+    "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-mdpi/ic_launcher.png")
+  
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_build.gradle.in"
+    "${CMAKE_BINARY_DIR}/android/app/build.gradle")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_Android.mk.in"
+    "${CMAKE_BINARY_DIR}/android/app/jni/Android.mk")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_src_Android.mk.in"
+    "${CMAKE_BINARY_DIR}/android/app/jni/src/Android.mk")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_AndroidManifest.xml.in"
+    "${CMAKE_BINARY_DIR}/android/app/src/main/AndroidManifest.xml")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_java_net_main.java.in"
+    "${CMAKE_BINARY_DIR}/android/app/src/main/java/${SOSAGE_EDITOR_EXT}/${SOSAGE_EDITOR_PATH}/${SOSAGE_ACTIVITY}/${SOSAGE_ACTIVITY}.java")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_res_values_strings.xml.in"
+    "${CMAKE_BINARY_DIR}/android/app/src/main/res/values/strings.xml")
 endif()
 
 include(CPack)

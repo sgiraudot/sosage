@@ -3,12 +3,9 @@
 ## Compilation
 
 1. Télécharger et installer SDK+NDK Android
-2. `$ cd android`
-3. `$ ln -s [sdl_source_path] app/jni/SDL`
-4. `$ ln -s [sdl_image_source_path] app/jni/SDL_image`
-5. `$ ln -s [sdl_mixer_source_path] app/jni/SDL_mixer`
-6. `$ ln -s [sdl_ttf_source_path] app/jni/SDL_ttf`
-7. `$ ln -s [libyaml_source_path] app/jni/yaml/libyaml`
-7. `$ ln -s [liblz4_source_path] app/jni/LZ4/lz4`
-8. `$ ln -s [where_the_data_is]/data app/src/main/assets/data`
-9. `$ ./gradlew assemble`
+2. `mkdir build && cd build`
+3. `$ cmake .. -DCMAKE_BUILD_TYPE=Release -DSOSAGE_ANDROID:BOOL=ON`
+4. Renseigner toutes variables cmake `*_SOURCE` (sources de SDL, Yaml
+   et LZ4)
+5. `cd android`
+6. `./gradlew assembleDeub`
