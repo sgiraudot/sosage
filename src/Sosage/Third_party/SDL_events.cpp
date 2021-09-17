@@ -79,12 +79,12 @@ Event SDL_events::next_event ()
     return Event();
 
   Event_type type = iter->second;
-  if (type == MOUSE_DOWN || type == MOUSE_MOVE || type == MOUSE_UP)
-    return mouse_event(type, ev);
   if (type == KEY_DOWN || type == KEY_UP)
     return keyboard_event(type, ev);
   if (type == TOUCH_DOWN || type == TOUCH_MOVE || type == TOUCH_UP)
     return touch_event(type, ev);
+  if (type == MOUSE_DOWN || type == MOUSE_MOVE || type == MOUSE_UP)
+    return mouse_event(type, ev);
   if (type == BUTTON_DOWN || type == BUTTON_UP || type == STICK_MOVE)
     return gamepad_event(type, ev);
 

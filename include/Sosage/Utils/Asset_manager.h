@@ -228,7 +228,8 @@ public:
     if (packaged() && !file_is_package)
     {
       auto iter = package_asset_map.find(filename);
-      check (iter != package_asset_map.end(), "Packaged asset " + filename + " not found");
+      if (iter == package_asset_map.end())
+        throw No_such_file();
       Packaged_asset& asset = iter->second;
       if (asset.compressed_size == 0) // uncompressed file
         return Asset (buffers[asset.buffer_id].data() + asset.position, asset.size);

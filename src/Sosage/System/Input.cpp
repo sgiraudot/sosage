@@ -199,7 +199,13 @@ void Input::run()
       }
       else // Real touchscreen
       {
-
+        if (ev == Event(TOUCH_DOWN, LEFT))
+        {
+          get<C::Position>
+            (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
+          emit ("Cursor:clicked");
+          set<C::Boolean>("Click:left", true);
+        }
       }
     }
     else // if (mode->value() == GAMEPAD)

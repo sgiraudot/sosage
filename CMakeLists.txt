@@ -19,7 +19,7 @@ sosage_option(SOSAGE_CFG_USE_SDL_TIME "Use SDL clock instead of STL clock" OFF)
 sosage_option(SOSAGE_CFG_ASSERTIONS_AS_EXCEPTIONS "Assertions treated as exceptions instead of triggering exit()" ON)
 sosage_option(SOSAGE_COMPILE_TESTS "Compile test executables" OFF)
 sosage_option(SOSAGE_COMPILE_SCAP "Compile Sosage Compressed Data Packager" OFF)
-sosage_option(SOSAGE_ANDROID "Compile Sosage for Android" OFF)
+sosage_option(SOSAGE_CONFIG_ANDROID "Configure Sosage for Android" OFF)
 
 ## Check all dependencies
 
@@ -99,14 +99,26 @@ target_link_libraries(${SOSAGE_EXE_NAME} PUBLIC sosage)
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
   target_compile_options(${SOSAGE_EXE_NAME} PUBLIC -DSOSAGE_INSTALL_DATA_FOLDER="../share/${SOSAGE_EXE_NAME}/")
   install(TARGETS ${SOSAGE_EXE_NAME} DESTINATION bin)
-  install(DIRECTORY ${SOSAGE_DATA_FOLDER}/data/ DESTINATION share/${SOSAGE_EXE_NAME})
+
+  if (EXISTS ${SOSAGE_DATA_FOLDER}/data/general.data)
+    file(GLOB_RECURSE SOSAGE_COMPRESSED_DATA "${SOSAGE_DATA_FOLDER}/data/*.data")
+    install(FILES ${SOSAGE_COMPRESSED_DATA} DESTINATION share/${SOSAGE_EXE_NAME})
+  else()
+    install(DIRECTORY ${SOSAGE_DATA_FOLDER}/data/ DESTINATION share/${SOSAGE_EXE_NAME})
+  endif()
   install(FILES ${SOSAGE_DATA_FOLDER}/resources/icon.svg DESTINATION share/icons/hicolor/scalable/apps/ RENAME ${SOSAGE_EXE_NAME}.svg)
   install(FILES ${SOSAGE_DATA_FOLDER}/resources/${SOSAGE_EXE_NAME}.desktop DESTINATION share/applications/)
   set(CPACK_GENERATOR "DEB;RPM")
+
 elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
   target_compile_options(${SOSAGE_EXE_NAME} PUBLIC -DSOSAGE_INSTALL_DATA_FOLDER="data/")
   install(TARGETS ${SOSAGE_EXE_NAME} DESTINATION ".")
-  install(DIRECTORY ${SOSAGE_DATA_FOLDER}/data/ DESTINATION "./data")
+  if (EXISTS ${SOSAGE_DATA_FOLDER}/data/general.data)
+    file(GLOB_RECURSE SOSAGE_COMPRESSED_DATA "${SOSAGE_DATA_FOLDER}/data/*.data")
+    install(FILES ${SOSAGE_COMPRESSED_DATA} DESTINATION share/${SOSAGE_EXE_NAME})
+  else()
+    install(DIRECTORY ${SOSAGE_DATA_FOLDER}/data/ DESTINATION "./data")
+  endif()
   install(FILES ${SOSAGE_SYSTEM_DLLS} DESTINATION ".")
   install(FILES ${SOSAGE_LOCAL_DLLS} DESTINATION ".")
   set(CPACK_GENERATOR "NSIS")
@@ -114,17 +126,22 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 
 endif()
 
-if (SOSAGE_ANDROID)
-  set(SDL_SOURCE_PATH "" CACHE PATH "Source of the SDL library")
-  set(SDL_IMAGE_SOURCE_PATH "" CACHE PATH "Source of the SDL Image library")
-  set(SDL_MIXER_SOURCE_PATH "" CACHE PATH "Source of the SDL Mixer library")
-  set(SDL_TTF_SOURCE_PATH "" CACHE PATH "Source of the SDL TTF library")
+if (SOSAGE_CONFIG_ANDROID)
+  set(SDL2_SOURCE_PATH "" CACHE PATH "Source of the SDL library")
+  set(SDL2_IMAGE_SOURCE_PATH "" CACHE PATH "Source of the SDL Image library")
+  set(SDL2_MIXER_SOURCE_PATH "" CACHE PATH "Source of the SDL Mixer library")
+  set(SDL2_TTF_SOURCE_PATH "" CACHE PATH "Source of the SDL TTF library")
   set(YAML_SOURCE_PATH "" CACHE PATH "Source of the YAML library")
   set(LZ4_SOURCE_PATH "" CACHE PATH "Source of the LZ4 library")
   
   file(COPY "${CMAKE_SOURCE_DIR}/platform/android/" DESTINATION "${CMAKE_BINARY_DIR}/android/")
   
-  file(COPY "${SOSAGE_DATA_FOLDER}/data/" DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/assets/data/")
+  if (EXISTS ${SOSAGE_DATA_FOLDER}/data/general.data)
+    file(GLOB_RECURSE SOSAGE_COMPRESSED_DATA "${SOSAGE_DATA_FOLDER}/data/*.data")
+    file(COPY ${SOSAGE_COMPRESSED_DATA} DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/assets/data/")
+  else()
+    file(COPY "${SOSAGE_DATA_FOLDER}/data/" DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/assets/data/")
+  endif()
   
   file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon.png"
     DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxxhdpi/")
@@ -162,8 +179,13 @@ if (SOSAGE_ANDROID)
     "${CMAKE_BINARY_DIR}/android/app/src/main/AndroidManifest.xml")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_java_net_main.java.in"
     "${CMAKE_BINARY_DIR}/android/app/src/main/java/${SOSAGE_EDITOR_EXT}/${SOSAGE_EDITOR_PATH}/${SOSAGE_ACTIVITY}/${SOSAGE_ACTIVITY}.java")
+  
+  set(SOSAGE_LOCALE_NAME ${SOSAGE_NAME})
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_res_values_strings.xml.in"
     "${CMAKE_BINARY_DIR}/android/app/src/main/res/values/strings.xml")
+  set(SOSAGE_LOCALE_NAME ${SOSAGE_NAME_FR})
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_res_values_strings.xml.in"
+    "${CMAKE_BINARY_DIR}/android/app/src/main/res/values-fr/strings.xml")
 endif()
 
 include(CPack)

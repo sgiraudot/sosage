@@ -324,17 +324,20 @@ bool Interface::detect_proximity()
     // If active object is not in reach anymore, find closest to activate
     else if (m_active_object != "" && close_objects.find(m_active_object) == close_objects.end())
     {
-      std::string chosen = "";
-      double dx_min = std::numeric_limits<double>::max();
-      auto active_pos = get<C::Position>(m_active_object + ":label");
-      for (const std::string& id : close_objects)
+      std::string chosen = close_objects.empty() ? "" : *close_objects.begin();
+      auto active_pos = request<C::Position>(m_active_object + ":label");
+      if (active_pos)
       {
-        auto pos = get<C::Position>(id + ":position");
-        double dx = std::abs (active_pos->value().x() - pos->value().x());
-        if (dx < dx_min)
+        double dx_min = std::numeric_limits<double>::max();
+        for (const std::string& id : close_objects)
         {
-          chosen = id;
-          dx_min = dx;
+          auto pos = get<C::Position>(id + ":position");
+          double dx = std::abs (active_pos->value().x() - pos->value().x());
+          if (dx < dx_min)
+          {
+            chosen = id;
+            dx_min = dx;
+          }
         }
       }
       m_active_object = chosen;

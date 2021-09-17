@@ -37,9 +37,9 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY ${SOSAGE_EXE_NAME})
 set(CPACK_NSIS_URL_INFO_ABOUT ${SOSAGE_URL})
 set(CPACK_NSIS_MUI_ICON "${SOSAGE_DATA_FOLDER}/resources/icon.ico")
 set(CPACK_NSIS_CONTACT ${SOSAGE_AUTHOR})
-set(CPACK_NSIS_WELCOME_TITLE "Bienvenue dans l'installateur de ${SOSAGE_NAME}")
-set(CPACK_NSIS_FINISH_TITLE "L'installation de ${SOSAGE_NAME} est maintenant terminée")
-set(CPACK_NSIS_UNINSTALL_NAME "desinstaller-${SOSAGE_EXE_NAME}")
+set(CPACK_NSIS_WELCOME_TITLE "Welcome to the installer of ${SOSAGE_NAME}")
+set(CPACK_NSIS_FINISH_TITLE "The installation ${SOSAGE_NAME} is now finised")
+set(CPACK_NSIS_UNINSTALL_NAME "uninstall-${SOSAGE_EXE_NAME}")
 set(CPACK_NSIS_CREATE_ICONS_EXTRA
     "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\${SOSAGE_NAME}.lnk' '$INSTDIR\\\\${SOSAGE_EXE_NAME}.exe'"
 )

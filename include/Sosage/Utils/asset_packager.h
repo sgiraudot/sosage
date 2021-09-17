@@ -33,6 +33,7 @@
 #include <Sosage/Third_party/SDL.h>
 
 #include <filesystem>
+#include <fstream>
 
 namespace Sosage
 {
