@@ -524,25 +524,26 @@ void Interface::update_active_objects()
 
   bool touchmode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == TOUCHSCREEN;
 
+  double xcamera = get<C::Double>(CAMERA__POSITION)->value();
+
   for (const std::string& id : m_close_objects)
   {
     bool is_active = touchmode || (m_active_object == id);
     auto name = get<C::String>(id + ":name");
     get<C::Image>(id + ":image")->set_highlight(is_active ? 192 : 64);
 
-    auto pos = get<C::Position>(id + ":label");
+    auto pos = get<C::Position>(id + ":label")->value() + Vector(-xcamera, 0);
 
     double scale = (is_active ? 1.0 : 0.75);
     if (auto right = request<C::Boolean>(id + "_goto:right"))
     {
       bool r = right->value();
-      update_label(false, id + "_label", locale(name->value()), !r, r, pos->value(),
+      update_label(false, id + "_label", locale(name->value()), !r, r, pos,
                    touchmode ? BOX : UNCLICKABLE, scale, true);
     }
     else
-      update_label(false, id + "_label", locale(name->value()), false, false, pos->value(),
+      update_label(false, id + "_label", locale(name->value()), false, false, pos,
                    touchmode ? BOX : UNCLICKABLE, scale);
-    get<C::Absolute_position>(id + "_label:global_position")->absolute() = false;
   }
 
 }
