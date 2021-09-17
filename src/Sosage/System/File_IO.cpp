@@ -222,7 +222,7 @@ void File_IO::read_savefile()
     inventory->add(input["inventory"][i].string());
 
   double camera_target = input["camera"].floating();
-  get<C::Double>(CAMERA__POSITION)->set (camera_target);
+  get<C::Absolute_position>(CAMERA__POSITION)->set (Point(camera_target, 0));
   set<C::Double>("Camera:target")->set (camera_target);
   auto action = set<C::Action>("Saved_game:action");
   action->add ("play", { "music", input["music"].string() });
@@ -272,7 +272,7 @@ void File_IO::write_savefile()
   Core::File_IO output ("save.yaml", true, true);
 
   output.write("room", get<C::String>("Game:current_room")->value());
-  output.write("camera", get<C::Double>(CAMERA__POSITION)->value());
+  output.write("camera", get<C::Absolute_position>(CAMERA__POSITION)->value().x());
   output.write("inventory", get<C::Inventory>("Game:inventory")->data());
   output.write("music", get<C::Music>("Game:music")->entity());
 

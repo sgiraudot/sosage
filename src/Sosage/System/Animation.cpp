@@ -627,7 +627,7 @@ void Animation::update_camera_target ()
 {
   const std::string& id = get<C::String>("Player:name")->value();
   int xbody = get<C::Position>(id + "_body:position")->value().X();
-  double xcamera = get<C::Double>(CAMERA__POSITION)->value();
+  double xcamera = get<C::Absolute_position>(CAMERA__POSITION)->value().x();
 
   if (xbody < xcamera + Config::camera_limit_left)
     get<C::Double>("Camera:target")->set (std::max (0, xbody - Config::camera_limit_right));

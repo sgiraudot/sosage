@@ -524,7 +524,7 @@ void Interface::update_active_objects()
 
   bool touchmode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == TOUCHSCREEN;
 
-  double xcamera = get<C::Double>(CAMERA__POSITION)->value();
+  double xcamera = get<C::Absolute_position>(CAMERA__POSITION)->value().x();
 
   for (const std::string& id : m_close_objects)
   {

@@ -327,7 +327,7 @@ void Interface::detect_collision (C::Position_handle cursor)
 
   auto previous_collision = m_collision;
   m_collision = C::Image_handle();
-  double xcamera = get<C::Double>(CAMERA__POSITION)->value();
+  double xcamera = get<C::Absolute_position>(CAMERA__POSITION)->value().x();
 
   const std::string& player = get<C::String>("Player:name")->value();
 

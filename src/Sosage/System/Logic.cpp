@@ -373,10 +373,7 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   //debug("Target = ", t);
 
   if (target->component() != "view")
-  {
-    //debug ("Camera position = ", get<C::Double>(CAMERA__POSITION)->value());
-    t = t + Vector (get<C::Double>(CAMERA__POSITION)->value(), 0);
-  }
+    t = t + get<C::Absolute_position>(CAMERA__POSITION)->value();
 
   //debug("Computing path from ", origin, " to ", t);
   std::vector<Point> path;
@@ -461,16 +458,17 @@ void Logic::update_camera()
 
     double shift = std::sin ((m_current_time - begin) / period);
 
-    get<C::Double>(CAMERA__POSITION)->set (x_start + shift * current_intensity);
+    get<C::Absolute_position>(CAMERA__POSITION)->set
+        (Point(x_start + shift * current_intensity, 0));
   }
   else
   {
-    auto position = get<C::Double>(CAMERA__POSITION);
+    auto position = get<C::Absolute_position>(CAMERA__POSITION);
     auto target = get<C::Double>("Camera:target");
 
-    double dir = target->value() - position->value();
+    double dir = target->value() - position->value().x();
     dir *= Config::camera_speed;
-    position->set (position->value() + dir);
+    position->set (position->value() + Vector(dir,0));
   }
 }
 

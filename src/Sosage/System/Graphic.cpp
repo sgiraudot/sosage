@@ -109,7 +109,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
                return (a->z() < b->z());
              });
 
-  double xcamera = get<C::Double>(CAMERA__POSITION)->value();
+  double xcamera = get<C::Absolute_position>(CAMERA__POSITION)->value().x();
 
   for (const auto& img : images)
   {
