@@ -524,15 +524,16 @@ void Interface::update_active_objects()
 
   bool touchmode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == TOUCHSCREEN;
 
-  double xcamera = get<C::Absolute_position>(CAMERA__POSITION)->value().x();
-
   for (const std::string& id : m_close_objects)
   {
     bool is_active = touchmode || (m_active_object == id);
     auto name = get<C::String>(id + ":name");
     get<C::Image>(id + ":image")->set_highlight(is_active ? 192 : 64);
 
-    auto pos = get<C::Position>(id + ":label")->value() + Vector(-xcamera, 0);
+    auto pos = set<C::Relative_position>
+               (id + "_label:global_position",
+                get<C::Position>(CAMERA__POSITION),
+                get<C::Position>(id + ":label")->value(), -1.);
 
     double scale = (is_active ? 1.0 : 0.75);
     if (auto right = request<C::Boolean>(id + "_goto:right"))
@@ -640,9 +641,11 @@ void Interface::update_switcher()
     bool keyboard = (get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE)->value() == KEYBOARD);
 
     if (keyboard)
-      update_label (true, "Switcher_left", "Tab", false, false, Point(0,0), UNCLICKABLE);
+      update_label (true, "Switcher_left", "Tab", false, false,
+                    set<C::Absolute_position>("Switcher_left:global_position", Point(0,0)), UNCLICKABLE);
     else
-      update_label (true, "Switcher_left", "L", false, false, Point(0,0), UNCLICKABLE);
+      update_label (true, "Switcher_left", "L", false, false,
+                    set<C::Absolute_position>("Switcher_left:global_position", Point(0,0)), UNCLICKABLE);
     m_labels.pop_back();
 
     auto left_pos = get<C::Absolute_position>("Switcher_left:global_position");
@@ -651,7 +654,7 @@ void Interface::update_switcher()
 
 
     update_label (false, "Switcher_label", locale_get("Switch_target:text"),
-                  true, !keyboard, Point(0,0), UNCLICKABLE);
+                  true, !keyboard, set<C::Absolute_position>("Switch_label:global_position",Point (0,0)), UNCLICKABLE);
     m_labels.pop_back();
 
     // Correct position of half-open label in keyboard mode (a bit hacky but meh…)
@@ -668,7 +671,8 @@ void Interface::update_switcher()
 
     if (!keyboard)
     {
-      update_label (true, "Switcher_right", "R", false, false, Point(0,0), UNCLICKABLE);
+      update_label (true, "Switcher_right", "R", false, false,
+                    set<C::Absolute_position>("Switch_right:global_position", Point(0,0)), UNCLICKABLE);
       m_labels.pop_back();
       auto right_pos = get<C::Absolute_position>("Switcher_right:global_position");
       right_pos->set (Point (pos->value().x() + img->width() / 2, left_pos->value().y()));

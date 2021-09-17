@@ -499,10 +499,10 @@ void Interface::detect_collision (C::Position_handle cursor)
               get<C::String>("Cursor:state")->set("object");
           }
 
-          update_label(false, id + "_label", locale(name->value()), true, false, cursor->value(), UNCLICKABLE);
+          update_label(false, id + "_label", locale(name->value()), true, false, cursor, UNCLICKABLE);
           if (force_right || get<C::Position>(id + "_label_right_circle:position")->value().x() >
               Config::world_width - Config::label_height)
-              update_label(false, id + "_label", locale(name->value()), false, true, cursor->value(), UNCLICKABLE);
+              update_label(false, id + "_label", locale(name->value()), false, true, cursor, UNCLICKABLE);
         }
       }
       else if (!touchmode)

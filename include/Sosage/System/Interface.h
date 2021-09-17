@@ -66,7 +66,7 @@ private:
   void set_action (const std::string& id, const std::string& default_id);
   void clear_action_ids(bool clear_highlight = false);
   void update_label (bool is_button, const std::string& id, std::string name, bool open_left,
-                     bool open_right, const Point& position, const Collision_type& collision,
+                     bool open_right, Component::Position_handle pos, const Collision_type& collision,
                      double scale = 1.0, bool arrow = false);
   void generate_action (const std::string& id, const std::string& action,
                         const Button_orientation& orientation, const std::string& button = "",

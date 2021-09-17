@@ -390,10 +390,9 @@ void Interface::clear_action_ids(bool clear_highlights)
 }
 
 void Interface::update_label (bool is_button, const std::string& id, std::string name,
-                              bool open_left, bool open_right, const Point& position,
+                              bool open_left, bool open_right, C::Position_handle pos,
                               const Collision_type& collision, double scale, bool arrow)
 {
-  auto pos = set<C::Absolute_position>(id + ":global_position", position);
   auto group = request<C::Group>(id + ":group");
   C::Image_handle label, left, right, back;
 
@@ -607,7 +606,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   if (id != "")
   {
     update_label (false, id + "_" + action + "_label", locale(label->value()), open_left, open_right,
-                  label_position, BOX);
+                  set<C::Absolute_position>(id + ":global_position", label_position), BOX);
 
     // UPPER and DOWNER configs might need to be moved to be on screen
     if (orientation == UPPER || orientation == DOWNER)
@@ -632,14 +631,20 @@ void Interface::generate_action (const std::string& id, const std::string& actio
 
   if (id == "")
   {
-    update_label (true, "Default_" + action + "_button", button, false, false, button_position, BOX);
+    std::string button_id = "Default_" + action + "_button";
+    update_label (true, button_id, button, false, false,
+                  set<C::Absolute_position>(button_id + ":global_position", button_position), BOX);
     if (auto img = request<C::Image>("Default_" + action + "_button:image"))
       img->on() = false;
     get<C::Image>("Default_" + action + "_button_left_circle:image")->set_alpha(128);
     get<C::Image>("Default_" + action + "_button_right_circle:image")->set_alpha(128);
   }
   else
-    update_label (true, id + "_" + action + "_button", button, false, false, button_position, BOX);
+  {
+    std::string button_id = id + "_" + action + "_button";
+    update_label (true, button_id, button, false, false,
+                  set<C::Absolute_position>(button_id + ":global_position", button_position), BOX);
+  }
 }
 
 
@@ -679,7 +684,8 @@ void Interface:: update_inventory ()
         auto position = get<C::Position>(img->entity() + ":position");
 
         Point p = position->value() + Vector(0, -Config::inventory_height / 2 - 2 * Config::inventory_margin);
-        update_label(false, img->entity() + "_label", locale(name->value()), false, false, p, UNCLICKABLE);
+        update_label(false, img->entity() + "_label", locale(name->value()), false, false,
+                     set<C::Absolute_position>(img->entity() + "_label:global_position", p), UNCLICKABLE);
       }
     }
     if (inventory->get(i) == m_source)

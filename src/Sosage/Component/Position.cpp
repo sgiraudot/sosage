@@ -40,8 +40,8 @@ std::string Absolute_position::str() const
 }
 
 Relative_position::Relative_position (const std::string& id, Position_handle ref,
-                                      const Sosage::Vector& diff)
-  : Position(id), m_ref(ref), m_diff(diff)
+                                      const Sosage::Vector& diff, double factor)
+  : Position(id), m_ref(ref), m_diff(diff), m_factor(factor)
 { }
   
 } // namespace Sosage::Component

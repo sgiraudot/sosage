@@ -71,13 +71,15 @@ class Relative_position : public Position
 {
   Position_handle m_ref;
   Sosage::Vector m_diff;
+  double m_factor;
 
 public:
 
   Relative_position (const std::string& id, Position_handle ref,
-                     const Sosage::Vector& diff = Sosage::Vector(0,0));
-  virtual Point value() const { return m_ref->value() + m_diff; }
-  virtual void set (const Point& p) { m_diff = Sosage::Vector(m_ref->value(), p); }
+                     const Sosage::Vector& diff = Sosage::Vector(0,0),
+                     double factor = 1.);
+  virtual Point value() const { return m_factor * m_ref->value() + m_diff; }
+  virtual void set (const Point& p) { m_diff = Sosage::Vector(m_factor * m_ref->value(), p); }
   void set (const Sosage::Vector& v) { m_diff = v; }
   bool absolute() const { return m_ref->absolute(); }
 };
