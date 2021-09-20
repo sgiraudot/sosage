@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.Locale;
 import java.lang.reflect.Method;
 import java.lang.Math;
 
@@ -85,6 +86,9 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     protected static int mLastCursorID;
     protected static SDLGenericMotionListener_API12 mMotionListener;
     protected static HIDDeviceManager mHIDDeviceManager;
+
+    // Get locale from java side (std::locale not working with JNI)
+    public static String locale = "";
 
     // This is what SDL runs in. It invokes SDL_main(), eventually
     protected static Thread mSDLThread;
@@ -273,6 +277,25 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
                 SDLActivity.onNativeDropFile(filename);
             }
         }
+
+        try
+        {
+          String lang = new String(Locale.getDefault().getLanguage());
+          if (Locale.getDefault().getCountry().length() > 0)
+          {
+            lang = lang + "_" + Locale.getDefault().getCountry();
+          }
+
+          locale = lang;
+        }
+        catch (Exception e)
+        {
+        }
+    }
+
+    public static String getLocale()
+    {
+      return locale;
     }
 
     protected void pauseNativeThread() {

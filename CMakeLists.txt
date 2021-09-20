@@ -127,6 +127,13 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 endif()
 
 if (SOSAGE_CONFIG_ANDROID)
+  
+  if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_ANDROID_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
+  elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_ANDROID_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
+  endif()
+  
   set(SDL2_SOURCE_PATH "" CACHE PATH "Source of the SDL library")
   set(SDL2_IMAGE_SOURCE_PATH "" CACHE PATH "Source of the SDL Image library")
   set(SDL2_MIXER_SOURCE_PATH "" CACHE PATH "Source of the SDL Mixer library")

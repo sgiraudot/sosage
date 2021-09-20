@@ -46,6 +46,7 @@
 #include <Sosage/System/File_IO.h>
 #include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/color.h>
+#include <Sosage/Utils/locale.h>
 #include <Sosage/Utils/profiling.h>
 
 #include <locale>
@@ -567,7 +568,7 @@ void File_IO::read_locale()
   if (get<C::String>(GAME__CURRENT_LOCAL)->value() == "")
   {
     std::string prefered = "";
-    std::string user_locale = std::locale("").name();
+    std::string user_locale = get_locale();
     if (user_locale.size() > 5)
       user_locale.resize(5);
 
@@ -597,7 +598,7 @@ void File_IO::read_locale()
     }
     if (prefered == "")
     {
-      debug("No available locale detected, fallback to en_US");
+      debug("Locale " + user_locale + " not available, fallback to en_US");
       prefered = "en_US";
     }
     get<C::String>(GAME__CURRENT_LOCAL)->set(prefered);
