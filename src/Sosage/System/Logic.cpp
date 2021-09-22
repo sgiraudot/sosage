@@ -237,7 +237,6 @@ void Logic::run ()
     }
   }
 
-  update_camera();
   update_debug_info (get<C::Debug>(GAME__DEBUG));
 }
 
@@ -440,35 +439,6 @@ void Logic::follow (const std::string& follower)
   {
     remove(follower + ":path", true);
     emit(follower + ":stop_walking");
-  }
-}
-
-void Logic::update_camera()
-{
-  if (auto i = request<C::Double>("Shake:intensity"))
-  {
-    double begin = get<C::Double>("Shake:begin")->value();
-    double end = get<C::Double>("Shake:end")->value();
-    double intensity = i->value();
-    double x_start = get<C::Double>("Camera:saved_position")->value();
-
-    double current_intensity = intensity * (end - m_current_time) / (end - begin);
-
-    constexpr double period = 0.02;
-
-    double shift = std::sin ((m_current_time - begin) / period);
-
-    get<C::Absolute_position>(CAMERA__POSITION)->set
-        (Point(x_start + shift * current_intensity, 0));
-  }
-  else
-  {
-    auto position = get<C::Absolute_position>(CAMERA__POSITION);
-    auto target = get<C::Double>("Camera:target");
-
-    double dir = target->value() - position->value().x();
-    dir *= Config::camera_speed;
-    position->set (position->value() + Vector(dir,0));
   }
 }
 

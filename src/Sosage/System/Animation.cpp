@@ -53,20 +53,37 @@ void Animation::run()
     return;
   }
 
+  run_gui_frame();
+
   if (new_frame_id == m_frame_id)
   {
     // Force update when new room is loaded
     if (request<C::Boolean>("Game:in_new_room"))
-      run_one_frame();
+      run_animation_frame();
     return;
   }
 
   for (std::size_t i = m_frame_id; i < new_frame_id; ++ i)
-    run_one_frame();
+    run_animation_frame();
   m_frame_id = new_frame_id;
 }
 
-void Animation::run_one_frame()
+void Animation::run_gui_frame()
+{
+  if (auto fadein = request<C::Boolean>("Fade:in"))
+  {
+    fade (get<C::Double>("Fade:begin")->value(), get<C::Double>("Fade:end")->value(), fadein->value());
+    m_fade_to_remove = fadein->value();
+  }
+  else if (m_fade_to_remove)
+  {
+    get<C::Image>("Blackscreen:image")->on() = false;
+    m_fade_to_remove = false;
+  }
+  update_camera();
+}
+
+void Animation::run_animation_frame()
 {
   for (auto c : m_content)
     if (auto b = C::cast<C::Boolean>(c))
@@ -233,17 +250,6 @@ void Animation::run_one_frame()
 
   for (const std::string& c : to_remove)
     remove(c);
-
-  if (auto fadein = request<C::Boolean>("Fade:in"))
-  {
-    fade (get<C::Double>("Fade:begin")->value(), get<C::Double>("Fade:end")->value(), fadein->value());
-    m_fade_to_remove = fadein->value();
-  }
-  else if (m_fade_to_remove)
-  {
-    get<C::Image>("Blackscreen:image")->on() = false;
-    m_fade_to_remove = false;
-  }
 
   if (has_moved)
     update_camera_target();
@@ -621,6 +627,36 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
   auto img = get<C::Image>("Blackscreen:image");
   img->on() = true;
   img->set_alpha((unsigned char)(255 * alpha));
+}
+
+void Animation::update_camera()
+{
+  if (auto i = request<C::Double>("Shake:intensity"))
+  {
+    double begin = get<C::Double>("Shake:begin")->value();
+    double end = get<C::Double>("Shake:end")->value();
+    double intensity = i->value();
+    double x_start = get<C::Double>("Camera:saved_position")->value();
+
+    double current_time = get<C::Double>(CLOCK__TIME)->value();
+    double current_intensity = intensity * (end - current_time) / (end - begin);
+
+    constexpr double period = 0.02;
+
+    double shift = std::sin ((current_time - begin) / period);
+
+    get<C::Absolute_position>(CAMERA__POSITION)->set
+        (Point(x_start + shift * current_intensity, 0));
+  }
+  else
+  {
+    auto position = get<C::Absolute_position>(CAMERA__POSITION);
+    auto target = get<C::Double>("Camera:target");
+
+    double dir = target->value() - position->value().x();
+    dir *= Config::camera_speed;
+    position->set (position->value() + Vector(dir,0));
+  }
 }
 
 void Animation::update_camera_target ()

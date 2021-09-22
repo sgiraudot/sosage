@@ -70,7 +70,6 @@ private:
                                  std::string id = "");
   bool compute_path_from_direction (const Vector& direction);
   void follow (const std::string& follower);
-  void update_camera();
   void update_debug_info (Component::Debug_handle debug_info);
 
   bool apply_step (Component::Action::Step step);

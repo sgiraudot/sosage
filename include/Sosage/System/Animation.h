@@ -57,7 +57,8 @@ public:
 
 private:
 
-  void run_one_frame();
+  void run_gui_frame();
+  void run_animation_frame();
 
   bool compute_movement_from_path (Component::Path_handle path);
   void set_move_animation (const std::string& id, const Vector& direction);
@@ -67,6 +68,7 @@ private:
 
   void fade (double begin_time, double end_time, bool fadein);
 
+  void update_camera();
   void update_camera_target();
 };
 
