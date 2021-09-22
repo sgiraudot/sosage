@@ -27,6 +27,7 @@
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Group.h>
+#include <Sosage/Component/GUI_animation.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Menu.h>
 #include <Sosage/Component/Position.h>
@@ -653,12 +654,22 @@ void Interface:: update_inventory ()
   Input_mode mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
 
   auto inventory_origin = get<C::Absolute_position>("Inventory:origin");
+
+  double target = 0;
   if (status()->value() == IN_INVENTORY || status()->value() == OBJECT_CHOICE || status()->value() == INVENTORY_ACTION_CHOICE)
-    inventory_origin->set (Point (0, Config::world_height - Config::inventory_height));
+    target = Config::world_height - Config::inventory_height;
   else if ((mode == MOUSE || mode == TOUCHSCREEN) && status()->value() == IDLE)
-    inventory_origin->set (Point (0, Config::world_height));
+    target = Config::world_height;
   else
-    inventory_origin->set(Point (0, 2 * Config::world_height)); // hidden way at the bottom
+    target = Config::inventory_active_zone + Config::world_height; // hidden t the bottom
+
+  if (target != inventory_origin->value().y() && !request<C::GUI_animation>("Inventory:animation"))
+  {
+    double current_time = get<C::Double>(CLOCK__TIME)->value();
+    auto position = get<C::Position>("Inventory:origin");
+    set<C::GUI_animation> ("Inventory:animation", current_time, current_time + Config::inventory_speed,
+                           position, Point(0, target));
+  }
 
   auto inventory = get<C::Inventory>("Game:inventory");
 
