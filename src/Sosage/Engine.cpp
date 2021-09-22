@@ -92,7 +92,6 @@ int Engine::run (const std::string& folder_name)
   // Init main variables
   auto status = m_content.set_fac<Component::Status>(GAME__STATUS, "Game:status");
   m_content.set_fac<Component::Absolute_position>(CAMERA__POSITION, "Camera:position", Point(0,0));
-  m_content.set<Component::Double>("Camera:target", 0.0);
   m_content.set<Component::Inventory>("Game:inventory");
   m_content.set<Component::Set<std::string> > ("Game:visited_rooms");
 

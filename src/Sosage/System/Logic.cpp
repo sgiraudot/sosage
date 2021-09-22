@@ -524,7 +524,10 @@ bool Logic::function_camera (const std::vector<std::string>& args)
   {
     check (args.size() == 2, "function_camera(target) takes 1 arguments");
     int position = to_int(args[1]);
-    get<C::Double>("Camera:target")->set (position);
+    set<C::Double>("Camera:source", get<C::Position>(CAMERA__POSITION)->value().x());
+    set<C::Double>("Camera:target", position);
+    set<C::Double>("Camera:source_time", m_current_time);
+    set<C::Double>("Camera:target_time", m_current_time + Config::camera_speed);
   }
   return true;
 }

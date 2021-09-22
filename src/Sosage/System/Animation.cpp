@@ -629,6 +629,13 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
   img->set_alpha((unsigned char)(255 * alpha));
 }
 
+double Animation::smooth_function(double xbegin, double xend,
+                                double ybegin, double yend,
+                                double x) const
+{
+  return ybegin + (yend - ybegin) * std::sqrt(std::sin((x-xbegin)*M_PI / (2 * (xend-xbegin))));
+}
+
 void Animation::update_camera()
 {
   if (auto i = request<C::Double>("Shake:intensity"))
@@ -648,14 +655,28 @@ void Animation::update_camera()
     get<C::Absolute_position>(CAMERA__POSITION)->set
         (Point(x_start + shift * current_intensity, 0));
   }
-  else
+  else if (auto target = request<C::Double>("Camera:target"))
   {
     auto position = get<C::Absolute_position>(CAMERA__POSITION);
-    auto target = get<C::Double>("Camera:target");
 
-    double dir = target->value() - position->value().x();
-    dir *= Config::camera_speed;
-    position->set (position->value() + Vector(dir,0));
+    auto source = get<C::Double>("Camera:source");
+    double start = get<C::Double>("Camera:source_time")->value();
+    double end = get<C::Double>("Camera:target_time")->value();
+    double current_time = get<C::Double>(CLOCK__TIME)->value();
+
+    if (current_time >= end)
+    {
+      position->set (Point(target->value(), position->value().y()));
+      remove("Camera:source");
+      remove("Camera:source_time");
+      remove("Camera:target");
+      remove("Camera:target_time");
+    }
+    else
+      position->set (Point(smooth_function (start, end,
+                                            source->value(), target->value(),
+                                            current_time),
+                           position->value().y()));
   }
 }
 
@@ -665,13 +686,27 @@ void Animation::update_camera_target ()
   int xbody = get<C::Position>(id + "_body:position")->value().X();
   double xcamera = get<C::Absolute_position>(CAMERA__POSITION)->value().x();
 
+  double target = std::numeric_limits<double>::quiet_NaN();
   if (xbody < xcamera + Config::camera_limit_left)
-    get<C::Double>("Camera:target")->set (std::max (0, xbody - Config::camera_limit_right));
+    target = std::max (0, xbody - Config::camera_limit_right);
   else if (xbody > xcamera + Config::camera_limit_right)
   {
     int width = get<C::Image>("Background:image")->width();
-    get<C::Double>("Camera:target")->set (std::min (width - Config::world_width, xbody - Config::camera_limit_left));
+    target = std::min (width - Config::world_width, xbody - Config::camera_limit_left);
   }
+
+  if (std::isnan(target))
+    return;
+
+  auto t = request<C::Double>("Camera:target");
+  if (t)
+    return;
+
+  double current_time = get<C::Double>(CLOCK__TIME)->value();
+  set<C::Double>("Camera:source", get<C::Position>(CAMERA__POSITION)->value().x());
+  set<C::Double>("Camera:target", target);
+  set<C::Double>("Camera:source_time", current_time);
+  set<C::Double>("Camera:target_time", current_time + Config::camera_speed);
 }
 
 } // namespace Sosage::System

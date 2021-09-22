@@ -224,7 +224,6 @@ void File_IO::read_savefile()
 
   double camera_target = input["camera"].floating();
   get<C::Absolute_position>(CAMERA__POSITION)->set (Point(camera_target, 0));
-  set<C::Double>("Camera:target")->set (camera_target);
   auto action = set<C::Action>("Saved_game:action");
   action->add ("play", { "music", input["music"].string() });
   action->add ("camera", { "fadein", "0.5" });

@@ -56,7 +56,7 @@ constexpr int label_diff = 20;
 
 constexpr int camera_limit_left = world_width / 4;
 constexpr int camera_limit_right = (3 * world_width) / 4;
-constexpr double camera_speed = 0.1;
+constexpr double camera_speed = 1.0;
 
 constexpr double char_spoken_time = 0.05;
 constexpr double min_reading_time = 1.5;
