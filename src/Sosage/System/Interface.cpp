@@ -606,7 +606,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   if (id != "")
   {
     update_label (false, id + "_" + action + "_label", locale(label->value()), open_left, open_right,
-                  set<C::Absolute_position>(id + ":global_position", label_position), BOX);
+                  set<C::Absolute_position>(id + "_" + action + "_label:global_position", label_position), BOX);
 
     // UPPER and DOWNER configs might need to be moved to be on screen
     if (orientation == UPPER || orientation == DOWNER)

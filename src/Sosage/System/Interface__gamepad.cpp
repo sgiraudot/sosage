@@ -654,7 +654,7 @@ void Interface::update_switcher()
 
 
     update_label (false, "Switcher_label", locale_get("Switch_target:text"),
-                  true, !keyboard, set<C::Absolute_position>("Switch_label:global_position",Point (0,0)), UNCLICKABLE);
+                  true, !keyboard, set<C::Absolute_position>("Switcher_label:global_position",Point (0,0)), UNCLICKABLE);
     m_labels.pop_back();
 
     // Correct position of half-open label in keyboard mode (a bit hacky but meh…)
