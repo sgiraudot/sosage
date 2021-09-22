@@ -68,8 +68,6 @@ private:
 
   void fade (double begin_time, double end_time, bool fadein);
 
-  double smooth_function(double xbegin, double xend, double ybegin, double yend, double x) const;
-  void update_camera();
   void update_camera_target();
 };
 

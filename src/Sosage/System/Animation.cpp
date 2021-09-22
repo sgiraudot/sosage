@@ -26,6 +26,7 @@
 
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Ground_map.h>
+#include <Sosage/Component/GUI_animation.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Status.h>
@@ -80,7 +81,33 @@ void Animation::run_gui_frame()
     get<C::Image>("Blackscreen:image")->on() = false;
     m_fade_to_remove = false;
   }
-  update_camera();
+
+  double current_time = get<C::Double>(CLOCK__TIME)->value();
+  if (auto i = request<C::Double>("Shake:intensity"))
+  {
+    double begin = get<C::Double>("Shake:begin")->value();
+    double end = get<C::Double>("Shake:end")->value();
+    double intensity = i->value();
+    double x_start = get<C::Double>("Camera:saved_position")->value();
+
+    double current_intensity = intensity * (end - current_time) / (end - begin);
+
+    constexpr double period = 0.02;
+
+    double shift = std::sin ((current_time - begin) / period);
+
+    get<C::Absolute_position>(CAMERA__POSITION)->set
+        (Point(x_start + shift * current_intensity, 0));
+  }
+
+  std::vector<std::string> to_remove;
+  for (auto c : m_content)
+    if (auto a = C::cast<C::GUI_animation>(c))
+      if (!a->update(current_time))
+        to_remove.emplace_back(c->id());
+
+  for (const std::string& id : to_remove)
+    remove(id);
 }
 
 void Animation::run_animation_frame()
@@ -629,57 +656,6 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
   img->set_alpha((unsigned char)(255 * alpha));
 }
 
-double Animation::smooth_function(double xbegin, double xend,
-                                double ybegin, double yend,
-                                double x) const
-{
-  return ybegin + (yend - ybegin) * std::sqrt(std::sin((x-xbegin)*M_PI / (2 * (xend-xbegin))));
-}
-
-void Animation::update_camera()
-{
-  if (auto i = request<C::Double>("Shake:intensity"))
-  {
-    double begin = get<C::Double>("Shake:begin")->value();
-    double end = get<C::Double>("Shake:end")->value();
-    double intensity = i->value();
-    double x_start = get<C::Double>("Camera:saved_position")->value();
-
-    double current_time = get<C::Double>(CLOCK__TIME)->value();
-    double current_intensity = intensity * (end - current_time) / (end - begin);
-
-    constexpr double period = 0.02;
-
-    double shift = std::sin ((current_time - begin) / period);
-
-    get<C::Absolute_position>(CAMERA__POSITION)->set
-        (Point(x_start + shift * current_intensity, 0));
-  }
-  else if (auto target = request<C::Double>("Camera:target"))
-  {
-    auto position = get<C::Absolute_position>(CAMERA__POSITION);
-
-    auto source = get<C::Double>("Camera:source");
-    double start = get<C::Double>("Camera:source_time")->value();
-    double end = get<C::Double>("Camera:target_time")->value();
-    double current_time = get<C::Double>(CLOCK__TIME)->value();
-
-    if (current_time >= end)
-    {
-      position->set (Point(target->value(), position->value().y()));
-      remove("Camera:source");
-      remove("Camera:source_time");
-      remove("Camera:target");
-      remove("Camera:target_time");
-    }
-    else
-      position->set (Point(smooth_function (start, end,
-                                            source->value(), target->value(),
-                                            current_time),
-                           position->value().y()));
-  }
-}
-
 void Animation::update_camera_target ()
 {
   const std::string& id = get<C::String>("Player:name")->value();
@@ -698,15 +674,14 @@ void Animation::update_camera_target ()
   if (std::isnan(target))
     return;
 
-  auto t = request<C::Double>("Camera:target");
+  auto t = request<C::GUI_animation>("Camera:animation");
   if (t)
     return;
 
   double current_time = get<C::Double>(CLOCK__TIME)->value();
-  set<C::Double>("Camera:source", get<C::Position>(CAMERA__POSITION)->value().x());
-  set<C::Double>("Camera:target", target);
-  set<C::Double>("Camera:source_time", current_time);
-  set<C::Double>("Camera:target_time", current_time + Config::camera_speed);
+  auto position = get<C::Position>(CAMERA__POSITION);
+  set<C::GUI_animation>("Camera:animation", current_time, current_time + Config::camera_speed,
+                        position, Point (target, position->value().y()));
 }
 
 } // namespace Sosage::System
