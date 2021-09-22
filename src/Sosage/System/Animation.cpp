@@ -674,14 +674,13 @@ void Animation::update_camera_target ()
   if (std::isnan(target))
     return;
 
-  auto t = request<C::GUI_animation>("Camera:animation");
-  if (t)
+  if (request<C::GUI_animation>("Camera:animation"))
     return;
 
   double current_time = get<C::Double>(CLOCK__TIME)->value();
   auto position = get<C::Position>(CAMERA__POSITION);
-  set<C::GUI_animation>("Camera:animation", current_time, current_time + Config::camera_speed,
-                        position, Point (target, position->value().y()));
+  set<C::GUI_position_animation>("Camera:animation", current_time, current_time + Config::camera_speed,
+                                 position, Point (target, position->value().y()));
 }
 
 } // namespace Sosage::System

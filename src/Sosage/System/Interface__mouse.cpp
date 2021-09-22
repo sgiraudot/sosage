@@ -256,30 +256,30 @@ void Interface::idle_clicked()
     else if (m_source == "")
     {
       clear_action_ids();
-      generate_action (id, "take", LEFT_BUTTON);
+      generate_action (id, "take", LEFT_BUTTON, "", Point(), true);
       if (get<C::Position>(id + "_take_label_left_circle:position")->value().x() < Config::label_height)
       {
-        generate_action (id, "move", UPPER);
-        generate_action (id, "take", UP_RIGHT);
-        generate_action (id, "look", DOWN_RIGHT);
-        generate_action (id, "inventory", DOWNER);
+        generate_action (id, "move", UPPER, "", Point(), true);
+        generate_action (id, "take", UP_RIGHT, "", Point(), true);
+        generate_action (id, "look", DOWN_RIGHT, "", Point(), true);
+        generate_action (id, "inventory", DOWNER, "", Point(), true);
       }
       else
       {
-        generate_action (id, "look", RIGHT_BUTTON);
+        generate_action (id, "look", RIGHT_BUTTON, "", Point(), true);
         if (get<C::Position>(id + "_take_label_right_circle:position")->value().x()
             > Config::world_width - Config::label_height)
         {
-          generate_action (id, "move", UPPER);
-          generate_action (id, "take", UP_LEFT);
-          generate_action (id, "look", DOWN_LEFT);
-          generate_action (id, "inventory", DOWNER);
+          generate_action (id, "move", UPPER, "", Point(), true);
+          generate_action (id, "take", UP_LEFT, "", Point(), true);
+          generate_action (id, "look", DOWN_LEFT, "", Point(), true);
+          generate_action (id, "inventory", DOWNER, "", Point(), true);
 
         }
         else
         {
-          generate_action (id, "move", UP);
-          generate_action (id, "inventory", DOWN);
+          generate_action (id, "move", UP, "", Point(), true);
+          generate_action (id, "inventory", DOWN, "", Point(), true);
         }
       }
       status()->push(ACTION_CHOICE);

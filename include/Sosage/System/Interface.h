@@ -70,7 +70,7 @@ private:
                      double scale = 1.0, bool arrow = false);
   void generate_action (const std::string& id, const std::string& action,
                         const Button_orientation& orientation, const std::string& button = "",
-                        Point position = Point());
+                        Point position = Point(), bool animate = false);
   void update_inventory ();
   void update_dialog_choices ();
   void generate_code_hover();

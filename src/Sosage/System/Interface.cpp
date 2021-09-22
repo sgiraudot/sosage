@@ -528,7 +528,7 @@ void Interface::update_label (bool is_button, const std::string& id, std::string
 
 void Interface::generate_action (const std::string& id, const std::string& action,
                                  const Button_orientation& orientation, const std::string& button,
-                                 Point position)
+                                 Point position, bool animate)
 {
   auto label = request<C::String>(id + "_" + action + ":label");
   if (isupper(action[0]))
@@ -543,28 +543,33 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     position = get<C::Position>(CURSOR__POSITION)->value();
   Point label_position;
   Point button_position;
+  Point start_position;
 
   // Default cross orientation
   if (orientation == UP)
   {
     label_position = position + Vector(0, -80);
     button_position = position + Vector(0, -40);
+    start_position = position + Vector(0, -14);
   }
   else if (orientation == DOWN)
   {
     label_position = position + Vector(0, 80);
     button_position = position + Vector(0, 40);
+    start_position = position + Vector(0, 14);
   }
   else if (orientation == RIGHT_BUTTON)
   {
     label_position = position + Vector(40, 0);
     button_position = position + Vector(40, 0);
+    start_position = position + Vector(14, 0);
     open_left = true;
   }
   else if (orientation == LEFT_BUTTON)
   {
     label_position = position + Vector(-40, 0);
     button_position = position + Vector(-40, 0);
+    start_position = position + Vector(-14, 0);
     open_right = true;
   }
 
@@ -573,68 +578,93 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   {
     label_position = position + Vector(0, -100);
     button_position = position + Vector(0, -60);
+    start_position = position + Vector(0, -14);
   }
   else if (orientation == DOWNER)
   {
     label_position = position + Vector(0, 100);
     button_position = position + Vector(0, 60);
+    start_position = position + Vector(0, 14);
   }
   else if (orientation == UP_RIGHT)
   {
     label_position = position + Vector(50, -28.25);
     button_position = position + Vector(50, -28.25);
+    start_position = position + Vector(-14, 0);
     open_left = true;
   }
   else if (orientation == UP_LEFT)
   {
     label_position = position + Vector(-50, -28.25);
     button_position = position + Vector(-50, -28.25);
+    start_position = position + Vector(-14, 0);
     open_right = true;
   }
   else if (orientation == DOWN_RIGHT)
   {
     label_position = position + Vector(50, 28.25);
     button_position = position + Vector(50, 28.25);
+    start_position = position + Vector(14, 0);
     open_left = true;
   }
   else if (orientation == DOWN_LEFT)
   {
     label_position = position + Vector(-50, 28.25);
     button_position = position + Vector(-50, 28.25);
+    start_position = position + Vector(14, 0);
     open_right = true;
   }
 
+  if (!animate)
+    start_position = button_position;
+
+  double current_time = get<C::Double>(CLOCK__TIME)->value();
+
   if (id != "")
   {
-    update_label (false, id + "_" + action + "_label", locale(label->value()), open_left, open_right,
-                  set<C::Absolute_position>(id + "_" + action + "_label:global_position", label_position), BOX);
+    std::string label_id = id + "_" + action + "_label";
+    update_label (false, label_id, locale(label->value()), open_left, open_right,
+                  set<C::Absolute_position>(label_id + ":global_position", label_position), BOX);
 
     // UPPER and DOWNER configs might need to be moved to be on screen
     if (orientation == UPPER || orientation == DOWNER)
     {
       int diff = 0;
-      auto lpos = get<C::Position>(id + "_" + action + "_label_left_circle:position");
+      auto lpos = get<C::Position>(label_id + "_left_circle:position");
       if (lpos->value().x() < Config::label_height)
         diff = Config::label_height - lpos->value().x();
       else
       {
-        auto rpos = get<C::Position>(id + "_" + action + "_label_right_circle:position");
+        auto rpos = get<C::Position>(label_id + "_right_circle:position");
         if (rpos->value().x() > Config::world_width - Config::label_height)
           diff = lpos->value().x() - (Config::world_width - Config::label_height);
       }
       if (diff != 0)
       {
-        auto pos = get<C::Position>(id + "_" + action + "_label:global_position");
+        auto pos = get<C::Position>(label_id + ":global_position");
         pos->set (Point (pos->value().x() + diff, pos->value().y()));
       }
     }
+
+    if (animate)
+    {
+      set<C::GUI_image_animation>(label_id + ":animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(label_id + ":image"), 0.05, 0.5, 0, 255);
+      set<C::GUI_image_animation>(label_id + "_back:animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(label_id + "_back:image"), 1, 1, 0, 100);
+      set<C::GUI_image_animation>(label_id + "_left_circle:animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(label_id + "_left_circle:image"), 1, 1, 0, 100);
+      set<C::GUI_image_animation>(label_id + "_right_circle:animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(label_id + "_right_circle:image"), 1, 1, 0, 100);
+    }
   }
 
+  std::string button_id = "";
   if (id == "")
   {
-    std::string button_id = "Default_" + action + "_button";
+    button_id = "Default_" + action + "_button";
     update_label (true, button_id, button, false, false,
-                  set<C::Absolute_position>(button_id + ":global_position", button_position), BOX);
+                  set<C::Absolute_position>(button_id + ":global_position", start_position), BOX);
     if (auto img = request<C::Image>("Default_" + action + "_button:image"))
       img->on() = false;
     get<C::Image>("Default_" + action + "_button_left_circle:image")->set_alpha(128);
@@ -642,9 +672,19 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   }
   else
   {
-    std::string button_id = id + "_" + action + "_button";
+    button_id = id + "_" + action + "_button";
     update_label (true, button_id, button, false, false,
-                  set<C::Absolute_position>(button_id + ":global_position", button_position), BOX);
+                  set<C::Absolute_position>(button_id + ":global_position", start_position), BOX);
+  }
+
+  if (animate)
+  {
+    set<C::GUI_position_animation>(button_id + ":animation", current_time, current_time + Config::inventory_speed,
+                                   get<C::Position>(button_id + ":global_position"), button_position);
+    set<C::GUI_image_animation>(button_id + "_left_circle:animation", current_time, current_time + Config::inventory_speed,
+                                get<C::Image>(button_id + "_left_circle:image"), 0.357, 1, 255, 255);
+    set<C::GUI_image_animation>(button_id + "_right_circle:animation", current_time, current_time + Config::inventory_speed,
+                                get<C::Image>(button_id + "_right_circle:image"), 0.357, 1, 255, 255);
   }
 }
 
@@ -667,8 +707,8 @@ void Interface:: update_inventory ()
   {
     double current_time = get<C::Double>(CLOCK__TIME)->value();
     auto position = get<C::Position>("Inventory:origin");
-    set<C::GUI_animation> ("Inventory:animation", current_time, current_time + Config::inventory_speed,
-                           position, Point(0, target));
+    set<C::GUI_position_animation> ("Inventory:animation", current_time, current_time + Config::inventory_speed,
+                                    position, Point(0, target));
   }
 
   auto inventory = get<C::Inventory>("Game:inventory");
