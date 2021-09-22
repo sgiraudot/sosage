@@ -432,6 +432,7 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
 
   // Render black screen while the rest is loading
   SDL_SetRenderDrawColor (m_renderer, 0, 0, 0, 255);
+  SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
   SDL_RenderClear (m_renderer);
   SDL_RenderPresent (m_renderer);
   SDL_ShowCursor(SDL_DISABLE);
@@ -560,6 +561,19 @@ void SDL::draw_square (const int x, const int y, const int size,
   rect.h = size;
 
   SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), 255);
+  SDL_RenderFillRect(m_renderer, &rect);
+}
+
+void SDL::draw_rectangle (const int x, const int y, const int width, const int height,
+                          unsigned int red, unsigned green, unsigned blue, unsigned alpha)
+{
+  SDL_Rect rect;
+  rect.x = x - width / 2;
+  rect.y = y - height / 2;
+  rect.w = width;
+  rect.h = height;
+
+  SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), Uint8(alpha));
   SDL_RenderFillRect(m_renderer, &rect);
 }
 

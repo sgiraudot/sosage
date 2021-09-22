@@ -78,11 +78,13 @@ public:
     std::tie (iter, inserted) = m_data.insert (std::make_pair (key, Resource_handle()));
     if (inserted)
     {
-      debug ("Loading ", key);
+      //debug ("Loading ", key);
       iter->second = make_single(std::forward<F>(f), std::forward<Args>(args)...);
     }
     else
-      debug ("Not reloading ", key);
+    {
+      //debug ("Not reloading ", key);
+    }
     return iter->second;
   }
 };

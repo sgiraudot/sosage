@@ -234,6 +234,8 @@ public:
                   unsigned int red = 255, unsigned green = 0, unsigned blue = 0);
   void draw_square (const int x, const int b, const int size,
                     unsigned int red = 255, unsigned green = 0, unsigned blue = 0);
+  void draw_rectangle (const int x, const int y, const int width, const int height,
+                       unsigned int red, unsigned green, unsigned blue, unsigned alpha);
   void end();
 
 };

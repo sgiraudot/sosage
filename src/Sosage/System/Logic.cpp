@@ -543,7 +543,7 @@ bool Logic::function_camera (const std::vector<std::string>& args)
     auto begin = set<C::Double> ("Shake:begin", m_current_time);
     auto end = set<C::Double> ("Shake:end", m_current_time + duration);
     auto intens = set<C::Double> ("Shake:intensity", intensity);
-    auto camera = set<C::Double> ("Camera:saved_position", get<C::Double>(CAMERA__POSITION)->value());
+    auto camera = set<C::Double> ("Camera:saved_position", get<C::Absolute_position>(CAMERA__POSITION)->value().x());
     m_timed.insert (std::make_pair (m_current_time + duration, begin));
     m_timed.insert (std::make_pair (m_current_time + duration, end));
     m_timed.insert (std::make_pair (m_current_time + duration, intens));
@@ -913,7 +913,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 
   int y = 100;
   int x = int(get<C::Position>(id + "_body:position")->value().x()
-              - get<C::Double>(CAMERA__POSITION)->value());
+              - get<C::Position>(CAMERA__POSITION)->value().x());
 
   double size_factor = 0.75 * (get<C::Int>("Dialog:size")->value() / double(Config::MEDIUM));
 

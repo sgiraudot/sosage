@@ -214,6 +214,26 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
           }
         }
     }
+
+    for (const auto& img : images)
+      if (img->on())
+      {
+        auto pos = img->entity().find("_label");
+        if (pos == std::string::npos)
+          continue;
+        std::string id (img->id().begin(), img->id().begin() + pos);
+
+        if (!request<C::String>(id + ":name"))
+          continue;
+
+        auto view = get<C::Position>(id + ":view");
+
+        m_core.draw_rectangle (int(view->value().x() - xcamera),
+                               int(view->value().y()),
+                               2 * Config::object_reach_x, 2 * Config::object_reach_y,
+                               255, 0, 0, 16);
+      }
+
   }
 }
 

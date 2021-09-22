@@ -84,12 +84,12 @@ public:
     for (Component::Handle c : m_data)
       if (!filter(c))
       {
-        debug("Keeping ", c->id());
+        //debug("Keeping ", c->id());
         new_set.insert(c);
       }
       else
       {
-        debug("Deleting ", c->id());
+        //debug("Deleting ", c->id());
       }
     m_data.swap (new_set);
   }

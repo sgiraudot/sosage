@@ -394,8 +394,8 @@ void File_IO::read_init ()
   loading_spin_img->on() = false;
   loading_spin_img->set_relative_origin(0.5, 0.5);
   set_fac<C::Absolute_position> (LOADING_SPIN__POSITION, "Loading_spin:position",
-                                 Point(Config::world_width / 2,
-                                       Config::world_height / 2));
+                                 Point(Config::world_width - loading_spin_img->width() * 1.5,
+                                       Config::world_height - loading_spin_img->height() * 1.5));
 
   std::string left_arrow = input["inventory_arrows"][0].string("images", "interface", "png");
   auto left_arrow_img = set<C::Image>("Left_arrow:image", left_arrow);
