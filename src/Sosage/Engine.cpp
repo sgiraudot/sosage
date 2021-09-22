@@ -67,10 +67,12 @@ void emscripten_main_loop()
 }
 #endif
 
-Engine::Engine ()
+Engine::Engine (int argc, char** argv)
 {
   debug ("Running Sosage ", Sosage::Version::str());
   srand(static_cast<unsigned int>(time(nullptr)));
+
+  handle_cmdline_args(argc, argv);
 
 #ifdef SOSAGE_EMSCRIPTEN
   emscripten_global_engine_ptr = this;
@@ -178,6 +180,19 @@ bool Engine::run()
   return !m_content.receive("Game:exit");
 }
 
-
+void Engine::handle_cmdline_args (int argc, char** argv)
+{
+  for (int i = 1; i < argc; ++ i)
+  {
+    std::string arg (argv[i]);
+    if (arg == "--locale" || arg == "-l")
+    {
+      ++ i;
+      if (i == argc)
+        break;
+      m_content.set<Component::String>("Cmdline:locale", argv[i]);
+    }
+  }
+}
 
 } // namespace Sosage

@@ -56,6 +56,7 @@ constexpr bool mac = false;
 constexpr bool windows = true;
 constexpr bool gnunux = false;
 constexpr bool emscripten = false;
+#define WINVER 0x0600
 
 #elif defined(__linux__)
 #define SOSAGE_GNUNUX

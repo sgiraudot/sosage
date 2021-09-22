@@ -2,9 +2,9 @@
 #include <Sosage/Utils/error.h>
 #include <Sosage/Engine.h>
 
-int main (int, char**)
+int main (int argc, char** argv)
 {
-  Sosage::Engine sosage;
+  Sosage::Engine sosage(argc, argv);
 
 #ifdef SOSAGE_INSTALL_DATA_FOLDER
   try

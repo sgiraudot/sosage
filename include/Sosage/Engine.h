@@ -41,10 +41,14 @@ class Engine
 
 public:
 
-  Engine ();
+  Engine (int argc, char** argv);
   ~Engine();
   int run (const std::string& folder_name);
   bool run();
+
+private:
+
+  void handle_cmdline_args (int argc, char** argv);
 };
 
 } // namespace Sosage

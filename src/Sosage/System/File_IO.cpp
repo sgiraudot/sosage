@@ -572,6 +572,9 @@ void File_IO::read_locale()
     if (user_locale.size() > 5)
       user_locale.resize(5);
 
+    if (auto l = request<C::String>("Cmdline:locale"))
+      user_locale = l->value();
+
     for (const std::string& l : available->value())
       if (user_locale == l)
       {
