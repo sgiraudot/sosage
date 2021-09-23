@@ -256,30 +256,30 @@ void Interface::idle_clicked()
     else if (m_source == "")
     {
       clear_action_ids();
-      generate_action (id, "take", LEFT_BUTTON, "", Point(), true);
+      generate_action (id, "take", LEFT_BUTTON, "", Point(), DEPLOY);
       if (get<C::Position>(id + "_take_label_left_circle:position")->value().x() < Config::label_height)
       {
-        generate_action (id, "move", UPPER, "", Point(), true);
-        generate_action (id, "take", UP_RIGHT, "", Point(), true);
-        generate_action (id, "look", DOWN_RIGHT, "", Point(), true);
-        generate_action (id, "inventory", DOWNER, "", Point(), true);
+        generate_action (id, "move", UPPER, "", Point(), DEPLOY);
+        generate_action (id, "take", UP_RIGHT, "", Point(), DEPLOY);
+        generate_action (id, "look", DOWN_RIGHT, "", Point(), DEPLOY);
+        generate_action (id, "inventory", DOWNER, "", Point(), DEPLOY);
       }
       else
       {
-        generate_action (id, "look", RIGHT_BUTTON, "", Point(), true);
+        generate_action (id, "look", RIGHT_BUTTON, "", Point(), DEPLOY);
         if (get<C::Position>(id + "_take_label_right_circle:position")->value().x()
             > Config::world_width - Config::label_height)
         {
-          generate_action (id, "move", UPPER, "", Point(), true);
-          generate_action (id, "take", UP_LEFT, "", Point(), true);
-          generate_action (id, "look", DOWN_LEFT, "", Point(), true);
-          generate_action (id, "inventory", DOWNER, "", Point(), true);
+          generate_action (id, "move", UPPER, "", Point(), DEPLOY);
+          generate_action (id, "take", UP_LEFT, "", Point(), DEPLOY);
+          generate_action (id, "look", DOWN_LEFT, "", Point(), DEPLOY);
+          generate_action (id, "inventory", DOWNER, "", Point(), DEPLOY);
 
         }
         else
         {
-          generate_action (id, "move", UP, "", Point(), true);
-          generate_action (id, "inventory", DOWN, "", Point(), true);
+          generate_action (id, "move", UP, "", Point(), DEPLOY);
+          generate_action (id, "inventory", DOWN, "", Point(), DEPLOY);
         }
       }
       status()->push(ACTION_CHOICE);
@@ -499,10 +499,12 @@ void Interface::detect_collision (C::Position_handle cursor)
               get<C::String>("Cursor:state")->set("object");
           }
 
-          update_label(false, id + "_label", locale(name->value()), true, false, cursor, UNCLICKABLE);
+          bool new_label = update_label(false, id + "_label", locale(name->value()), true, false, cursor, UNCLICKABLE);
           if (force_right || get<C::Position>(id + "_label_right_circle:position")->value().x() >
               Config::world_width - Config::label_height)
-              update_label(false, id + "_label", locale(name->value()), false, true, cursor, UNCLICKABLE);
+              new_label = update_label(false, id + "_label", locale(name->value()), false, true, cursor, UNCLICKABLE);
+          if (new_label)
+            animate_label(id + "_label", FADE);
         }
       }
       else if (!touchmode)

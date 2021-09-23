@@ -122,12 +122,14 @@ public:
   {
     m_image->set_scale (m_end_scale);
     m_image->set_alpha (m_end_alpha);
+    m_image->set_highlight (0);
   }
 
   virtual void update_impl (double current_time)
   {
     m_image->set_scale(smooth_function (m_start_scale, m_end_scale, current_time));
     m_image->set_alpha(smooth_function (m_start_alpha, m_end_alpha, current_time));
+    m_image->set_highlight (0);
   }
 };
 

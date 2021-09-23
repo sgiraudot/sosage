@@ -382,15 +382,22 @@ void Interface::clear_action_ids(bool clear_highlights)
       }
     }
 
+  double current_time = get<C::Double>(CLOCK__TIME)->value();
   for (C::Group_handle group : m_labels)
   {
-    group->apply<C::Base> ([&](auto h) { remove (h->id()); });
+    group->apply<C::Image> ([&](auto img)
+    {
+      set<C::GUI_image_animation>(img->entity() + ":animation", current_time, current_time + Config::inventory_speed,
+                                  img, img->scale(), img->scale(), img->alpha(), 0);
+
+      //remove (h->id());
+    });
     remove (group->id());
   }
   m_labels.clear();
 }
 
-void Interface::update_label (bool is_button, const std::string& id, std::string name,
+bool Interface::update_label (bool is_button, const std::string& id, std::string name,
                               bool open_left, bool open_right, C::Position_handle pos,
                               const Collision_type& collision, double scale, bool arrow)
 {
@@ -400,8 +407,10 @@ void Interface::update_label (bool is_button, const std::string& id, std::string
   unsigned char alpha = (is_button ? 255 : 100);
   int depth = (is_button ? Config::action_button_depth : Config::label_depth);
 
+  bool out = true;
   if (group)
   {
+    out = false;
     label = request<C::Image>(id + ":image");
     left = request<C::Image>(id + "_left_circle:image");
     right = request<C::Image>(id + "_right_circle:image");
@@ -524,11 +533,13 @@ void Interface::update_label (bool is_button, const std::string& id, std::string
   if (right)
     set<C::Relative_position>(id + "_right_circle:position",
                                get<C::Position>(id + "_back:position"), Vector(half_width_plus, 0));
+
+  return out;
 }
 
 void Interface::generate_action (const std::string& id, const std::string& action,
                                  const Button_orientation& orientation, const std::string& button,
-                                 Point position, bool animate)
+                                 Point position, const Animation_style& style)
 {
   auto label = request<C::String>(id + "_" + action + ":label");
   if (isupper(action[0]))
@@ -615,10 +626,8 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     open_right = true;
   }
 
-  if (!animate)
+  if (style != DEPLOY)
     start_position = button_position;
-
-  double current_time = get<C::Double>(CLOCK__TIME)->value();
 
   if (id != "")
   {
@@ -646,17 +655,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
       }
     }
 
-    if (animate)
-    {
-      set<C::GUI_image_animation>(label_id + ":animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(label_id + ":image"), 0.05, 0.5, 0, 255);
-      set<C::GUI_image_animation>(label_id + "_back:animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(label_id + "_back:image"), 1, 1, 0, 100);
-      set<C::GUI_image_animation>(label_id + "_left_circle:animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(label_id + "_left_circle:image"), 1, 1, 0, 100);
-      set<C::GUI_image_animation>(label_id + "_right_circle:animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(label_id + "_right_circle:image"), 1, 1, 0, 100);
-    }
+    animate_label (label_id, style);
   }
 
   std::string button_id = "";
@@ -677,17 +676,67 @@ void Interface::generate_action (const std::string& id, const std::string& actio
                   set<C::Absolute_position>(button_id + ":global_position", start_position), BOX);
   }
 
-  if (animate)
-  {
-    set<C::GUI_position_animation>(button_id + ":animation", current_time, current_time + Config::inventory_speed,
-                                   get<C::Position>(button_id + ":global_position"), button_position);
-    set<C::GUI_image_animation>(button_id + "_left_circle:animation", current_time, current_time + Config::inventory_speed,
-                                get<C::Image>(button_id + "_left_circle:image"), 0.357, 1, 255, 255);
-    set<C::GUI_image_animation>(button_id + "_right_circle:animation", current_time, current_time + Config::inventory_speed,
-                                get<C::Image>(button_id + "_right_circle:image"), 0.357, 1, 255, 255);
-  }
+  animate_label (button_id, style, true, button_position);
 }
 
+void Interface::animate_label (const std::string& id, const Animation_style& style,
+                               bool button , const Point& position)
+{
+  if (style == NONE)
+    return;
+
+  double current_time = get<C::Double>(CLOCK__TIME)->value();
+
+  if (!button)
+  {
+    if (style == ZOOM)
+    {
+      double from = 0.5 * 0.75, to = 0.5;
+      if (get<C::Image>(id + ":image")->scale() != 0.5)
+        std::swap(from, to);
+
+      set<C::GUI_image_animation>(id + ":animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id + ":image"), from, to, 255, 255);
+    }
+    else
+    {
+      unsigned char alpha = get<C::Image>(id + "_left_circle:image")->alpha();
+      double scale = get<C::Image>(id + "_left_circle:image")->scale();
+      set<C::GUI_image_animation>(id + "_back:animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id + "_back:image"), scale, scale, 0, alpha);
+      set<C::GUI_image_animation>(id + "_left_circle:animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id + "_left_circle:image"), scale, scale, 0, alpha);
+      set<C::GUI_image_animation>(id + "_right_circle:animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id + "_right_circle:image"), scale, scale, 0, alpha);
+      if (style == DEPLOY)
+        set<C::GUI_image_animation>(id + ":animation", current_time, current_time + Config::inventory_speed,
+                                    get<C::Image>(id + ":image"), 0.05, 0.5 * scale, 0, 255);
+      else if (style == FADE || style == FADE_LABEL_ONLY)
+        set<C::GUI_image_animation>(id + ":animation", current_time, current_time + Config::inventory_speed,
+                                    get<C::Image>(id + ":image"), 0.5 * scale, 0.5 * scale, 0, 255);
+    }
+  }
+  else
+  {
+    unsigned char alpha = get<C::Image>(id + "_left_circle:image")->alpha();
+    if (style == DEPLOY)
+    {
+      set<C::GUI_position_animation>(id + ":animation", current_time, current_time + Config::inventory_speed,
+                                     get<C::Position>(id + ":global_position"), position);
+      set<C::GUI_image_animation>(id + "_left_circle:animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id + "_left_circle:image"), 0.357, 1, alpha, alpha);
+      set<C::GUI_image_animation>(id + "_right_circle:animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id + "_right_circle:image"), 0.357, 1, alpha, alpha);
+    }
+    else if (style == FADE)
+    {
+      set<C::GUI_image_animation>(id + "_left_circle:animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id + "_left_circle:image"), 1, 1, 0, alpha);
+      set<C::GUI_image_animation>(id + "_right_circle:animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id + "_right_circle:image"), 1, 1, 0, alpha);
+    }
+  }
+}
 
 void Interface:: update_inventory ()
 {

@@ -27,6 +27,7 @@
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Group.h>
+#include <Sosage/Component/GUI_animation.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
@@ -536,6 +537,11 @@ void Interface::update_active_objects()
                 get<C::Position>(id + ":label")->value(), -1.);
 
     double scale = (is_active ? 1.0 : 0.75);
+    bool scale_changed = false;
+    if (auto img = request<C::Image>(id + "_label:image"))
+      if (img->scale() != 0.5 * scale)
+        scale_changed = true;
+
     if (auto right = request<C::Boolean>(id + "_goto:right"))
     {
       bool r = right->value();
@@ -545,6 +551,21 @@ void Interface::update_active_objects()
     else
       update_label(false, id + "_label", locale(name->value()), false, false, pos,
                    touchmode ? BOX : UNCLICKABLE, scale);
+
+    // If label was already there, cancel out animation
+    if (auto anim = request<C::GUI_image_animation>(id + "_label:animation"))
+    {
+      remove(id + "_label:animation");
+      remove(id + "_label_back:animation");
+      remove(id + "_label_left_circle:animation");
+      remove(id + "_label_right_circle:animation");
+      if (scale_changed)
+        animate_label(id + "_label", ZOOM);
+    }
+    else // Else in animation
+    {
+      animate_label (id + "_label", FADE);
+    }
   }
 
 }
@@ -617,10 +638,10 @@ void Interface::update_action_selector()
       inventory_action = "Continue";
     }
 
-    generate_action (take_id, take_action, LEFT_BUTTON, gamepad_label(gamepad, WEST), origin);
-    generate_action (look_id, look_action, RIGHT_BUTTON, gamepad_label(gamepad, EAST), origin);
-    generate_action (move_id, move_action, UP, gamepad_label(gamepad, NORTH), origin);
-    generate_action (inventory_id, inventory_action, DOWN, gamepad_label(gamepad, SOUTH), origin);
+    generate_action (take_id, take_action, LEFT_BUTTON, gamepad_label(gamepad, WEST), origin, FADE_LABEL_ONLY);
+    generate_action (look_id, look_action, RIGHT_BUTTON, gamepad_label(gamepad, EAST), origin, FADE_LABEL_ONLY);
+    generate_action (move_id, move_action, UP, gamepad_label(gamepad, NORTH), origin, FADE_LABEL_ONLY);
+    generate_action (inventory_id, inventory_action, DOWN, gamepad_label(gamepad, SOUTH), origin, FADE_LABEL_ONLY);
 
     for (std::size_t i = nb_labels; i < m_labels.size(); ++ i)
       group->add(m_labels[i]);
@@ -635,8 +656,19 @@ void Interface::update_action_selector()
 
 void Interface::update_switcher()
 {
+  bool switcher_on = (m_close_objects.size() >= 2);
+  double current_time = get<C::Double>(CLOCK__TIME)->value();
   auto group = request<C::Group>("Switcher:group");
-  if (!group)
+  if (group && !switcher_on)
+  {
+    group->apply<C::Image> ([&](auto img)
+    {
+      set<C::GUI_image_animation>(img->id() + ":animation", current_time, current_time + Config::inventory_speed,
+                                  img, img->scale(), img->scale(), img->alpha(), 0);
+    });
+    remove (group->id());
+  }
+  else if (!group && switcher_on)
   {
     bool keyboard = (get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE)->value() == KEYBOARD);
 
@@ -669,23 +701,31 @@ void Interface::update_switcher()
     pos->set (Point (get<C::Position>("Switcher_left_right_circle:position")->value().x() + img->width() / 2,
                      left_pos->value().y()));
 
+    animate_label("Switcher_left", FADE, true);
+    animate_label("Switcher_label", FADE, false);
     if (!keyboard)
     {
       update_label (true, "Switcher_right", "R", false, false,
                     set<C::Absolute_position>("Switch_right:global_position", Point(0,0)), UNCLICKABLE);
+      remove("Switcher_right:group");
       m_labels.pop_back();
       auto right_pos = get<C::Absolute_position>("Switcher_right:global_position");
       right_pos->set (Point (pos->value().x() + img->width() / 2, left_pos->value().y()));
+      animate_label("Switcher_right", FADE, true);
     }
 
     group = set<C::Group>("Switcher:group");
     group->add (get<C::Group>("Switcher_left:group"));
     group->add (get<C::Group>("Switcher_label:group"));
+    remove("Switcher_left:group");
+    remove("Switcher_label:group");
     if (auto g = request<C::Group>("Switcher_right:group"))
+    {
       group->add(g);
-  }
+      remove("Switcher_right:group");
+    }
 
-  group->apply<C::Image> ([&](auto img) { img->on() = (m_close_objects.size() >= 2); });
+  }
 }
 
 } // namespace Sosage::System

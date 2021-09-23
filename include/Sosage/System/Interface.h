@@ -52,6 +52,8 @@ class Interface : public Base
   double m_latest_exit;
   bool m_stick_on;
 
+  enum Animation_style { NONE, DEPLOY, FADE, FADE_LABEL_ONLY, ZOOM };
+
 public:
 
   Interface (Content& content);
@@ -65,12 +67,14 @@ private:
   void update_pause_screen();
   void set_action (const std::string& id, const std::string& default_id);
   void clear_action_ids(bool clear_highlight = false);
-  void update_label (bool is_button, const std::string& id, std::string name, bool open_left,
+  bool update_label (bool is_button, const std::string& id, std::string name, bool open_left,
                      bool open_right, Component::Position_handle pos, const Collision_type& collision,
                      double scale = 1.0, bool arrow = false);
   void generate_action (const std::string& id, const std::string& action,
                         const Button_orientation& orientation, const std::string& button = "",
-                        Point position = Point(), bool animate = false);
+                        Point position = Point(), const Animation_style& style = NONE);
+  void animate_label (const std::string& id, const Animation_style& style,
+                      bool button = false, const Point& position = Point());
   void update_inventory ();
   void update_dialog_choices ();
   void generate_code_hover();
