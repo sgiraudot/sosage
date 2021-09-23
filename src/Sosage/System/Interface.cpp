@@ -388,7 +388,7 @@ void Interface::clear_action_ids(bool clear_highlights)
     group->apply<C::Image> ([&](auto img)
     {
       set<C::GUI_image_animation>(img->entity() + ":animation", current_time, current_time + Config::inventory_speed,
-                                  img, img->scale(), img->scale(), img->alpha(), 0);
+                                  img, img->scale(), img->scale(), img->alpha(), 0, true);
 
       //remove (h->id());
     });

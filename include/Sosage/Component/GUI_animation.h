@@ -37,11 +37,13 @@ class GUI_animation : public Base
 {
   double m_start_time;
   double m_end_time;
+  bool m_remove_after;
 
 public:
 
-  GUI_animation (const std::string& id, double start_time, double end_time)
-    : Base(id), m_start_time (start_time), m_end_time(end_time)
+  GUI_animation (const std::string& id, double start_time, double end_time,
+                 bool remove_after)
+    : Base(id), m_start_time (start_time), m_end_time(end_time), m_remove_after(remove_after)
   { }
 
   bool update (double current_time)
@@ -56,8 +58,11 @@ public:
     return true;
   }
 
+  bool remove_after() const { return m_remove_after; }
+
   virtual void finalize () = 0;
   virtual void update_impl (double current_time) = 0;
+  virtual const std::string& object_id() = 0;
 
 protected:
 
@@ -79,8 +84,8 @@ class GUI_position_animation : public GUI_animation
 public:
 
   GUI_position_animation (const std::string& id, double start_time, double end_time,
-                          Position_handle position, Point target)
-    : GUI_animation(id, start_time, end_time)
+                          Position_handle position, Point target, bool remove_after = false)
+    : GUI_animation(id, start_time, end_time, remove_after)
     , m_position(position)
     , m_start_pos(position->value()), m_end_pos(target)
   { }
@@ -95,6 +100,8 @@ public:
     m_position->set (Point(smooth_function (m_start_pos.x(), m_end_pos.x(), current_time),
                            smooth_function (m_start_pos.y(), m_end_pos.y(), current_time)));
   }
+
+  virtual const std::string& object_id() { return m_position->id(); }
 };
 
 using GUI_position_animation_handle = std::shared_ptr<GUI_position_animation>;
@@ -111,8 +118,9 @@ public:
 
   GUI_image_animation (const std::string& id, double start_time, double end_time,
                        Image_handle image, double start_scale, double end_scale,
-                       unsigned char start_alpha, unsigned char end_alpha)
-    : GUI_animation(id, start_time, end_time)
+                       unsigned char start_alpha, unsigned char end_alpha,
+                       bool remove_after = false)
+    : GUI_animation(id, start_time, end_time, remove_after)
     , m_image (image)
     , m_start_scale (start_scale), m_end_scale (end_scale)
     , m_start_alpha (start_alpha), m_end_alpha (end_alpha)
@@ -131,6 +139,8 @@ public:
     m_image->set_alpha(smooth_function (m_start_alpha, m_end_alpha, current_time));
     m_image->set_highlight (0);
   }
+
+  virtual const std::string& object_id() { return m_image->id(); }
 };
 
 using GUI_image_animation_handle = std::shared_ptr<GUI_image_animation>;

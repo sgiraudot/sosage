@@ -100,14 +100,18 @@ void Animation::run_gui_frame()
         (Point(x_start + shift * current_intensity, 0));
   }
 
-  std::vector<std::string> to_remove;
+  std::vector<C::GUI_animation_handle> to_remove;
   for (auto c : m_content)
     if (auto a = C::cast<C::GUI_animation>(c))
       if (!a->update(current_time))
-        to_remove.emplace_back(c->id());
+        to_remove.emplace_back(a);
 
-  for (const std::string& id : to_remove)
-    remove(id);
+  for (C::GUI_animation_handle a : to_remove)
+  {
+    if (a->remove_after())
+      remove(a->object_id());
+    remove(a->id());
+  }
 }
 
 void Animation::run_animation_frame()
