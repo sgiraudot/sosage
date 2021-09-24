@@ -773,7 +773,8 @@ void Interface:: update_inventory ()
     unsigned char alpha = 255;
     unsigned char highlight = 0;
 
-    if (img == m_collision || inventory->get(i) == m_active_object)
+    if (status()->value() != INVENTORY_ACTION_CHOICE &&
+        (img == m_collision || inventory->get(i) == m_active_object))
     {
       highlight = 255;
       factor = 0.9;
