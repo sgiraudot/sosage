@@ -35,7 +35,6 @@
 #include <Sosage/Component/Variable.h>
 #include <Sosage/System/Interface.h>
 #include <Sosage/Utils/color.h>
-#include <Sosage/Utils/gamepad_labels.h>
 
 #include <queue>
 
@@ -44,6 +43,7 @@ namespace Sosage::System
 
 namespace C = Component;
 
+#if 0
 void Interface::window_triggered(const std::string& action)
 {
   if (action == "look" || action == "inventory")
@@ -727,5 +727,5 @@ void Interface::update_switcher()
 
   }
 }
-
+#endif
 } // namespace Sosage::System

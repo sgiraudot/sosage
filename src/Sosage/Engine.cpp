@@ -35,6 +35,7 @@
 #include <Sosage/Config/version.h>
 #include <Sosage/Engine.h>
 #include <Sosage/System/Animation.h>
+#include <Sosage/System/Control.h>
 #include <Sosage/System/File_IO.h>
 #include <Sosage/System/Graphic.h>
 #include <Sosage/System/Input.h>
@@ -104,6 +105,7 @@ int Engine::run (const std::string& folder_name)
 
   auto file_io = System::make_handle<System::File_IO>(m_content);
   auto graphic = System::make_handle<System::Graphic>(m_content);
+  auto control = System::make_handle<System::Control>(m_content);
   auto interface = System::make_handle<System::Interface>(m_content);
   auto time = System::make_handle<System::Time>(m_content);
   auto animation = System::make_handle<System::Animation>(m_content);
@@ -111,6 +113,7 @@ int Engine::run (const std::string& folder_name)
   // Create all systems
   m_systems.push_back (file_io);
   m_systems.push_back (System::make_handle<System::Input>(m_content));
+  m_systems.push_back (control);
   m_systems.push_back (interface);
   m_systems.push_back (System::make_handle<System::Logic>(m_content));
   m_systems.push_back (animation);
@@ -137,7 +140,8 @@ int Engine::run (const std::string& folder_name)
 
 
   file_io->read_init ();
-  interface->init(); // init interface
+  control->init();
+  interface->init();
 
   debug("Init done, entering main loop");
 
@@ -171,7 +175,7 @@ bool Engine::run()
   }
   catch (std::runtime_error& error)
   {
-    std::dynamic_pointer_cast<System::Graphic>(m_systems[6])->display_error (error.what());
+    std::dynamic_pointer_cast<System::Graphic>(m_systems[7])->display_error (error.what());
     throw error;
   }
 #endif

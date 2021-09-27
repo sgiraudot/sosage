@@ -39,7 +39,7 @@ namespace Sosage::System
 
 namespace C = Component;
 
-
+#if 0
 void Interface::window_clicked()
 {
   auto window = get<C::Image>("Game:window");
@@ -512,7 +512,7 @@ void Interface::detect_collision (C::Position_handle cursor)
     }
   }
 }
-
+#endif
 
 
 } // namespace Sosage::System

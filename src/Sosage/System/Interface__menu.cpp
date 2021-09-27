@@ -39,6 +39,7 @@ namespace Sosage::System
 
 namespace C = Component;
 
+#if 0
 void Interface::init_menus()
 {
   auto exit_menu = set<C::Menu>("Exit:menu");
@@ -733,6 +734,6 @@ void Interface::apply_setting (const std::string& setting, const std::string& va
   else if (setting == "sound_volume")
     set<C::Int>("Sounds:volume")->set(to_int(value) / 10);
 }
-
+#endif
 
 }

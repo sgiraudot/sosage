@@ -42,6 +42,7 @@ namespace Sosage::System
 
 class Interface : public Base
 {
+#if 0
   Component::Image_handle m_collision;
   std::string m_source;
   std::string m_target;
@@ -51,6 +52,11 @@ class Interface : public Base
   Status m_latest_status;
   double m_latest_exit;
   bool m_stick_on;
+#endif
+
+  std::string m_active_object;
+  std::vector<std::string> m_active_objects;
+  std::array<std::string, 4> m_action_selector;
 
   enum Animation_style { NONE, DEPLOY, FADE, FADE_LABEL_ONLY, ZOOM };
 
@@ -60,21 +66,46 @@ public:
 
   virtual void run();
 
+#if 0
+  void run_old();
+#endif
+
   virtual void init();
 
 private:
 
+  void update_active_objects();
+  void update_action_selector();
+  void update_object_switcher();
+  void update_inventory();
+  void update_cursor();
+
+  void create_object_label (const std::string& id);
+  void create_label (bool is_button, const std::string& id, std::string name,
+                     bool open_left, bool open_right,
+                     const Collision_type& collision, double scale = 1.0, bool arrow = false);
+  void animate_label (const std::string& id, const Animation_style& style,
+                      bool button = false, const Point& position = Point());
+  void update_label (const std::string& id,
+                     bool open_left, bool open_right, Component::Position_handle pos,
+                     double scale = 1.0, bool arrow = false);
+  void update_label_position (const std::string& id, double scale = 1.0);
+  void delete_label (const std::string& id);
+  void fade_action_selector (const std::string& id, bool fade_in);
+  void highlight_object (const std::string& id, unsigned char highlight);
+  void set_action_selector (const std::string& id);
+  void reset_action_selector ();
+  void generate_action (const std::string& id, const std::string& action,
+                        const Button_orientation& orientation, const std::string& button,
+                        const Point& position, const Animation_style& style = NONE);
+
+#if 0
   void update_pause_screen();
   void set_action (const std::string& id, const std::string& default_id);
   void clear_action_ids(bool clear_highlight = false);
   bool update_label (bool is_button, const std::string& id, std::string name, bool open_left,
                      bool open_right, Component::Position_handle pos, const Collision_type& collision,
                      double scale = 1.0, bool arrow = false);
-  void generate_action (const std::string& id, const std::string& action,
-                        const Button_orientation& orientation, const std::string& button = "",
-                        Point position = Point(), const Animation_style& style = NONE);
-  void animate_label (const std::string& id, const Animation_style& style,
-                      bool button = false, const Point& position = Point());
   void update_inventory ();
   void update_dialog_choices ();
   void generate_code_hover();
@@ -119,7 +150,7 @@ private:
   void delete_menu (const std::string& id);
   void menu_clicked (std::string entity = "");
   void apply_setting (const std::string& setting, const std::string& value);
-
+#endif
 };
 
 
