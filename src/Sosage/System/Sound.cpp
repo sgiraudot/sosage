@@ -70,11 +70,11 @@ void Sound::run()
 
   if (music)
   {
-    bool paused = (status()->value() == PAUSED);
+    bool paused = (status()->is (PAUSED));
 
     if (paused && music->on())
     {
-      if (status()->next_value() == CUTSCENE)
+      if (status()->was (CUTSCENE))
         m_core.pause_music (music->core());
       else
         m_core.set_volume(0.15 * get<C::Int>("Music:volume")->value() / 10.);
@@ -82,7 +82,7 @@ void Sound::run()
     }
     else if (!paused && !music->on())
     {
-      if (status()->value() == CUTSCENE)
+      if (status()->is (CUTSCENE))
         m_core.resume_music(music->core());
       else
         m_core.set_volume (get<C::Int>("Music:volume")->value() / 10.);

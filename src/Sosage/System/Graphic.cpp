@@ -115,7 +115,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
   {
     if (img->on())
     {
-      if (status()->value() == LOCKED &&
+      if (status()->is (LOCKED) &&
            img->entity() == "Cursor")
         continue;
 

@@ -276,7 +276,7 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
                              const std::string& text)
 {
   SDL_Surface* surf;
-  if (text.find('\n') == std::string::npos)
+  if (!contains (text, "\n"))
     surf = TTF_RenderUTF8_Blended(font.first.get(), text.c_str(), color(color_str));
   else
     surf = TTF_RenderUTF8_Blended_Wrapped(font.first.get(), text.c_str(), color(color_str), 1920);

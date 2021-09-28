@@ -48,7 +48,7 @@ void Animation::run()
 {
   std::size_t new_frame_id = frame_id(get<C::Double>(CLOCK__TIME)->value());
 
-  if (status()->value() == PAUSED || status()->value() == IN_MENU)
+  if (status()->is (PAUSED, IN_MENU))
   {
     m_frame_id = new_frame_id;
     return;
@@ -286,7 +286,7 @@ void Animation::run_animation_frame()
     update_camera_target();
 
   for (const auto& animation : animations)
-    if (just_started.find(animation->entity()) == just_started.end())
+    if (!contains(just_started, animation->entity()))
       if (!animation->next_frame())
         animation->on() = false;
 

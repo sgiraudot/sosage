@@ -100,7 +100,7 @@ void File_IO::clean_content()
        if (!full_reset)
        {
          // keep inventory + other forced kept
-         if (force_keep.find(c->entity()) != force_keep.end())
+         if (contains(force_keep, c->entity()))
            return false;
 
          // keep states and positions
@@ -113,7 +113,7 @@ void File_IO::clean_content()
        }
 
        // else, remove component if belonged to the latest room
-       return (m_latest_room_entities.find(c->entity()) != m_latest_room_entities.end());
+       return contains (m_latest_room_entities, c->entity());
      });
 }
 

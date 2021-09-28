@@ -117,20 +117,20 @@ void Input::run()
 
     if (ev == Event(KEY_UP, SPACE))
     {
-      if (status()->value() == PAUSED)
+      if (status()->is(PAUSED))
         status()->pop();
       else
         status()->push(PAUSED);
     }
 
     if (ev == Event(WINDOW, FOREGROUND)
-        && status()->value() == PAUSED)
+        && status()->is(PAUSED))
       status()->pop();
     if (ev == Event(WINDOW, BACKGROUND)
-        && status()->value() != PAUSED)
+        && !status()->is (PAUSED))
       status()->push(PAUSED);
 
-    if (status()->value() == PAUSED)
+    if (status()->is (PAUSED))
       continue;
 
     if (ev == Event(KEY_UP, D))
@@ -161,7 +161,7 @@ void Input::run()
     }
 
     // If paused, ignore mouse events
-    if (status()->value() == LOCKED)
+    if (status()->is (LOCKED))
       continue;
 
     if (mode->value() == MOUSE)

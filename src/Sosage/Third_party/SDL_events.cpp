@@ -104,11 +104,9 @@ Gamepad_type SDL_events::gamepad_type() const
         {
           std::string name = name_str;
 //          std::cerr << "CONTROLLER NAME = " << name << std::endl;
-          if (name.find("Nintendo") != std::string::npos)
+          if (contains (name, "Nintendo"))
             return JAPAN;
-          if (name.find("Steam") != std::string::npos)
-            return USA;
-          if (name.find("X-Box") != std::string::npos)
+          if (contains (name, "Steam") || contains (name, "X-Box"))
             return USA;
         }
         break;

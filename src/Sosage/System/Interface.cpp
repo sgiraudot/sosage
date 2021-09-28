@@ -283,7 +283,7 @@ void Interface::update_active_objects()
   }
   else if (auto active = request<C::String>("Interface:active_object"))
   {
-    if (status()->value() == INVENTORY_ACTION_CHOICE)
+    if (status()->is (INVENTORY_ACTION_CHOICE))
     {
       if (m_active_object != "")
       {
@@ -334,9 +334,9 @@ void Interface::update_action_selector()
           garbage_mouse_selector = true;
 
       // Action selector not up to date
-      bool uptodate = (status()->value() == IDLE && m_action_selector[0] == target->value() + "_move")
-          || (status()->value() == IN_INVENTORY && m_action_selector[0] == target->value() + "_use")
-          || (status()->value() == OBJECT_CHOICE && m_action_selector[1] == target->value() + "_Ok");
+      bool uptodate = (status()->is (IDLE) && m_action_selector[0] == target->value() + "_move")
+          || (status()->is (IN_INVENTORY) && m_action_selector[0] == target->value() + "_use")
+          || (status()->is (OBJECT_CHOICE) && m_action_selector[1] == target->value() + "_Ok");
 
       if (garbage_mouse_selector || !uptodate)
       {
@@ -347,7 +347,7 @@ void Interface::update_action_selector()
     }
     else
     {
-      bool uptodate = ((status()->value() == IN_WINDOW || status()->value() == IN_CODE) && m_action_selector[1] == "code_Ok")
+      bool uptodate = (status()->is (IN_WINDOW, IN_CODE) && m_action_selector[1] == "code_Ok")
           || m_action_selector[2] == "Default_inventory";
 
       // Action selector not up to date
@@ -370,8 +370,8 @@ void Interface::update_action_selector()
           garbage_gamepad_selector = true;
 
       // Action selector not up to date
-      bool uptodate = (status()->value() == ACTION_CHOICE && m_action_selector[0] == target->value() + "_move")
-          || (status()->value() == INVENTORY_ACTION_CHOICE && m_action_selector[0] == target->value() + "_use");
+      bool uptodate = (status()->is (ACTION_CHOICE) && m_action_selector[0] == target->value() + "_move")
+          || (status()->is (INVENTORY_ACTION_CHOICE) && m_action_selector[0] == target->value() + "_use");
 
       // Action selector not up to date
       if (garbage_gamepad_selector || !uptodate)
@@ -441,12 +441,12 @@ void Interface::update_inventory()
 
   double target = 0;
   double as_target = 0;
-  if (status()->value() == IN_INVENTORY || status()->value() == OBJECT_CHOICE || status()->value() == INVENTORY_ACTION_CHOICE)
+  if (status()->is (IN_INVENTORY, OBJECT_CHOICE, INVENTORY_ACTION_CHOICE))
   {
     target = Config::world_height - Config::inventory_height;
     as_target = target - 80 - 2 * Config::inventory_margin;
   }
-  else if ((mode == MOUSE || mode == TOUCHSCREEN) && status()->value() == IDLE)
+  else if ((mode == MOUSE || mode == TOUCHSCREEN) && status()->is (IDLE))
   {
     target = Config::world_height;
     as_target = target - Config::inventory_active_zone - 130;
@@ -577,7 +577,7 @@ void Interface::update_cursor()
       if (state->value() == "selected")
         remove("Selected_object:image");
 
-      if (status()->value() != INVENTORY_ACTION_CHOICE && m_active_object != "")
+      if (!status()->is(INVENTORY_ACTION_CHOICE) && m_active_object != "")
       {
         if (auto right = request<C::Boolean>(m_active_object + "_goto:right"))
         {
@@ -599,7 +599,7 @@ void Interface::create_object_label (const std::string& id)
 {
   debug("Create object_label " + id);
   // Special case for inventory
-  if (status()->value() == IN_INVENTORY || status()->value() == OBJECT_CHOICE)
+  if (status()->is (IN_INVENTORY, OBJECT_CHOICE))
   {
     auto position = get<C::Position>(id + ":position");
     auto pos = set<C::Relative_position>(id + "_label:global_position", position,
@@ -876,7 +876,7 @@ void Interface::update_label (const std::string& id,
 
 void Interface::update_label_position (const std::string& id, double scale)
 {
-  if (status()->value() == IN_INVENTORY || status()->value() == OBJECT_CHOICE)
+  if (status()->is (IN_INVENTORY, OBJECT_CHOICE))
     return;
   debug("Update label position " + id);
 
@@ -987,7 +987,7 @@ void Interface::set_action_selector (const std::string& id)
       look_action = "goto";
     }
 
-    if (status()->value() == IN_INVENTORY)
+    if (status()->is (IN_INVENTORY))
     {
       take_action = "combine";
       move_action = "use";
@@ -995,14 +995,14 @@ void Interface::set_action_selector (const std::string& id)
       if (get<C::Inventory>("Game:inventory")->size() == 1)
         take_id = "";
     }
-    else if (status()->value() == OBJECT_CHOICE)
+    else if (status()->is (OBJECT_CHOICE))
     {
       take_id = "";
       move_id = "";
       look_action = "Ok";
       inventory_action = "Cancel";
     }
-    else if (status()->value() == IN_CODE || status()->value() == IN_WINDOW)
+    else if (status()->is (IN_CODE, IN_WINDOW))
     {
       look_id = "code";
       take_id = "";
@@ -1010,7 +1010,7 @@ void Interface::set_action_selector (const std::string& id)
       look_action = "Ok";
       inventory_action = "Cancel";
     }
-    else if (status()->value() == IN_MENU)
+    else if (status()->is (IN_MENU))
     {
       look_id = "menu";
       take_id = "";
@@ -1028,7 +1028,7 @@ void Interface::set_action_selector (const std::string& id)
   }
   else
   {
-    if (status()->value() == INVENTORY_ACTION_CHOICE)
+    if (status()->is (INVENTORY_ACTION_CHOICE))
     {
       Point object_pos = get<C::Position>(id + ":position")->value();
       auto position = set<C::Absolute_position>

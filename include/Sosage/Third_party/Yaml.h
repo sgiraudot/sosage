@@ -91,7 +91,7 @@ public:
 
     bool has (const std::string& key) const
     {
-      return (map.find(key) != map.end());
+      return contains (map, key);
     }
 
     std::size_t size() const { return vec.size(); }

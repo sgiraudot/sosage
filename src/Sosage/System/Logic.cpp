@@ -80,13 +80,12 @@ void Logic::run ()
 {
   m_current_time = get<C::Double> (CLOCK__TIME)->value();
 
-  if (status()->value() == CUTSCENE || status()->next_value() == CUTSCENE)
+  if (status()->is (CUTSCENE) || status()->was (CUTSCENE))
   {
     run_cutscene();
     return;
   }
-  if (status()->value() == PAUSED || status()->value() == DIALOG_CHOICE ||
-      status()->value() == IN_MENU)
+  if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU))
     return;
   std::set<Timed_handle> new_timed_handle;
 
@@ -244,8 +243,7 @@ void Logic::run ()
 void Logic::run_cutscene()
 {
   auto cutscene = get<C::Cutscene>("Game:cutscene");
-  bool paused = status()->value() == PAUSED
-                || status()->value() == IN_MENU;
+  bool paused = status()->is (PAUSED, IN_MENU);
   double current_time
       = cutscene->current_time (m_current_time, paused);
   if (current_time < 0)

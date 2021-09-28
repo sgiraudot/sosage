@@ -64,6 +64,12 @@ public:
     return out;
   }
 
+  bool is (const Sosage::Status& s) { return (value() == s); }
+  bool is (const Sosage::Status& s1, const Sosage::Status& s2) { return (value() == s1) || (value() == s2); }
+  bool is (const Sosage::Status& s1, const Sosage::Status& s2, const Sosage::Status& s3)
+  { return (value() == s1) || (value() == s2) || (value() == s3); }
+  bool was (const Sosage::Status& s) { return (next_value() == s); }
+
   virtual std::string str() const
   {
     auto copy = m_value;

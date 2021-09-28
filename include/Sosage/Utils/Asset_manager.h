@@ -179,7 +179,7 @@ public:
             fname.resize(ext);
             fname = fname + ".png";
           }
-          else if (fname.find(".lz4") == std::string::npos) // uncompressed file
+          else if (!contains (fname, ".lz4")) // uncompressed file
           {
             passet.size = asset.binary_read<unsigned int>();
             passet.position = asset.tell();

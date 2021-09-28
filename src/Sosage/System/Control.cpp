@@ -182,9 +182,7 @@ void Control::idle_touchscreen()
             return false;
 
           // Only collide with active objects
-          return (std::find(active_objects->value().begin(),
-                            active_objects->value().end(), id)
-                  != active_objects->value().end());
+          return (contains(active_objects->value(), id));
         });
 
     std::size_t pos = collision.find("_label");
@@ -268,8 +266,7 @@ void Control::idle_sub_update_active_objects()
       if (auto active_object = request<C::String>("Interface:active_object"))
       {
         // If active object is not anymore in list of active objects, change it
-        if (std::find(new_active_objects.begin(), new_active_objects.end(), active_object->value())
-            == new_active_objects.end())
+        if (!contains (new_active_objects, active_object->value()))
           active_object->set (new_active_objects.front());
       }
       else
@@ -284,8 +281,7 @@ void Control::idle_sub_update_active_objects()
     if (auto active_object = request<C::String>("Interface:active_object"))
     {
       // If active object is not anymore in list of active objects, change it
-      if (std::find(new_active_objects.begin(), new_active_objects.end(), active_object->value())
-          == new_active_objects.end())
+      if (!contains (new_active_objects, active_object->value()))
         active_object->set (new_active_objects.front());
     }
     else

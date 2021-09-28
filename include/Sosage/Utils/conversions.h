@@ -27,10 +27,12 @@
 #ifndef SOSAGE_UTILS_CONVERSIONS_H
 #define SOSAGE_UTILS_CONVERSIONS_H
 
+#include <algorithm>
 #include <array>
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace Sosage
 {
@@ -89,6 +91,12 @@ template <typename Set, typename T>
 bool contains (const Set& set, const T& t)
 {
   return (set.find(t) != set.end());
+}
+
+template <typename T>
+bool contains (const std::vector<T>& vec, const T& t)
+{
+  return std::find (vec.begin(), vec.end(), t) != vec.end();
 }
 
 inline bool contains (const std::string& str, const char* sub)
