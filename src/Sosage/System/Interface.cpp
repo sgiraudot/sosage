@@ -658,7 +658,7 @@ void Interface::create_object_label (const std::string& id)
                 get<C::Position>(CAMERA__POSITION),
                 get<C::Position>(id + ":label")->value(), -1.);
 
-    update_label(id + "_label", open_left, open_right, pos, scale);
+    update_label(id + "_label", open_left, open_right, pos, scale, true);
   }
 
   animate_label (id + "_label", FADE);
@@ -770,14 +770,15 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
     }
     else
     {
-      unsigned char alpha = get<C::Image>(id + "_left_circle:image")->alpha();
       double scale = get<C::Image>(id + "_left_circle:image")->scale();
-      set<C::GUI_image_animation>(id + "_back:animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(id + "_back:image"), scale, scale, 0, alpha);
-      set<C::GUI_image_animation>(id + "_left_circle:animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(id + "_left_circle:image"), scale, scale, 0, alpha);
-      set<C::GUI_image_animation>(id + "_right_circle:animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(id + "_right_circle:image"), scale, scale, 0, alpha);
+
+      for (const std::string& element : { "back", "left_circle", "right_circle" })
+      {
+        auto img = get<C::Image>(id + "_" + element + ":image");
+        set<C::GUI_image_animation>(id + "_back:animation", current_time, current_time + Config::inventory_speed,
+                                    img, scale, scale, 0, img->alpha());
+      }
+
       if (style == DEPLOY)
         set<C::GUI_image_animation>(id + ":animation", current_time, current_time + Config::inventory_speed,
                                     get<C::Image>(id + ":image"), 0.05, 0.5 * scale, 0, 255);
@@ -899,11 +900,13 @@ void Interface::update_label_position (const std::string& id, double scale)
   {
     bool open_left = false;
     bool open_right = false;
+    bool arrow = false;
 
     if (auto right = request<C::Boolean>(id + "_goto:right"))
     {
       open_left = !right->value();
       open_right = right->value();
+      arrow = true;
     }
 
     auto pos = set<C::Relative_position>
@@ -911,7 +914,7 @@ void Interface::update_label_position (const std::string& id, double scale)
                 get<C::Position>(CAMERA__POSITION),
                 get<C::Position>(id + ":label")->value(), -1.);
 
-    update_label(id + "_label", open_left, open_right, pos, scale);
+    update_label(id + "_label", open_left, open_right, pos, scale, arrow);
   }
 }
 
