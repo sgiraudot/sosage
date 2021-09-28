@@ -42,18 +42,6 @@ namespace Sosage::System
 
 class Interface : public Base
 {
-#if 0
-  Component::Image_handle m_collision;
-  std::string m_source;
-  std::string m_target;
-  std::vector<Component::Group_handle> m_labels;
-  std::unordered_set<std::string> m_close_objects;
-  std::string m_active_object;
-  Status m_latest_status;
-  double m_latest_exit;
-  bool m_stick_on;
-#endif
-
   std::string m_active_object;
   std::vector<std::string> m_active_objects;
   std::array<std::string, 4> m_action_selector;
@@ -66,10 +54,6 @@ public:
 
   virtual void run();
 
-#if 0
-  void run_old();
-#endif
-
   virtual void init();
 
 private:
@@ -81,6 +65,7 @@ private:
   void update_code_hover();
   void update_cursor();
 
+  // Implemented in Interface__labels.cpp
   void create_object_label (const std::string& id);
   void create_label (bool is_button, const std::string& id, std::string name,
                      bool open_left, bool open_right,
@@ -115,44 +100,6 @@ private:
   void delete_menu (const std::string& id);
   void menu_clicked ();
   void apply_setting (const std::string& setting, const std::string& value);
-
-#if 0
-  void update_pause_screen();
-  void set_action (const std::string& id, const std::string& default_id);
-  void clear_action_ids(bool clear_highlight = false);
-  bool update_label (bool is_button, const std::string& id, std::string name, bool open_left,
-                     bool open_right, Component::Position_handle pos, const Collision_type& collision,
-                     double scale = 1.0, bool arrow = false);
-  void update_inventory ();
-  void update_dialog_choices ();
-  void generate_code_hover();
-
-  // Implemented in Interface__mouse.cpp
-  void window_clicked();
-  void code_clicked (Component::Position_handle cursor);
-  void dialog_clicked ();
-  void arrow_clicked();
-  void action_clicked();
-  void object_clicked();
-  void inventory_clicked();
-  void idle_clicked();
-  void detect_collision (Component::Position_handle cursor);
-
-  // Implemented in Interface__gamepad.cpp
-  void window_triggered (const std::string& action);
-  void code_triggered (const std::string& action);
-  void menu_triggered (const std::string& action);
-  void dialog_triggered (const std::string& action);
-  void inventory_triggered (const std::string& action);
-  void idle_triggered (const std::string& action);
-  bool detect_proximity ();
-  void switch_active_object (const bool& right);
-  void clear_active_objects();
-  void update_active_objects();
-  void update_action_selector ();
-  void update_switcher();
-
-#endif
 };
 
 

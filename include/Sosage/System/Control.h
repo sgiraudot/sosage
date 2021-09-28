@@ -70,61 +70,51 @@ private:
   void begin_status (const Status& s);
   void end_status (const Status& s);
 
+  void set_action (const std::string& id, const std::string& default_id);
+
+  // Implemented in Control__mouse.cpp
   void idle_mouse();
   void idle_touchscreen();
-  void idle_gamepad();
-
   void idle_sub_click (const std::string& target);
-  void idle_sub_update_active_objects();
-  void idle_sub_switch_active_object (bool right);
-  void idle_sub_triggered (const std::string& key);
-
   void action_choice_mouse();
   void action_choice_touchscreen();
-
   void action_choice_sub_click (const std::string& id);
-
   void object_choice_mouse();
   void object_choice_touchscreen();
-  void object_choice_gamepad();
-
   void object_choice_sub_click (const std::string& id);
-  void object_choice_sub_triggered (const std::string& key);
-
   void inventory_mouse();
   void inventory_touchscreen();
-  void inventory_gamepad();
-
   void inventory_sub_click (const std::string& target);
-  void inventory_sub_switch_active_object (bool right);
-  void inventory_sub_triggered (const std::string& key);
-
   void window_mouse();
   void window_touchscreen();
-  void window_gamepad();
-
   void code_mouse();
   void code_touchscreen();
-  void code_gamepad();
-
   void code_sub_click(bool collision);
-
   void menu_mouse();
   void menu_touchscreen();
-  void menu_gamepad();
-
-  void menu_sub_triggered (const Event_value& key);
-  void menu_sub_switch_active_item (bool right);
-
   bool collides (Component::Position_handle cursor, Component::Image_handle img);
   std::string first_collision (Component::Position_handle cursor,
                                const std::function<bool(Component::Image_handle)>& filter);
+
+  // Implemented in Control__gamepad.cpp
+  void idle_gamepad();
+  void idle_sub_update_active_objects();
+  void idle_sub_switch_active_object (bool right);
+  void idle_sub_triggered (const std::string& key);
+  void object_choice_gamepad();
+  void object_choice_sub_triggered (const std::string& key);
+  void inventory_gamepad();
+  void inventory_sub_switch_active_object (bool right);
+  void inventory_sub_triggered (const std::string& key);
+  void window_gamepad();
+  void code_gamepad();
+  void menu_gamepad();
+  void menu_sub_triggered (const Event_value& key);
+  void menu_sub_switch_active_item (bool right);
   std::vector<std::string> detect_active_objects();
-  void set_action (const std::string& id, const std::string& default_id);
   Event_value stick_left_right();
   Event_value stick_left_right_up_down();
   Vector stick_direction();
-
 };
 
 } // namespace Sosage::System
