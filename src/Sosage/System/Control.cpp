@@ -104,62 +104,21 @@ void Control::update_exit()
   if (status()->is (CUTSCENE))
   {
     double time = get<C::Double>(CLOCK__TIME)->value();
-    bool exit_message_exists = (request<C::Image>("Exit_message:image") != nullptr);
+    bool exit_message_exists = bool(request<C::Image>("Skip_message:image"));
 
     if (receive("Game:escape"))
     {
-      if (time - m_latest_exit < Config::key_repeat_delay)
+      if (exit_message_exists)
       {
         emit("Game:skip_cutscene");
-        if (exit_message_exists)
-          emit("Exit_message:remove");
-#if 0
-        {
-          remove("Exit_message:image");
-          remove("Exit_message:position");
-          remove("Exit_message_back:image");
-          remove("Exit_message_back:position");
-        }
-#endif
-        return;
+        emit("Skip_message:remove");
       }
+      else
+        emit("Skip_message:create");
       m_latest_exit = time;
     }
-
-    if (time - m_latest_exit < Config::key_repeat_delay)
-    {
-      if (!exit_message_exists)
-        emit("Exit_message:create");
-#if 0
-      {
-        auto interface_font = get<C::Font> ("Interface:font");
-
-        auto img
-            = set<C::Image>("Exit_message:image", interface_font, "FFFFFF",
-                            get<C::String>("Skip_cutscene:text")->value());
-        img->z() += 10;
-        img->set_scale(0.5);
-        img->set_relative_origin (1, 1);
-
-        auto img_back
-            = set<C::Image>("Exit_message_back:image", 0.5 * img->width() + 10, 0.5 * img->height() + 10);
-        img_back->z() = img->z() - 1;
-        img_back->set_relative_origin (1, 1);
-
-        int window_width = Config::world_width;
-        int window_height = Config::world_height;
-        set<C::Absolute_position>("Exit_message:position", Point (window_width - 5,
-                                                         window_height - 5));
-        set<C::Absolute_position>("Exit_message_back:position", Point (window_width,
-                                                              window_height));
-      }
-#endif
-    }
-    else
-    {
-      if (exit_message_exists)
-        emit("Exit_message:remove");
-    }
+    if (exit_message_exists && time - m_latest_exit >= Config::key_repeat_delay)
+      emit("Skip_message:remove");
   }
   else // status != CUTSCENE
   {

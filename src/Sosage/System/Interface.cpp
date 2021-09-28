@@ -58,6 +58,7 @@ void Interface::run()
   update_inventory();
   update_code_hover();
   update_menu();
+  update_skip_message();
   update_cursor();
 }
 
@@ -543,6 +544,41 @@ void Interface::update_code_hover()
        + Vector(position->value())
        - Vector (0.5  * window->width(),
                  0.5 * window->height()));
+}
+
+void Interface::update_skip_message()
+{
+  if (receive ("Skip_message:create"))
+  {
+    auto interface_font = get<C::Font> ("Interface:font");
+
+    auto img
+        = set<C::Image>("Skip_message:image", interface_font, "FFFFFF",
+                        get<C::String>("Skip_cutscene:text")->value());
+    img->z() += 10;
+    img->set_scale(0.5);
+    img->set_relative_origin (1, 1);
+
+    auto img_back
+        = set<C::Image>("Skip_message_back:image", 0.5 * img->width() + 10, 0.5 * img->height() + 10);
+    img_back->z() = img->z() - 1;
+    img_back->set_relative_origin (1, 1);
+
+    int window_width = Config::world_width;
+    int window_height = Config::world_height;
+    set<C::Absolute_position>("Skip_message:position", Point (window_width - 5,
+                                                              window_height - 5));
+    set<C::Absolute_position>("Skip_message_back:position", Point (window_width,
+                                                                   window_height));
+  }
+
+  if (receive ("Skip_message:remove"))
+  {
+    remove("Skip_message:image");
+    remove("Skip_message:position");
+    remove("Skip_message_back:image");
+    remove("Skip_message_back:position");
+  }
 }
 
 void Interface::update_cursor()
