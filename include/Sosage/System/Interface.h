@@ -78,6 +78,7 @@ private:
   void update_action_selector();
   void update_object_switcher();
   void update_inventory();
+  void update_code_hover();
   void update_cursor();
 
   void create_object_label (const std::string& id);
@@ -97,7 +98,7 @@ private:
   void reset_action_selector ();
   void generate_action (const std::string& id, const std::string& action,
                         const Button_orientation& orientation, const std::string& button,
-                        const Point& position, const Animation_style& style = NONE);
+                        Component::Position_handle position, const Animation_style& style = NONE);
 
 #if 0
   void update_pause_screen();

@@ -44,7 +44,7 @@ constexpr int world_depth = 3240;
 constexpr int inventory_height = 150;
 constexpr int inventory_active_zone = 50;
 constexpr int inventory_margin = 20;
-constexpr double inventory_speed = 0.2;
+constexpr double inventory_speed = 0.3;
 
 constexpr int object_reach_x = 150;
 constexpr int object_reach_y = 65;

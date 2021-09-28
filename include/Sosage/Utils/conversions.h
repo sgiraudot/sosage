@@ -85,6 +85,17 @@ inline std::string to_string (const T& t, const Ts& ... ts)
   return to_string(t) + to_string(std::forward<const Ts>(ts)...);
 }
 
+template <typename Set, typename T>
+bool contains (const Set& set, const T& t)
+{
+  return (set.find(t) != set.end());
+}
+
+inline bool contains (const std::string& str, const char* sub)
+{
+  return str.find(sub) != std::string::npos;
+}
+
 } // namespace Sosage
 
 #endif // SOSAGE_UTILS_CONVERSIONS_H

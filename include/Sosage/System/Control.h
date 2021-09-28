@@ -38,6 +38,7 @@ class Control : public Base
 {
   Status m_status;
   Input_mode m_mode;
+  bool m_stick_on;
 
   using Function = std::function<void(void)>;
   using Status_input_pair = std::pair<Status, Input_mode>;
@@ -66,8 +67,6 @@ private:
   void begin_status (const Status& s);
   void end_status (const Status& s);
 
-  void nothing() { };
-
   void idle_mouse();
   void idle_touchscreen();
   void idle_gamepad();
@@ -82,12 +81,39 @@ private:
 
   void action_choice_sub_click (const std::string& id);
 
+  void object_choice_mouse();
+  void object_choice_touchscreen();
+  void object_choice_gamepad();
+
+  void object_choice_sub_click (const std::string& id);
+  void object_choice_sub_triggered (const std::string& key);
+
+  void inventory_mouse();
+  void inventory_touchscreen();
+  void inventory_gamepad();
+
+  void inventory_sub_click (const std::string& target);
+  void inventory_sub_switch_active_object (bool right);
+  void inventory_sub_triggered (const std::string& key);
+
+  void window_mouse();
+  void window_touchscreen();
+  void window_gamepad();
+
+  void code_mouse();
+  void code_touchscreen();
+  void code_gamepad();
+
+  void code_sub_click(bool collision);
+
   bool collides (Component::Position_handle cursor, Component::Image_handle img);
   std::string first_collision (Component::Position_handle cursor,
                                const std::function<bool(Component::Image_handle)>& filter);
   std::vector<std::string> detect_active_objects();
   void set_action (const std::string& id, const std::string& default_id);
-
+  Event_value stick_left_right();
+  Event_value stick_left_right_up_down();
+  Vector stick_direction();
 
 };
 

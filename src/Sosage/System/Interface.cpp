@@ -62,6 +62,7 @@ void Interface::run()
   update_action_selector();
   update_object_switcher();
   update_inventory();
+  update_code_hover();
   update_cursor();
 }
 
@@ -155,6 +156,12 @@ void Interface::init()
   gamepad_switcher->add (get<C::Group>("Gamepad_switcher_right:group"));
   gamepad_switcher->apply<C::Image> ([&](auto img) { img->set_alpha(0); });
 
+  // Init gamepad action selector position
+  set<C::Relative_position>("Gamepad_action_selector:position",
+                            inventory_origin, Vector (Config::world_width - 240, -Config::inventory_active_zone - 130));
+
+  set<C::Variable>("Selected_object:position", get<C::Position>(CURSOR__POSITION));
+
   //init_menus();
 }
 
@@ -162,57 +169,101 @@ void Interface::update_active_objects()
 {
   if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
   {
-    if (active_objects->value() != m_active_objects)
+    if (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD)
     {
-      // Deactivate objects not active anymore
+      auto active_object = get<C::String>("Interface:active_object");
+
+      // No change
+      if (active_objects->value() == m_active_objects
+          && active_object->value() == m_active_object)
+        return;
+
+      std::string old_selected = m_active_object;
+      std::string new_selected = active_object->value();
+
+      m_active_object = active_object->value();
+
+      std::unordered_set<std::string> new_active, old_active, all_active;
       for (const std::string& a : m_active_objects)
-        if (std::find (active_objects->value().begin(), active_objects->value().end(), a)
-            == active_objects->value().end())
+      {
+        old_active.insert(a);
+        all_active.insert(a);
+      }
+      for (const std::string& a : active_objects->value())
+      {
+        new_active.insert(a);
+        all_active.insert(a);
+      }
+
+      debug("Updating labels:");
+      for (const std::string& a : all_active)
+      {
+        // Object was active and is not anymore
+        if (!contains(new_active, a))
         {
+          debug(a + " is not active anymore");
           highlight_object (a, 0);
           delete_label (a + "_label");
         }
-
-      // Activate new objects
-      for (const std::string& a : active_objects->value())
-        if (std::find (m_active_objects.begin(), m_active_objects.end(), a)
-            == m_active_objects.end())
+        // Object was selected and is not anymore (but still here)
+        else if (a == old_selected && a != new_selected)
         {
+          debug(a + " is not selected anymore");
+          update_label_position(a, 0.75);
+          animate_label(a + "_label", ZOOM);
+          highlight_object (a, 192);
+        }
+        // Object was not active and is now active
+        else if (!contains(old_active, a) && contains(new_active, a))
+        {
+          debug(a + " is now active");
           create_object_label (a);
-          highlight_object (a, 64);
+          highlight_object (a, (a == new_selected ? 255 : 192));
         }
+        // Object was already here but is now selected
+        else if (a != old_selected && a == new_selected)
+        {
+          debug(a + " is now selected");
+          update_label_position(a, 1.0);
+          animate_label(a + "_label", ZOOM);
+          highlight_object (a, 255);
+        }
+      }
     }
-
-    if (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() != TOUCHSCREEN)
+    else // TOUCHSCREEN
     {
-      auto active_object = get<C::String>("Interface:active_object");
-      if (active_object->value() != m_active_object)
+      // No change
+      if (active_objects->value() == m_active_objects)
+        return;
+
+      std::unordered_set<std::string> new_active, old_active, all_active;
+      for (const std::string& a : m_active_objects)
       {
-        if (m_active_object != "")
-        {
-          // Old active object is still here, zoom out
-          if (std::find (active_objects->value().begin(), active_objects->value().end(), m_active_object)
-              != active_objects->value().end())
-          {
-            update_label_position(m_active_object, 0.75);
-            animate_label(m_active_object + "_label", ZOOM);
-          }
-        }
+        old_active.insert(a);
+        all_active.insert(a);
+      }
+      for (const std::string& a : active_objects->value())
+      {
+        new_active.insert(a);
+        all_active.insert(a);
+      }
 
-        m_active_object = active_object->value();
-
-        // New active object was already there, zoom in
-        if (std::find (m_active_objects.begin(), m_active_objects.end(), m_active_object)
-            != m_active_objects.end())
+      debug("Updating labels:");
+      for (const std::string& a : all_active)
+      {
+        // Object was active and is not anymore
+        if (!contains(new_active, a))
         {
-          update_label_position(m_active_object);
-          animate_label(m_active_object + "_label", ZOOM);
+          debug(a + " is not active anymore");
+          highlight_object (a, 0);
+          delete_label (a + "_label");
         }
-        // New object is completely new, create from scratch
-        else
+        // Object was not active and is now active
+        else if (!contains(old_active, a) && contains(new_active, a))
         {
-          create_object_label (m_active_object);
-          highlight_object (m_active_object, 192);
+          debug(a + " is now active");
+          create_object_label (a);
+          highlight_object (a, 255);
         }
       }
     }
@@ -232,8 +283,16 @@ void Interface::update_active_objects()
   }
   else if (auto active = request<C::String>("Interface:active_object"))
   {
+    if (status()->value() == INVENTORY_ACTION_CHOICE)
+    {
+      if (m_active_object != "")
+      {
+        highlight_object (m_active_object, 0);
+        delete_label (m_active_object + "_label");
+      }
+    }
     // Active object didn't change, just update position
-    if (m_active_object == active->value())
+    else if (m_active_object == active->value())
       update_label_position(m_active_object); // Just update position
     // New active object
     else
@@ -248,7 +307,7 @@ void Interface::update_active_objects()
       // Then activate object
       m_active_object = active->value();
       create_object_label (m_active_object);
-      highlight_object (m_active_object, 128);
+      highlight_object (m_active_object, 255);
     }
   }
   // If previous object, deactivate it
@@ -268,8 +327,18 @@ void Interface::update_action_selector()
   {
     if (auto target = request<C::String>("Interface:active_object"))
     {
+      // Mouse action selector might be active, deactivate too
+      bool garbage_mouse_selector = false;
+      if (auto p = request<C::Relative_position>(m_action_selector[0] + "_button_back:position"))
+        if (p->absolute_reference() != get<C::Absolute_position>("Inventory:origin"))
+          garbage_mouse_selector = true;
+
       // Action selector not up to date
-      if (m_action_selector[0] != target->value() + "_move")
+      bool uptodate = (status()->value() == IDLE && m_action_selector[0] == target->value() + "_move")
+          || (status()->value() == IN_INVENTORY && m_action_selector[0] == target->value() + "_use")
+          || (status()->value() == OBJECT_CHOICE && m_action_selector[1] == target->value() + "_Ok");
+
+      if (garbage_mouse_selector || !uptodate)
       {
         if (m_action_selector[0] != "")
           reset_action_selector();
@@ -278,8 +347,11 @@ void Interface::update_action_selector()
     }
     else
     {
+      bool uptodate = ((status()->value() == IN_WINDOW || status()->value() == IN_CODE) && m_action_selector[1] == "code_Ok")
+          || m_action_selector[2] == "Default_inventory";
+
       // Action selector not up to date
-      if (m_action_selector[0] != "Default_move")
+      if (!uptodate)
       {
         if (m_action_selector[0] != "")
           reset_action_selector();
@@ -291,8 +363,18 @@ void Interface::update_action_selector()
   {
     if (auto target = request<C::String>("Interface:action_choice_target"))
     {
+      // Gamepad action selector might be active, deactivate too
+      bool garbage_gamepad_selector = false;
+      if (auto p = request<C::Relative_position>(m_action_selector[0] + "_button_back:position"))
+        if (p->absolute_reference() == get<C::Absolute_position>("Inventory:origin"))
+          garbage_gamepad_selector = true;
+
       // Action selector not up to date
-      if (m_action_selector[0] != target->value() + "_move")
+      bool uptodate = (status()->value() == ACTION_CHOICE && m_action_selector[0] == target->value() + "_move")
+          || (status()->value() == INVENTORY_ACTION_CHOICE && m_action_selector[0] == target->value() + "_use");
+
+      // Action selector not up to date
+      if (garbage_gamepad_selector || !uptodate)
       {
         if (m_action_selector[0] != "")
           reset_action_selector();
@@ -317,6 +399,8 @@ void Interface::update_action_selector()
       }
       for (const std::string& id : m_action_selector)
       {
+        if (id == "")
+          continue;
         unsigned char highlight = (id == active_button ? 255 : 0);
         get<C::Image>(id + "_button_left_circle:image")->set_highlight(highlight);
         get<C::Image>(id + "_button_right_circle:image")->set_highlight(highlight);
@@ -356,12 +440,22 @@ void Interface::update_inventory()
   auto inventory_origin = get<C::Absolute_position>("Inventory:origin");
 
   double target = 0;
+  double as_target = 0;
   if (status()->value() == IN_INVENTORY || status()->value() == OBJECT_CHOICE || status()->value() == INVENTORY_ACTION_CHOICE)
+  {
     target = Config::world_height - Config::inventory_height;
+    as_target = target - 80 - 2 * Config::inventory_margin;
+  }
   else if ((mode == MOUSE || mode == TOUCHSCREEN) && status()->value() == IDLE)
+  {
     target = Config::world_height;
+    as_target = target - Config::inventory_active_zone - 130;
+  }
   else
+  {
     target = Config::inventory_active_zone + Config::world_height; // hidden at the bottom
+    as_target = target - Config::inventory_active_zone - 130;
+  }
 
   if (target != inventory_origin->value().y() && !request<C::GUI_animation>("Inventory:animation"))
   {
@@ -369,7 +463,90 @@ void Interface::update_inventory()
     auto position = get<C::Position>("Inventory:origin");
     set<C::GUI_position_animation> ("Inventory:animation", current_time, current_time + Config::inventory_speed,
                                     position, Point(0, target));
+
+    auto as_pos = get<C::Position>("Gamepad_action_selector:position");
+    set<C::GUI_position_animation> ("Gamepad_action_selector:animation", current_time, current_time + Config::inventory_speed,
+                                    as_pos, Point(Config::world_width - 240, as_target));
   }
+
+  auto inventory = get<C::Inventory>("Game:inventory");
+
+  constexpr int inventory_margin = 100;
+  constexpr int inventory_width = Config::world_width - inventory_margin * 2;
+
+  std::string active_object = "";
+  if (auto a = request<C::String>("Interface:active_object"))
+    active_object = a->value();
+  std::string source_object = "";
+  if (auto s = request<C::String>("Interface:source_object"))
+    source_object = s->value();
+
+  std::size_t position = inventory->position();
+  for (std::size_t i = 0; i < inventory->size(); ++ i)
+  {
+    auto img = get<C::Image>(inventory->get(i) + ":image");
+    double factor = 0.7;
+    unsigned char alpha = 255;
+    unsigned char highlight = 0;
+
+    if (inventory->get(i) == active_object)
+    {
+      highlight = 255;
+      factor = 0.9;
+    }
+    if (inventory->get(i) == source_object)
+    {
+      highlight = 0;
+      alpha = 128;
+      factor = 0.5;
+    }
+
+    if (position <= i && i < position + Config::displayed_inventory_size)
+    {
+      std::size_t pos = i - position;
+      double relative_pos = (1 + pos) / double(Config::displayed_inventory_size + 1);
+      img->on() = true;
+      img->set_scale (factor);
+      img->set_alpha (alpha);
+      img->set_highlight(highlight);
+
+      int x = inventory_margin + int(relative_pos * inventory_width);
+      int y = Config::inventory_height / 2;
+
+      set<C::Relative_position>(inventory->get(i) + ":position", inventory_origin, Vector(x,y));
+    }
+    else
+      img->on() = false;
+  }
+
+  get<C::Image>("Left_arrow:image")->on() = (inventory->position() > 0);
+  get<C::Image>("Right_arrow:image")->on() = (inventory->size() - inventory->position()
+                                              > Config::displayed_inventory_size);
+}
+
+void Interface::update_code_hover()
+{
+  if (!receive("Code:hover"))
+    return;
+
+  // Possible improvment: avoid creating image at each frame
+  const std::string& player = get<C::String>("Player:name")->value();
+  auto code = get<C::Code>("Game:code");
+  auto window = get<C::Image>("Game:window");
+  auto position
+    = get<C::Position>(window->entity() + ":position");
+
+  const std::string& color_str = get<C::String>(player + ":color")->value();
+  RGB_color color = color_from_string (color_str);
+  auto img = set<C::Image>("Code_hover:image", code->xmax() - code->xmin(), code->ymax() - code->ymin(),
+                           color[0], color[1], color[2], 128);
+  img->set_collision(UNCLICKABLE);
+  img->z() = Config::inventory_depth;
+  set<C::Absolute_position>
+      ("Code_hover:position", Point(code->xmin(), code->ymin())
+       + Vector(position->value())
+       - Vector (0.5  * window->width(),
+                 0.5 * window->height()));
 }
 
 void Interface::update_cursor()
@@ -378,30 +555,68 @@ void Interface::update_cursor()
 
   if (mode == MOUSE)
   {
-    auto source = request<C::String>("Interface:source_object");
-    if (source)
+    auto state = get<C::String>("Cursor:state");
+    if (auto source = request<C::String>("Interface:source_object"))
     {
-
-    }
-    else if (m_active_object != "")
-    {
-      if (auto right = request<C::Boolean>(m_active_object + "_goto:right"))
+      if (state->value() != "selected")
       {
-        if (right->value())
-          get<C::String>("Cursor:state")->set("goto_right");
-        else
-          get<C::String>("Cursor:state")->set("goto_left");
+        state->set("selected");
+        auto cursor_img = C::make_handle<C::Image>("Selected_object:image",
+                                                   get<C::Image>(source->value() + ":image"));
+        cursor_img->set_alpha(255);
+        cursor_img->set_scale(0.28);
+        cursor_img->set_collision(UNCLICKABLE);
+        cursor_img->z() = Config::cursor_depth+1;
+
+        auto cursor_cond = set<C::String_conditional>("Selected_object:image", state);
+        cursor_cond->add("selected", cursor_img);
       }
-      else
-        get<C::String>("Cursor:state")->set("object");
     }
     else
-      get<C::String>("Cursor:state")->set("default");
+    {
+      if (state->value() == "selected")
+        remove("Selected_object:image");
+
+      if (status()->value() != INVENTORY_ACTION_CHOICE && m_active_object != "")
+      {
+        if (auto right = request<C::Boolean>(m_active_object + "_goto:right"))
+        {
+          if (right->value())
+            state->set("goto_right");
+          else
+            state->set("goto_left");
+        }
+        else
+          state->set("object");
+      }
+      else
+        state->set("default");
+    }
   }
 }
 
 void Interface::create_object_label (const std::string& id)
 {
+  debug("Create object_label " + id);
+  // Special case for inventory
+  if (status()->value() == IN_INVENTORY || status()->value() == OBJECT_CHOICE)
+  {
+    auto position = get<C::Position>(id + ":position");
+    auto pos = set<C::Relative_position>(id + "_label:global_position", position,
+                                         Vector(0, -Config::inventory_height / 2 - 2 * Config::inventory_margin));
+
+    const std::string& name = get<C::String>(id + ":name")->value();
+    create_label (false, id + "_label", locale(name), false, false, UNCLICKABLE);
+    update_label(id + "_label", false, false, pos);
+
+    double diff = get<C::Position>(id + "_label_left_circle:position")->value().x()
+                  - (get<C::Position>("Chamfer:position")->value().x() + Config::label_height);
+    if (diff < 0)
+      position->set(Point (position->value().x() - diff, position->value().y()));
+
+    return;
+  }
+
   const Input_mode& mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
 
   if (mode == MOUSE)
@@ -602,6 +817,15 @@ void Interface::update_label (const std::string& id,
   auto right = request<C::Image>(id + "_right_circle:image");
   auto back = request<C::Image>(id + "_back:image");
 
+  // If animation was happening, finalize it before updating so that scale is final
+  for (const std::string& section : { "", "_left_circle", "_right_circle", "_back" })
+    if (auto anim = request<C::GUI_animation>(id + section + ":animation"))
+    {
+      debug("Finalize " + anim->id());
+      anim->finalize();
+      remove(anim->id());
+    }
+
   if (label)
     label->set_scale(scale * 0.5);
 
@@ -652,6 +876,10 @@ void Interface::update_label (const std::string& id,
 
 void Interface::update_label_position (const std::string& id, double scale)
 {
+  if (status()->value() == IN_INVENTORY || status()->value() == OBJECT_CHOICE)
+    return;
+  debug("Update label position " + id);
+
   const Input_mode& mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
 
   if (mode == MOUSE)
@@ -692,10 +920,15 @@ void Interface::delete_label (const std::string& id)
   auto group = request<C::Group>(id + ":group");
   if (!group)
     return;
+  debug("Delete label " + id);
 
   double current_time = get<C::Double>(CLOCK__TIME)->value();
-  group->apply<C::Image>([&](auto img)
+  group->apply<C::Image>([&](auto img_old)
   {
+    // To avoid later referencing a fading-out image, copy it with another ID and animate the copy
+    auto img = set<C::Image>(img_old->entity() + "_old:image", img_old);
+    set<C::Variable>(img_old->entity() + "_old:position", get<C::Position>(img_old->entity() + ":position"));
+    remove(img_old->id());
     set<C::GUI_image_animation>(img->entity() + ":animation", current_time, current_time + Config::inventory_speed,
                                 img, img->scale(), img->scale(), img->alpha(), 0, true);
   });
@@ -713,8 +946,7 @@ void Interface::fade_action_selector (const std::string& id, bool fade_in)
   {
     unsigned char alpha_off = 0;
     unsigned char alpha_on = 255;
-    if (img->id().find("_label") != std::string::npos &&
-        img->id().find("_label:") == std::string::npos)
+    if (contains(img->id(), "_label") && !contains(img->id(), "_label:"))
       alpha_on = 100;
 
     set<C::GUI_image_animation>(img->entity() + ":animation", current_time, current_time + Config::inventory_speed,
@@ -727,11 +959,15 @@ void Interface::fade_action_selector (const std::string& id, bool fade_in)
 
 void Interface::highlight_object (const std::string& id, unsigned char highlight)
 {
-  get<C::Image>(id + ":image")->set_highlight (highlight);
+  debug("Highlight " + id + " by " + to_string(int(highlight)));
+  // Image might have been destroyed here
+  if (auto img = request<C::Image>(id + ":image"))
+    img->set_highlight (highlight);
 }
 
 void Interface::set_action_selector (const std::string& id)
 {
+  debug("Set action selector to " + id);
   const Input_mode& mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
   if (mode == GAMEPAD)
   {
@@ -784,7 +1020,7 @@ void Interface::set_action_selector (const std::string& id)
     }
 
     const Gamepad_type& gamepad = get<C::Simple<Gamepad_type>>("Gamepad:type")->value();
-    Point pos(Config::world_width - 240, Config::world_height - 130);
+    auto pos = get<C::Position>("Gamepad_action_selector:position");
     generate_action (take_id, take_action, LEFT_BUTTON, gamepad_label(gamepad, WEST), pos, FADE_LABEL_ONLY);
     generate_action (look_id, look_action, RIGHT_BUTTON, gamepad_label(gamepad, EAST), pos, FADE_LABEL_ONLY);
     generate_action (move_id, move_action, UP, gamepad_label(gamepad, NORTH), pos, FADE_LABEL_ONLY);
@@ -792,34 +1028,57 @@ void Interface::set_action_selector (const std::string& id)
   }
   else
   {
-    auto position = get<C::Position>(CURSOR__POSITION)->value();
-
-    m_action_selector = { id + "_move", id + "_take", id + "_inventory", id + "_look" };
-
-    generate_action (id, "take", LEFT_BUTTON, "", position, DEPLOY);
-    if (get<C::Position>(id + "_take_label_left_circle:position")->value().x() < Config::label_height)
+    if (status()->value() == INVENTORY_ACTION_CHOICE)
     {
-      generate_action (id, "move", UPPER, "", position, DEPLOY);
-      generate_action (id, "take", UP_RIGHT, "", position, DEPLOY);
-      generate_action (id, "look", DOWN_RIGHT, "", position, DEPLOY);
-      generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
+      Point object_pos = get<C::Position>(id + ":position")->value();
+      auto position = set<C::Absolute_position>
+                      ("Action_selector:position",
+                       Point (object_pos.x(),
+                              get<C::Position>("Inventory:origin")->value().y() - 0.75 * Config::label_height));
+
+      generate_action (id, "combine", LEFT_BUTTON, "", position, DEPLOY);
+      double diff = get<C::Position>(id + "_combine_label_left_circle:position")->value().x()
+                    - (get<C::Position>("Chamfer:position")->value().x() + Config::label_height);
+      if (diff < 0)
+      {
+        position->set(Point (position->value().x() - diff, position->value().y()));
+        generate_action (id, "combine", LEFT_BUTTON, "", position, DEPLOY);
+      }
+
+      generate_action (id, "use", UP, "", position, DEPLOY);
+      generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
     }
     else
     {
-      generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
-      if (get<C::Position>(id + "_take_label_right_circle:position")->value().x()
-          > Config::world_width - Config::label_height)
+      auto position = set<C::Absolute_position>("Action_selector:position",
+                                                get<C::Position>(CURSOR__POSITION)->value());
+
+
+      generate_action (id, "take", LEFT_BUTTON, "", position, DEPLOY);
+      if (get<C::Position>(id + "_take_label_left_circle:position")->value().x() < Config::label_height)
       {
         generate_action (id, "move", UPPER, "", position, DEPLOY);
-        generate_action (id, "take", UP_LEFT, "", position, DEPLOY);
-        generate_action (id, "look", DOWN_LEFT, "", position, DEPLOY);
+        generate_action (id, "take", UP_RIGHT, "", position, DEPLOY);
+        generate_action (id, "look", DOWN_RIGHT, "", position, DEPLOY);
         generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
-
       }
       else
       {
-        generate_action (id, "move", UP, "", position, DEPLOY);
-        generate_action (id, "inventory", DOWN, "", position, DEPLOY);
+        generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
+        if (get<C::Position>(id + "_take_label_right_circle:position")->value().x()
+            > Config::world_width - Config::label_height)
+        {
+          generate_action (id, "move", UPPER, "", position, DEPLOY);
+          generate_action (id, "take", UP_LEFT, "", position, DEPLOY);
+          generate_action (id, "look", DOWN_LEFT, "", position, DEPLOY);
+          generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
+
+        }
+        else
+        {
+          generate_action (id, "move", UP, "", position, DEPLOY);
+          generate_action (id, "inventory", DOWN, "", position, DEPLOY);
+        }
       }
     }
   }
@@ -827,6 +1086,7 @@ void Interface::set_action_selector (const std::string& id)
 
 void Interface::reset_action_selector()
 {
+  debug ("Reset action selector");
   for (std::string& id : m_action_selector)
   {
     delete_label (id + "_label");
@@ -837,7 +1097,7 @@ void Interface::reset_action_selector()
 
 void Interface::generate_action (const std::string& id, const std::string& action,
                                  const Button_orientation& orientation, const std::string& button,
-                                 const Point& position, const Animation_style& style)
+                                 C::Position_handle position, const Animation_style& style)
 {
   auto label = request<C::String>(id + "_" + action + ":label");
   if (isupper(action[0]))
@@ -848,40 +1108,40 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     label = get<C::String>("Inventory:label");
 
   bool open_left = false, open_right = false;
-  Point label_position;
-  Point button_position;
-  Point start_position;
+  Vector label_position;
+  Vector button_position;
+  Vector start_position;
 
   // Default cross orientation
   std::size_t selector_idx = 0;
   if (orientation == UP)
   {
     selector_idx = 0;
-    label_position = position + Vector(0, -80);
-    button_position = position + Vector(0, -40);
-    start_position = position + Vector(0, -14);
+    label_position = Vector(0, -80);
+    button_position = Vector(0, -40);
+    start_position = Vector(0, -14);
   }
   else if (orientation == RIGHT_BUTTON)
   {
     selector_idx = 1;
-    label_position = position + Vector(40, 0);
-    button_position = position + Vector(40, 0);
-    start_position = position + Vector(14, 0);
+    label_position = Vector(40, 0);
+    button_position = Vector(40, 0);
+    start_position = Vector(14, 0);
     open_left = true;
   }
   else if (orientation == DOWN)
   {
     selector_idx = 2;
-    label_position = position + Vector(0, 80);
-    button_position = position + Vector(0, 40);
-    start_position = position + Vector(0, 14);
+    label_position = Vector(0, 80);
+    button_position = Vector(0, 40);
+    start_position = Vector(0, 14);
   }
   else if (orientation == LEFT_BUTTON)
   {
     selector_idx = 3;
-    label_position = position + Vector(-40, 0);
-    button_position = position + Vector(-40, 0);
-    start_position = position + Vector(-14, 0);
+    label_position = Vector(-40, 0);
+    button_position = Vector(-40, 0);
+    start_position = Vector(-14, 0);
     open_right = true;
   }
 
@@ -889,47 +1149,47 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   else if (orientation == UPPER)
   {
     selector_idx = 0;
-    label_position = position + Vector(0, -100);
-    button_position = position + Vector(0, -60);
-    start_position = position + Vector(0, -14);
+    label_position = Vector(0, -100);
+    button_position = Vector(0, -60);
+    start_position = Vector(0, -14);
   }
   else if (orientation == DOWN_RIGHT)
   {
     selector_idx = 1;
-    label_position = position + Vector(50, 28.25);
-    button_position = position + Vector(50, 28.25);
-    start_position = position + Vector(14, 0);
+    label_position = Vector(50, 28.25);
+    button_position = Vector(50, 28.25);
+    start_position = Vector(14, 0);
     open_left = true;
   }
   else if (orientation == DOWN_LEFT)
   {
     selector_idx = 1;
-    label_position = position + Vector(-50, 28.25);
-    button_position = position + Vector(-50, 28.25);
-    start_position = position + Vector(14, 0);
+    label_position = Vector(-50, 28.25);
+    button_position = Vector(-50, 28.25);
+    start_position = Vector(14, 0);
     open_right = true;
   }
   else if (orientation == DOWNER)
   {
     selector_idx = 2;
-    label_position = position + Vector(0, 100);
-    button_position = position + Vector(0, 60);
-    start_position = position + Vector(0, 14);
+    label_position = Vector(0, 100);
+    button_position = Vector(0, 60);
+    start_position = Vector(0, 14);
   }
   else if (orientation == UP_RIGHT)
   {
     selector_idx = 3;
-    label_position = position + Vector(50, -28.25);
-    button_position = position + Vector(50, -28.25);
-    start_position = position + Vector(-14, 0);
+    label_position = Vector(50, -28.25);
+    button_position = Vector(50, -28.25);
+    start_position = Vector(-14, 0);
     open_left = true;
   }
   else if (orientation == UP_LEFT)
   {
     selector_idx = 3;
-    label_position = position + Vector(-50, -28.25);
-    button_position = position + Vector(-50, -28.25);
-    start_position = position + Vector(-14, 0);
+    label_position = Vector(-50, -28.25);
+    button_position = Vector(-50, -28.25);
+    start_position = Vector(-14, 0);
     open_right = true;
   }
   m_action_selector[selector_idx] = id + "_" + action;
@@ -942,7 +1202,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     std::string label_id = id + "_" + action + "_label";
     create_label (false, label_id, locale(label->value()), open_left, open_right, BOX);
     update_label (label_id, open_left, open_right,
-                  set<C::Absolute_position>(label_id + ":global_position", label_position));
+                  set<C::Relative_position>(label_id + ":global_position", position, label_position));
 
     // UPPER and DOWNER configs might need to be moved to be on screen
     if (orientation == UPPER || orientation == DOWNER)
@@ -974,7 +1234,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     button_id = "Default_" + action + "_button";
     create_label (true, button_id, button, false, false, BOX);
     update_label (button_id, false, false,
-                  set<C::Absolute_position>(button_id + ":global_position", start_position));
+                  set<C::Relative_position>(button_id + ":global_position", position, start_position));
     if (auto img = request<C::Image>("Default_" + action + "_button:image"))
       img->on() = false;
     get<C::Image>("Default_" + action + "_button_left_circle:image")->set_alpha(128);
@@ -985,10 +1245,10 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     button_id = id + "_" + action + "_button";
     create_label (true, button_id, button, false, false, BOX);
     update_label (button_id, false, false,
-                  set<C::Absolute_position>(button_id + ":global_position", start_position));
+                  set<C::Relative_position>(button_id + ":global_position", position, start_position));
   }
 
-  animate_label (button_id, style, true, button_position);
+  animate_label (button_id, style, true, position->value() + button_position);
 }
 
 

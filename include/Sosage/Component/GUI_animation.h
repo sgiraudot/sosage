@@ -60,6 +60,7 @@ public:
 
   bool remove_after() const { return m_remove_after; }
 
+  virtual void cancel () = 0;
   virtual void finalize () = 0;
   virtual void update_impl (double current_time) = 0;
   virtual const std::string& object_id() = 0;
@@ -89,6 +90,11 @@ public:
     , m_position(position)
     , m_start_pos(position->value()), m_end_pos(target)
   { }
+
+  virtual void cancel()
+  {
+    m_position->set(m_start_pos);
+  }
 
   virtual void finalize()
   {
@@ -125,6 +131,13 @@ public:
     , m_start_scale (start_scale), m_end_scale (end_scale)
     , m_start_alpha (start_alpha), m_end_alpha (end_alpha)
   { }
+
+  virtual void cancel()
+  {
+    m_image->set_scale (m_start_scale);
+    m_image->set_alpha (m_start_alpha);
+    m_image->set_highlight (0);
+  }
 
   virtual void finalize()
   {
