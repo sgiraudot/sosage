@@ -39,7 +39,6 @@ namespace Sosage::System
 
 namespace C = Component;
 
-#if 0
 void Interface::init_menus()
 {
   auto exit_menu = set<C::Menu>("Exit:menu");
@@ -67,7 +66,6 @@ void Interface::init_menus()
   init_menu_item ((*wanna_restart_menu)[1][1], "Cancel", "cancel");
   init_menu_buttons ((*wanna_restart_menu)[1]);
 
-#if 1
   std::vector<std::array<std::string, 2> > settings_list
       = {
           { "Language", "language" },
@@ -91,7 +89,6 @@ void Interface::init_menus()
   }
   init_menu_item ((*settings_menu)[1], "Ok", "ok");
   init_menu_buttons (settings_menu->root());
-#endif
 
   auto credits_menu = set<C::Menu>("Credits:menu");
   credits_menu->split(VERTICALLY, 3);
@@ -331,14 +328,46 @@ void Interface::init_menu_buttons (Component::Menu::Node node)
 
 void Interface::update_menu()
 {
-  if (status()->value() != IN_MENU)
+  if (auto menu = request<C::String>("Menu:create"))
+  {
+    create_menu (menu->value());
+    remove("Menu:create");
+  }
+
+  if (auto menu = request<C::String>("Menu:delete"))
+  {
+    delete_menu (menu->value());
+    remove("Menu:delete");
+  }
+
+  if (!status()->is (IN_MENU))
     return;
+
+  if (receive ("Menu:clicked"))
+    menu_clicked();
 
   bool gamepad = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD;
 
   const std::string& id = get<C::String>("Game:current_menu")->value();
   auto menu = get<C::Menu>(id + ":menu");
   bool settings = (id == "Settings");
+
+  std::string active_item = "";
+  std::string setting_item = "";
+  if (auto active = request<C::String>("Interface:active_menu_item"))
+  {
+    active_item = active->value();
+    setting_item = active_item;
+    std::size_t pos = setting_item.find("_left_arrow");
+    if (pos != std::string::npos)
+      setting_item.resize(pos);
+    else
+    {
+      pos = setting_item.find("_right_arrow");
+      if (pos != std::string::npos)
+        setting_item.resize(pos);
+    }
+  }
 
   std::queue<C::Menu::Node> todo;
   todo.push (menu->root());
@@ -350,133 +379,40 @@ void Interface::update_menu()
     if (current.nb_children() < 2)
     {
       std::string entity = current.image()->entity();
-      if (gamepad && m_active_object == "")
+      if (gamepad && active_item == "")
       {
         if (settings)
         {
           std::size_t pos = entity.find("_left_arrow");
           if (pos != std::string::npos)
-            m_active_object = std::string(entity.begin(), entity.begin() + pos);
+            active_item = std::string(entity.begin(), entity.begin() + pos);
         }
-        else if (entity.find("_button") != std::string::npos)
-          m_active_object = entity;
+        else if (contains (entity, "_button"))
+          active_item = entity;
+
+        set<C::String>("Interface:active_menu_item", active_item);
+        set<C::String>("Interface:gamepad_active_menu_item", active_item);
       }
 
-      bool active = (current.image() == m_collision || entity == m_active_object);
-      if (settings)
-        active = active ||(entity.find(m_active_object) != std::string::npos);
+      std::cerr << entity << " == " << active_item << "?" << std::endl;
+
+      bool active = (entity == active_item);
+      if (settings && setting_item != "")
+        active = active || contains(entity, setting_item);
 
       double scale = 1.0;
       if (current.image()->scale() < 1.)
         scale = 0.75;
       if (active)
-        scale *= 1.05;
+        scale *= 1.1;
       current.image()->set_scale(scale);
 
-      if (settings && entity.find("arrow") != std::string::npos)
+      if (gamepad && settings &&  contains (entity, "arrow"))
         current.image()->on() = active;
     }
     for (std::size_t i = 0; i < current.nb_children(); ++ i)
       todo.push (current[i]);
   }
-}
-
-void Interface::update_exit()
-{
-  if (status()->value() == LOCKED)
-  {
-    receive("Game:escape");
-    return;
-  }
-  if (receive("Show:menu"))
-  {
-    create_menu (get<C::String>("Game:triggered_menu")->value());
-    status()->push (IN_MENU);
-  }
-
-  if (status()->value() == CUTSCENE)
-  {
-    double time = get<C::Double>(CLOCK__TIME)->value();
-    bool exit_message_exists = (request<C::Image>("Exit_message:image") != nullptr);
-
-    if (receive("Game:escape"))
-    {
-      if (time - m_latest_exit < Config::key_repeat_delay)
-      {
-        emit("Game:skip_cutscene");
-        if (exit_message_exists)
-        {
-          remove("Exit_message:image");
-          remove("Exit_message:position");
-          remove("Exit_message_back:image");
-          remove("Exit_message_back:position");
-        }
-        return;
-      }
-      m_latest_exit = time;
-    }
-
-
-    if (time - m_latest_exit < Config::key_repeat_delay)
-    {
-      if (!exit_message_exists)
-      {
-        auto interface_font = get<C::Font> ("Interface:font");
-
-        auto img
-            = set<C::Image>("Exit_message:image", interface_font, "FFFFFF",
-                            get<C::String>("Skip_cutscene:text")->value());
-        img->z() += 10;
-        img->set_scale(0.5);
-        img->set_relative_origin (1, 1);
-
-        auto img_back
-            = set<C::Image>("Exit_message_back:image", 0.5 * img->width() + 10, 0.5 * img->height() + 10);
-        img_back->z() = img->z() - 1;
-        img_back->set_relative_origin (1, 1);
-
-        int window_width = Config::world_width;
-        int window_height = Config::world_height;
-        set<C::Absolute_position>("Exit_message:position", Point (window_width - 5,
-                                                         window_height - 5));
-        set<C::Absolute_position>("Exit_message_back:position", Point (window_width,
-                                                              window_height));
-      }
-    }
-    else
-    {
-      if (exit_message_exists)
-      {
-        remove("Exit_message:image");
-        remove("Exit_message:position");
-        remove("Exit_message_back:image");
-        remove("Exit_message_back:position");
-      }
-    }
-  }
-  else // status != CUTSCENE
-  {
-    if (receive("Game:escape"))
-    {
-      if (status()->value() == IN_MENU)
-      {
-        const std::string& menu = get<C::String>("Game:current_menu")->value();
-        if (menu == "End")
-          emit("Game:exit");
-        else
-        {
-          delete_menu(menu);
-          status()->pop();
-        }
-      }
-      else
-      {
-        create_menu("Exit");
-        status()->push (IN_MENU);
-      }
-    }
-  }
-
 }
 
 void Interface::create_menu (const std::string& id)
@@ -552,8 +488,6 @@ void Interface::create_menu (const std::string& id)
 
   menu->set_position(Config::world_width / 2,
                      Config::world_height / 2);
-
-  m_active_object = "";
 }
 
 void Interface::delete_menu (const std::string& id)
@@ -562,14 +496,15 @@ void Interface::delete_menu (const std::string& id)
   menu->hide();
   get<C::Image>("Menu_background:image")->on() = false;
   get<C::Image>("Menu_foreground:image")->on() = false;
-  m_active_object = "";
+
+  remove ("Interface:active_menu_item", true);
+  remove ("Interface:gamepad_active_menu_item", true);
 }
 
-void Interface::menu_clicked (std::string entity)
+void Interface::menu_clicked ()
 {
-  bool gamepad = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD;
-  if (entity == "")
-    entity = gamepad ? m_active_object : m_collision->entity();
+  std::string entity = get<C::String>("Interface:active_menu_item")->value();
+
   std::size_t pos = entity.find("_button");
   if (pos != std::string::npos)
     entity.resize(pos);
@@ -734,6 +669,5 @@ void Interface::apply_setting (const std::string& setting, const std::string& va
   else if (setting == "sound_volume")
     set<C::Int>("Sounds:volume")->set(to_int(value) / 10);
 }
-#endif
 
 }

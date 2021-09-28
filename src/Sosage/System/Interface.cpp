@@ -63,6 +63,7 @@ void Interface::run()
   update_object_switcher();
   update_inventory();
   update_code_hover();
+  update_menu();
   update_cursor();
 }
 
@@ -162,7 +163,7 @@ void Interface::init()
 
   set<C::Variable>("Selected_object:position", get<C::Position>(CURSOR__POSITION));
 
-  //init_menus();
+  init_menus();
 }
 
 void Interface::update_active_objects()
@@ -348,6 +349,7 @@ void Interface::update_action_selector()
     else
     {
       bool uptodate = (status()->is (IN_WINDOW, IN_CODE) && m_action_selector[1] == "code_Ok")
+          || (status()->is (IN_MENU) && m_action_selector[1] == "menu_Ok")
           || m_action_selector[2] == "Default_inventory";
 
       // Action selector not up to date

@@ -104,6 +104,11 @@ inline bool contains (const std::string& str, const char* sub)
   return str.find(sub) != std::string::npos;
 }
 
+inline bool contains (const std::string& str, const std::string& sub)
+{
+  return str.find(sub) != std::string::npos;
+}
+
 } // namespace Sosage
 
 #endif // SOSAGE_UTILS_CONVERSIONS_H

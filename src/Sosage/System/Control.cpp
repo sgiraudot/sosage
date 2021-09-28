@@ -27,8 +27,11 @@
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Inventory.h>
+#include <Sosage/Component/Menu.h>
 #include <Sosage/Component/Variable.h>
 #include <Sosage/System/Control.h>
+
+#include <queue>
 
 #define INIT_DISPATCHER(s, m, f) \
   m_dispatcher.insert (std::make_pair(std::make_pair(s, m), std::bind(&Control::f, this)))
@@ -42,6 +45,7 @@ namespace C = Component;
 Control::Control(Content& content)
   : Base (content)
   , m_status(LOCKED)
+  , m_latest_exit (0)
   , m_stick_on (false)
 {
   INIT_DISPATCHER (IDLE, MOUSE, idle_mouse);
@@ -63,6 +67,9 @@ Control::Control(Content& content)
   INIT_DISPATCHER (IN_CODE, MOUSE, code_mouse);
   INIT_DISPATCHER (IN_CODE, TOUCHSCREEN, code_touchscreen);
   INIT_DISPATCHER (IN_CODE, GAMEPAD, code_gamepad);
+  INIT_DISPATCHER (IN_MENU, MOUSE, menu_mouse);
+  INIT_DISPATCHER (IN_MENU, TOUCHSCREEN, menu_touchscreen);
+  INIT_DISPATCHER (IN_MENU, GAMEPAD, menu_gamepad);
 }
 
 void Control::run()
@@ -78,10 +85,115 @@ void Control::run()
     begin_status(m_status);
   }
 
+  update_exit();
+
   auto key = std::make_pair (m_status, m_mode);
   auto iter = m_dispatcher.find(key);
   if (iter != m_dispatcher.end())
     (iter->second)();
+}
+
+void Control::update_exit()
+{
+  if (status()->is (LOCKED))
+  {
+    receive("Game:escape");
+    return;
+  }
+
+#if 0
+  if (receive("Show:menu"))
+  {
+    create_menu (get<C::String>("Game:triggered_menu")->value());
+    status()->push (IN_MENU);
+  }
+#endif
+
+  if (status()->is (CUTSCENE))
+  {
+    double time = get<C::Double>(CLOCK__TIME)->value();
+    bool exit_message_exists = (request<C::Image>("Exit_message:image") != nullptr);
+
+    if (receive("Game:escape"))
+    {
+      if (time - m_latest_exit < Config::key_repeat_delay)
+      {
+        emit("Game:skip_cutscene");
+        if (exit_message_exists)
+          emit("Exit_message:remove");
+#if 0
+        {
+          remove("Exit_message:image");
+          remove("Exit_message:position");
+          remove("Exit_message_back:image");
+          remove("Exit_message_back:position");
+        }
+#endif
+        return;
+      }
+      m_latest_exit = time;
+    }
+
+    if (time - m_latest_exit < Config::key_repeat_delay)
+    {
+      if (!exit_message_exists)
+        emit("Exit_message:create");
+#if 0
+      {
+        auto interface_font = get<C::Font> ("Interface:font");
+
+        auto img
+            = set<C::Image>("Exit_message:image", interface_font, "FFFFFF",
+                            get<C::String>("Skip_cutscene:text")->value());
+        img->z() += 10;
+        img->set_scale(0.5);
+        img->set_relative_origin (1, 1);
+
+        auto img_back
+            = set<C::Image>("Exit_message_back:image", 0.5 * img->width() + 10, 0.5 * img->height() + 10);
+        img_back->z() = img->z() - 1;
+        img_back->set_relative_origin (1, 1);
+
+        int window_width = Config::world_width;
+        int window_height = Config::world_height;
+        set<C::Absolute_position>("Exit_message:position", Point (window_width - 5,
+                                                         window_height - 5));
+        set<C::Absolute_position>("Exit_message_back:position", Point (window_width,
+                                                              window_height));
+      }
+#endif
+    }
+    else
+    {
+      if (exit_message_exists)
+        emit("Exit_message:remove");
+    }
+  }
+  else // status != CUTSCENE
+  {
+    if (receive("Game:escape"))
+    {
+      if (status()->is (IN_MENU))
+      {
+        const std::string& menu = get<C::String>("Game:current_menu")->value();
+        if (menu == "End")
+          emit("Game:exit");
+        else
+        {
+          set<C::String>("Menu:delete", menu);
+          status()->pop();
+        }
+      }
+      else
+      {
+        set<C::String>("Menu:create", "Exit");
+#if 0
+        create_menu("Exit");
+#endif
+        status()->push (IN_MENU);
+      }
+    }
+  }
 }
 
 void Control::begin_status (const Status& s)
@@ -270,7 +382,7 @@ void Control::idle_sub_update_active_objects()
           active_object->set (new_active_objects.front());
       }
       else
-        active_object->set (new_active_objects.front());
+        set<C::String>("Interface:active_object", new_active_objects.front());
       active_objects->set (new_active_objects);
     }
   }
@@ -861,6 +973,183 @@ void Control::code_sub_click(bool collision)
     if (code->click(p.X(), p.Y()))
       emit ("code:button_clicked");
   }
+}
+
+
+void Control::menu_mouse()
+{
+  auto cursor = get<C::Position>(CURSOR__POSITION);
+
+  // Detect collision with clickable objets
+  std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
+  {
+    return contains(img->entity(), "_button") || contains(img->entity(), "_arrow");
+  });
+
+  if (collision != "")
+    set<C::String>("Interface:active_menu_item", collision);
+  else
+    remove ("Interface:active_menu_item", true);
+
+  if (receive("Cursor:clicked") && collision != "")
+    emit ("Menu:clicked");
+}
+
+void Control::menu_touchscreen()
+{
+  if (receive("Cursor:clicked"))
+  {
+    auto cursor = get<C::Position>(CURSOR__POSITION);
+
+    // Detect collision with clickable objets
+    std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
+    {
+      return contains(img->entity(), "_button") || contains(img->entity(), "_arrow");
+    });
+
+    if (collision != "")
+    {
+      set<C::String>("Interface:active_menu_item", collision);
+      emit ("Menu:clicked");
+    }
+  }
+}
+
+void Control::menu_gamepad()
+{
+  if (auto right = request<C::Boolean>("Switch:right"))
+  {
+    remove ("Switch:right");
+    menu_sub_triggered(right ? RIGHT : LEFT);
+  }
+
+  Event_value stick = stick_left_right_up_down();
+  if (stick != NONE)
+    menu_sub_triggered(stick);
+
+  std::string received_key = "";
+  for (const std::string& key : {"move", "take", "inventory", "look"})
+    if (receive("Action:" + key))
+      received_key = key;
+
+  if (received_key == "inventory")
+    menu_sub_triggered (SOUTH);
+  else if (received_key == "look")
+    menu_sub_triggered (EAST);
+}
+
+void Control::menu_sub_triggered (const Event_value& key)
+{
+  const std::string& menu = get<C::String>("Game:current_menu")->value();
+  bool settings = (menu == "Settings");
+
+  auto active_item = request<C::String>("Interface:gamepad_active_menu_item");
+  if (!active_item)
+   return;
+
+  if (key == UP_ARROW)
+    menu_sub_switch_active_item (false);
+  else if (key == DOWN_ARROW)
+    menu_sub_switch_active_item (true);
+  else if (key == LEFT)
+  {
+    if (settings)
+    {
+      if (!contains (active_item->value(), "_button"))
+      {
+        set<C::String>("Interface:active_menu_item", active_item->value() + "_left_arrow");
+        emit ("Menu:clicked");
+      }
+    }
+    else
+      menu_sub_switch_active_item (false);
+  }
+  else if (key == RIGHT)
+  {
+    if (settings)
+    {
+      if (!contains (active_item->value(), "_button"))
+      {
+        set<C::String>("Interface:active_menu_item", active_item->value() + "_right_arrow");
+        emit ("Menu:clicked");
+      }
+    }
+    else
+      menu_sub_switch_active_item (true);
+  }
+  else if (key == EAST)
+  {
+    if (settings && !contains (active_item->value(), "_button"))
+    {
+      set<C::String>("Interface:active_menu_item", active_item->value() + "_right_arrow");
+      emit ("Menu:clicked");
+    }
+    else
+    {
+      set<C::String>("Interface:active_menu_item", active_item->value());
+      emit ("Menu:clicked");
+    }
+  }
+  else if (key == SOUTH)
+  {
+    emit("Game:escape");
+    update_exit();
+  }
+}
+
+void Control::menu_sub_switch_active_item (bool right)
+{
+  const std::string& id = get<C::String>("Game:current_menu")->value();
+  auto menu = get<C::Menu>(id + ":menu");
+  bool settings = (id == "Settings");
+
+  auto active_item = get<C::String>("Interface:gamepad_active_menu_item");
+
+  std::queue<C::Menu::Node> todo;
+  todo.push (menu->root());
+  std::vector<std::string> nodes;
+  std::size_t nb_current = std::size_t(-1);
+  while (!todo.empty())
+  {
+    C::Menu::Node current = todo.front();
+    todo.pop();
+
+    if (current.nb_children() < 2)
+    {
+      std::string entity = current.image()->entity();
+
+      if (settings)
+      {
+        std::size_t pos = entity.find("_left_arrow");
+        if (pos != std::string::npos)
+         nodes.emplace_back(entity.begin(), entity.begin() + pos);
+      }
+      if (entity.find("_button") != std::string::npos)
+        nodes.push_back (current.image()->entity());
+      if (!nodes.empty() && nodes.back() == active_item->value())
+        nb_current = nodes.size() - 1;
+    }
+    for (std::size_t i = 0; i < current.nb_children(); ++ i)
+      todo.push (current[i]);
+  }
+
+  check (nb_current != std::size_t(-1), "Node " + active_item->value() + " not found in menu");
+  if (right)
+  {
+    if (nb_current < nodes.size() - 1)
+      active_item->set (nodes[nb_current + 1]);
+    else
+      active_item->set (nodes.front());
+  }
+  else
+  {
+    if (nb_current > 0)
+      active_item->set (nodes[nb_current - 1]);
+    else
+      active_item->set (nodes.back());
+  }
+
+  set<C::String>("Interface:active_menu_item", active_item->value());
 }
 
 bool Control::collides (C::Position_handle cursor, C::Image_handle img)

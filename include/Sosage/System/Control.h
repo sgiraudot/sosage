@@ -38,6 +38,7 @@ class Control : public Base
 {
   Status m_status;
   Input_mode m_mode;
+  double m_latest_exit;
   bool m_stick_on;
 
   using Function = std::function<void(void)>;
@@ -63,6 +64,8 @@ public:
   virtual void init() { }
 
 private:
+
+  void update_exit();
 
   void begin_status (const Status& s);
   void end_status (const Status& s);
@@ -105,6 +108,13 @@ private:
   void code_gamepad();
 
   void code_sub_click(bool collision);
+
+  void menu_mouse();
+  void menu_touchscreen();
+  void menu_gamepad();
+
+  void menu_sub_triggered (const Event_value& key);
+  void menu_sub_switch_active_item (bool right);
 
   bool collides (Component::Position_handle cursor, Component::Image_handle img);
   std::string first_collision (Component::Position_handle cursor,

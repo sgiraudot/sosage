@@ -100,6 +100,22 @@ private:
                         const Button_orientation& orientation, const std::string& button,
                         Component::Position_handle position, const Animation_style& style = NONE);
 
+  // Implemented in Interface__menu.cpp
+  void init_menus();
+  void update_menu();
+  void update_exit();
+  void init_menu_item (Component::Menu::Node node, const std::string& id,
+                       const std::string& effect = std::string());
+  void init_setting_item (Component::Menu::Node node_left,
+                          Component::Menu::Node node,
+                          Component::Menu::Node node_right,
+                          const std::string& effect);
+  void init_menu_buttons (Component::Menu::Node node);
+  void create_menu (const std::string& id);
+  void delete_menu (const std::string& id);
+  void menu_clicked ();
+  void apply_setting (const std::string& setting, const std::string& value);
+
 #if 0
   void update_pause_screen();
   void set_action (const std::string& id, const std::string& default_id);
@@ -136,21 +152,6 @@ private:
   void update_action_selector ();
   void update_switcher();
 
-  // Implemented in Interface__menu.cpp
-  void init_menus();
-  void update_menu();
-  void update_exit();
-  void init_menu_item (Component::Menu::Node node, const std::string& id,
-                       const std::string& effect = std::string());
-  void init_setting_item (Component::Menu::Node node_left,
-                          Component::Menu::Node node,
-                          Component::Menu::Node node_right,
-                          const std::string& effect);
-  void init_menu_buttons (Component::Menu::Node node);
-  void create_menu (const std::string& id);
-  void delete_menu (const std::string& id);
-  void menu_clicked (std::string entity = "");
-  void apply_setting (const std::string& setting, const std::string& value);
 #endif
 };
 
