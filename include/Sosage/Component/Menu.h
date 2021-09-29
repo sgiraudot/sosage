@@ -69,6 +69,7 @@ class Menu : public Base
 
     Split_direction direction() const { return tree[vertex].direction; }
 
+    bool has_image() { return !tree[vertex].image.empty(); }
     Image_handle image() const { return tree[vertex].image[tree[vertex].current]; }
     Position_handle position() const { return tree[vertex].position; }
 
@@ -217,16 +218,10 @@ class Menu : public Base
 
     void hide()
     {
-      if (nb_children() == 0)
+      if (has_image())
         image()->on() = false;
-      else if (nb_children() == 1)
-      {
-        image()->on() = false;
-        (*this)[0].hide();
-      }
-      else
-        for (std::size_t i = 0; i < nb_children(); ++ i)
-          (*this)[i].hide();
+      for (std::size_t i = 0; i < nb_children(); ++ i)
+        (*this)[i].hide();
     }
 
     void apply (const std::function<void(Image_handle)>& func)

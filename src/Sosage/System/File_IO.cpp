@@ -433,25 +433,22 @@ void File_IO::read_init ()
   std::string interface_font = input["interface_font"].string("fonts", "ttf");
   set<C::Font> ("Interface:font", interface_font, 80);
 
+  std::string interface_light_font = input["interface_light_font"].string("fonts", "ttf");
+  set<C::Font> ("Interface:light_font", interface_light_font, 80);
+
   std::string dialog_font = input["dialog_font"].string("fonts", "ttf");
   set<C::Font> ("Dialog:font", dialog_font, 80);
 
-  std::string menu_color = input["menu_color"].string();
-  set<C::String> ("Menu:color", menu_color);
+  std::string menu_background = input["menu_background"].string("images", "interface", "png");
+  auto menu_background_img = set<C::Image> ("Menu_background:image", menu_background);
+  menu_background_img->z() = Config::menu_front_depth;
+  menu_background_img->set_relative_origin(0.5, 0.5);
+  menu_background_img->on() = false;
+  set<C::Absolute_position>("Menu_background:position", Point (Config::world_width / 2, Config::world_height / 2));
 
   std::string logo_id = input["menu_logo"].string("images", "interface", "png");
-  auto logo
-    = set<C::Image> ("Menu_logo:image", logo_id);
+  auto logo = set<C::Image> ("Menu_logo:image", logo_id);
   logo->on() = false;
-  auto credits_logo
-    = set<C::Image> ("Credits_logo:image", logo_id);
-  credits_logo->on() = false;
-
-
-  std::string credits_id = input["credits_image"].string("images", "interface", "png");
-  auto credits
-    = set<C::Image> ("Credits_text:image", credits_id);
-  credits->on() = false;
 
   std::string left_arrow_id = input["menu_arrows"][0].string("images", "interface", "png");
   auto arrow_left = set<C::Image>("Menu_left_arrow:image", left_arrow_id);
@@ -463,12 +460,41 @@ void File_IO::read_init ()
   arrow_right->set_relative_origin(1, 0.5);
   arrow_right->on() = false;
 
+  std::string menu_ok_id = input["menu_oknotok"][0].string("images", "interface", "png");
+  auto menu_ok = set<C::Image>("Menu_ok:image", menu_ok_id);
+  menu_ok->set_relative_origin(0.5, 0.5);
+  menu_ok->on() = false;
+
+  std::string menu_cancel_id = input["menu_oknotok"][1].string("images", "interface", "png");
+  auto menu_cancel = set<C::Image>("Menu_canel:image", menu_cancel_id);
+  menu_cancel->set_relative_origin(0.5, 0.5);
+  menu_cancel->on() = false;
+
+  std::string menu_button_id = input["menu_buttons"][0].string("images", "interface", "png");
+  auto menu_button = set<C::Image>("Menu_main_button:image", menu_button_id, 1, BOX);
+  menu_button->set_relative_origin(0.5, 0.5);
+  menu_button->on() = false;
+
+  std::string menu_settings_button_id = input["menu_buttons"][1].string("images", "interface", "png");
+  auto menu_settings_button = set<C::Image>("Menu_settings_button:image", menu_settings_button_id, 1, BOX);
+  menu_settings_button->set_relative_origin(0.5, 0.5);
+  menu_settings_button->on() = false;
+
   for (std::size_t i = 0; i < input["text"].size(); ++ i)
   {
     const Core::File_IO::Node& itext = input["text"][i];
     std::string id = itext["id"].string();
     id[0] = toupper(id[0]); // system id start with uppercase
     set<C::String>(id + ":text", itext["value"].string());
+
+    if (itext.has("icon"))
+    {
+      std::string icon_id = itext["icon"].string("images", "interface", "png");
+      auto icon = set<C::Image>(id + "_icon:image", icon_id);
+      icon->z() = Config::menu_text_depth;
+      icon->set_relative_origin(0.5, 0.5);
+      icon->on() = false;
+    }
   }
 
   for (std::string id : Config::possible_actions)

@@ -90,6 +90,12 @@ private:
   void init_menus();
   void update_menu();
   void update_exit();
+
+  void make_oknotok_item (Component::Menu::Node node, bool only_ok);
+  void make_exit_menu_item (Component::Menu::Node node, const std::string& id, int y);
+  void make_text_menu_title (Component::Menu::Node node, const std::string& id);
+  void make_text_menu_text (Component::Menu::Node node, const std::string& id);
+
   void init_menu_item (Component::Menu::Node node, const std::string& id,
                        const std::string& effect = std::string());
   void init_setting_item (Component::Menu::Node node_left,
