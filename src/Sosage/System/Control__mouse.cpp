@@ -50,8 +50,18 @@ void Control::idle_mouse()
   }
 
   // Detect collision with clickable objets
+  auto source = request<C::String>("Interface:source_object");
+
   std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
-  { return bool(request<C::String>(img->entity() + ":name")); });
+  {
+    if (!request<C::String>(img->entity() + ":name"))
+      return false;
+    // Can't combine with a goto
+    if (source)
+      if (request<C::Boolean>(img->entity() + "_goto:right"))
+        return false;
+    return true;
+  });
 
   if (collision != "")
     set<C::String>("Interface:active_object", collision);

@@ -149,9 +149,11 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
     label->set_alpha(scale * 255);
   }
 
+  const Input_mode& mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
+
   if (open_left)
   {
-    if (arrow)
+    if (arrow && mode != MOUSE)
       left = C::make_handle<C::Image>(id + "_left_circle:image", get<C::Image>("Goto_left:image"));
   }
   else
@@ -162,7 +164,7 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
 
   if (open_right)
   {
-    if (arrow)
+    if (arrow && mode != MOUSE)
       right = C::make_handle<C::Image>(id + "_right_circle:image", get<C::Image>("Goto_right:image"));
   }
   else
