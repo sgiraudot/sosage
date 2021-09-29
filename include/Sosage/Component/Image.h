@@ -54,6 +54,7 @@ public:
          const std::string& text, bool outlined = false);
   Image (const std::string& id, std::shared_ptr<Image> copy);
   virtual ~Image() { /*debug("Destructor of ", id());*/ }
+  void compose_with (const std::shared_ptr<Image>& other);
   virtual std::string str() const;
   void set_relative_origin (double ratio_x, double ratio_y);
   const Core::Graphic::Image& core() const { return m_core; }

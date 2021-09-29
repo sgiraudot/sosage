@@ -216,6 +216,68 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
   return out;
 }
 
+SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
+{
+  // Compose images horitonzally
+  Uint32 total_height = 0;
+  Uint32 total_width = 0;
+  for (SDL::Image img : images)
+  {
+    total_height = std::max(Uint32(height(img)), total_height);
+    total_width += width (img);
+  }
+
+  Texture texture = m_textures.make_single
+                    (SDL_CreateTexture, m_renderer, SDL_PIXELFORMAT_ARGB8888,
+                     SDL_TEXTUREACCESS_TARGET, total_width, total_height);
+
+  SDL_SetRenderTarget(m_renderer, texture.get());
+  SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+  SDL_RenderClear(m_renderer);
+  SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+  SDL_SetTextureBlendMode (texture.get(), SDL_BLENDMODE_BLEND);
+  Uint32 x = 0;
+  for (SDL::Image img : images)
+  {
+    SDL_Rect rect;
+    rect.h = height (img);
+    rect.w = width (img);
+    rect.x = x;
+    rect.y = (total_height - rect.h) / 2;
+    SDL_SetTextureBlendMode (img.texture.get(), SDL_BLENDMODE_BLEND);
+    SDL_RenderCopy (m_renderer, img.texture.get(), nullptr, &rect);
+    x += rect.w;
+  }
+
+  Texture highlight = m_textures.make_single
+                      (SDL_CreateTexture, m_renderer, SDL_PIXELFORMAT_ARGB8888,
+                       SDL_TEXTUREACCESS_TARGET, total_width, total_height);
+
+  SDL_SetRenderTarget(m_renderer, highlight.get());
+  SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+  SDL_RenderClear(m_renderer);
+  SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+  SDL_SetTextureBlendMode (highlight.get(), SDL_BLENDMODE_BLEND);
+  x = 0;
+  for (SDL::Image img : images)
+  {
+    SDL_Rect rect;
+    rect.h = height (img);
+    rect.w = width (img);
+    rect.x = x;
+    rect.y = (total_height - rect.h) / 2;
+    SDL_SetTextureBlendMode (img.highlight.get(), SDL_BLENDMODE_BLEND);
+    SDL_RenderCopy (m_renderer, img.highlight.get(), nullptr, &rect);
+    x += rect.w;
+  }
+
+  SDL_SetRenderTarget(m_renderer, nullptr);
+
+  Image out (texture, Bitmap(), total_width, total_height);
+  out.highlight = highlight;
+  return out;
+}
+
 SDL::Font SDL::load_font (const std::string& file_name, int size)
 {
   Asset asset = Asset_manager::open(file_name);

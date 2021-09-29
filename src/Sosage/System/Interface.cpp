@@ -111,20 +111,20 @@ void Interface::init()
   create_label (true, "Keyboard_switcher_left", "Tab", false, false, UNCLICKABLE);
   auto kb_left_pos = set<C::Absolute_position>("Keyboard_switcher_left:global_position", Point(0,0));
   update_label ("Keyboard_switcher_left", false, false, kb_left_pos);
-  kb_left_pos->set (Point (Config::label_height - get<C::Position>("Keyboard_switcher_left_left_circle:position")->value().x(),
+  kb_left_pos->set (Point (Config::label_height - get<C::Position>("Keyboard_switcher_left_back:position")->value().x(),
                         Config::world_height - Config::label_height));
 
   create_label (true, "Gamepad_switcher_left", "L", false, false, UNCLICKABLE);
   auto left_pos = set<C::Absolute_position>("Gamepad_switcher_left:global_position", Point(0,0));
   update_label ("Gamepad_switcher_left", false, false, left_pos);
-  left_pos->set (Point (Config::label_height - get<C::Position>("Gamepad_switcher_left_left_circle:position")->value().x(),
+  left_pos->set (Point (Config::label_height - get<C::Position>("Gamepad_switcher_left_back:position")->value().x(),
                         Config::world_height - Config::label_height));
 
   create_label (false, "Keyboard_switcher_label", locale_get("Switch_target:text"), true, false, UNCLICKABLE);
   auto kb_img = get<C::Image>("Keyboard_switcher_label_back:image");
   auto kb_pos = set<C::Absolute_position>("Keyboard_switcher_label:global_position", Point(0,0));
   update_label ("Keyboard_switcher_label", true, false, kb_pos);
-  kb_pos->set (Point (get<C::Position>("Keyboard_switcher_left_right_circle:position")->value().x() + kb_img->width() / 2,
+  kb_pos->set (Point (get<C::Position>("Keyboard_switcher_left_back:position")->value().x() + kb_img->width() / 2,
                       kb_left_pos->value().y()));
   get<C::Relative_position>("Keyboard_switcher_label:position")->set(Vector(Config::label_margin,0));
   get<C::Relative_position>("Keyboard_switcher_label_back:position")->set(Vector(0,0));
@@ -133,7 +133,7 @@ void Interface::init()
   auto img = get<C::Image>("Gamepad_switcher_label_back:image");
   auto pos = set<C::Absolute_position>("Gamepad_switcher_label:global_position", Point(0,0));
   update_label ("Gamepad_switcher_label", true, true, pos);
-  pos->set (Point (get<C::Position>("Gamepad_switcher_left_right_circle:position")->value().x() + img->width() / 2,
+  pos->set (Point (get<C::Position>("Gamepad_switcher_left_back:position")->value().x() + img->width() / 2,
                       left_pos->value().y()));
 
   create_label (true, "Gamepad_switcher_right", "R", false, false, UNCLICKABLE);
@@ -154,7 +154,7 @@ void Interface::init()
 
   // Init gamepad action selector position
   set<C::Relative_position>("Gamepad_action_selector:position",
-                            inventory_origin, Vector (Config::world_width - 240, -Config::inventory_active_zone - 130));
+                            inventory_origin, Vector (Config::world_width - 250, -Config::inventory_active_zone - 130));
 
   set<C::Variable>("Selected_object:position", get<C::Position>(CURSOR__POSITION));
 
@@ -163,6 +163,28 @@ void Interface::init()
 
 void Interface::update_active_objects()
 {
+  // Clear if input mode changed
+  if (receive("Input_mode:changed"))
+  {
+    std::cerr << "Input mode changed" << std::endl;
+    if (!m_active_objects.empty())
+    {
+      for (const std::string& a : m_active_objects)
+      {
+        highlight_object (a, 0);
+        delete_label (a + "_label");
+      }
+      m_active_objects.clear();
+      m_active_object = "";
+    }
+    else if (m_active_object != "")
+    {
+      highlight_object (m_active_object, 0);
+      delete_label (m_active_object + "_label");
+      m_active_object = "";
+    }
+  }
+
   if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
   {
     if (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD)
@@ -287,9 +309,9 @@ void Interface::update_active_objects()
         delete_label (m_active_object + "_label");
       }
     }
-    // Active object didn't change, just update position
+    // Active object didn't change, nothing to do
     else if (m_active_object == active->value())
-      update_label_position(m_active_object); // Just update position
+    {}
     // New active object
     else
     {
@@ -345,7 +367,7 @@ void Interface::update_action_selector()
     {
       bool uptodate = (status()->is (IN_WINDOW, IN_CODE) && m_action_selector[1] == "code_Ok")
           || (status()->is (IN_MENU) && m_action_selector[1] == "menu_Ok")
-          || m_action_selector[2] == "Default_inventory";
+          || (status()->is (IDLE) && m_action_selector[2] == "Default_inventory");
 
       // Action selector not up to date
       if (!uptodate)
@@ -399,8 +421,7 @@ void Interface::update_action_selector()
         if (id == "")
           continue;
         unsigned char highlight = (id == active_button ? 255 : 0);
-        get<C::Image>(id + "_button_left_circle:image")->set_highlight(highlight);
-        get<C::Image>(id + "_button_right_circle:image")->set_highlight(highlight);
+        get<C::Image>(id + "_button_back:image")->set_highlight(highlight);
       }
     }
   }

@@ -44,7 +44,7 @@ constexpr int world_depth = 3240;
 constexpr int inventory_height = 150;
 constexpr int inventory_active_zone = 50;
 constexpr int inventory_margin = 20;
-constexpr double inventory_speed = 0.3;
+constexpr double inventory_speed = 0.25;
 
 constexpr int object_reach_x = 150;
 constexpr int object_reach_y = 65;
@@ -53,7 +53,7 @@ constexpr int follow_factor = 1500;
 
 constexpr int label_height = 50;
 constexpr int label_margin = 20;
-constexpr int label_diff = 20;
+constexpr int label_diff = 5;
 
 constexpr int camera_limit_left = world_width / 4;
 constexpr int camera_limit_right = (3 * world_width) / 4;

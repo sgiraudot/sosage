@@ -394,8 +394,6 @@ void Interface::update_menu()
         set<C::String>("Interface:gamepad_active_menu_item", active_item);
       }
 
-      std::cerr << entity << " == " << active_item << "?" << std::endl;
-
       bool active = (entity == active_item);
       if (settings && setting_item != "")
         active = active || contains(entity, setting_item);

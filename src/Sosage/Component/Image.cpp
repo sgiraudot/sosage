@@ -64,6 +64,11 @@ Image::Image (const std::string& id, std::shared_ptr<Image> copy)
 
 }
 
+void Image::compose_with (const std::shared_ptr<Image>& other)
+{
+  m_core = Core::Graphic::compose ({m_core, other->m_core});
+}
+
 std::string Image::str() const
 {
   return this->id() + " at (" + std::to_string (m_origin.x())
