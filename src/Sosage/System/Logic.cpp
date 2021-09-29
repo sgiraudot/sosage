@@ -188,8 +188,7 @@ void Logic::run ()
   if (receive ("code:quit"))
   {
     auto code = get<C::Code>("Game:code");
-    auto window = get<C::Image>("Game:window");
-    window->on() = false;
+    emit("Interface:hide_window");
     code->reset();
     remove("Code_hover:image", true);
     status()->pop();
@@ -780,9 +779,8 @@ bool Logic::function_set (const std::vector<std::string>& args)
     else
     {
       auto image = get<C::Image>(target + ":image");
-      image->on() = true;
-
       set<C::Variable>("Game:window", image);
+      emit ("Interface:show_window");
 
       auto code = request<C::Code>(target + ":code");
       if (code)

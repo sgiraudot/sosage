@@ -544,27 +544,45 @@ void Interface::update_inventory()
 
 void Interface::update_code_hover()
 {
-  if (!receive("Code:hover"))
-    return;
+  double current_time = get<C::Double>(CLOCK__TIME)->value();
 
-  // Possible improvment: avoid creating image at each frame
-  const std::string& player = get<C::String>("Player:name")->value();
-  auto code = get<C::Code>("Game:code");
-  auto window = get<C::Image>("Game:window");
-  auto position
-    = get<C::Position>(window->entity() + ":position");
+  if (receive("Interface:show_window"))
+  {
+    auto window = get<C::Image>("Game:window");
+    window->on() = true;
+    set<C::GUI_image_animation>(window->entity() + ":animation",
+                                current_time, current_time + Config::inventory_speed,
+                                window, 0, 1, 0, 255);
+  }
+  if (receive("Interface:hide_window"))
+  {
+    auto window = get<C::Image>("Game:window");
+    set<C::GUI_image_animation>(window->entity() + ":animation",
+                                current_time, current_time + Config::inventory_speed,
+                                window, 1, 0, 255, 0);
+  }
 
-  const std::string& color_str = get<C::String>(player + ":color")->value();
-  RGB_color color = color_from_string (color_str);
-  auto img = set<C::Image>("Code_hover:image", code->xmax() - code->xmin(), code->ymax() - code->ymin(),
-                           color[0], color[1], color[2], 128);
-  img->set_collision(UNCLICKABLE);
-  img->z() = Config::inventory_depth;
-  set<C::Absolute_position>
-      ("Code_hover:position", Point(code->xmin(), code->ymin())
-       + Vector(position->value())
-       - Vector (0.5  * window->width(),
-                 0.5 * window->height()));
+  if (receive("Code:hover"))
+  {
+    // Possible improvment: avoid creating image at each frame
+    const std::string& player = get<C::String>("Player:name")->value();
+    auto code = get<C::Code>("Game:code");
+    auto window = get<C::Image>("Game:window");
+    auto position
+        = get<C::Position>(window->entity() + ":position");
+
+    const std::string& color_str = get<C::String>(player + ":color")->value();
+    RGB_color color = color_from_string (color_str);
+    auto img = set<C::Image>("Code_hover:image", code->xmax() - code->xmin(), code->ymax() - code->ymin(),
+                             color[0], color[1], color[2], 128);
+    img->set_collision(UNCLICKABLE);
+    img->z() = Config::inventory_depth;
+    set<C::Absolute_position>
+        ("Code_hover:position", Point(code->xmin(), code->ymin())
+         + Vector(position->value())
+         - Vector (0.5  * window->width(),
+                   0.5 * window->height()));
+  }
 }
 
 void Interface::update_skip_message()

@@ -308,8 +308,7 @@ void Control::window_gamepad()
 
   if (received_key == "look" || received_key == "inventory")
   {
-    auto window = get<C::Image>("Game:window");
-    window->on() = false;
+    emit ("Interface:hide_window");
     status()->pop();
   }
 }
@@ -332,7 +331,7 @@ void Control::code_gamepad()
   auto window = get<C::Image>("Game:window");
   if (received_key == "inventory")
   {
-    window->on() = false;
+    emit ("Interface:hide_window");
     code->reset();
     remove("Code_hover:image");
     status()->pop();

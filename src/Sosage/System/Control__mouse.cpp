@@ -404,8 +404,7 @@ void Control::window_mouse()
 {
   if (receive("Cursor:clicked"))
   {
-    auto window = get<C::Image>("Game:window");
-    window->on() = false;
+    emit("Interface:hide_window");
     status()->pop();
   }
 }
@@ -413,8 +412,7 @@ void Control::window_touchscreen()
 {
   if (receive("Cursor:clicked"))
   {
-    auto window = get<C::Image>("Game:window");
-    window->on() = false;
+    emit("Interface:hide_window");
     status()->pop();
   }
 }
@@ -459,7 +457,7 @@ void Control::code_sub_click(bool collision)
   auto window = get<C::Image>("Game:window");
   if (!collision)
   {
-    window->on() = false;
+    emit("Interface:hide_window");
     code->reset();
     status()->pop();
   }

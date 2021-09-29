@@ -144,6 +144,8 @@ public:
     m_image->set_scale (m_end_scale);
     m_image->set_alpha (m_end_alpha);
     m_image->set_highlight (0);
+    if (m_end_alpha == 0)
+      m_image->on() = false;
   }
 
   virtual void update_impl (double current_time)
