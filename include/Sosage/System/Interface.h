@@ -95,6 +95,7 @@ private:
   void make_exit_menu_item (Component::Menu::Node node, const std::string& id, int y);
   void make_text_menu_title (Component::Menu::Node node, const std::string& id);
   void make_text_menu_text (Component::Menu::Node node, const std::string& id);
+  void make_settings_item (Component::Menu::Node node, const std::string& id, int y);
 
   void init_menu_item (Component::Menu::Node node, const std::string& id,
                        const std::string& effect = std::string());

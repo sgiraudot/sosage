@@ -36,17 +36,20 @@
 
 namespace Sosage::Config
 {
-constexpr int exit_menu_margin = 85;
-constexpr int exit_menu_small_margin = 35;
+constexpr int menu_margin = 85;
+constexpr int menu_small_margin = 35;
+constexpr int menu_oknotok_y = 858;
+constexpr int menu_ok_x = 120;
+constexpr int menu_notok_x = 360;
 constexpr int exit_menu_logo = 130;
 constexpr int exit_menu_start = 300;
-constexpr int exit_menu_text = exit_menu_margin + 60;
-constexpr int exit_menu_button_width = 400;
-constexpr int exit_menu_button_height = 80;
-constexpr int exit_menu_oknotok_y = 858;
-constexpr int exit_menu_oknotok_height = 858;
-constexpr int exit_menu_ok_x = 120;
-constexpr int exit_menu_notok_x = 360;
+constexpr int exit_menu_text = menu_margin + 60;
+constexpr int settings_menu_margin = 15;
+constexpr int settings_menu_start = 120;
+constexpr int settings_menu_in_margin = 20;
+constexpr int settings_menu_value_margin = 65;
+constexpr int settings_menu_larrow_x = settings_menu_margin + 370;
+constexpr int settings_menu_rarrow_x = settings_menu_margin + 420;
 }
 
 namespace Sosage::System
@@ -75,7 +78,7 @@ void Interface::init_menus()
 })
   {
     make_exit_menu_item ((*exit_menu)[idx], id, y);
-    y += Config::exit_menu_margin;
+    y += Config::menu_margin;
     idx ++;
   }
 
@@ -93,55 +96,33 @@ void Interface::init_menus()
   make_text_menu_text((*credits_menu)[1], "Credits_text");
   make_oknotok_item ((*credits_menu)[2], true);
 
-#if 0
-  init_menu_item ((*exit_menu)[0], "Menu_logo", "");
-  init_menu_item ((*exit_menu)[1], "New_game", "new_game");
-  init_menu_item ((*exit_menu)[2], "Settings", "settings");
-  init_menu_item ((*exit_menu)[4], "Phone", "phone");
-  init_menu_item ((*exit_menu)[5], "GPS", "gps");
-    init_menu_item ((*exit_menu)[6], "Credits", "credits");
-  if constexpr (!Config::emscripten)
-    init_menu_item ((*exit_menu)[7], "Save_and_quit", "quit");
-  init_menu_buttons (exit_menu->root());
+  auto end_menu = set<C::Menu>("End:menu");
+  end_menu->split(VERTICALLY, 2);
+  make_text_menu_text((*end_menu)[0], "End_text");
+  make_oknotok_item ((*end_menu)[1], true);
 
-  auto wanna_restart_menu = set<C::Menu>("Wanna_restart:menu");
-  wanna_restart_menu->split(VERTICALLY, 2);
-  (*wanna_restart_menu)[1].split(HORIZONTALLY, 2);
-  init_menu_item ((*wanna_restart_menu)[0], "Wanna_restart", "");
-  init_menu_item ((*wanna_restart_menu)[1][0], "Ok", "ok");
-  init_menu_item ((*wanna_restart_menu)[1][1], "Cancel", "cancel");
-  init_menu_buttons ((*wanna_restart_menu)[1]);
-
-  std::vector<std::array<std::string, 2> > settings_list
-      = {
-          { "Language", "language" },
-#if !defined(SOSAGE_ANDROID) && !defined(SOSAGE_EMSCRIPTEN)
-          { "Fullscreen", "fullscreen" },
-#endif
-          { "Text_size", "text_size" },
-          { "Text_speed", "text_speed" },
-          { "Music_volume", "music_volume" },
-          { "Sound_volume", "sound_volume" } };
   auto settings_menu = set<C::Menu>("Settings:menu");
-  settings_menu->split(VERTICALLY, 2);
-  (*settings_menu)[0].split(HORIZONTALLY, 4);
-  for (std::size_t i = 0; i < 4; ++ i)
-    (*settings_menu)[0][i].split(VERTICALLY, settings_list.size());
-  for (std::size_t i = 0; i < settings_list.size(); ++ i)
-  {
-    init_menu_item ((*settings_menu)[0][0][i], settings_list[i][0], "");
-    init_setting_item ((*settings_menu)[0][1][i], (*settings_menu)[0][2][i],
-        (*settings_menu)[0][3][i], settings_list[i][1]);
-  }
-  init_menu_item ((*settings_menu)[1], "Ok", "ok");
-  init_menu_buttons (settings_menu->root());
+  if constexpr (Config::emscripten || Config::android)
+    settings_menu->split(VERTICALLY, 7);
+  else
+    settings_menu->split(VERTICALLY, 8);
 
-  auto credits_menu = set<C::Menu>("Credits:menu");
-  credits_menu->split(VERTICALLY, 3);
-  init_menu_item ((*credits_menu)[0], "Credits_logo", "");
-  init_menu_item ((*credits_menu)[1], "Credits_text", "");
-  init_menu_item ((*credits_menu)[2], "Ok", "ok");
-  init_menu_buttons (credits_menu->root());
+    make_text_menu_title((*settings_menu)[0], "Settings");
+    idx = 1;
+    y = Config::settings_menu_start;
+  for (const std::string& id : { "Language",
+#if !defined (SOSAGE_ANDROID) && !defined(SOSAGE_EMSCRIPTEN)
+        "Fullscreen",
+#endif
+       "Text_size", "Text_speed", "Music_volume", "Sound_volume" })
+  {
+    make_settings_item ((*settings_menu)[idx], id, y);
+    y += Config::settings_menu_start;
+    idx ++;
+  }
+  make_oknotok_item ((*settings_menu)[idx], true);
+
+#if 0
 
   auto end_menu = set<C::Menu>("End:menu");
   end_menu->split(VERTICALLY, 2);
@@ -188,7 +169,7 @@ void Interface::make_exit_menu_item (Component::Menu::Node node, const std::stri
     img->set_collision(UNCLICKABLE);
 
     pos = set<C::Relative_position>("Exit_" + id + ":position", reference, Vector (Config::exit_menu_text, y));
-    pos_icon = set<C::Relative_position>(id + "_icon:position", reference, Vector (Config::exit_menu_margin, y));
+    pos_icon = set<C::Relative_position>(id + "_icon:position", reference, Vector (Config::menu_margin, y));
   }
   else
   {
@@ -212,14 +193,10 @@ void Interface::make_exit_menu_item (Component::Menu::Node node, const std::stri
     pos_button = set<C::Relative_position>(id + "_button:position", reference, Vector (240, y));
   }
   else
-    pos = get<C::Position>(img->entity() + "_button:position");
+    pos_button = get<C::Position>(id + "_button:position");
   node.init(button, pos_button);
 
-  std::string effect (id);
-  for (char& c : effect)
-    c = std::tolower(c);
-
-  set<C::String>(text->entity() + ":effect", effect);
+  set<C::String>(id + ":effect", id);
 }
 
 void Interface::make_oknotok_item (Component::Menu::Node node, bool only_ok)
@@ -227,10 +204,11 @@ void Interface::make_oknotok_item (Component::Menu::Node node, bool only_ok)
   C::Image_handle ok, cancel, ok_alone, ok_button, cancel_button, ok_alone_button;
   C::Position_handle ok_pos, cancel_pos, ok_alone_pos,
       ok_button_pos, cancel_button_pos, ok_alone_button_pos;
-  ok_pos = request<C::Position>("Ok_icon:position");
+
+  ok_alone = request<C::Image>("Ok_alone_icon:image");
 
   // Only create once
-  if (!ok_pos)
+  if (!ok)
   {
     auto reference = get<C::Position>("Menu:reference");
 
@@ -242,9 +220,9 @@ void Interface::make_oknotok_item (Component::Menu::Node node, bool only_ok)
     ok_alone = set<C::Image>("Ok_alone_icon:image", ok);
 
     ok_pos = set<C::Relative_position>("Ok_icon:position", reference,
-                                       Vector (Config::exit_menu_ok_x, Config::exit_menu_oknotok_y));
+                                       Vector (Config::menu_ok_x, Config::menu_oknotok_y));
     ok_alone_pos = set<C::Relative_position>("Ok_alone_icon:position", reference,
-                                             Vector (240, Config::exit_menu_oknotok_y));
+                                             Vector (240, Config::menu_oknotok_y));
 
     ok_button = set<C::Image>("Ok_button:image", 230, 50, 0, 0, 0, 64);
     ok_button->z() = Config::menu_button_depth;
@@ -257,8 +235,8 @@ void Interface::make_oknotok_item (Component::Menu::Node node, bool only_ok)
     ok_button_pos = set<C::Relative_position>("Ok_button:position", ok_pos, Vector(0,0));
     ok_alone_button_pos = set<C::Relative_position>("Ok_alone_button:position", ok_alone_pos, Vector(0,0));
 
-    set<C::String>("Ok:effect", "ok");
-    set<C::String>("Ok_alone:effect", "ok");
+    set<C::String>("Ok:effect", "Ok");
+    set<C::String>("Ok_alone:effect", "Ok");
 
     cancel = get<C::Image>("Cancel_icon:image");
     cancel->z() = Config::menu_text_depth;
@@ -266,7 +244,7 @@ void Interface::make_oknotok_item (Component::Menu::Node node, bool only_ok)
     cancel->set_relative_origin(0.5, 0.5);
     cancel->set_collision(UNCLICKABLE);
     cancel_pos = set<C::Relative_position>("Cancel_icon:position", reference,
-                                           Vector (Config::exit_menu_notok_x, Config::exit_menu_oknotok_y));
+                                           Vector (Config::menu_notok_x, Config::menu_oknotok_y));
 
     cancel_button = set<C::Image>("Cancel_button:image", 230, 50, 0, 0, 0, 64);
     cancel_button->set_relative_origin(0.5, 0.5);
@@ -274,16 +252,16 @@ void Interface::make_oknotok_item (Component::Menu::Node node, bool only_ok)
     cancel_button_pos = set<C::Relative_position>("Cancel_button:position", cancel_pos, Vector(0,0));
     cancel_button->z() = Config::menu_button_depth;
 
-    set<C::String>("Cancel:effect", "cancel");
+    set<C::String>("Cancel:effect", "Cancel");
   }
   else
   {
     ok = get<C::Image>("Ok_icon:image");
     cancel = get<C::Image>("Cancel_icon:image");
-    ok_alone = get<C::Image>("Ok_alone_icon:image");
     ok_button = get<C::Image>("Ok_button:image");
     cancel_button = get<C::Image>("Cancel_button:image");
     ok_alone_button = get<C::Image>("Ok_alone_button:image");
+    ok_pos = get<C::Position>("Ok_icon:position");
     cancel_pos = get<C::Position>("Cancel_icon:position");
     ok_alone_pos = get<C::Position>("Ok_alone_icon:position");
     ok_button_pos = get<C::Position>("Ok_button:position");
@@ -322,7 +300,7 @@ void Interface::make_text_menu_title (Component::Menu::Node node, const std::str
   img->set_relative_origin(0.5, 0.5);
   img->set_collision(UNCLICKABLE);
   auto pos = set<C::Relative_position>("Title_" + id + ":position", reference,
-                                       Point(240, Config::exit_menu_margin));
+                                       Point(240, Config::menu_margin));
   node.init(img, pos);
 }
 
@@ -363,9 +341,134 @@ void Interface::make_text_menu_text (Component::Menu::Node node, const std::stri
     img->set_collision(UNCLICKABLE);
     auto pos = set<C::Relative_position>(text->entity() + "_" + std::to_string(i)
                                          + ":position", reference,
-                                         Point(Config::exit_menu_small_margin, y));
+                                         Point(Config::menu_small_margin, y));
     node[i].init(img, pos);
-    y += Config::exit_menu_small_margin;
+    y += Config::menu_small_margin;
+  }
+}
+
+void Interface::make_settings_item (Component::Menu::Node node, const std::string& id, int y)
+{
+  auto reference = get<C::Position>("Menu:reference");
+  auto font = get<C::Font>("Interface:font");
+  auto light_font = get<C::Font>("Interface:light_font");
+
+  // Create button
+  auto button = request<C::Image>(id + "_button:image");
+  C::Position_handle pos_button;
+  if (!button)
+  {
+    button = set<C::Image>(id + "_button:image", get<C::Image>("Menu_settings_button:image"));
+    button->z() = Config::menu_button_depth;
+    button->set_relative_origin(0.5, 0.5);
+    button->on() = false;
+    pos_button = set<C::Relative_position>(id + "_button:position", reference,
+                                           Vector (240, y + Config::settings_menu_start / 2 - Config::settings_menu_margin));
+  }
+  else
+    pos_button = get<C::Position>(id + "_button:position");
+  node.init(button, pos_button);
+
+  set<C::String>(id + ":effect", id);
+
+  node.split(HORIZONTALLY, 4);
+
+  // Setting title
+  {
+    auto text = request<C::String>(id + ":text");
+    auto img = request<C::Image>(id + ":image");
+    C::Position_handle pos, pos_icon;
+    if (!img)
+    {
+      img = set<C::Image>(id + "_setting:image", font, "FFFFFF", locale(text->value()));
+      img->z() = Config::menu_text_depth;
+      img->on() = false;
+      img->set_scale(0.5);
+      img->set_relative_origin(0, 0.5);
+      img->set_collision(UNCLICKABLE);
+
+      pos = set<C::Relative_position>(id + "_setting:position", reference,
+                                      Vector (Config::settings_menu_margin + Config::settings_menu_in_margin,
+                                              y + Config::settings_menu_in_margin));
+    }
+    else
+    {
+      pos = get<C::Position>(id + "_setting:position");
+    }
+    node[0].init(img, pos);
+  }
+
+  // Setting value
+  {
+    std::vector<std::string> possible_values;
+    if (id == "Language")
+    {
+      auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+      for (const std::string& a : available)
+        possible_values.push_back (get<C::String>(a + ":description")->value());
+    }
+    else if (id == "Fullscreen")
+      possible_values = { "Yes", "No" };
+    else if (id == "Text_size")
+      possible_values = { "Small", "Medium", "Large" };
+    else if (id == "Text_speed")
+      possible_values = { "Slow", "Medium_speed", "Fast" };
+    else if (id == "Music_volume" || id == "Sound_volume")
+      possible_values = { "0", "10", "20", "30", "40",
+                          "50", "60", "70", "80", "90",
+                          "100" };
+
+    auto pos = set<C::Relative_position>(id + ":position", reference,
+                                         Vector (Config::settings_menu_margin + Config::settings_menu_in_margin,
+                                                 y + Config::settings_menu_value_margin));
+    for (std::size_t i = 0; i < possible_values.size(); ++ i)
+    {
+      std::string value_id = id + '_' + possible_values[i];
+      std::string text;
+      if (auto t = request<C::String>(possible_values[i] + ":text"))
+        text = locale(t->value());
+      else if (is_int(possible_values[i]))
+        text = possible_values[i] + " %";
+      else
+        text = possible_values[i];
+
+      auto img = set<C::Image>(value_id + ":image", light_font, "FFFFFF", text);
+      img->z() = Config::menu_text_depth;
+      img->on() = false;
+      img->set_scale(0.5);
+      img->set_relative_origin(0, 0.5);
+      img->set_collision(UNCLICKABLE);
+      set<C::Variable>(value_id + ":position", pos);
+      if (i == 0)
+        node[1].init(img, pos);
+      else
+        node[1].add(img);
+    }
+  }
+
+  // Arrows
+  {
+    auto left_arrow = set<C::Image>(id + "_left_arrow:image",
+                                    get<C::Image>("Menu_left_arrow:image"));
+    left_arrow->z() = Config::menu_text_depth;
+    left_arrow->set_relative_origin(0.5, 0.5);
+    left_arrow->set_collision(BOX);
+    auto left_pos = set<C::Relative_position>(id + "_left_arrow:position",
+                                              reference,
+                                              Vector(Config::settings_menu_larrow_x,
+                                                     y + Config::settings_menu_start / 2));
+    node[2].init (left_arrow, left_pos);
+
+    auto right_arrow = set<C::Image>(id + "_right_arrow:image",
+                                    get<C::Image>("Menu_right_arrow:image"));
+    right_arrow->z() = Config::menu_text_depth;
+    right_arrow->set_relative_origin(0.5, 0.5);
+    right_arrow->set_collision(BOX);
+    auto right_pos = set<C::Relative_position>(id + "_right_arrow:position",
+                                               reference,
+                                               Vector(Config::settings_menu_rarrow_x,
+                                                      y + Config::settings_menu_start / 2));
+    node[3].init (right_arrow, right_pos);
   }
 }
 
@@ -665,13 +768,9 @@ void Interface::update_menu()
       if (settings && setting_item != "")
         active = active || contains(entity, setting_item);
 
-
       current.image()->on() = true;
       if (contains(entity, "_button"))
         current.image()->set_alpha (active ? 255 : 0);
-
-      if (gamepad && settings &&  contains (entity, "arrow"))
-        current.image()->on() = active;
     }
     for (std::size_t i = 0; i < current.nb_children(); ++ i)
       todo.push (current[i]);
@@ -701,30 +800,30 @@ void Interface::create_menu (const std::string& id)
   // Update settings menu with current settings
   if (id == "Settings")
   {
-    menu->update_setting ("language",
+    menu->update_setting ("Language",
                           get<C::String>(get<C::String>(GAME__CURRENT_LOCAL)->value() + ":description")->value());
 
-    menu->update_setting ("fullscreen",
+    menu->update_setting ("Fullscreen",
                           get<C::Boolean>("Window:fullscreen")->value() ? "Yes" : "No");
 
     int speed = get<C::Int>("Dialog:speed")->value();
     if (speed == Config::SLOW)
-      menu->update_setting ("text_speed", "Slow");
+      menu->update_setting ("Text_speed", "Slow");
     else if (speed == Config::MEDIUM_SPEED)
-      menu->update_setting ("text_speed", "Medium_speed");
+      menu->update_setting ("Text_speed", "Medium_speed");
     else if (speed == Config::FAST)
-      menu->update_setting ("text_speed", "Fast");
+      menu->update_setting ("Text_speed", "Fast");
 
     int size = get<C::Int>("Dialog:size")->value();
     if (size == Config::SMALL)
-      menu->update_setting ("text_size", "Small");
+      menu->update_setting ("Text_size", "Small");
     else if (size == Config::MEDIUM)
-      menu->update_setting ("text_size", "Medium");
+      menu->update_setting ("Text_size", "Medium");
     else if (size == Config::LARGE)
-      menu->update_setting ("text_size", "Large");
+      menu->update_setting ("Text_size", "Large");
 
-    menu->update_setting ("music_volume", std::to_string(10 * get<C::Int>("Music:volume")->value()));
-    menu->update_setting ("sound_volume", std::to_string(10 * get<C::Int>("Sounds:volume")->value()));
+    menu->update_setting ("Music_volume", std::to_string(10 * get<C::Int>("Music:volume")->value()));
+    menu->update_setting ("Sound_volume", std::to_string(10 * get<C::Int>("Sounds:volume")->value()));
   }
 
   get<C::Image>("Menu_background:image")->on() = true;
@@ -751,9 +850,10 @@ void Interface::menu_clicked ()
   const std::string& menu = get<C::String>("Game:current_menu")->value();
 
   auto effect = request<C::String>(entity + ":effect");
-  if (!effect)
+
+  if (menu == "Settings")
   {
-    if (menu == "Settings")
+    if (!effect)
     {
       std::size_t pos = entity.find("_left_arrow");
       bool left_arrow = (pos != std::string::npos);
@@ -764,26 +864,29 @@ void Interface::menu_clicked ()
           return;
       }
 
-      emit("Click:play_sound");
-      std::string setting (entity.begin() + 5, entity.begin() + pos);
+      std::string setting (entity.begin(), entity.begin() + pos);
       if (left_arrow)
         apply_setting (setting, get<C::Menu>("Settings:menu")->decrement(setting));
       else
         apply_setting (setting, get<C::Menu>("Settings:menu")->increment(setting));
+      emit("Click:play_sound");
     }
-    return;
+    else if (effect->value() != "Ok")
+      return;
   }
+
+  if (!effect)
+    return;
 
   emit("Click:play_sound");
 
-
-  if (effect->value() == "quit")
+  if (effect->value() == "Quit")
   {
     if (menu != "End")
       emit ("Game:save");
     emit ("Game:exit");
   }
-  else if (effect->value() == "new_game")
+  else if (effect->value() == "New_game")
   {
     delete_menu(menu);
     if (menu == "Exit")
@@ -799,7 +902,7 @@ void Interface::menu_clicked ()
       status()->pop();
     }
   }
-  else if (effect->value() == "ok")
+  else if (effect->value() == "Ok")
   {
     if (menu == "Wanna_restart")
     {
@@ -828,22 +931,22 @@ void Interface::menu_clicked ()
       status()->pop();
     }
   }
-  else if (effect->value() == "settings")
+  else if (effect->value() == "Settings")
   {
     delete_menu ("Exit");
     create_menu ("Settings");
   }
-  else if (effect->value() == "credits")
+  else if (effect->value() == "Credits")
   {
     delete_menu ("Exit");
     create_menu ("Credits");
   }
-  else if (effect->value() == "hint")
+  else if (effect->value() == "Hint")
   {
     delete_menu ("Exit");
     create_menu ("Hint");
   }
-  else if (effect->value() == "cancel")
+  else if (effect->value() == "Cancel")
   {
     delete_menu(menu);
     if (menu == "Exit")
@@ -855,7 +958,8 @@ void Interface::menu_clicked ()
 
 void Interface::apply_setting (const std::string& setting, const std::string& value)
 {
-  if (setting == "language")
+  std::cerr << "Apply setting " << value << " to " << setting << std::endl;
+  if (setting == "Language")
   {
     auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
     for (const std::string& a : available)
@@ -882,12 +986,12 @@ void Interface::apply_setting (const std::string& setting, const std::string& va
     init();
     create_menu ("Settings");
   }
-  else if (setting == "fullscreen")
+  else if (setting == "Fullscreen")
   {
     get<C::Boolean>("Window:fullscreen")->set(value == "Yes");
     emit ("Window:toggle_fullscreen");
   }
-  else if (setting == "text_size")
+  else if (setting == "Text_size")
   {
     if (value == "Small")
       set<C::Int>("Dialog:size")->set(Config::SMALL);
@@ -896,7 +1000,7 @@ void Interface::apply_setting (const std::string& setting, const std::string& va
     else
       set<C::Int>("Dialog:size")->set(Config::LARGE);
   }
-  else if (setting == "text_speed")
+  else if (setting == "Text_speed")
   {
     if (value == "Slow")
       set<C::Int>("Dialog:speed")->set(Config::SLOW);
@@ -905,12 +1009,12 @@ void Interface::apply_setting (const std::string& setting, const std::string& va
     else
       set<C::Int>("Dialog:speed")->set(Config::FAST);
   }
-  else if (setting == "music_volume")
+  else if (setting == "Music_volume")
   {
     set<C::Int>("Music:volume")->set(to_int(value) / 10);
     emit("Music:volume_changed");
   }
-  else if (setting == "sound_volume")
+  else if (setting == "Sound_volume")
     set<C::Int>("Sounds:volume")->set(to_int(value) / 10);
 }
 
