@@ -138,84 +138,6 @@ class Menu : public Base
 
     std::size_t nb_children() const { return tree.incident_edges(vertex).size(); }
 
-    Sosage::Vector size() const
-    {
-      if (nb_children() == 0)
-      {
-        int x = 0, y = 0;
-        for (Image_handle img : tree[vertex].image)
-        {
-          double scale = 1.;
-          if (img->scale() < 1.)
-            scale = img->scale() / 0.75;
-          x = std::max(x, int(img->width() * scale));
-          y = std::max(y, int(img->height() * scale));
-        }
-        return Sosage::Vector(x + 10, y + 10);
-      }
-      else if (nb_children() == 1)
-      {
-        Sosage::Vector s = (*this)[0].size();
-        return s + Sosage::Vector(10, 10);
-      }
-      // else
-      double x = 0, y = 0;
-      for (std::size_t i = 0; i < nb_children(); ++ i)
-      {
-        Sosage::Vector s = (*this)[i].size();
-        if (direction() == HORIZONTALLY)
-        {
-          x += s.x();
-          y = std::max(y, s.y());
-        }
-        else
-        {
-          check (direction() == VERTICALLY, "Non-empty node with no split direction");
-          x = std::max(x, s.x());
-          y += s.y();
-        }
-      }
-      return Sosage::Vector(x, y);
-    }
-
-    void set_position (double x, double y)
-    {
-      if (nb_children() == 0)
-      {
-        image()->on() = true;
-        position()->set(Point(x,y));
-      }
-      else if (nb_children() == 1)
-      {
-        image()->on() = true;
-        position()->set(Point(x,y));
-        (*this)[0].set_position(x,y);
-      }
-      else
-      {
-        Sosage::Vector s = size();
-        double dx = (direction() == HORIZONTALLY ? x - s.x() / 2 : x);
-        double dy = (direction() == VERTICALLY ? y - s.y() / 2 : y);
-        for (std::size_t i = 0; i < nb_children(); ++ i)
-        {
-          Sosage::Vector s = (*this)[i].size();
-
-          if (direction() == HORIZONTALLY)
-            dx += s.x() / 2;
-          else
-            dy += s.y() / 2;
-
-          (*this)[i].set_position (dx, dy);
-
-          if (direction() == HORIZONTALLY)
-            dx += s.x() / 2;
-          else
-            dy += s.y() / 2;
-
-        }
-      }
-    }
-
     void hide()
     {
       if (has_image())
@@ -283,10 +205,6 @@ public:
   }
 
   std::size_t nb_children() const { return root().nb_children(); }
-
-  Sosage::Vector size() const { return root().size(); }
-
-  void set_position (double x, double y) { root().set_position(x, y); }
 
   void hide() { root().hide(); }
 

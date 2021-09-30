@@ -52,12 +52,12 @@ Interface::Interface (Content& content)
 
 void Interface::run()
 {
+  update_menu();
   update_active_objects();
   update_action_selector();
   update_object_switcher();
   update_inventory();
   update_code_hover();
-  update_menu();
   update_skip_message();
   update_cursor();
 }
@@ -164,9 +164,8 @@ void Interface::init()
 void Interface::update_active_objects()
 {
   // Clear if input mode changed
-  if (receive("Input_mode:changed"))
+  if (receive("Input_mode:changed") || status()->is (IN_MENU))
   {
-    std::cerr << "Input mode changed" << std::endl;
     if (!m_active_objects.empty())
     {
       for (const std::string& a : m_active_objects)
@@ -183,6 +182,7 @@ void Interface::update_active_objects()
       delete_label (m_active_object + "_label");
       m_active_object = "";
     }
+    return;
   }
 
   if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
@@ -343,7 +343,8 @@ void Interface::update_action_selector()
 
   if (mode == GAMEPAD)
   {
-    if (auto target = request<C::String>("Interface:active_object"))
+    auto target = request<C::String>("Interface:active_object");
+    if (!status()->is(IN_MENU) && target)
     {
       // Mouse action selector might be active, deactivate too
       bool garbage_mouse_selector = false;
@@ -380,6 +381,9 @@ void Interface::update_action_selector()
   }
   else
   {
+    if (status()->is (IN_MENU))
+      return;
+
     if (auto target = request<C::String>("Interface:action_choice_target"))
     {
       // Gamepad action selector might be active, deactivate too
@@ -433,7 +437,7 @@ void Interface::update_object_switcher()
   bool gamepad_on = false;
 
   const Input_mode& mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
-  if (mode == GAMEPAD)
+  if (mode == GAMEPAD && !status()->is(IN_MENU))
     if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
       if (active_objects->value().size() > 1)
       {
@@ -441,18 +445,21 @@ void Interface::update_object_switcher()
         gamepad_on = !keyboard_on;
       }
 
-  if (keyboard_on && get<C::Image>("Keyboard_switcher_left:image")->alpha() == 0)
+  if (keyboard_on && get<C::Image>("Keyboard_switcher_left:image")->alpha() != 255)
     fade_action_selector ("Keyboard_switcher", true);
-  else if (gamepad_on && get<C::Image>("Gamepad_switcher_left:image")->alpha() == 0)
+  else if (gamepad_on && get<C::Image>("Gamepad_switcher_left:image")->alpha() != 255)
     fade_action_selector ("Gamepad_switcher", true);
-  else if (!keyboard_on && get<C::Image>("Keyboard_switcher_left:image")->alpha() == 255)
+  else if (!keyboard_on && get<C::Image>("Keyboard_switcher_left:image")->alpha() != 0)
     fade_action_selector ("Keyboard_switcher", false);
-  else if (!gamepad_on && get<C::Image>("Gamepad_switcher_left:image")->alpha() == 255)
+  else if (!gamepad_on && get<C::Image>("Gamepad_switcher_left:image")->alpha() != 0)
     fade_action_selector ("Gamepad_switcher", false);
 }
 
 void Interface::update_inventory()
 {
+  if (status()->is(IN_MENU))
+    return;
+
   Input_mode mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
 
   auto inventory_origin = get<C::Absolute_position>("Inventory:origin");
@@ -627,7 +634,9 @@ void Interface::update_cursor()
   if (mode == MOUSE)
   {
     auto state = get<C::String>("Cursor:state");
-    if (auto source = request<C::String>("Interface:source_object"))
+    if (status()->is(IN_MENU))
+      state->set("default");
+    else if (auto source = request<C::String>("Interface:source_object"))
     {
       if (state->value() != "selected")
       {

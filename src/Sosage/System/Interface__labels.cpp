@@ -131,8 +131,13 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
                               bool open_left, bool open_right,
                               const Collision_type& collision, double scale, bool arrow)
 {
+  const Input_mode& mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
+
   auto group = set<C::Group>(id + ":group");
   int depth = (is_button ? Config::action_button_depth : Config::label_depth);
+  if (mode == GAMEPAD)
+    depth = (is_button ? Config::menu_text_depth : Config::menu_front_depth);
+
   unsigned char alpha = (is_button ? 255 : 100);
 
   C::Image_handle label, left, right, back;
@@ -148,8 +153,6 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
     label->set_collision(collision);
     label->set_alpha(scale * 255);
   }
-
-  const Input_mode& mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
 
   if (open_left)
   {
@@ -410,9 +413,10 @@ void Interface::fade_action_selector (const std::string& id, bool fade_in)
     if (contains(img->id(), "_label") && !contains(img->id(), "_label:"))
       alpha_on = 100;
 
+    img->on() = true;
     set<C::GUI_image_animation>(img->entity() + ":animation", current_time, current_time + Config::inventory_speed,
                                 img, img->scale(), img->scale(),
-                                (fade_in ? alpha_off : alpha_off),
+                                (fade_in ? alpha_off : alpha_on),
                                 (fade_in ? alpha_on : alpha_off),
                                 false);
   });

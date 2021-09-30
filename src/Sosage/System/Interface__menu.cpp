@@ -24,7 +24,6 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#include <Sosage/Component/Hints.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
 #include <Sosage/Component/Status.h>
@@ -96,6 +95,18 @@ void Interface::init_menus()
   make_text_menu_text((*credits_menu)[1], "Credits_text");
   make_oknotok_item ((*credits_menu)[2], true);
 
+  auto phone_menu = set<C::Menu>("Phone:menu");
+  phone_menu->split(VERTICALLY, 3);
+  make_text_menu_title((*phone_menu)[0], "Phone");
+  make_text_menu_text((*phone_menu)[1], "No_number_text");
+  make_oknotok_item ((*phone_menu)[2], true);
+
+  auto gps_menu = set<C::Menu>("Gps:menu");
+  gps_menu->split(VERTICALLY, 3);
+  make_text_menu_title((*gps_menu)[0], "Gps");
+  make_text_menu_text((*gps_menu)[1], "No_gps_text");
+  make_oknotok_item ((*gps_menu)[2], true);
+
   auto end_menu = set<C::Menu>("End:menu");
   end_menu->split(VERTICALLY, 2);
   make_text_menu_text((*end_menu)[0], "End_text");
@@ -121,17 +132,6 @@ void Interface::init_menus()
     idx ++;
   }
   make_oknotok_item ((*settings_menu)[idx], true);
-
-#if 0
-
-  auto end_menu = set<C::Menu>("End:menu");
-  end_menu->split(VERTICALLY, 2);
-  (*end_menu)[1].split(HORIZONTALLY, 2);
-  init_menu_item ((*end_menu)[0], "End_text", "");
-  init_menu_item ((*end_menu)[1][0], "Restart", "new_game");
-  init_menu_item ((*end_menu)[1][1], "Quit", "quit");
-  init_menu_buttons ((*end_menu)[1]);
-#endif
 }
 
 void Interface::make_exit_menu_item (Component::Menu::Node node, const std::string& id, int y)
@@ -208,7 +208,7 @@ void Interface::make_oknotok_item (Component::Menu::Node node, bool only_ok)
   ok_alone = request<C::Image>("Ok_alone_icon:image");
 
   // Only create once
-  if (!ok)
+  if (!ok_alone)
   {
     auto reference = get<C::Position>("Menu:reference");
 
@@ -472,227 +472,6 @@ void Interface::make_settings_item (Component::Menu::Node node, const std::strin
   }
 }
 
-void Interface::init_menu_item (Component::Menu::Node node, const std::string& id,
-                               const std::string& effect)
-{
-#if 0
-  auto font = get<C::Font>("Interface:font");
-  auto light_font = get<C::Font>("Interface:font");
-
-  auto text = request<C::String>(id + ":text");
-
-  if (effect == "")
-  {
-    if (text)
-    {
-      const std::string& str = locale(text->value());
-      std::size_t pos = str.find('\n');
-      if (pos == std::string::npos)
-      {
-        auto img = set<C::Image>(text->entity() + ":image",
-                                 font, "FFFFFF", locale(text->value()));
-        img->z() = Config::menu_text_depth;
-        img->on() = false;
-        img->set_scale(0.75);
-        img->set_relative_origin(0.5, 0.5);
-        img->set_collision(UNCLICKABLE);
-        auto pos = set<C::Absolute_position>(text->entity() + ":position", Point(0,0));
-        node.init(img, pos);
-      }
-      else
-      {
-        std::vector<std::string> lines;
-        std::size_t begin = 0;
-        do
-        {
-          lines.emplace_back (str.begin() + begin, str.begin() + pos);
-          begin = pos + 1;
-          pos = str.find('\n', pos+2);
-        }
-        while (pos != std::string::npos);
-
-        double scale = 0.75;
-        if (lines.size() > 2) // hack for cursor selection menu
-          scale = 0.6;
-
-        node.split(VERTICALLY, lines.size());
-        for (std::size_t i = 0; i < lines.size(); ++ i)
-        {
-          auto img = set<C::Image>(text->entity() + "_" + std::to_string(i)
-                                   + ":image",
-                                   interface_font, "000000", lines[i]);
-          img->z() = Config::menu_text_depth;
-          img->on() = false;
-          img->set_scale(scale);
-          img->set_relative_origin(0.5, 0.5);
-          img->set_collision(UNCLICKABLE);
-          auto pos = set<C::Absolute_position>(text->entity() + "_" + std::to_string(i)
-                                      + ":position", Point(0, 0));
-          node[i].init(img, pos);
-        }
-      }
-    }
-    else // image
-    {
-      auto img = get<C::Image>(id + ":image");
-      img->z() = Config::menu_text_depth;
-      img->on() = false;
-      img->set_relative_origin(0.5, 0.5);
-      auto pos = set<C::Absolute_position>(id + ":position", Point(0,0));
-      node.init(img, pos);
-    }
-  }
-  else // button
-  {
-    node.split(BUTTON, 1);
-    // might be reused
-    auto img = request<C::Image>(text->entity() + ":image");
-    C::Position_handle pos;
-    if (!img)
-    {
-      img = set<C::Image>(text->entity() + ":image",
-                          dialog_font, menu_color, locale(text->value()));
-      img->z() = Config::menu_text_depth;
-      img->on() = false;
-      img->set_scale(0.75);
-      img->set_relative_origin(0.5, 0.5);
-      img->set_collision(UNCLICKABLE);
-
-      pos = set<C::Absolute_position>(text->entity() + ":position", Point(0,0));
-    }
-    else
-      pos = get<C::Position>(text->entity() + ":position");
-    node[0].init(img, pos);
-
-    set<C::String>(text->entity() + ":effect", effect);
-  }
-#endif
-}
-
-void Interface::init_setting_item (Component::Menu::Node node_left,
-                                   Component::Menu::Node node,
-                                   Component::Menu::Node node_right,
-                                   const std::string& effect)
-{
-  auto left_arrow = set<C::Image>("Menu_" + effect + "_left_arrow:image",
-                                  get<C::Image>("Menu_left_arrow:image"));
-  left_arrow->z() = Config::menu_text_depth;
-  left_arrow->set_relative_origin(0.5, 0.5);
-  left_arrow->set_collision(BOX);
-  auto left_pos = set<C::Absolute_position>("Menu_" + effect + "_left_arrow:position", Point(0, 0));
-  node_left.init (left_arrow, left_pos);
-  auto right_arrow = set<C::Image>("Menu_" + effect + "_right_arrow:image",
-                                  get<C::Image>("Menu_right_arrow:image"));
-  right_arrow->z() = Config::menu_text_depth;
-  right_arrow->set_relative_origin(0.5, 0.5);
-  right_arrow->set_collision(BOX);
-  auto right_pos = set<C::Absolute_position>("Menu_" + effect + "_right_arrow:position", Point(0, 0));
-  node_right.init (right_arrow, right_pos);
-
-  std::vector<std::string> possible_values;
-  if (effect == "language")
-  {
-    auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
-    for (const std::string& a : available)
-      possible_values.push_back (get<C::String>(a + ":description")->value());
-  }
-  else if (effect == "fullscreen")
-    possible_values = { "Yes", "No" };
-  else if (effect == "text_size")
-    possible_values = { "Small", "Medium", "Large" };
-  else if (effect == "text_speed")
-    possible_values = { "Slow", "Medium_speed", "Fast" };
-  else if (effect == "music_volume" || effect == "sound_volume")
-    possible_values = { "0", "10", "20", "30", "40",
-                        "50", "60", "70", "80", "90",
-                        "100" };
-
-  auto menu_font = get<C::Font>("Interface:font");
-
-  auto pos = set<C::Absolute_position>(effect + ":position", Point(0,0));
-  for (std::size_t i = 0; i < possible_values.size(); ++ i)
-  {
-    std::string id = effect + '_' + possible_values[i];
-    std::string text;
-    if (auto t = request<C::String>(possible_values[i] + ":text"))
-      text = locale(t->value());
-    else if (is_int(possible_values[i]))
-      text = possible_values[i] + " %";
-    else
-      text = possible_values[i];
-
-    auto img = set<C::Image>(id + ":image",
-                             menu_font, "000000", text);
-    img->z() = Config::menu_text_depth;
-    img->on() = false;
-    img->set_scale(0.75);
-    img->set_relative_origin(0.5, 0.5);
-    img->set_collision(UNCLICKABLE);
-    set<C::Variable>(id + ":position", pos);
-    if (i == 0)
-      node.init(img, pos);
-    else
-      node.add(img);
-  }
-
-}
-
-void Interface::init_menu_buttons (Component::Menu::Node node)
-{
-  if (node.direction() == VERTICALLY)
-  {
-    double width = 0;
-    for (std::size_t i = 0; i < node.nb_children(); ++ i)
-      if (node[i].direction() == BUTTON)
-        width = std::max (width, node[i][0].size().x());
-
-    for (std::size_t i = 0; i < node.nb_children(); ++ i)
-      if (node[i].direction() == BUTTON)
-      {
-        auto img = request<C::Image>(node[i][0].image()->entity() + "_button:image");
-        C::Position_handle pos;
-        if (!img)
-        {
-          img = set<C::Image>(node[i][0].image()->entity() + "_button:image",
-              width, node[i][0].size().y());
-          img->z() = Config::menu_button_depth;
-          img->set_relative_origin(0.5, 0.5);
-          img->on() = false;
-          pos = set<C::Absolute_position>(img->entity() + ":position", Point(0,0));
-        }
-        else
-          pos = get<C::Position>(img->entity() + ":position");
-        node[i].init(img, pos);
-      }
-  }
-  else
-  {
-    check (node.direction() == HORIZONTALLY, "Menu node should be vertical or horizontal");
-    double height = 0;
-    for (std::size_t i = 0; i < node.nb_children(); ++ i)
-      if (node[i].direction() == BUTTON)
-        height = std::max (height, node[i][0].size().y());
-    for (std::size_t i = 0; i < node.nb_children(); ++ i)
-      if (node[i].direction() == BUTTON)
-      {
-        auto img = request<C::Image>(node[i][0].image()->entity() + "_button:image");
-        C::Position_handle pos;
-        if (!img)
-        {
-          img = set<C::Image>(node[i][0].image()->entity() + "_button:image",
-              node[i][0].size().x(), height);
-          img->z() = Config::menu_button_depth;
-          img->set_relative_origin(0.5, 0.5);
-          img->on() = false;
-          pos = set<C::Absolute_position>(img->entity() + ":position", Point(0,0));
-        }
-        else
-          pos = get<C::Position>(img->entity() + ":position");
-        node[i].init(img, pos);
-      }
-  }
-}
-
 void Interface::update_menu()
 {
   if (auto menu = request<C::String>("Menu:create"))
@@ -781,20 +560,6 @@ void Interface::create_menu (const std::string& id)
 {
   set<C::String>("Game:current_menu", id);
 
-  // Hint menu is created on the fly
-  if (id == "Hint")
-  {
-    std::string hint = get<C::Hints>("Game:hints")->next();
-    if (hint == "")
-      hint = get<C::String>("No_hint:text")->value();
-    set<C::String>("Hint_text:text", hint);
-    auto hint_menu = set<C::Menu>("Hint:menu");
-    hint_menu->split(VERTICALLY, 2);
-    init_menu_item ((*hint_menu)[0], "Hint_text", "");
-    init_menu_item ((*hint_menu)[1], "Ok", "ok");
-    init_menu_buttons (hint_menu->root());
-  }
-
   auto menu = get<C::Menu>(id + ":menu");
 
   // Update settings menu with current settings
@@ -827,6 +592,9 @@ void Interface::create_menu (const std::string& id)
   }
 
   get<C::Image>("Menu_background:image")->on() = true;
+  auto blackscreen = get<C::Image>("Blackscreen:image");
+  blackscreen->on() = true;
+  blackscreen->set_alpha(128);
 }
 
 void Interface::delete_menu (const std::string& id)
@@ -834,6 +602,9 @@ void Interface::delete_menu (const std::string& id)
   auto menu = get<C::Menu>(id + ":menu");
   menu->hide();
   get<C::Image>("Menu_background:image")->on() = false;
+  auto blackscreen = get<C::Image>("Blackscreen:image");
+  blackscreen->on() = false;
+  blackscreen->set_alpha(255);
 
   remove ("Interface:active_menu_item", true);
   remove ("Interface:gamepad_active_menu_item", true);
@@ -915,15 +686,10 @@ void Interface::menu_clicked ()
       delete_menu("Wanna_restart");
       status()->pop();
     }
-    else if (menu == "Credits" || menu == "Settings")
+    else if (menu == "Credits" || menu == "Settings" || menu == "Phone" || menu == "Gps")
     {
       delete_menu (menu);
       create_menu ("Exit");
-    }
-    else if (menu == "Hint")
-    {
-      delete_menu("Hint");
-      status()->pop();
     }
     else if (menu == "Exit")
     {
@@ -931,20 +697,11 @@ void Interface::menu_clicked ()
       status()->pop();
     }
   }
-  else if (effect->value() == "Settings")
+  else if (effect->value() == "Credits" || effect->value() == "Settings"
+           || effect->value() == "Phone" || effect->value() == "Gps")
   {
     delete_menu ("Exit");
-    create_menu ("Settings");
-  }
-  else if (effect->value() == "Credits")
-  {
-    delete_menu ("Exit");
-    create_menu ("Credits");
-  }
-  else if (effect->value() == "Hint")
-  {
-    delete_menu ("Exit");
-    create_menu ("Hint");
+    create_menu (effect->value());
   }
   else if (effect->value() == "Cancel")
   {
@@ -970,14 +727,15 @@ void Interface::apply_setting (const std::string& setting, const std::string& va
       }
 
     // Delete all menus
-    for (const std::string& id : { "Exit", "Settings", "Credits", "End" })
+    for (const std::string& id : { "Exit", "Wanna_restart", "Settings", "Credits", "Phone", "Gps", "End" })
     {
       auto menu = get<C::Menu>(id + ":menu");
       menu->apply([&](C::Image_handle img)
       {
         std::string id = img->entity();
-        if (id.find ("_button") != std::string::npos
-            || request<C::String>(id + ":text"))
+        if (contains(id, "Exit_"))
+          id = std::string (id.begin() + 5, id.end());
+        if (request<C::String>(id + ":text"))
           remove(img->id(), true);
       });
     }

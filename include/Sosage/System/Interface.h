@@ -97,13 +97,6 @@ private:
   void make_text_menu_text (Component::Menu::Node node, const std::string& id);
   void make_settings_item (Component::Menu::Node node, const std::string& id, int y);
 
-  void init_menu_item (Component::Menu::Node node, const std::string& id,
-                       const std::string& effect = std::string());
-  void init_setting_item (Component::Menu::Node node_left,
-                          Component::Menu::Node node,
-                          Component::Menu::Node node_right,
-                          const std::string& effect);
-  void init_menu_buttons (Component::Menu::Node node);
   void create_menu (const std::string& id);
   void delete_menu (const std::string& id);
   void menu_clicked ();
