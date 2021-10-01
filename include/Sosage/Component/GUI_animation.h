@@ -91,6 +91,13 @@ public:
     , m_start_pos(position->value()), m_end_pos(target)
   { }
 
+  void update (const Point& point)
+  {
+    if (m_end_pos == point)
+      return;
+    m_end_pos = point;
+  }
+
   virtual void cancel()
   {
     m_position->set(m_start_pos);

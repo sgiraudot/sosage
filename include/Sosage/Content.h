@@ -238,13 +238,16 @@ private:
     sorted.reserve (m_access_count.size());
     std::copy (m_access_count.begin(), m_access_count.end(),
                std::back_inserter (sorted));
-    std::sort (sorted.begin(), sorted.end(),
+    auto end = std::partition
+               (sorted.begin(), sorted.end(),
+                [](const auto& p) -> bool { return isupper(p.first[0]); });
+    std::sort (sorted.begin(), end,
                [](const auto& a, const auto& b) -> bool
                {
                  return a.second > b.second;
                });
-    debug ("[Profiling component access count (10 first)]");
-    for (std::size_t i = 0; i < 10; ++ i)
+    debug ("[Profiling system component access count (25 first)]");
+    for (std::size_t i = 0; i < 25; ++ i)
       debug (" * ", sorted[i].first, " (accessed ",
              sorted[i].second, " times)");
   }

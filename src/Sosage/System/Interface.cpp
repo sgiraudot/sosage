@@ -490,16 +490,21 @@ void Interface::update_inventory()
     as_target = target - Config::inventory_active_zone - 130;
   }
 
-  if (target != inventory_origin->value().y() && !request<C::GUI_animation>("Inventory:animation"))
+  if (target != inventory_origin->value().y())
   {
-    double current_time = value<C::Double>(CLOCK__TIME);
-    auto position = get<C::Position>("Inventory:origin");
-    set<C::GUI_position_animation> ("Inventory:animation", current_time, current_time + Config::inventory_speed,
-                                    position, Point(0, target));
+    if (auto anim = request<C::GUI_position_animation>("Inventory:animation"))
+      anim->update(Point(0, target));
+    else
+    {
+      double current_time = value<C::Double>(CLOCK__TIME);
+      auto position = get<C::Position>("Inventory:origin");
+      set<C::GUI_position_animation> ("Inventory:animation", current_time, current_time + Config::inventory_speed,
+                                      position, Point(0, target));
 
-    auto as_pos = get<C::Position>("Gamepad_action_selector:position");
-    set<C::GUI_position_animation> ("Gamepad_action_selector:animation", current_time, current_time + Config::inventory_speed,
-                                    as_pos, Point(Config::world_width - 240, as_target));
+      auto as_pos = get<C::Position>("Gamepad_action_selector:position");
+      set<C::GUI_position_animation> ("Gamepad_action_selector:animation", current_time, current_time + Config::inventory_speed,
+                                      as_pos, Point(Config::world_width - 240, as_target));
+    }
   }
 
   auto inventory = get<C::Inventory>("Game:inventory");
