@@ -188,23 +188,21 @@ void File_IO::write_config()
 {
   Core::File_IO output ("config.yaml", true, true);
 
-  output.write ("locale", get<C::String>(GAME__CURRENT_LOCAL)->value());
-  output.write ("fullscreen", get<C::Boolean>("Window:fullscreen")->value());
-  output.write ("input_mode", get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value());
-  output.write ("gamepad_type", get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE)->value());
+  output.write ("locale", value<C::String>(GAME__CURRENT_LOCAL));
+  output.write ("fullscreen", value<C::Boolean>("Window:fullscreen"));
+  output.write ("input_mode", value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE));
+  output.write ("gamepad_type", value<C::Simple<Gamepad_type>>(GAMEPAD__TYPE));
 
-  output.write ("dialog_speed", get<C::Int>("Dialog:speed")->value());
-  output.write ("dialog_size", get<C::Int>("Dialog:size")->value());
+  output.write ("dialog_speed", value<C::Int>("Dialog:speed"));
+  output.write ("dialog_size", value<C::Int>("Dialog:size"));
 
-  output.write ("music_volume", get<C::Int>("Music:volume")->value());
-  output.write ("sounds_volume", get<C::Int>("Sounds:volume")->value());
+  output.write ("music_volume", value<C::Int>("Music:volume"));
+  output.write ("sounds_volume", value<C::Int>("Sounds:volume"));
 
-  output.write ("autosave", get<C::Boolean>("Game:autosave")->value());
-  output.write ("hints", get<C::Boolean>("Game:hints_on")->value());
+  output.write ("autosave", value<C::Boolean>("Game:autosave"));
+  output.write ("hints", value<C::Boolean>("Game:hints_on"));
 
-  output.write ("window",
-                get<C::Int>("Window:width")->value(),
-                get<C::Int>("Window:height")->value());
+  output.write ("window", value<C::Int>("Window:width"), value<C::Int>("Window:height"));
 }
 
 void File_IO::read_savefile()
@@ -271,15 +269,15 @@ void File_IO::write_savefile()
 {
   Core::File_IO output ("save.yaml", true, true);
 
-  output.write("room", get<C::String>("Game:current_room")->value());
-  output.write("camera", get<C::Absolute_position>(CAMERA__POSITION)->value().x());
+  output.write("room", value<C::String>("Game:current_room"));
+  output.write("camera", value<C::Absolute_position>(CAMERA__POSITION).x());
   output.write("inventory", get<C::Inventory>("Game:inventory")->data());
   output.write("music", get<C::Music>("Game:music")->entity());
 
   if (auto dialog = request<C::String>("Game:current_dialog"))
   {
     output.write("dialog", dialog->value());
-    output.write("dialog_position", get<C::Int>("Game:dialog_position")->value());
+    output.write("dialog_position", value<C::Int>("Game:dialog_position"));
   }
 
   output.start_section("visited_rooms");
@@ -590,15 +588,14 @@ void File_IO::read_locale()
     }
   }
 
-  if (get<C::String>(GAME__CURRENT_LOCAL)->value() == "")
+  if (value<C::String>(GAME__CURRENT_LOCAL) == "")
   {
     std::string prefered = "";
     std::string user_locale = get_locale();
     if (user_locale.size() > 5)
       user_locale.resize(5);
 
-    if (auto l = request<C::String>("Cmdline:locale"))
-      user_locale = l->value();
+    user_locale = value<C::String>("Cmdline:locale", user_locale);
 
     for (const std::string& l : available->value())
       if (user_locale == l)
@@ -814,7 +811,7 @@ void File_IO::read_cutscene (const std::string& file_name)
 void File_IO::create_locale_dependent_text (const std::string& id, Component::Font_handle font,
                                             const std::string& color, const std::string& text)
 {
-  auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+  auto available = value<C::Vector<std::string>>("Game:available_locales");
   if (available.size() == 1)
   {
     auto img = set<C::Image>(id + ":image", font, color, text);
@@ -827,7 +824,7 @@ void File_IO::create_locale_dependent_text (const std::string& id, Component::Fo
   auto cond_img = set<C::String_conditional>(id + ":image", get<C::String>(GAME__CURRENT_LOCAL));
 
   // Save current locale to put it back after
-  std::string current = get<C::String>(GAME__CURRENT_LOCAL)->value();
+  std::string current = value<C::String>(GAME__CURRENT_LOCAL);
 
   for (const std::string& l : available)
   {
@@ -846,7 +843,7 @@ void File_IO::load_locale_dependent_image (const std::string& id, const std::str
 {
   auto img = func (filename);
 
-  auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+  auto available = value<C::Vector<std::string>>("Game:available_locales");
   if (available.size() == 1)
   {
     set<C::Image>(id, img);

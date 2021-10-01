@@ -78,7 +78,7 @@ Logic::Logic (Content& content)
 
 void Logic::run ()
 {
-  m_current_time = get<C::Double> (CLOCK__TIME)->value();
+  m_current_time = value<C::Double> (CLOCK__TIME);
 
   if (status()->is (CUTSCENE) || status()->was (CUTSCENE))
   {
@@ -124,7 +124,7 @@ void Logic::run ()
   if (receive ("Stick:moved"))
   {
     auto direction = get<C::Simple<Vector>>(STICK__DIRECTION);
-    const std::string& id = get<C::String>("Player:name")->value();
+    const std::string& id = value<C::String>("Player:name");
     if (direction->value() == Vector(0,0))
     {
       remove(id + ":path", true);
@@ -151,7 +151,7 @@ void Logic::run ()
     cropped->crop (code->xmin(), code->xmax(), code->ymin(), code->ymax());
     set<C::Absolute_position>
       (window->entity() + "_button:position",
-       get<C::Position>(window->entity() + ":position")->value()
+       value<C::Position>(window->entity() + ":position")
        + Vector(code->xmin(), code->ymin()));
 
     cropped->on() = true;
@@ -361,7 +361,7 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   auto ground_map = get<C::Ground_map>("Background:ground_map");
 
   if (id == "")
-    id = get<C::String>("Player:name")->value();
+    id = value<C::String>("Player:name");
   auto position = get<C::Position>(id + "_body:position");
 
   Point origin = position->value();
@@ -370,7 +370,7 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   //debug("Target = ", t);
 
   if (target->component() != "view")
-    t = t + get<C::Absolute_position>(CAMERA__POSITION)->value();
+    t = t + value<C::Absolute_position>(CAMERA__POSITION);
 
   //debug("Computing path from ", origin, " to ", t);
   std::vector<Point> path;
@@ -389,7 +389,7 @@ bool Logic::compute_path_from_target (C::Position_handle target,
 bool Logic::compute_path_from_direction (const Vector& direction)
 {
   auto ground_map = get<C::Ground_map>("Background:ground_map");
-  const std::string& id = get<C::String>("Player:name")->value();
+  const std::string& id = value<C::String>("Player:name");
   auto position = get<C::Position>(id + "_body:position");
   Point origin = position->value();
 
@@ -409,7 +409,7 @@ bool Logic::compute_path_from_direction (const Vector& direction)
 
 void Logic::follow (const std::string& follower)
 {
-  const std::string& player = get<C::String>("Player:name")->value();
+  const std::string& player = value<C::String>("Player:name");
 
   auto pos_player = get<C::Position>(player + "_idle:position");
   auto pos_follower = get<C::Position>(follower + "_idle:position");
@@ -511,7 +511,7 @@ bool Logic::function_camera (const std::vector<std::string>& args)
     auto begin = set<C::Double> ("Shake:begin", m_current_time);
     auto end = set<C::Double> ("Shake:end", m_current_time + duration);
     auto intens = set<C::Double> ("Shake:intensity", intensity);
-    auto camera = set<C::Double> ("Camera:saved_position", get<C::Absolute_position>(CAMERA__POSITION)->value().x());
+    auto camera = set<C::Double> ("Camera:saved_position", value<C::Absolute_position>(CAMERA__POSITION).x());
     m_timed.insert (std::make_pair (m_current_time + duration, begin));
     m_timed.insert (std::make_pair (m_current_time + duration, end));
     m_timed.insert (std::make_pair (m_current_time + duration, intens));
@@ -614,7 +614,7 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
   }
   else
   {
-    id = get<C::String>("Player:name")->value();
+    id = value<C::String>("Player:name");
     args = init_args;
   }
 
@@ -650,17 +650,17 @@ bool Logic::function_look (const std::vector<std::string>& args)
     target = m_current_action->target_entity();
 
   debug ("Action_look ", target);
-  const std::string& id = get<C::String>("Player:name")->value();
+  const std::string& id = value<C::String>("Player:name");
 
   if (target == "default" || !request<C::Position>(target + ":position"))
     set<C::Absolute_position>(id + ":lookat",
-                                       get<C::Position>(CURSOR__POSITION)->value());
+                              value<C::Position>(CURSOR__POSITION));
   else
   {
     auto state = request<C::String>(target + ":state");
     if (!state || state->value() != "inventory")
       set<C::Absolute_position>(id + ":lookat",
-                                         get<C::Position>(target + ":position")->value());
+                                value<C::Position>(target + ":position"));
   }
   return true;
 }
@@ -675,7 +675,7 @@ bool Logic::function_play (const std::vector<std::string>& args)
     check (args.size() == 3 || args.size() == 2, "function_play(animation) takes 1 or 2 arguments");
     if (args.size() == 3) // Target is character
     {
-      const std::string& character = get<C::String>("Player:name")->value();
+      const std::string& character = value<C::String>("Player:name");
 
       double duration = to_double(args[2]);
       set<C::String>(character + ":start_animation", target);
@@ -859,7 +859,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 
   if (args.size() == 1)
   {
-    id = get<C::String>("Player:name")->value();
+    id = value<C::String>("Player:name");
     text = args[0];
   }
   else
@@ -877,15 +877,15 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 
   int nb_char = int(text.size());
   double nb_seconds_read
-      = (get<C::Int>("Dialog:speed")->value() / double(Config::MEDIUM_SPEED))
+      = (value<C::Int>("Dialog:speed") / double(Config::MEDIUM_SPEED))
       * (Config::min_reading_time + nb_char * Config::char_spoken_time);
   double nb_seconds_lips_moving = nb_char * Config::char_spoken_time;
 
   int y = 100;
-  int x = int(get<C::Position>(id + "_body:position")->value().x()
-              - get<C::Position>(CAMERA__POSITION)->value().x());
+  int x = int(value<C::Position>(id + "_body:position").x()
+              - value<C::Position>(CAMERA__POSITION).x());
 
-  double size_factor = 0.75 * (get<C::Int>("Dialog:size")->value() / double(Config::MEDIUM));
+  double size_factor = 0.75 * (value<C::Int>("Dialog:size") / double(Config::MEDIUM));
 
   for (auto img : dialog)
     if (x + size_factor * img->width() / 2 > int(0.95 * Config::world_width))
@@ -916,10 +916,10 @@ void Logic::create_dialog (const std::string& character,
 {
   static const int width_max = int(0.6 * Config::world_width);
 
-  double size_factor = 0.75 * (get<C::Int>("Dialog:size")->value() / double(Config::MEDIUM));
+  double size_factor = 0.75 * (value<C::Int>("Dialog:size") / double(Config::MEDIUM));
 
   auto font = get<C::Font> ("Dialog:font");
-  const std::string& color = get<C::String> (character + ":color")->value();
+  const std::string& color = value<C::String> (character + ":color");
 
   auto img
     = set<C::Image> ("Comment:image",

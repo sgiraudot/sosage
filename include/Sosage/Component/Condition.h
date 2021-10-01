@@ -46,6 +46,11 @@ using Condition_handle = std::shared_ptr<Condition>;
 
 class Boolean : public Condition
 {
+public:
+  using const_reference = bool;
+  using value_type = bool;
+
+private:
   bool m_value;
   bool m_memory;
 public:

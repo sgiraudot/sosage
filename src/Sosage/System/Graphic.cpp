@@ -53,7 +53,7 @@ void Graphic::init()
   int w = iw->value();
   int h = ih->value();
   m_core.init (w, h,
-               get<C::Boolean>("Window:fullscreen")->value());
+               value<C::Boolean>("Window:fullscreen"));
   iw->set(w);
   ih->set(h);
 
@@ -63,7 +63,7 @@ void Graphic::run()
 {
   if (auto name = request<C::String>("Game:name"))
   {
-    m_core.update_window (locale(name->value()), get<C::String>("Icon:filename")->value());
+    m_core.update_window (locale(name->value()), value<C::String>("Icon:filename"));
     remove ("Game:name");
   }
 
@@ -77,7 +77,7 @@ void Graphic::run()
   if (receive ("Window:rescaled"))
     m_core.update_view ();
   if (receive ("Window:toggle_fullscreen"))
-    m_core.toggle_fullscreen (get<C::Boolean>("Window:fullscreen")->value());
+    m_core.toggle_fullscreen (value<C::Boolean>("Window:fullscreen"));
   if (receive ("Fake_touchscreen:enable"))
     m_core.toggle_cursor(true);
   if (receive ("Fake_touchscreen:disable"))
@@ -109,7 +109,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
                return (a->z() < b->z());
              });
 
-  double xcamera = get<C::Absolute_position>(CAMERA__POSITION)->value().x();
+  double xcamera = value<C::Absolute_position>(CAMERA__POSITION).x();
 
   for (const auto& img : images)
   {
@@ -179,7 +179,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
     }
   }
 
-  if (get<C::Boolean>(GAME__DEBUG)->value())
+  if (value<C::Boolean>(GAME__DEBUG))
   {
     if (auto ground_map = request<C::Ground_map>("Background:ground_map"))
     {
@@ -197,11 +197,11 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
                             (border ? 255 : 0), 0, (border ? 0 : 255));
         });
 
-        const std::string& id = get<C::String>("Player:name")->value();
+        const std::string& id = value<C::String>("Player:name");
         auto path = request<C::Path>(id + ":path");
         if (path)
         {
-          Point current = get<C::Position>(id + "_body:position")->value();
+          Point current = value<C::Position>(id + "_body:position");
           m_core.draw_square (int(current.x() - xcamera), current.Y(), 10, 0, 255, 0);
 
           for (std::size_t p = path->current(); p < path->size(); ++ p)

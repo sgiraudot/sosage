@@ -210,7 +210,7 @@ void Input::run()
     }
     else // if (mode->value() == GAMEPAD)
     {
-      Vector previous_stick = get<C::Simple<Vector>>(STICK__DIRECTION)->value();
+      Vector previous_stick = value<C::Simple<Vector>>(STICK__DIRECTION);
 
       if (gamepad->value() == KEYBOARD)
       {
@@ -284,7 +284,7 @@ void Input::run()
         get<C::Simple<Vector>>(STICK__DIRECTION)->set(vec);
       }
 
-      if (previous_stick != get<C::Simple<Vector>>(STICK__DIRECTION)->value())
+      if (previous_stick != value<C::Simple<Vector>>(STICK__DIRECTION))
         emit("Stick:moved");
     }
 

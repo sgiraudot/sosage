@@ -40,6 +40,9 @@ class Position : public Base
 {
 public:
 
+  using const_reference = Point;
+  using value_type = Point;
+
   Position (const std::string& id) : Base(id) { }
 
   virtual void set (const Point& p) = 0;

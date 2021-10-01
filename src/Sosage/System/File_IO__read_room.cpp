@@ -312,14 +312,14 @@ void File_IO::read_room (const std::string& file_name)
 
   callback->value()();
 
-  const std::string& origin = get<C::String>("Game:new_room_origin")->value();
+  const std::string& origin = value<C::String>("Game:new_room_origin");
   if (origin == "Saved_game")
     set<C::Boolean>("Game:in_new_room", true);
   else
   {
     auto origin_coord = get<C::Position>(origin + ":position");
     auto origin_looking = get<C::Boolean>(origin + ":looking_right");
-    const std::string& player = get<C::String>(origin + ":player")->value();
+    const std::string& player = value<C::String>(origin + ":player");
     set<C::String>("Player:name", player);
     get<C::Position>(player + "_body:position")->set(origin_coord->value());
     set<C::Boolean>("Game:in_new_room", origin_looking->value());

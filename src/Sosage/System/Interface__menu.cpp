@@ -403,9 +403,9 @@ void Interface::make_settings_item (Component::Menu::Node node, const std::strin
     std::vector<std::string> possible_values;
     if (id == "Language")
     {
-      auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+      auto available = value<C::Vector<std::string>>("Game:available_locales");
       for (const std::string& a : available)
-        possible_values.push_back (get<C::String>(a + ":description")->value());
+        possible_values.push_back (value<C::String>(a + ":description"));
     }
     else if (id == "Fullscreen")
       possible_values = { "Yes", "No" };
@@ -495,9 +495,9 @@ void Interface::update_menu()
   if (!status()->is (IN_MENU))
     return;
 
-  bool gamepad = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD;
+  bool gamepad = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD;
 
-  const std::string& id = get<C::String>("Game:current_menu")->value();
+  const std::string& id = value<C::String>("Game:current_menu");
   auto menu = get<C::Menu>(id + ":menu");
   bool settings = (id == "Settings");
 
@@ -566,12 +566,12 @@ void Interface::create_menu (const std::string& id)
   if (id == "Settings")
   {
     menu->update_setting ("Language",
-                          get<C::String>(get<C::String>(GAME__CURRENT_LOCAL)->value() + ":description")->value());
+                          value<C::String>(value<C::String>(GAME__CURRENT_LOCAL) + ":description"));
 
     menu->update_setting ("Fullscreen",
-                          get<C::Boolean>("Window:fullscreen")->value() ? "Yes" : "No");
+                          value<C::Boolean>("Window:fullscreen") ? "Yes" : "No");
 
-    int speed = get<C::Int>("Dialog:speed")->value();
+    int speed = value<C::Int>("Dialog:speed");
     if (speed == Config::SLOW)
       menu->update_setting ("Text_speed", "Slow");
     else if (speed == Config::MEDIUM_SPEED)
@@ -579,7 +579,7 @@ void Interface::create_menu (const std::string& id)
     else if (speed == Config::FAST)
       menu->update_setting ("Text_speed", "Fast");
 
-    int size = get<C::Int>("Dialog:size")->value();
+    int size = value<C::Int>("Dialog:size");
     if (size == Config::SMALL)
       menu->update_setting ("Text_size", "Small");
     else if (size == Config::MEDIUM)
@@ -587,8 +587,8 @@ void Interface::create_menu (const std::string& id)
     else if (size == Config::LARGE)
       menu->update_setting ("Text_size", "Large");
 
-    menu->update_setting ("Music_volume", std::to_string(10 * get<C::Int>("Music:volume")->value()));
-    menu->update_setting ("Sound_volume", std::to_string(10 * get<C::Int>("Sounds:volume")->value()));
+    menu->update_setting ("Music_volume", std::to_string(10 * value<C::Int>("Music:volume")));
+    menu->update_setting ("Sound_volume", std::to_string(10 * value<C::Int>("Sounds:volume")));
   }
 
   get<C::Image>("Menu_background:image")->on() = true;
@@ -612,13 +612,13 @@ void Interface::delete_menu (const std::string& id)
 
 void Interface::menu_clicked ()
 {
-  std::string entity = get<C::String>("Interface:active_menu_item")->value();
+  std::string entity = value<C::String>("Interface:active_menu_item");
 
   std::size_t pos = entity.find("_button");
   if (pos != std::string::npos)
     entity.resize(pos);
 
-  const std::string& menu = get<C::String>("Game:current_menu")->value();
+  const std::string& menu = value<C::String>("Game:current_menu");
 
   auto effect = request<C::String>(entity + ":effect");
 
@@ -713,14 +713,14 @@ void Interface::menu_clicked ()
   }
 }
 
-void Interface::apply_setting (const std::string& setting, const std::string& value)
+void Interface::apply_setting (const std::string& setting, const std::string& v)
 {
-  std::cerr << "Apply setting " << value << " to " << setting << std::endl;
+  std::cerr << "Apply setting " << v << " to " << setting << std::endl;
   if (setting == "Language")
   {
-    auto available = get<C::Vector<std::string>>("Game:available_locales")->value();
+    auto available = value<C::Vector<std::string>>("Game:available_locales");
     for (const std::string& a : available)
-      if (get<C::String>(a + ":description")->value() == value)
+      if (value<C::String>(a + ":description") == v)
       {
         get<C::String>(GAME__CURRENT_LOCAL)->set(a);
         break;
@@ -746,34 +746,34 @@ void Interface::apply_setting (const std::string& setting, const std::string& va
   }
   else if (setting == "Fullscreen")
   {
-    get<C::Boolean>("Window:fullscreen")->set(value == "Yes");
+    get<C::Boolean>("Window:fullscreen")->set(v == "Yes");
     emit ("Window:toggle_fullscreen");
   }
   else if (setting == "Text_size")
   {
-    if (value == "Small")
+    if (v == "Small")
       set<C::Int>("Dialog:size")->set(Config::SMALL);
-    else if (value == "Medium")
+    else if (v == "Medium")
       set<C::Int>("Dialog:size")->set(Config::MEDIUM);
     else
       set<C::Int>("Dialog:size")->set(Config::LARGE);
   }
   else if (setting == "Text_speed")
   {
-    if (value == "Slow")
+    if (v == "Slow")
       set<C::Int>("Dialog:speed")->set(Config::SLOW);
-    else if (value == "Medium_speed")
+    else if (v == "Medium_speed")
       set<C::Int>("Dialog:speed")->set(Config::MEDIUM_SPEED);
     else
       set<C::Int>("Dialog:speed")->set(Config::FAST);
   }
   else if (setting == "Music_volume")
   {
-    set<C::Int>("Music:volume")->set(to_int(value) / 10);
+    set<C::Int>("Music:volume")->set(to_int(v) / 10);
     emit("Music:volume_changed");
   }
   else if (setting == "Sound_volume")
-    set<C::Int>("Sounds:volume")->set(to_int(value) / 10);
+    set<C::Int>("Sounds:volume")->set(to_int(v) / 10);
 }
 
 }

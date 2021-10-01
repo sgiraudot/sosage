@@ -57,6 +57,13 @@ public:
   std::shared_ptr<T> get (const Fast_access_component& fac) { return m_content.get<T>(fac); }
   template <typename T>
   std::shared_ptr<T> request (const std::string& key) { return m_content.request<T>(key); }
+  template <typename T>
+  typename T::const_reference value (const Fast_access_component& fac) { return m_content.value<T>(fac); }
+  template <typename T>
+  typename T::const_reference value (const std::string& key) { return m_content.value<T>(key); }
+  template <typename T>
+  typename T::value_type value (const std::string& key, const typename T::value_type& default_value)
+  { return m_content.value<T>(key, default_value); }
   template <typename T, typename ... Args>
   std::shared_ptr<T> set (Args&& ... args) { return m_content.set<T>(std::forward<Args>(args)...); }
   template <typename T>

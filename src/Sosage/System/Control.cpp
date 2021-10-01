@@ -77,7 +77,7 @@ Control::Control(Content& content)
 
 void Control::run()
 {
-  const Input_mode& new_mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
+  const Input_mode& new_mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   const Status& new_status = status()->value();
 
   if (new_status != m_status || new_mode != m_mode)
@@ -106,7 +106,7 @@ void Control::update_exit()
 
   if (status()->is (CUTSCENE))
   {
-    double time = get<C::Double>(CLOCK__TIME)->value();
+    double time = value<C::Double>(CLOCK__TIME);
     bool exit_message_exists = bool(request<C::Image>("Skip_message:image"));
 
     if (receive("Game:escape"))
@@ -129,7 +129,7 @@ void Control::update_exit()
     {
       if (status()->is (IN_MENU))
       {
-        const std::string& menu = get<C::String>("Game:current_menu")->value();
+        const std::string& menu = value<C::String>("Game:current_menu");
         if (menu == "End")
           emit("Game:exit");
         else

@@ -46,7 +46,7 @@ Animation::Animation (Content& content)
 
 void Animation::run()
 {
-  std::size_t new_frame_id = frame_id(get<C::Double>(CLOCK__TIME)->value());
+  std::size_t new_frame_id = frame_id(value<C::Double>(CLOCK__TIME));
 
   if (status()->is (PAUSED))
   {
@@ -79,7 +79,7 @@ void Animation::run_gui_frame()
 {
   if (auto fadein = request<C::Boolean>("Fade:in"))
   {
-    fade (get<C::Double>("Fade:begin")->value(), get<C::Double>("Fade:end")->value(), fadein->value());
+    fade (value<C::Double>("Fade:begin"), value<C::Double>("Fade:end"), fadein->value());
     m_fade_to_remove = fadein->value();
   }
   else if (m_fade_to_remove)
@@ -88,13 +88,13 @@ void Animation::run_gui_frame()
     m_fade_to_remove = false;
   }
 
-  double current_time = get<C::Double>(CLOCK__TIME)->value();
+  double current_time = value<C::Double>(CLOCK__TIME);
   if (auto i = request<C::Double>("Shake:intensity"))
   {
-    double begin = get<C::Double>("Shake:begin")->value();
-    double end = get<C::Double>("Shake:end")->value();
+    double begin = value<C::Double>("Shake:begin");
+    double end = value<C::Double>("Shake:end");
     double intensity = i->value();
-    double x_start = get<C::Double>("Camera:saved_position")->value();
+    double x_start = value<C::Double>("Camera:saved_position");
 
     double current_intensity = intensity * (end - current_time) / (end - begin);
 
@@ -139,7 +139,7 @@ void Animation::run_animation_frame()
 
   if (auto looking_right = request<C::Boolean>("Game:in_new_room"))
   {
-    const std::string& player = get<C::String>("Player:name")->value();
+    const std::string& player = value<C::String>("Player:name");
     place_and_scale_character (player, looking_right->value());
     generate_random_idle_animation (player, looking_right->value());
 
@@ -175,16 +175,16 @@ void Animation::run_animation_frame()
       if (looking_right)
       {
         phead->set (pbody->value() - abody->core().scaling
-                    * Vector(get<C::Position>(id + "_head:gap_right")->value()));
+                    * Vector(value<C::Position>(id + "_head:gap_right")));
         pmouth->set (phead->value() - ahead->core().scaling
-                     * Vector(get<C::Position>(id + "_mouth:gap_right")->value()));
+                     * Vector(value<C::Position>(id + "_mouth:gap_right")));
       }
       else
       {
         phead->set (pbody->value() - abody->core().scaling
-                    * Vector(get<C::Position>(id + "_head:gap_left")->value()));
+                    * Vector(value<C::Position>(id + "_head:gap_left")));
         pmouth->set (phead->value() - ahead->core().scaling
-                     * Vector(get<C::Position>(id + "_mouth:gap_left")->value()));
+                     * Vector(value<C::Position>(id + "_mouth:gap_left")));
       }
 
       generate_random_idle_animation (id, looking_right);
@@ -237,7 +237,7 @@ void Animation::run_animation_frame()
     {
       if (!compute_movement_from_path(path))
         to_remove.push_back(c->id());
-      else if (path->entity() == get<C::String>("Player:name")->value())
+      else if (path->entity() == value<C::String>("Player:name"))
         has_moved = true;
     }
     else if (C::cast<C::Signal>(c))
@@ -245,7 +245,7 @@ void Animation::run_animation_frame()
       std::string id = c->entity();
       if (c->component() == "start_talking")
       {
-        if (get<C::Boolean>(id + ":visible")->value())
+        if (value<C::Boolean>(id + ":visible"))
           generate_random_mouth_animation (id);
         to_remove.push_back(c->id());
       }
@@ -305,7 +305,7 @@ void Animation::run_animation_frame()
 
 bool Animation::run_loading()
 {
-  std::size_t new_frame_id = frame_id(get<C::Double>(CLOCK__TIME)->value());
+  std::size_t new_frame_id = frame_id(value<C::Double>(CLOCK__TIME));
   if (new_frame_id == m_frame_id)
     return false;
   m_frame_id = new_frame_id;
@@ -338,16 +338,16 @@ void Animation::place_and_scale_character(const std::string& id, bool looking_ri
   if (looking_right)
   {
     phead->set (pbody->value() - abody->core().scaling
-                * Vector(get<C::Position>(id + "_head:gap_right")->value()));
+                * Vector(value<C::Position>(id + "_head:gap_right")));
     pmouth->set (phead->value() - ahead->core().scaling
-                * Vector(get<C::Position>(id + "_mouth:gap_right")->value()));
+                * Vector(value<C::Position>(id + "_mouth:gap_right")));
   }
   else
   {
     phead->set (pbody->value() - abody->core().scaling
-                * Vector(get<C::Position>(id + "_head:gap_left")->value()));
+                * Vector(value<C::Position>(id + "_head:gap_left")));
     pmouth->set (phead->value() - ahead->core().scaling
-                * Vector(get<C::Position>(id + "_mouth:gap_left")->value()));
+                * Vector(value<C::Position>(id + "_mouth:gap_left")));
   }
   visible->set(was_visible);
 }
@@ -555,7 +555,7 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
 
   std::vector<int> possibles_values;
   const std::vector<std::string>& positions
-    = get<C::Vector<std::string> >(id + "_idle:values")->value();
+    = value<C::Vector<std::string> >(id + "_idle:values");
 
   int pose = 1;
   for (std::size_t i = 0; i < positions.size(); ++ i)
@@ -625,7 +625,7 @@ void Animation::generate_animation (const std::string& id, const std::string& an
   debug ("Generate animation \"", anim, "\" for character \"", id, "\"");
   auto image = get<C::Animation>(id + "_idle:image");
   const std::vector<std::string>& positions
-    = get<C::Vector<std::string> >(id + "_idle:values")->value();
+    = value<C::Vector<std::string> >(id + "_idle:values");
 
   int row_index = image->frames().front().y;
 
@@ -648,7 +648,7 @@ void Animation::generate_animation (const std::string& id, const std::string& an
 
 void Animation::fade (double begin_time, double end_time, bool fadein)
 {
-  double current_time = get<C::Double>(CLOCK__TIME)->value();
+  double current_time = value<C::Double>(CLOCK__TIME);
 
   if (current_time > end_time)
     return;
@@ -668,9 +668,9 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
 
 void Animation::update_camera_target ()
 {
-  const std::string& id = get<C::String>("Player:name")->value();
-  int xbody = get<C::Position>(id + "_body:position")->value().X();
-  double xcamera = get<C::Absolute_position>(CAMERA__POSITION)->value().x();
+  const std::string& id = value<C::String>("Player:name");
+  int xbody = value<C::Position>(id + "_body:position").X();
+  double xcamera = value<C::Absolute_position>(CAMERA__POSITION).x();
 
   double target = std::numeric_limits<double>::quiet_NaN();
   if (xbody < xcamera + Config::camera_limit_left)
@@ -687,7 +687,7 @@ void Animation::update_camera_target ()
   if (request<C::GUI_animation>("Camera:animation"))
     return;
 
-  double current_time = get<C::Double>(CLOCK__TIME)->value();
+  double current_time = value<C::Double>(CLOCK__TIME);
   auto position = get<C::Position>(CAMERA__POSITION);
   set<C::GUI_position_animation>("Camera:animation", current_time, current_time + Config::camera_speed,
                                  position, Point (target, position->value().y()));

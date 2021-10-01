@@ -49,7 +49,7 @@ void Sound::run()
   if (receive("Music:start"))
   {
     check (music, "No music to start");
-    m_core.start_music (music->core(), get<C::Int>("Music:volume")->value() / 10.);
+    m_core.start_music (music->core(), value<C::Int>("Music:volume") / 10.);
     music->on() = true;
   }
 
@@ -57,13 +57,13 @@ void Sound::run()
   {
     check (music, "No music to fade");
     auto fadein = request<C::Boolean>("Fade:in");
-    double current_time = get<C::Double> (CLOCK__TIME)->value();
-    double end_time = get<C::Double>("Fade:end")->value();
+    double current_time = value<C::Double> (CLOCK__TIME);
+    double end_time = value<C::Double>("Fade:end");
     m_core.fade(music->core(), end_time - current_time, fadein->value());
   }
 
   if (receive("Music:volume_changed"))
-    m_core.set_volume (get<C::Int>("Music:volume")->value() / 10.);
+    m_core.set_volume (value<C::Int>("Music:volume") / 10.);
 
   if (receive("Music:stop"))
     m_core.stop_music();
@@ -77,7 +77,7 @@ void Sound::run()
       if (status()->was (CUTSCENE))
         m_core.pause_music (music->core());
       else
-        m_core.set_volume(0.15 * get<C::Int>("Music:volume")->value() / 10.);
+        m_core.set_volume(0.15 * value<C::Int>("Music:volume") / 10.);
       music->on() = false;
     }
     else if (!paused && !music->on())
@@ -85,30 +85,30 @@ void Sound::run()
       if (status()->is (CUTSCENE))
         m_core.resume_music(music->core());
       else
-        m_core.set_volume (get<C::Int>("Music:volume")->value() / 10.);
+        m_core.set_volume (value<C::Int>("Music:volume") / 10.);
       music->on() = true;
     }
   }
 
   if (receive ("Click:play_sound"))
     m_core.play_sound (get<C::Sound>("Click:sound")->core(),
-                       get<C::Int>("Sounds:volume")->value() / 10.);
+                       value<C::Int>("Sounds:volume") / 10.);
 
   if (receive ("code:play_failure"))
     m_core.play_sound
       (get<C::Sound>
        (get<C::Code>("Game:code")->entity() +"_failure:sound")->core(),
-       get<C::Int>("Sounds:volume")->value() / 10.);
+       value<C::Int>("Sounds:volume") / 10.);
   else if (receive ("code:play_success"))
     m_core.play_sound
       (get<C::Sound>
        (get<C::Code>("Game:code")->entity() +"_success:sound")->core(),
-       get<C::Int>("Sounds:volume")->value() / 10.);
+       value<C::Int>("Sounds:volume") / 10.);
   else if (receive ("code:play_click"))
     m_core.play_sound
       (get<C::Sound>
        (get<C::Code>("Game:code")->entity() +"_button:sound")->core(),
-       get<C::Int>("Sounds:volume")->value() / 10.);
+       value<C::Int>("Sounds:volume") / 10.);
 
   std::vector<std::string> to_remove;
   for (C::Handle h : m_content)
@@ -116,7 +116,7 @@ void Sound::run()
       if (ev->entity() == "play_sound")
       {
         m_core.play_sound (get<C::Sound> (ev->component() + ":sound")->core(),
-                           get<C::Int>("Sounds:volume")->value() / 10.);
+                           value<C::Int>("Sounds:volume") / 10.);
         to_remove.push_back (ev->id());
       }
 

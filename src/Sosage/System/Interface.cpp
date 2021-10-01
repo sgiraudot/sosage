@@ -112,20 +112,20 @@ void Interface::init()
   create_label (true, "Keyboard_switcher_left", "Tab", false, false, UNCLICKABLE);
   auto kb_left_pos = set<C::Absolute_position>("Keyboard_switcher_left:global_position", Point(0,0));
   update_label ("Keyboard_switcher_left", false, false, kb_left_pos);
-  kb_left_pos->set (Point (Config::label_height - get<C::Position>("Keyboard_switcher_left_back:position")->value().x(),
+  kb_left_pos->set (Point (Config::label_height - value<C::Position>("Keyboard_switcher_left_back:position").x(),
                         Config::world_height - Config::label_height));
 
   create_label (true, "Gamepad_switcher_left", "L", false, false, UNCLICKABLE);
   auto left_pos = set<C::Absolute_position>("Gamepad_switcher_left:global_position", Point(0,0));
   update_label ("Gamepad_switcher_left", false, false, left_pos);
-  left_pos->set (Point (Config::label_height - get<C::Position>("Gamepad_switcher_left_back:position")->value().x(),
+  left_pos->set (Point (Config::label_height - value<C::Position>("Gamepad_switcher_left_back:position").x(),
                         Config::world_height - Config::label_height));
 
   create_label (false, "Keyboard_switcher_label", locale_get("Switch_target:text"), true, false, UNCLICKABLE);
   auto kb_img = get<C::Image>("Keyboard_switcher_label_back:image");
   auto kb_pos = set<C::Absolute_position>("Keyboard_switcher_label:global_position", Point(0,0));
   update_label ("Keyboard_switcher_label", true, false, kb_pos);
-  kb_pos->set (Point (get<C::Position>("Keyboard_switcher_left_back:position")->value().x() + kb_img->width() / 2,
+  kb_pos->set (Point (value<C::Position>("Keyboard_switcher_left_back:position").x() + kb_img->width() / 2,
                       kb_left_pos->value().y()));
   get<C::Relative_position>("Keyboard_switcher_label:position")->set(Vector(Config::label_margin,0));
   get<C::Relative_position>("Keyboard_switcher_label_back:position")->set(Vector(0,0));
@@ -134,8 +134,8 @@ void Interface::init()
   auto img = get<C::Image>("Gamepad_switcher_label_back:image");
   auto pos = set<C::Absolute_position>("Gamepad_switcher_label:global_position", Point(0,0));
   update_label ("Gamepad_switcher_label", true, true, pos);
-  pos->set (Point (get<C::Position>("Gamepad_switcher_left_back:position")->value().x() + img->width() / 2,
-                      left_pos->value().y()));
+  pos->set (Point (value<C::Position>("Gamepad_switcher_left_back:position").x() + img->width() / 2,
+                   left_pos->value().y()));
 
   create_label (true, "Gamepad_switcher_right", "R", false, false, UNCLICKABLE);
   auto right_pos = set<C::Absolute_position>("Gamepad_switcher_right:global_position", Point(0,0));
@@ -188,7 +188,7 @@ void Interface::update_active_objects()
 
   if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
   {
-    if (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value() == GAMEPAD)
+    if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
     {
       auto active_object = get<C::String>("Interface:active_object");
 
@@ -340,7 +340,7 @@ void Interface::update_active_objects()
 
 void Interface::update_action_selector()
 {
-  const Input_mode& mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
+  const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
   if (status()->is(CUTSCENE, LOCKED, DIALOG_CHOICE))
   {
@@ -444,12 +444,12 @@ void Interface::update_object_switcher()
   bool keyboard_on = false;
   bool gamepad_on = false;
 
-  const Input_mode& mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
+  const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   if (mode == GAMEPAD && !status()->is(IN_MENU))
     if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
       if (active_objects->value().size() > 1)
       {
-        keyboard_on = (get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE)->value() == KEYBOARD);
+        keyboard_on = (value<C::Simple<Gamepad_type>>(GAMEPAD__TYPE) == KEYBOARD);
         gamepad_on = !keyboard_on;
       }
 
@@ -468,7 +468,7 @@ void Interface::update_inventory()
   if (status()->is(IN_MENU))
     return;
 
-  Input_mode mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
+  Input_mode mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
   auto inventory_origin = get<C::Absolute_position>("Inventory:origin");
 
@@ -492,7 +492,7 @@ void Interface::update_inventory()
 
   if (target != inventory_origin->value().y() && !request<C::GUI_animation>("Inventory:animation"))
   {
-    double current_time = get<C::Double>(CLOCK__TIME)->value();
+    double current_time = value<C::Double>(CLOCK__TIME);
     auto position = get<C::Position>("Inventory:origin");
     set<C::GUI_position_animation> ("Inventory:animation", current_time, current_time + Config::inventory_speed,
                                     position, Point(0, target));
@@ -507,12 +507,8 @@ void Interface::update_inventory()
   constexpr int inventory_margin = 100;
   constexpr int inventory_width = Config::world_width - inventory_margin * 2;
 
-  std::string active_object = "";
-  if (auto a = request<C::String>("Interface:active_object"))
-    active_object = a->value();
-  std::string source_object = "";
-  if (auto s = request<C::String>("Interface:source_object"))
-    source_object = s->value();
+  std::string active_object = value<C::String>("Interface:active_object", "");
+  std::string source_object = value<C::String>("Interface:source_object", "");
 
   std::size_t position = inventory->position();
   for (std::size_t i = 0; i < inventory->size(); ++ i)
@@ -559,7 +555,7 @@ void Interface::update_inventory()
 
 void Interface::update_code_hover()
 {
-  double current_time = get<C::Double>(CLOCK__TIME)->value();
+  double current_time = value<C::Double>(CLOCK__TIME);
 
   if (receive("Interface:show_window"))
   {
@@ -580,13 +576,13 @@ void Interface::update_code_hover()
   if (receive("Code:hover"))
   {
     // Possible improvment: avoid creating image at each frame
-    const std::string& player = get<C::String>("Player:name")->value();
+    const std::string& player = value<C::String>("Player:name");
     auto code = get<C::Code>("Game:code");
     auto window = get<C::Image>("Game:window");
     auto position
         = get<C::Position>(window->entity() + ":position");
 
-    const std::string& color_str = get<C::String>(player + ":color")->value();
+    const std::string& color_str = value<C::String>(player + ":color");
     RGB_color color = color_from_string (color_str);
     auto img = set<C::Image>("Code_hover:image", code->xmax() - code->xmin(), code->ymax() - code->ymin(),
                              color[0], color[1], color[2], 128);
@@ -605,7 +601,7 @@ void Interface::update_dialog_choices()
   if (receive("Dialog:clean"))
   {
     const std::vector<std::string>& choices
-        = get<C::Vector<std::string> >("Dialog:choices")->value();
+        = value<C::Vector<std::string> >("Dialog:choices");
 
     // Clean up
     for (int c = int(choices.size()) - 1; c >= 0; -- c)
@@ -624,13 +620,13 @@ void Interface::update_dialog_choices()
     return;
 
   const std::vector<std::string>& choices
-      = get<C::Vector<std::string> >("Dialog:choices")->value();
+      = value<C::Vector<std::string> >("Dialog:choices");
 
   // Generate images if not done yet
   if (!request<C::Image>("Dialog_choice_background:image"))
   {
     auto interface_font = get<C::Font> ("Dialog:font");
-    const std::string& player = get<C::String>("Player:name")->value();
+    const std::string& player = value<C::String>("Player:name");
 
     int bottom = Config::world_height;
     int y = bottom - 10;
@@ -647,7 +643,7 @@ void Interface::update_dialog_choices()
 
       auto img_on
         = set<C::Image>(entity + "_on:image", interface_font,
-                        get<C::String>(player + ":color")->value(),
+                        value<C::String>(player + ":color"),
                         locale(choices[std::size_t(c)]));
       img_on->z() = Config::dialog_depth;
       img_on->set_scale(0.75);
@@ -676,9 +672,7 @@ void Interface::update_dialog_choices()
   int bottom = Config::world_height;
   int y = bottom - 10;
 
-  int choice = -1;
-  if (auto c = request<C::Int>("Interface:active_dialog_item"))
-    choice = c->value();
+  int choice = value<C::Int>("Interface:active_dialog_item", -1);
 
   for (int c = int(choices.size()) - 1; c >= 0; -- c)
   {
@@ -705,7 +699,7 @@ void Interface::update_skip_message()
 
     auto img
         = set<C::Image>("Skip_message:image", interface_font, "FFFFFF",
-                        get<C::String>("Skip_cutscene:text")->value());
+                        value<C::String>("Skip_cutscene:text"));
     img->z() += 10;
     img->set_scale(0.5);
     img->set_relative_origin (1, 1);
@@ -734,7 +728,7 @@ void Interface::update_skip_message()
 
 void Interface::update_cursor()
 {
-  const Input_mode& mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
+  const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
   if (mode == MOUSE)
   {

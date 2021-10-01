@@ -237,9 +237,7 @@ void Control::inventory_sub_switch_active_object (bool right)
 {
   auto inventory = get<C::Inventory>("Game:inventory");
   auto active_object = get<C::String>("Interface:active_object");
-  std::string source_object = "";
-  if (auto s = request<C::String>("Interface:source_object"))
-    source_object = s->value();
+  std::string source_object = value<C::String>("Interface:source_object", "");
 
   for (std::size_t i = 0; i < inventory->size(); ++ i)
     if (inventory->get(i) == active_object->value())
@@ -365,7 +363,7 @@ void Control::dialog_gamepad()
 void Control::dialog_sub_switch_active_object (bool right)
 {
   const std::vector<std::string>& choices
-      = get<C::Vector<std::string> >("Dialog:choices")->value();
+      = value<C::Vector<std::string> >("Dialog:choices");
 
   auto choice = request<C::Int>("Interface:active_dialog_item");
   if (!choice)
@@ -412,7 +410,7 @@ void Control::menu_gamepad()
 
 void Control::menu_sub_triggered (const Event_value& key)
 {
-  const std::string& menu = get<C::String>("Game:current_menu")->value();
+  const std::string& menu = value<C::String>("Game:current_menu");
   bool settings = (menu == "Settings");
 
   auto active_item = request<C::String>("Interface:gamepad_active_menu_item");
@@ -471,7 +469,7 @@ void Control::menu_sub_triggered (const Event_value& key)
 
 void Control::menu_sub_switch_active_item (bool right)
 {
-  const std::string& id = get<C::String>("Game:current_menu")->value();
+  const std::string& id = value<C::String>("Game:current_menu");
   auto menu = get<C::Menu>(id + ":menu");
   bool settings = (id == "Settings");
 
@@ -526,7 +524,7 @@ void Control::menu_sub_switch_active_item (bool right)
 
 std::vector<std::string> Control::detect_active_objects()
 {
-  const std::string& id = get<C::String>("Player:name")->value();
+  const std::string& id = value<C::String>("Player:name");
   auto position = get<C::Position>(id + "_body:position");
 
   std::unordered_set<std::string> active_objects;
@@ -554,7 +552,7 @@ std::vector<std::string> Control::detect_active_objects()
           continue;
 
         // Inventory objet
-        if (get<C::String>(label->entity() + ":state")->value() == "inventory")
+        if (value<C::String>(label->entity() + ":state") == "inventory")
           continue;
 
         // Object in reach
@@ -584,14 +582,14 @@ Event_value Control::stick_left_right()
   {
     if (m_stick_on)
     {
-      if (get<C::Simple<Vector>>(STICK__DIRECTION)->value() == Vector(0,0))
+      if (value<C::Simple<Vector>>(STICK__DIRECTION) == Vector(0,0))
         m_stick_on = false;
       return NONE;
     }
 
     m_stick_on = true;
 
-    double x = get<C::Simple<Vector>>(STICK__DIRECTION)->value().x();
+    double x = value<C::Simple<Vector>>(STICK__DIRECTION).x();
     if (x == 0)
       return NONE;
     return (x > 0 ? RIGHT : LEFT);
@@ -605,14 +603,14 @@ Event_value Control::stick_up_down()
   {
     if (m_stick_on)
     {
-      if (get<C::Simple<Vector>>(STICK__DIRECTION)->value() == Vector(0,0))
+      if (value<C::Simple<Vector>>(STICK__DIRECTION) == Vector(0,0))
         m_stick_on = false;
       return NONE;
     }
 
     m_stick_on = true;
 
-    double y = get<C::Simple<Vector>>(STICK__DIRECTION)->value().y();
+    double y = value<C::Simple<Vector>>(STICK__DIRECTION).y();
     if (y == 0)
       return NONE;
     return (y > 0 ? DOWN_ARROW : UP_ARROW);
@@ -626,15 +624,15 @@ Event_value Control::stick_left_right_up_down()
   {
     if (m_stick_on)
     {
-      if (get<C::Simple<Vector>>(STICK__DIRECTION)->value() == Vector(0,0))
+      if (value<C::Simple<Vector>>(STICK__DIRECTION) == Vector(0,0))
         m_stick_on = false;
       return NONE;
     }
 
     m_stick_on = true;
 
-    double x = get<C::Simple<Vector>>(STICK__DIRECTION)->value().x();
-    double y = get<C::Simple<Vector>>(STICK__DIRECTION)->value().y();
+    double x = value<C::Simple<Vector>>(STICK__DIRECTION).x();
+    double y = value<C::Simple<Vector>>(STICK__DIRECTION).y();
     if (std::abs(x) > std::abs(y))
       return (x > 0 ? RIGHT : LEFT);
     // else
@@ -649,12 +647,12 @@ Vector Control::stick_direction()
   {
     if (m_stick_on)
     {
-      if (get<C::Simple<Vector>>(STICK__DIRECTION)->value() == Vector(0,0))
+      if (value<C::Simple<Vector>>(STICK__DIRECTION) == Vector(0,0))
         m_stick_on = false;
       return Vector(0,0);
     }
     m_stick_on = true;
-    return get<C::Simple<Vector>>(STICK__DIRECTION)->value();
+    return value<C::Simple<Vector>>(STICK__DIRECTION);
   }
   return Vector(0,0);
 }

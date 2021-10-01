@@ -142,6 +142,21 @@ public:
   }
 
   template <typename T>
+  typename T::const_reference value (const std::string& key)
+  {
+    return get<T>(key)->value();
+  }
+
+  template <typename T>
+  typename T::value_type value (const std::string& key,
+                                const typename T::value_type& default_value)
+  {
+    if (auto t = request<T>(key))
+      return t->value();
+    return default_value;
+  }
+
+  template <typename T>
   std::shared_ptr<T> get (const std::string& key)
   {
     count_get();
@@ -173,6 +188,12 @@ public:
   std::shared_ptr<T> get (const Fast_access_component& fac)
   {
     return Component::cast<T>(m_fast_access_components[std::size_t(fac)]);
+  }
+
+  template <typename T>
+  typename T::const_reference value (const Fast_access_component& fac)
+  {
+    return Component::cast<T>(m_fast_access_components[std::size_t(fac)])->value();
   }
 
   void emit (const std::string& signal)

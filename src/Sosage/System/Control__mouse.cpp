@@ -529,7 +529,7 @@ void Control::dialog_touchscreen()
 
 void Control::dialog_sub_click ()
 {
-  set<C::Int>("Dialog:choice", get<C::Int>("Interface:active_dialog_item")->value());
+  set<C::Int>("Dialog:choice", value<C::Int>("Interface:active_dialog_item"));
   emit("Dialog:clean");
   remove ("Interface:active_dialog_item", true);
   remove("Game:current_dialog");
@@ -587,7 +587,7 @@ bool Control::collides (C::Position_handle cursor, C::Image_handle img)
 
   if (auto absol = C::cast<C::Absolute_position>(position))
     if (!absol->absolute())
-      p = p + Vector (-get<C::Absolute_position>(CAMERA__POSITION)->value().x(), 0);
+      p = p + Vector (-value<C::Absolute_position>(CAMERA__POSITION).x(), 0);
 
   Point screen_position = p - img->core().scaling * Vector(img->origin());
   int xmin = screen_position.X();
