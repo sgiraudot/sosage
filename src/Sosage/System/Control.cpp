@@ -67,6 +67,9 @@ Control::Control(Content& content)
   INIT_DISPATCHER (IN_CODE, MOUSE, code_mouse);
   INIT_DISPATCHER (IN_CODE, TOUCHSCREEN, code_touchscreen);
   INIT_DISPATCHER (IN_CODE, GAMEPAD, code_gamepad);
+  INIT_DISPATCHER (DIALOG_CHOICE, MOUSE, dialog_mouse);
+  INIT_DISPATCHER (DIALOG_CHOICE, TOUCHSCREEN, dialog_touchscreen);
+  INIT_DISPATCHER (DIALOG_CHOICE, GAMEPAD, dialog_gamepad);
   INIT_DISPATCHER (IN_MENU, MOUSE, menu_mouse);
   INIT_DISPATCHER (IN_MENU, TOUCHSCREEN, menu_touchscreen);
   INIT_DISPATCHER (IN_MENU, GAMEPAD, menu_gamepad);
@@ -177,6 +180,8 @@ void Control::begin_status (const Status& s)
       get<C::Code>("Game:code")->hover();
       emit("Code:hover");
     }
+    else if (s == DIALOG_CHOICE)
+      set<C::Int>("Interface:active_dialog_item", 0);
   }
 }
 

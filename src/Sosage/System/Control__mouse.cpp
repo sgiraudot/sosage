@@ -475,6 +475,69 @@ void Control::code_sub_click(bool collision)
   }
 }
 
+void Control::dialog_mouse()
+{
+  auto cursor = get<C::Position>(CURSOR__POSITION);
+
+  // Detect collision with clickable objets
+  std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
+  {
+      return contains(img->entity(), "Dialog_choice_") && !contains(img->entity(), "background");
+  });
+
+  int choice = -1;
+  if (collision != "")
+  {
+    choice = to_int(std::string(collision.begin() +
+                                    std::ptrdiff_t(std::string("Dialog_choice_").size()),
+                                    collision.end()));
+    std::cerr << "Choice = " << choice << std::endl;
+    set<C::Int>("Interface:active_dialog_item", choice);
+  }
+  else
+    remove ("Interface:active_dialog_item", true);
+
+  if (receive("Cursor:clicked") && choice != -1)
+    dialog_sub_click ();
+}
+
+void Control::dialog_touchscreen()
+{
+  if (receive("Cursor:clicked"))
+  {
+    auto cursor = get<C::Position>(CURSOR__POSITION);
+
+    // Detect collision with clickable objets
+    std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
+    {
+      return contains(img->entity(), "Dialog_choice_") && !contains(img->entity(), "background");
+    });
+
+    int choice = -1;
+    if (collision != "")
+    {
+      choice = to_int(std::string(collision.begin() +
+                                      std::ptrdiff_t(std::string("Dialog_choice_").size()),
+                                      collision.end()));
+      set<C::Int>("Interface:active_dialog_item", choice);
+      dialog_sub_click ();
+    }
+    else
+      remove ("Interface:active_dialog_item", true);
+  }
+}
+
+void Control::dialog_sub_click ()
+{
+  set<C::Int>("Dialog:choice", get<C::Int>("Interface:active_dialog_item")->value());
+  emit("Dialog:clean");
+  remove ("Interface:active_dialog_item", true);
+  remove("Game:current_dialog");
+
+  status()->pop();
+  emit ("Click:play_sound");
+}
+
 void Control::menu_mouse()
 {
   auto cursor = get<C::Position>(CURSOR__POSITION);

@@ -63,6 +63,7 @@ private:
   void update_object_switcher();
   void update_inventory();
   void update_code_hover();
+  void update_dialog_choices();
   void update_skip_message();
   void update_cursor();
 

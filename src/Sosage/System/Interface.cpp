@@ -58,6 +58,7 @@ void Interface::run()
   update_object_switcher();
   update_inventory();
   update_code_hover();
+  update_dialog_choices();
   update_skip_message();
   update_cursor();
 }
@@ -341,6 +342,13 @@ void Interface::update_action_selector()
 {
   const Input_mode& mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE)->value();
 
+  if (status()->is(CUTSCENE, LOCKED, DIALOG_CHOICE))
+  {
+    if (m_action_selector[0] != "")
+      reset_action_selector();
+    return;
+  }
+
   if (mode == GAMEPAD)
   {
     auto target = request<C::String>("Interface:active_object");
@@ -589,6 +597,103 @@ void Interface::update_code_hover()
          + Vector(position->value())
          - Vector (0.5  * window->width(),
                    0.5 * window->height()));
+  }
+}
+
+void Interface::update_dialog_choices()
+{
+  if (receive("Dialog:clean"))
+  {
+    const std::vector<std::string>& choices
+        = get<C::Vector<std::string> >("Dialog:choices")->value();
+
+    // Clean up
+    for (int c = int(choices.size()) - 1; c >= 0; -- c)
+    {
+      std::string entity = "Dialog_choice_" + std::to_string(c);
+      remove(entity + "_off:image");
+      remove(entity + "_off:position");
+      remove(entity + "_on:image");
+      remove(entity + "_on:position");
+    }
+    remove("Dialog_choice_background:image");
+    remove("Dialog_choice_background:position");
+  }
+
+  if (!status()->is(DIALOG_CHOICE) && !status()->was(DIALOG_CHOICE))
+    return;
+
+  const std::vector<std::string>& choices
+      = get<C::Vector<std::string> >("Dialog:choices")->value();
+
+  // Generate images if not done yet
+  if (!request<C::Image>("Dialog_choice_background:image"))
+  {
+    auto interface_font = get<C::Font> ("Dialog:font");
+    const std::string& player = get<C::String>("Player:name")->value();
+
+    int bottom = Config::world_height;
+    int y = bottom - 10;
+
+    for (int c = int(choices.size()) - 1; c >= 0; -- c)
+    {
+      std::string entity = "Dialog_choice_" + std::to_string(c);
+      auto img_off
+        = set<C::Image>(entity + "_off:image", interface_font, "FFFFFF",
+                        locale(choices[std::size_t(c)]));
+      img_off->z() = Config::dialog_depth;
+      img_off->set_scale(0.75);
+      img_off->set_relative_origin(0., 1.);
+
+      auto img_on
+        = set<C::Image>(entity + "_on:image", interface_font,
+                        get<C::String>(player + ":color")->value(),
+                        locale(choices[std::size_t(c)]));
+      img_on->z() = Config::dialog_depth;
+      img_on->set_scale(0.75);
+      img_on->set_relative_origin(0., 1.);
+      y -= img_off->height() * 0.75;
+
+    }
+
+    auto background = set<C::Image> ("Dialog_choice_background:image",
+                                     Config::world_width, bottom - y + 20, 0, 0, 0, 192);
+    background->set_relative_origin(0., 1.);
+    set<C::Absolute_position>("Dialog_choice_background:position", Point(0,bottom));
+  }
+
+  for (int c = int(choices.size()) - 1; c >= 0; -- c)
+  {
+    std::string entity = "Dialog_choice_" + std::to_string(c);
+    get<C::Image>(entity + "_off:image")->on() = status()->is(DIALOG_CHOICE);
+    get<C::Image>(entity + "_on:image")->on() = status()->is(DIALOG_CHOICE);
+    get<C::Image> ("Dialog_choice_background:image")->on() = status()->is(DIALOG_CHOICE);
+  }
+
+  if (status()->was(DIALOG_CHOICE))
+    return;
+
+  int bottom = Config::world_height;
+  int y = bottom - 10;
+
+  int choice = -1;
+  if (auto c = request<C::Int>("Interface:active_dialog_item"))
+    choice = c->value();
+
+  for (int c = int(choices.size()) - 1; c >= 0; -- c)
+  {
+    std::string entity = "Dialog_choice_" + std::to_string(c);
+    auto img_off = get<C::Image>(entity + "_off:image");
+    auto img_on = get<C::Image>(entity + "_on:image");
+
+    Point p (10, y);
+    set<C::Absolute_position>(entity + "_off:position", p);
+    set<C::Absolute_position>(entity + "_on:position", p);
+    y -= img_off->height() * 0.75;
+
+    bool on = (c == choice);
+    img_off->on() = !on;
+    img_on->on() = on;
   }
 }
 

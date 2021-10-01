@@ -90,6 +90,9 @@ private:
   void code_mouse();
   void code_touchscreen();
   void code_sub_click(bool collision);
+  void dialog_mouse();
+  void dialog_touchscreen();
+  void dialog_sub_click ();
   void menu_mouse();
   void menu_touchscreen();
   bool collides (Component::Position_handle cursor, Component::Image_handle img);
@@ -108,11 +111,14 @@ private:
   void inventory_sub_triggered (const std::string& key);
   void window_gamepad();
   void code_gamepad();
+  void dialog_gamepad();
+  void dialog_sub_switch_active_object (bool right);
   void menu_gamepad();
   void menu_sub_triggered (const Event_value& key);
   void menu_sub_switch_active_item (bool right);
   std::vector<std::string> detect_active_objects();
   Event_value stick_left_right();
+  Event_value stick_up_down();
   Event_value stick_left_right_up_down();
   Vector stick_direction();
 };

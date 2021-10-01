@@ -341,6 +341,52 @@ void Control::code_gamepad()
       emit ("code:button_clicked");
 }
 
+void Control::dialog_gamepad()
+{
+  if (auto right = request<C::Boolean>("Switch:right"))
+  {
+    dialog_sub_switch_active_object(right->value());
+    remove ("Switch:right");
+  }
+
+  Event_value stick = stick_up_down();
+  if (stick != NONE)
+    dialog_sub_switch_active_object(stick == DOWN_ARROW);
+
+  std::string received_key = "";
+  for (const std::string& key : {"move", "take", "inventory", "look"})
+    if (receive("Action:" + key))
+      received_key = key;
+
+  if (received_key == "look" || received_key == "inventory")
+    dialog_sub_click ();
+}
+
+void Control::dialog_sub_switch_active_object (bool right)
+{
+  const std::vector<std::string>& choices
+      = get<C::Vector<std::string> >("Dialog:choices")->value();
+
+  auto choice = request<C::Int>("Interface:active_dialog_item");
+  if (!choice)
+    choice = set<C::Int>("Interface:active_dialog_item", 0);
+
+  if (right)
+  {
+    if (choice->value() < int(choices.size() - 1))
+      choice->set (choice->value() + 1);
+    else
+      choice->set (0);
+  }
+  else
+  {
+    if (choice->value() > 0)
+      choice->set (choice->value() - 1);
+    else
+      choice->set (int(choices.size() - 1));
+  }
+}
+
 void Control::menu_gamepad()
 {
   if (auto right = request<C::Boolean>("Switch:right"))
@@ -549,6 +595,27 @@ Event_value Control::stick_left_right()
     if (x == 0)
       return NONE;
     return (x > 0 ? RIGHT : LEFT);
+  }
+  return NONE;
+}
+
+Event_value Control::stick_up_down()
+{
+  if (receive("Stick:moved"))
+  {
+    if (m_stick_on)
+    {
+      if (get<C::Simple<Vector>>(STICK__DIRECTION)->value() == Vector(0,0))
+        m_stick_on = false;
+      return NONE;
+    }
+
+    m_stick_on = true;
+
+    double y = get<C::Simple<Vector>>(STICK__DIRECTION)->value().y();
+    if (y == 0)
+      return NONE;
+    return (y > 0 ? DOWN_ARROW : UP_ARROW);
   }
   return NONE;
 }
