@@ -103,6 +103,11 @@ void Control::update_exit()
     receive("Game:escape");
     return;
   }
+  if (receive("Show:menu"))
+  {
+    set<C::String>("Menu:create", value<C::String>("Game:triggered_menu"));
+    status()->push (IN_MENU);
+  }
 
   if (status()->is (CUTSCENE))
   {

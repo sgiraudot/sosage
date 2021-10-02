@@ -132,6 +132,12 @@ void Interface::init_menus()
     idx ++;
   }
   make_oknotok_item ((*settings_menu)[idx], true);
+
+  auto menu_overlay = set<C::Image>("Menu_overlay:image", Config::world_width, Config::world_height, 0, 0, 0, 64);
+  menu_overlay->on() = false;
+  menu_overlay->z() = Config::overlay_depth;
+  menu_overlay->set_collision(UNCLICKABLE);
+  set<C::Absolute_position>("Menu_overlay:position", Point(0,0));
 }
 
 void Interface::make_exit_menu_item (Component::Menu::Node node, const std::string& id, int y)
@@ -592,9 +598,7 @@ void Interface::create_menu (const std::string& id)
   }
 
   get<C::Image>("Menu_background:image")->on() = true;
-  auto blackscreen = get<C::Image>("Blackscreen:image");
-  blackscreen->on() = true;
-  blackscreen->set_alpha(128);
+  get<C::Image>("Menu_overlay:image")->on() = true;
 }
 
 void Interface::delete_menu (const std::string& id)
@@ -602,9 +606,7 @@ void Interface::delete_menu (const std::string& id)
   auto menu = get<C::Menu>(id + ":menu");
   menu->hide();
   get<C::Image>("Menu_background:image")->on() = false;
-  auto blackscreen = get<C::Image>("Blackscreen:image");
-  blackscreen->on() = false;
-  blackscreen->set_alpha(255);
+  get<C::Image>("Menu_overlay:image")->on() = false;
 
   remove ("Interface:active_menu_item", true);
   remove ("Interface:gamepad_active_menu_item", true);
@@ -653,8 +655,7 @@ void Interface::menu_clicked ()
 
   if (effect->value() == "Quit")
   {
-    if (menu != "End")
-      emit ("Game:save");
+    emit ("Game:save");
     emit ("Game:exit");
   }
   else if (effect->value() == "New_game")
@@ -696,6 +697,8 @@ void Interface::menu_clicked ()
       delete_menu(menu);
       status()->pop();
     }
+    else if (menu == "End")
+      emit ("Game:exit");
   }
   else if (effect->value() == "Credits" || effect->value() == "Settings"
            || effect->value() == "Phone" || effect->value() == "Gps")
