@@ -161,8 +161,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
     SOSAGE_TIMER_START(SDL_Image__load_image_texture_downscale);
     texture_downscale = std::min (double(width_max) / surf->w,
                                   double(height_max) / surf->h);
-    debug (file_name, " is too large and will be downscaled by a factor ",
-           texture_downscale);
+    debug << file_name << " is too large and will be downscaled by a factor " << texture_downscale << std::endl;
     SDL_Surface* old = surf;
     surf = SDL_CreateRGBSurface
            (old->flags, old->w, old->h,

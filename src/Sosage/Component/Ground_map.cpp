@@ -37,9 +37,9 @@
 
 //#define SOSAGE_DEBUG_GROUND_MAP
 #ifdef SOSAGE_DEBUG_GROUND_MAP
-#  define debug_gm(args...) debug(args)
+#  define debug_gm debug
 #else
-#  define debug_gm(args...) (static_cast<void>(0))
+#  define debug_gm if(false) std::cerr
 #endif
 
 namespace Sosage::Component
@@ -174,7 +174,7 @@ void Ground_map::build_graph (const std::function<void()>& callback)
   m_graph.clean();
   m_graph.validity();
 
-  debug("Edges = ", m_graph.num_edges());
+  debug << "Edges = " << m_graph.num_edges() << std::endl;
 
   for (auto it0 = m_graph.vertices().begin(); it0 != m_graph.vertices().end(); ++ it0)
   {
@@ -205,7 +205,7 @@ void Ground_map::build_graph (const std::function<void()>& callback)
     }
     callback();
   }
-  debug("Edges = ", m_graph.num_edges());
+  debug << "Edges = " << m_graph.num_edges() << std::endl;
 }
 
 void Ground_map::write (const std::string& filename)
@@ -326,7 +326,7 @@ void Ground_map::find_path (Point origin,
   else if (vtarget == Graph::null_vertex())
   {
     vtarget = m_latest_graph.add_vertex(target);
-    debug_gm ("New target vertex ", vtarget);
+    debug_gm << "New target vertex " << vtarget << std::endl;
   }
 
   Segment segment (origin, target);
@@ -359,11 +359,11 @@ void Ground_map::find_path (Point origin,
 
     for (GVertex n : { vorigin, vtarget })
     {
-      debug_gm ("Trying to insert ", v, "-> ", n);
+      debug_gm << "Trying to insert " << v << "-> " << n << std::endl;
       Point mid = midpoint (m_latest_graph[v].point, m_latest_graph[n].point);
       if (!is_ground_point(mid))
       {
-        debug_gm (" -> mid point is not ground");
+        debug_gm << " -> mid point is not ground" << std::endl;
         continue;
       }
         
@@ -375,7 +375,7 @@ void Ground_map::find_path (Point origin,
              return ((e == eorigin || e == etarget) || m_latest_graph.edge_has_vertex(e, v));
            }))
       {
-        debug_gm (" -> segment intersects border");
+        debug_gm << " -> segment intersects border" << std::endl;
         continue;
       }
 
@@ -385,7 +385,7 @@ void Ground_map::find_path (Point origin,
 
   for (const auto& p : to_add)
   {
-    debug_gm ("New edge ", p.first, " -> ", p.second);
+    debug_gm << "New edge " << p.first << " -> " << p.second << std::endl;
     GEdge e = m_latest_graph.add_edge(p.first, p.second);
     m_latest_graph[e].border = false;
   }
@@ -575,7 +575,7 @@ Ground_map::Neighbor_query Ground_map::closest_simplex (const Point& p) const
   for (GVertex v : m_graph.vertices())
   {
     double dist = distance (p, m_graph[v].point);
-    debug_gm ("Dist(v", v, ",", p, ") = ", dist);
+    debug_gm << "Dist(v" << v << "," << p << ") = " << dist << std::endl;
     if (dist < min_dist)
     {
       point = m_graph[v].point;
@@ -598,7 +598,7 @@ Ground_map::Neighbor_query Ground_map::closest_simplex (const Point& p) const
     if (does_project)
     {
       double dist = distance (p, proj);
-      debug_gm ("Dist(e", e, ",", p, ") = ", dist);
+      debug_gm << "Dist(e" << e << "," << p << ") = " << dist << std::endl;
       if (dist < min_dist)
       {
         point = proj;
@@ -627,7 +627,7 @@ void Ground_map::shortest_path (GVertex vorigin, GVertex vtarget,
       dist = 0;
     m_latest_graph[v].dist = dist;
     todo.push (std::make_pair(-dist, v));
-    debug_gm ("Dist[", v, "] = ", dist);
+    debug_gm << "Dist[" << v << "] = " << dist << std::endl;
   }
 
   while (!todo.empty())
@@ -647,9 +647,9 @@ void Ground_map::shortest_path (GVertex vorigin, GVertex vtarget,
       if (dist < m_latest_graph[next].dist)
       {
         m_latest_graph[next].dist = dist;
-        debug_gm ("Update Dist[", next, "] = ", dist);
+        debug_gm << "Update Dist[" << next << "] = " << dist << std::endl;
         parent[std::size_t(next)] = current;
-        debug_gm ("Update Parent[", next, "] = ", current);
+        debug_gm << "Update Parent[" << next << "] = " << current << std::endl;
         todo.push (std::make_pair (-dist, next));
       }
     }
@@ -658,7 +658,7 @@ void Ground_map::shortest_path (GVertex vorigin, GVertex vtarget,
   std::vector<Point> path;
   while (vtarget != vorigin)
   {
-    debug_gm ("Going back from ", vtarget, " to ", parent[vtarget]);
+    debug_gm << "Going back from " << vtarget << " to " << parent[vtarget] << std::endl;
     check (parent[vtarget] != Graph::null_vertex(), "Node has no parent");
     path.push_back (m_latest_graph[vtarget].point);
     vtarget = parent[std::size_t(vtarget)];

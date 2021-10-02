@@ -600,7 +600,7 @@ void File_IO::read_locale()
     for (const std::string& l : available->value())
       if (user_locale == l)
       {
-        debug("Locale exactly detected as " + l);
+        debug << "Locale exactly detected as " << l << std::endl;
         prefered = l;
         break;
       }
@@ -615,7 +615,7 @@ void File_IO::read_locale()
         reduced.resize(2);
         if (reduced_locale == reduced)
         {
-          debug("Locale partly detected as " + l + " (instead of " + user_locale + ")");
+          debug << "Locale partly detected as " << l << " (instead of " << user_locale << ")" << std::endl;
           prefered = l;
           break;
         }
@@ -623,7 +623,7 @@ void File_IO::read_locale()
     }
     if (prefered == "")
     {
-      debug("Locale " + user_locale + " not available, fallback to en_US");
+      debug << "Locale " << user_locale << " not available, fallback to en_US" << std::endl;
       prefered = "en_US";
     }
     get<C::String>(GAME__CURRENT_LOCAL)->set(prefered);

@@ -201,7 +201,7 @@ void Control::end_status (const Status& s)
 
 void Control::set_action (const std::string& id, const std::string& default_id)
 {
-  debug ("Set action to " + id + " (fallback to " + default_id + ")");
+  debug << "Set action to " << id << " (fallback to " << default_id << ")" << std::endl;
   if (auto action = request<C::Action>(id + ":action"))
     set<C::Variable>("Character:action", action);
   else

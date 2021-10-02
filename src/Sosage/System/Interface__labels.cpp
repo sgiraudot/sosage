@@ -47,7 +47,7 @@ namespace C = Component;
 
 void Interface::create_object_label (const std::string& id)
 {
-  debug("Create object_label " + id);
+  debug << "Create object_label " << id << std::endl;
   // Special case for inventory
   if (status()->is (IN_INVENTORY, OBJECT_CHOICE))
   {
@@ -231,7 +231,7 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
 void Interface::animate_label (const std::string& id, const Animation_style& style,
                                bool button , const Point& position)
 {
-  debug("Animate label " + id);
+  debug << "Animate label " << id << std::endl;
   if (style == NONE)
     return;
 
@@ -300,7 +300,7 @@ void Interface::update_label (const std::string& id,
   for (const std::string& section : { "", "_back" })
     if (auto anim = request<C::GUI_animation>(id + section + ":animation"))
     {
-      debug("Finalize " + anim->id());
+      debug << "Finalize " << anim->id() << std::endl;
       anim->finalize();
       remove(anim->id());
     }
@@ -339,7 +339,7 @@ void Interface::update_label_position (const std::string& id, double scale)
 {
   if (status()->is (IN_INVENTORY, OBJECT_CHOICE))
     return;
-  debug("Update label position " + id);
+  debug << "Update label position " << id << std::endl;
 
   const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
@@ -382,7 +382,7 @@ void Interface::delete_label (const std::string& id)
   auto group = request<C::Group>(id + ":group");
   if (!group)
     return;
-  debug("Delete label " + id);
+  debug << "Delete label " << id << std::endl;
 
   double current_time = value<C::Double>(CLOCK__TIME);
   group->apply<C::Image>([&](auto img_old)
@@ -422,7 +422,7 @@ void Interface::fade_action_selector (const std::string& id, bool fade_in)
 
 void Interface::highlight_object (const std::string& id, unsigned char highlight)
 {
-  debug("Highlight " + id + " by " + to_string(int(highlight)));
+  debug << "Highlight " << id << " by " << highlight << std::endl;
   // Image might have been destroyed here
   if (auto img = request<C::Image>(id + ":image"))
     img->set_highlight (highlight);
@@ -430,7 +430,7 @@ void Interface::highlight_object (const std::string& id, unsigned char highlight
 
 void Interface::set_action_selector (const std::string& id)
 {
-  debug("Set action selector to " + id);
+  debug << "Set action selector to " << id << std::endl;
   const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   if (mode == GAMEPAD)
   {
@@ -553,7 +553,7 @@ void Interface::set_action_selector (const std::string& id)
 
 void Interface::reset_action_selector()
 {
-  debug ("Reset action selector");
+  debug << "Reset action selector" << std::endl;
   for (std::string& id : m_action_selector)
   {
     delete_label (id + "_label");

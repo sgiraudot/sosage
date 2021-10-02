@@ -160,7 +160,7 @@ void Animation::run_animation_frame()
   {
     if (c->component() == "lookat")
     {
-      debug("lookat");
+      debug << "lookat" << std::endl;
       std::string id = c->entity();
       auto lookat = C::cast<C::Position>(c);
       auto abody = get<C::Animation>(id + "_idle:image");
@@ -217,7 +217,7 @@ void Animation::run_animation_frame()
       }
       else if (c->component() == "stop_animation")
       {
-        debug("stop_animation");
+        debug << "stop_animation" << std::endl;
         if (auto head = request<C::Animation>(id + "_head:image"))
           generate_random_idle_body_animation (id, head->frames().front().y == 0);
         else
@@ -276,7 +276,7 @@ void Animation::run_animation_frame()
     {
       auto anim = C::cast<C::String>(c);
       std::string id = c->entity();
-      debug("start_animation");
+      debug << "start_animation" << std::endl;
       generate_animation (id, anim->value());
       to_remove.push_back (c->id());
     }
@@ -460,7 +460,7 @@ void Animation::generate_random_idle_animation (const std::string& id, bool look
 
 void Animation::generate_random_idle_head_animation (const std::string& id, bool looking_right)
 {
-  debug ("Generate random idle head animation for character \"", id, "\"");
+  debug << "Generate random idle head animation for character \"" << id << "\"" << std::endl;
 
   auto head = get<C::Animation>(id + "_head:image");
   auto mouth = get<C::Animation>(id + "_mouth:image");
@@ -539,7 +539,7 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
 
 void Animation::generate_random_idle_body_animation (const std::string& id, bool looking_right)
 {
-  debug ("Generate random idle body animation for character \"", id, "\"");
+  debug << "Generate random idle body animation for character \"" << id << "\"" << std::endl;
 
   auto image = get<C::Animation>(id + "_idle:image");
   get<C::Animation>(id + "_walking:image")->on() = false;
@@ -622,7 +622,7 @@ void Animation::generate_random_mouth_animation (const std::string& id)
 
 void Animation::generate_animation (const std::string& id, const std::string& anim)
 {
-  debug ("Generate animation \"", anim, "\" for character \"", id, "\"");
+  debug << "Generate animation \"" << anim << "\" for character \"" << id << "\"" << std::endl;
   auto image = get<C::Animation>(id + "_idle:image");
   const std::vector<std::string>& positions
     = value<C::Vector<std::string> >(id + "_idle:values");

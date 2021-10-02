@@ -45,7 +45,7 @@ public:
   static Unit now()
   {
     Unit out = SDL_GetTicks();
-    debug("Ticks = ", std::to_string(out));
+    debug << "Ticks = " << out << std::endl;
     return out;
   }
 

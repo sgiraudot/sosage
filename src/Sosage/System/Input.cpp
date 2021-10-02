@@ -105,8 +105,6 @@ void Input::run()
 
   for (const Event& ev : m_current_events)
   {
-    //debug("New event ", ev.to_string());
-
     if (ev == Event(KEY_UP, ESCAPE) ||
         ev == Event(KEY_UP, ANDROID_BACK) ||
         ev == Event(BUTTON_UP, START))

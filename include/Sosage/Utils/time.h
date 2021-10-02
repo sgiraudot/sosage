@@ -81,7 +81,7 @@ public:
     Time::Duration duration = now - m_latest;
 
     if (duration > m_refresh_time)
-      debug("Warning: frame lasted ", duration, " (max is ", m_refresh_time, ")");
+      debug << "Warning: frame lasted " << duration << " (max is " << m_refresh_time << ")" << std::endl;
     adapt_fps (duration > m_refresh_time);
 
     if constexpr (!Config::emscripten)
@@ -130,7 +130,7 @@ private:
       ++ m_nb_missed;
     if (m_nb_recorded == interval)
     {
-      debug(m_nb_missed / 10., "% frames exceeded allowed refresh time");
+      debug << m_nb_missed / 10. << "% frames exceeded allowed refresh time" << std::endl;
       if (m_nb_missed > max_missed)
       {
         int current_fps = int(1000. / m_refresh_time);
@@ -138,13 +138,13 @@ private:
         if (target_fps >= Config::animation_fps)
         {
           m_refresh_time = 1000. / double(target_fps);
-          debug("Downgrading FPS to ", int(1000. / m_refresh_time));
+          debug << "Downgrading FPS to " << int(1000. / m_refresh_time) << std::endl;
         }
         else
-          debug("Can't downgrade FPS anymore (", int(1000. / m_refresh_time), ")");
+          debug << "Can't downgrade FPS anymore (" << int(1000. / m_refresh_time) << ")" << std::endl;
       }
       else
-        debug("Keeping FPS to ", int(1000. / m_refresh_time));
+        debug << "Keeping FPS to " << int(1000. / m_refresh_time) << std::endl;
 
 
       m_nb_recorded = 0;

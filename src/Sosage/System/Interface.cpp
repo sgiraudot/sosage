@@ -214,20 +214,17 @@ void Interface::update_active_objects()
         all_active.insert(a);
       }
 
-      debug("Updating labels:");
       for (const std::string& a : all_active)
       {
         // Object was active and is not anymore
         if (!contains(new_active, a))
         {
-          debug(a + " is not active anymore");
           highlight_object (a, 0);
           delete_label (a + "_label");
         }
         // Object was selected and is not anymore (but still here)
         else if (a == old_selected && a != new_selected)
         {
-          debug(a + " is not selected anymore");
           update_label_position(a, 0.75);
           animate_label(a + "_label", ZOOM);
           highlight_object (a, 192);
@@ -235,14 +232,12 @@ void Interface::update_active_objects()
         // Object was not active and is now active
         else if (!contains(old_active, a) && contains(new_active, a))
         {
-          debug(a + " is now active");
           create_object_label (a);
           highlight_object (a, (a == new_selected ? 255 : 192));
         }
         // Object was already here but is now selected
         else if (a != old_selected && a == new_selected)
         {
-          debug(a + " is now selected");
           update_label_position(a, 1.0);
           animate_label(a + "_label", ZOOM);
           highlight_object (a, 255);
@@ -267,20 +262,17 @@ void Interface::update_active_objects()
         all_active.insert(a);
       }
 
-      debug("Updating labels:");
       for (const std::string& a : all_active)
       {
         // Object was active and is not anymore
         if (!contains(new_active, a))
         {
-          debug(a + " is not active anymore");
           highlight_object (a, 0);
           delete_label (a + "_label");
         }
         // Object was not active and is now active
         else if (!contains(old_active, a) && contains(new_active, a))
         {
-          debug(a + " is now active");
           create_object_label (a);
           highlight_object (a, 255);
         }

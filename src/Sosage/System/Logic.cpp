@@ -629,7 +629,7 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
   {
     std::string target
         = (args.empty() ? m_current_action->target_entity() : args[0]);
-    debug ("Action_goto ", target);
+    debug << "Action_goto " << target << std::endl;
 
     auto position = request<C::Position>(target + ":view");
     if (compute_path_from_target(position, id))
@@ -649,7 +649,7 @@ bool Logic::function_look (const std::vector<std::string>& args)
   else
     target = m_current_action->target_entity();
 
-  debug ("Action_look ", target);
+  debug << "Action_look " << target << std::endl;
   const std::string& id = value<C::String>("Player:name");
 
   if (target == "default" || !request<C::Position>(target + ":position"))

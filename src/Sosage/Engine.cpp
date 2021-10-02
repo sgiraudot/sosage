@@ -44,6 +44,7 @@
 #include <Sosage/System/Sound.h>
 #include <Sosage/System/Time.h>
 #include <Sosage/Utils/Asset_manager.h>
+#include <Sosage/Utils/error.h>
 #include <Sosage/Utils/profiling.h>
 
 #include <ctime>
@@ -59,6 +60,10 @@ namespace Sosage
 std::string Asset_manager::folder_name = "";
 std::vector<Buffer> Asset_manager::buffers;
 Package_asset_map Asset_manager::package_asset_map;
+#ifdef SOSAGE_DEBUG_BUFFER
+Debug_buffer debug_buffer;
+std::ostream debug(&debug_buffer);
+#endif
 
 #ifdef SOSAGE_EMSCRIPTEN
 Engine* emscripten_global_engine_ptr;
@@ -70,7 +75,7 @@ void emscripten_main_loop()
 
 Engine::Engine (int argc, char** argv)
 {
-  debug ("Running Sosage ", Sosage::Version::str());
+  debug << "Running Sosage " << Sosage::Version::str() << std::endl;
   srand(static_cast<unsigned int>(time(nullptr)));
 
   handle_cmdline_args(argc, argv);
@@ -143,7 +148,7 @@ int Engine::run (const std::string& folder_name)
   control->init();
   interface->init();
 
-  debug("Init done, entering main loop");
+  debug << "Init done, entering main loop" << std::endl;
 
 #ifdef SOSAGE_EMSCRIPTEN
   emscripten_set_main_loop (emscripten_main_loop, 0, 0);
