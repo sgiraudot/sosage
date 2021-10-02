@@ -266,8 +266,11 @@ SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
     rect.w = width (img);
     rect.x = x;
     rect.y = (total_height - rect.h) / 2;
-    SDL_SetTextureBlendMode (img.highlight.get(), SDL_BLENDMODE_BLEND);
-    SDL_RenderCopy (m_renderer, img.highlight.get(), nullptr, &rect);
+    if (img.highlight)
+    {
+      SDL_SetTextureBlendMode (img.highlight.get(), SDL_BLENDMODE_BLEND);
+      SDL_RenderCopy (m_renderer, img.highlight.get(), nullptr, &rect);
+    }
     x += rect.w;
   }
 
