@@ -48,11 +48,15 @@ std::string package (const std::string& filename)
 {
   std::string out = "";
 
+  if (contains(filename, "locale.yaml") ||
+      std::count(filename.begin(), filename.end(), '.') == 3) // locale files have 3 points, like image.fr_FR.sdl_surface.lz4
+    return "locale";
+
   for (const std::string& p : packages)
   {
     std::string pp = p;
     std::replace (pp.begin(), pp.end(), '_', '/');
-    if (contains(filename, p) && p.size() > out.size())
+    if (contains(filename, pp) && p.size() > out.size())
       out = p;
   }
 
