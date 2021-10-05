@@ -663,6 +663,9 @@ void File_IO::read_action (const std::string& id, const Core::File_IO::Node& nod
 {
   m_latest_room_entities.insert(id);
 
+  if (node.has("label"))
+    set<C::String>(id + ":label", node["label"].string());
+
   auto state_handle = get_or_set<C::String>(id + ":state");
   auto conditional_handle = set<C::String_conditional>(id + ":action", state_handle);
 

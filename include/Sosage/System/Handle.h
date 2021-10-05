@@ -89,7 +89,7 @@ public:
 
   const std::string& locale_get (const std::string& id)
   {
-    return locale (get<Component::String>(id)->value());
+    return locale (value<Component::String>(id));
   }
 };
 

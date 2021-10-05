@@ -24,6 +24,7 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
+#include <Sosage/Component/Action.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
 #include <Sosage/Component/Status.h>
@@ -596,6 +597,8 @@ void Interface::create_menu (const std::string& id)
     menu->update_setting ("Music_volume", std::to_string(10 * value<C::Int>("Music:volume")));
     menu->update_setting ("Sound_volume", std::to_string(10 * value<C::Int>("Sounds:volume")));
   }
+  else if (id == "Phone")
+    update_phone_menu();
 
   get<C::Image>("Menu_background:image")->on() = true;
   get<C::Image>("Menu_overlay:image")->on() = true;
@@ -714,6 +717,12 @@ void Interface::menu_clicked ()
     else if (menu == "Wanna_restart")
       create_menu("Exit");
   }
+  else if (auto action = request<C::Action>(effect->value() + ":action"))
+  {
+    delete_menu(menu);
+    status()->pop();
+    set<C::Variable>("Character:action", action);
+  }
 }
 
 void Interface::apply_setting (const std::string& setting, const std::string& v)
@@ -777,6 +786,150 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
   }
   else if (setting == "Sound_volume")
     set<C::Int>("Sounds:volume")->set(to_int(v) / 10);
+}
+
+void Interface::update_phone_menu()
+{
+  // If not IDLE, can't use phone right now
+  if (!status()->was(IDLE))
+  {
+    auto phone_menu = set<C::Menu>("Phone:menu");
+    phone_menu->split(VERTICALLY, 3);
+    make_text_menu_title((*phone_menu)[0], "Phone");
+    make_text_menu_text((*phone_menu)[1], "No_phone_allowed");
+    make_oknotok_item ((*phone_menu)[2], true);
+    return;
+  }
+
+  auto numbers = request<C::Vector<std::string>>("phone_numbers:list");
+  if (!numbers)
+    return;
+
+  auto phone_menu = get<C::Menu>("Phone:menu");
+  bool uptodate = true;
+
+  if (phone_menu->nb_children() != numbers->value().size() + 2)
+    uptodate = false;
+  else
+  {
+    std::size_t idx = 1;
+    for (const std::string& id : numbers->value())
+    {
+      if ((*phone_menu)[idx].nb_children() != 2)
+      {
+        uptodate = false;
+        break;
+      }
+      else if ((*phone_menu)[idx].image()->entity() != id + "_button")
+      {
+        uptodate = false;
+        break;
+      }
+      ++ idx;
+    }
+  }
+
+  if (uptodate)
+  {
+    debug << "Phone book is up to date" << std::endl;
+    return;
+  }
+  else
+  {
+    debug << "Phone book is NOT up to date, updating..." << std::endl;
+  }
+
+  phone_menu = set<C::Menu>("Phone:menu");
+  phone_menu->split(VERTICALLY, numbers->value().size() + 2);
+  make_text_menu_title((*phone_menu)[0], "Phone");
+
+  // Make action item
+  auto reference = get<C::Position>("Menu:reference");
+  auto font = get<C::Font>("Interface:font");
+  auto light_font = get<C::Font>("Interface:light_font");
+
+  std::size_t idx = 1;
+  int y = Config::settings_menu_start;
+  for (const std::string& id : numbers->value())
+  {
+    std::string label = locale_get(id + ":label");
+    std::size_t pos = label.find_last_of(' ');
+    check(pos != std::string::npos, "Warning: ill-formed number " + label);
+
+    std::string name (label.begin(), label.begin() + pos);
+    std::string number (label.begin() + pos + 1, label.end());
+
+    // Create button
+    C::Menu::Node node = (*phone_menu)[idx];
+    auto button = request<C::Image>(id + "_button:image");
+    C::Position_handle pos_button;
+    if (!button)
+    {
+      button = set<C::Image>(id + "_button:image", get<C::Image>("Menu_settings_button:image"));
+      button->z() = Config::menu_button_depth;
+      button->set_relative_origin(0.5, 0.5);
+      button->on() = false;
+      pos_button = set<C::Relative_position>(id + "_button:position", reference,
+                                             Vector (240, y + Config::settings_menu_start / 2 - Config::settings_menu_margin));
+    }
+    else
+      pos_button = get<C::Position>(id + "_button:position");
+    node.init(button, pos_button);
+
+    set<C::String>(id + ":effect", id);
+
+    node.split(VERTICALLY, 2);
+
+    // Name
+    {
+      auto img = request<C::Image>(id + "_name:image");
+      C::Position_handle pos;
+      if (!img)
+      {
+        img = set<C::Image>(id + "_name:image", font, "FFFFFF", name);
+        img->z() = Config::menu_text_depth;
+        img->on() = false;
+        img->set_scale(0.5);
+        img->set_relative_origin(0, 0.5);
+        img->set_collision(UNCLICKABLE);
+
+        pos = set<C::Relative_position>(id + "_name:position", reference,
+                                        Vector (Config::settings_menu_margin + Config::settings_menu_in_margin,
+                                                y + Config::settings_menu_in_margin));
+      }
+      else
+      {
+        pos = get<C::Position>(id + "_name:position");
+      }
+      node[0].init(img, pos);
+    }
+
+    // Number value
+    {
+      auto img = request<C::Image>(id + "_number:image");
+      C::Position_handle pos;
+      if (!img)
+      {
+        img = set<C::Image>(id + "_number:image", light_font, "FFFFFF", number);
+        img->z() = Config::menu_text_depth;
+        img->on() = false;
+        img->set_scale(0.5);
+        img->set_relative_origin(0, 0.5);
+        img->set_collision(UNCLICKABLE);
+
+        pos = set<C::Relative_position>(id + "_number:position", reference,
+                                        Vector (Config::settings_menu_margin + Config::settings_menu_in_margin,
+                                                y + Config::settings_menu_value_margin));
+      }
+      else
+        pos = get<C::Position>(id + "_number:position");
+      node[1].init(img, pos);
+    }
+    y += Config::settings_menu_start;
+    ++ idx;
+  }
+
+  make_oknotok_item ((*phone_menu)[idx], true);
 }
 
 }

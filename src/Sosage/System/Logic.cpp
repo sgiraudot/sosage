@@ -471,18 +471,27 @@ bool Logic::function_add (const std::vector<std::string>& args)
 {
   check (args.size() == 2, "function_add() takes 2 arguments");
   std::string id = args[0];
-  int diff = to_int(args[1]);
 
-  auto integer = get<C::Int>(id + ":value");
-  integer->set (integer->value() + diff);
+  auto integer = request<C::Int>(id + ":value");
+  if (integer)
+  {
+    int diff = to_int(args[1]);
+    integer->set (integer->value() + diff);
 
-  auto action = request<C::Action>(id + ":" + std::to_string(integer->value()));
-  if (!action)
-    action = get<C::Action>(id + ":default");
+    auto action = request<C::Action>(id + ":" + std::to_string(integer->value()));
+    if (!action)
+      action = get<C::Action>(id + ":default");
 
-  for (std::size_t i = 0; i < action->size(); ++ i)
-    apply_step ((*action)[i]);
-
+    for (std::size_t i = 0; i < action->size(); ++ i)
+      apply_step ((*action)[i]);
+  }
+  else
+  {
+    auto list = request<C::Vector<std::string>>(id + ":list");
+    if (!list)
+      list = set<C::Vector<std::string>>(id + ":list");
+    list->push_back (args[1]);
+  }
   return true;
 }
 

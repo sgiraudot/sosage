@@ -102,6 +102,7 @@ private:
   void delete_menu (const std::string& id);
   void menu_clicked ();
   void apply_setting (const std::string& setting, const std::string& value);
+  void update_phone_menu();
 };
 
 
