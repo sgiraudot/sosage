@@ -2,11 +2,13 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v1.1.0 (modern-ui)` - TBD
+## `v1.1.0 (modern-ui)` - 2021-10-05
 
 ### Release Management
 
 - Integration of LZ4 library
+- Integrate Android/Emscripten to global CMakeLists
+- Data validation script
 
 ### Interface and Menus
 
@@ -15,12 +17,14 @@ History of versions and modifications of the SOSAGE engine.
 - Screen is 100% in-game, no permanent interface
 - Support for gamepads and keyboard input
 - Reworked support for touchscreens
+- Fully reworked menus
 
 ### Game Engine
 
 - SCAP program (Sosage Compressed Asset Packager)
 - Handle packaged data with compressed custom image formats
 - Precompute ground map borders
+- I18n support
 
 ### Bug fixes
 
