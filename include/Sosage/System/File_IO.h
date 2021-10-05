@@ -43,6 +43,9 @@ class File_IO : public Base
 {
 private:
 
+  using Function = std::function<void(const std::string&, const Core::File_IO::Node&)>;
+  std::unordered_map<std::string, Function> m_dispatcher;
+
   std::unordered_set<std::string> m_latest_room_entities;
 
 public:
@@ -74,21 +77,21 @@ private:
   // Implemented in File_IO__read_room.cpp:
   void read_room (const std::string& file_name);
 
-  void read_action (const Core::File_IO::Node& input);
-  void read_animation (const Core::File_IO::Node& input);
-  void read_character (const Core::File_IO::Node& input);
-  void read_code (const std::string& id);
-  void read_dialog (const std::string& id);
-  void read_integer (const Core::File_IO::Node& input);
-  void read_music (const Core::File_IO::Node& input);
-  void read_object (const std::string& id);
+  void read_action (const std::string& id, const Core::File_IO::Node& input);
+  void read_animation (const std::string& id, const Core::File_IO::Node& input);
+  void read_character (const std::string& id, const Core::File_IO::Node& input);
+  void read_code (const std::string& id, const Core::File_IO::Node& input);
+  void read_dialog (const std::string& id, const Core::File_IO::Node& input);
+  void read_integer (const std::string& id, const Core::File_IO::Node& input);
+  void read_music (const std::string& id, const Core::File_IO::Node& input);
+  void read_object (const std::string& id, const Core::File_IO::Node& input);
   std::pair<Component::Handle, Component::Handle>
   read_object_action (const std::string& id, const std::string& action,
                       const Core::File_IO::Node& input);
-  void read_origin (const Core::File_IO::Node& input);
-  void read_scenery (const Core::File_IO::Node& input);
-  void read_sound (const Core::File_IO::Node& input);
-  void read_window (const Core::File_IO::Node& input);
+  void read_origin (const std::string& id, const Core::File_IO::Node& input);
+  void read_scenery (const std::string& id, const Core::File_IO::Node& input);
+  void read_sound (const std::string& id, const Core::File_IO::Node& input);
+  void read_window (const std::string& id, const Core::File_IO::Node& input);
 
 };
 

@@ -51,16 +51,11 @@ namespace Sosage::System
 
 namespace C = Component;
 
-void File_IO::read_character (const Core::File_IO::Node& node)
+void File_IO::read_character (const std::string& id, const Core::File_IO::Node& input)
 {
-  std::string id = node["id"].string();
-  std::string file_name = node["id"].string("data", "characters", "yaml");
-  int x = node["coordinates"][0].integer();
-  int y = node["coordinates"][1].integer();
-  bool looking_right = node["looking_right"].boolean();
-
-  Core::File_IO input (file_name);
-  input.parse();
+  int x = input["coordinates"][0].integer();
+  int y = input["coordinates"][1].integer();
+  bool looking_right = input["looking_right"].boolean();
 
   std::string name = input["name"].string();
   set<C::String> (id + ":name", name);
@@ -209,80 +204,25 @@ void File_IO::read_room (const std::string& file_name)
 
   callback->value()();
 
-  if (input.has("actions"))
-    for (std::size_t i = 0; i < input["actions"].size(); ++ i)
-    {
-      read_action (input["actions"][i]);
-      callback->value()();
-    }
-  if (input.has("animations"))
-    for (std::size_t i = 0; i < input["animations"].size(); ++ i)
-    {
-      read_animation (input["animations"][i]);
-      callback->value()();
-    }
-  if (input.has("characters"))
-    for (std::size_t i = 0; i < input["characters"].size(); ++ i)
-    {
-      read_character (input["characters"][i]);
-      callback->value()();
-    }
-  if (input.has("codes"))
-    for (std::size_t i = 0; i < input["codes"].size(); ++ i)
-    {
-      read_code (input["codes"][i].string());
-      callback->value()();
-    }
-  if (input.has("dialogs"))
-    for (std::size_t i = 0; i < input["dialogs"].size(); ++ i)
-    {
-      read_dialog (input["dialogs"][i].string());
-      callback->value()();
-    }
-  if (input.has("integers"))
-    for (std::size_t i = 0; i < input["integers"].size(); ++ i)
-    {
-      read_integer (input["integers"][i]);
-      callback->value()();
-    }
-  if (input.has("objects"))
-    for (std::size_t i = 0; i < input["objects"].size(); ++ i)
-    {
-      read_object (input["objects"][i].string());
-      callback->value()();
-    }
-  if (input.has("origins"))
-    for (std::size_t i = 0; i < input["origins"].size(); ++ i)
-    {
-      read_origin (input["origins"][i]);
-      callback->value()();
-    }
-  if (input.has("musics"))
-    for (std::size_t i = 0; i < input["musics"].size(); ++ i)
-    {
-      read_music (input["musics"][i]);
-      callback->value()();
-    }
-  if (input.has("scenery"))
-    for (std::size_t i = 0; i < input["scenery"].size(); ++ i)
-    {
-      read_scenery (input["scenery"][i]);
-      callback->value()();
-    }
-  if (input.has("sounds"))
-    for (std::size_t i = 0; i < input["sounds"].size(); ++ i)
-    {
-      read_sound (input["sounds"][i]);
-      callback->value()();
-    }
-  if (input.has("windows"))
-    for (std::size_t i = 0; i < input["windows"].size(); ++ i)
-    {
-      read_window (input["windows"][i]);
-      callback->value()();
-    }
-
-
+  for (const auto& d : m_dispatcher)
+  {
+    const std::string& section = d.first;
+    const Function& func = d.second;
+    if (input.has(section))
+      for (std::size_t i = 0; i < input[section].size(); ++ i)
+      {
+        const Core::File_IO::Node& s = input[section][i];
+        if (s.string() == "")
+          func (s["id"].string(), s);
+        else
+        {
+          Core::File_IO subfile ("data/" + section + "/" + s.string() + ".yaml");
+          subfile.parse();
+          func (s.string(), subfile.root());
+        }
+        callback->value()();
+      }
+  }
 
   // Special handling for inventory after reloading save (may need to
   // search in other rooms for the object)
@@ -358,9 +298,8 @@ void File_IO::read_room (const std::string& file_name)
   SOSAGE_TIMER_STOP(File_IO__read_room);
 }
 
-void File_IO::read_animation (const Core::File_IO::Node& node)
+void File_IO::read_animation (const std::string& id, const Core::File_IO::Node& node)
 {
-  std::string id = node["id"].string();
   m_latest_room_entities.insert(id);
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
@@ -405,11 +344,9 @@ void File_IO::read_animation (const Core::File_IO::Node& node)
   debug << "Animation " << id << " at position " << img->z() << std::endl;
 }
 
-void File_IO::read_code (const std::string& id)
+void File_IO::read_code (const std::string& id, const Core::File_IO::Node& input)
 {
   m_latest_room_entities.insert(id);
-  Core::File_IO input ("data/codes/" + id + ".yaml");
-  input.parse();
 
   std::string button_sound = input["button_sound"].string("sounds", "effects", "ogg");
   set<C::Sound>(id + "_button:sound", button_sound);
@@ -498,11 +435,9 @@ void File_IO::read_code (const std::string& id)
   }
 }
 
-void File_IO::read_dialog (const std::string& id)
+void File_IO::read_dialog (const std::string& id, const Core::File_IO::Node& input)
 {
   m_latest_room_entities.insert(id);
-  Core::File_IO input ("data/dialogs/" + id + ".yaml");
-  input.parse();
 
   auto dialog = set<C::Dialog>(id + ":dialog",
                                input.has("end") ? input["end"].string() : "");
@@ -571,9 +506,8 @@ void File_IO::read_dialog (const std::string& id)
         std::get<2>(g), std::get<3>(g));
 }
 
-void File_IO::read_integer (const Core::File_IO::Node& node)
+void File_IO::read_integer (const std::string& id, const Core::File_IO::Node& node)
 {
-  std::string id = node["id"].string();
   m_latest_room_entities.insert(id);
 
   int value = node["value"].integer();
@@ -597,12 +531,9 @@ void File_IO::read_integer (const Core::File_IO::Node& node)
   }
 }
 
-void File_IO::read_object (const std::string& id)
+void File_IO::read_object (const std::string& id, const Core::File_IO::Node& input)
 {
   m_latest_room_entities.insert(id);
-
-  Core::File_IO input ("data/objects/" + id + ".yaml");
-  input.parse();
 
   // First, check if object already exists in inventory (if so, skip)
   auto state_handle = get_or_set<C::String>(id + ":state");
@@ -728,9 +659,8 @@ void File_IO::read_object (const std::string& id)
     }
 }
 
-void File_IO::read_action (const Core::File_IO::Node& node)
+void File_IO::read_action (const std::string& id, const Core::File_IO::Node& node)
 {
-  std::string id = node["id"].string();
   m_latest_room_entities.insert(id);
 
   auto state_handle = get_or_set<C::String>(id + ":state");
@@ -755,9 +685,8 @@ void File_IO::read_action (const Core::File_IO::Node& node)
   }
 }
 
-void File_IO::read_music(const Core::File_IO::Node& node)
+void File_IO::read_music(const std::string& id, const Core::File_IO::Node& node)
 {
-  std::string id = node["id"].string();
   m_latest_room_entities.insert(id);
 
   if (node.has("states"))
@@ -851,11 +780,8 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
   return out;
 }
 
-
-
-void File_IO::read_origin(const Core::File_IO::Node& node)
+void File_IO::read_origin(const std::string& id, const Core::File_IO::Node& node)
 {
-  std::string id = node["id"].string();
   m_latest_room_entities.insert(id);
 
   std::string player = node["player"].string();
@@ -875,9 +801,8 @@ void File_IO::read_origin(const Core::File_IO::Node& node)
   }
 }
 
-void File_IO::read_scenery (const Core::File_IO::Node& node)
+void File_IO::read_scenery (const std::string& id, const Core::File_IO::Node& node)
 {
-  std::string id = node["id"].string();
   m_latest_room_entities.insert(id);
 
   int x = node["coordinates"][0].integer();
@@ -929,18 +854,16 @@ void File_IO::read_scenery (const Core::File_IO::Node& node)
   }
 }
 
-void File_IO::read_sound (const Core::File_IO::Node& node)
+void File_IO::read_sound (const std::string& id, const Core::File_IO::Node& node)
 {
-  std::string id = node["id"].string();
   m_latest_room_entities.insert(id);
 
   std::string sound = node["sound"].string("sounds", "effects", "ogg");
   set<C::Sound>(id + ":sound", sound);
 }
 
-void File_IO::read_window (const Core::File_IO::Node& node)
+void File_IO::read_window (const std::string& id, const Core::File_IO::Node& node)
 {
-  std::string id = node["id"].string();
   m_latest_room_entities.insert(id);
 
   std::string skin = node["skin"].string("images", "windows", "png");

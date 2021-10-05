@@ -51,6 +51,10 @@
 
 #include <locale>
 
+#define INIT_DISPATCHER(id, func) \
+  m_dispatcher.insert (std::make_pair(id, std::bind(&File_IO::func, this, std::placeholders::_1, std::placeholders::_2)))
+
+
 namespace Sosage::System
 {
 
@@ -59,6 +63,18 @@ namespace C = Component;
 File_IO::File_IO (Content& content)
   : Base (content)
 {
+  INIT_DISPATCHER("actions", read_action);
+  INIT_DISPATCHER("animations", read_animation);
+  INIT_DISPATCHER("characters", read_character);
+  INIT_DISPATCHER("codes", read_code);
+  INIT_DISPATCHER("dialogs", read_dialog);
+  INIT_DISPATCHER("integers", read_integer);
+  INIT_DISPATCHER("objects", read_object);
+  INIT_DISPATCHER("origins", read_origin);
+  INIT_DISPATCHER("musics", read_music);
+  INIT_DISPATCHER("scenery", read_scenery);
+  INIT_DISPATCHER("sounds", read_sound);
+  INIT_DISPATCHER("windows", read_window);
 }
 
 void File_IO::run()
