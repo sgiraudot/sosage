@@ -2,6 +2,8 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.2.0 (demo)` - TBD
+
 ## `v1.1.0 (modern-ui)` - 2021-10-05
 
 ### Release Management
