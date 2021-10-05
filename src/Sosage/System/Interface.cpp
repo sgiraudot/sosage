@@ -591,6 +591,10 @@ void Interface::update_code_hover()
          - Vector (0.5  * window->width(),
                    0.5 * window->height()));
   }
+  else
+  {
+    remove("Code_hover:image", true);
+  }
 }
 
 void Interface::update_dialog_choices()
