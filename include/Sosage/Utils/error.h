@@ -46,6 +46,32 @@
 namespace Sosage
 {
 
+#if !defined(SOSAGE_DEBUG)
+#define debug if(false) std::cerr
+#elif defined(SOSAGE_ANDROID) || defined(SOSAGE_WINDOWS) || defined(SOSAGE_EMSCRIPTEN)
+#define SOSAGE_DEBUG_BUFFER
+
+class Debug_buffer : public std::stringbuf
+{
+public:
+  virtual int sync()
+  {
+#if defined(SOSAGE_ANDROID)
+    __android_log_print (ANDROID_LOG_DEBUG, "Sosage", "%s", this->str().c_str());
+#else
+    SDL_LogDebug("%s", str.c_str());
+#endif
+    this->str("");
+    return 0;
+  }
+};
+
+extern Debug_buffer debug_buffer;
+extern std::ostream debug;
+#else
+#define debug std::cerr
+#endif
+
 #define check(test, msg) if (!(test)) check_impl (__FILE__, __LINE__, msg)
 
 #ifdef SOSAGE_DEBUG
@@ -54,61 +80,16 @@ namespace Sosage
 #define dbg_check(test, msg) (static_cast<void>(0))
 #endif
 
-#if defined(SOSAGE_ANDROID)
+#if defined(SOSAGE_ASSERTIONS_AS_EXCEPTIONS)
 inline void check_impl (const char* file, int line, const std::string& str)
 {
-  __android_log_print (ANDROID_LOG_ERROR, "Sosage Error", "%s [%s:%i]", str.c_str(), file, line);
-  exit(EXIT_FAILURE);
-}
-#elif defined(SOSAGE_EMSCRIPTEN) || defined(SOSAGE_WINDOWS)
-inline void check_impl (const char* file, int line, const std::string& str)
-{
-  SDL_Log("%s [%s:%i]", str.c_str(), file, line);
-  exit(EXIT_FAILURE);
-}
-#elif defined(SOSAGE_ASSERTIONS_AS_EXCEPTIONS)
-inline void check_impl (const char* file, int line, const std::string& str)
-{
-
-
   throw std::runtime_error(str + " [" + file + ":" + std::to_string(line) + "]");
 }
 #else
 inline void check_impl (const char* file, int line, const std::string& str)
 {
-  std::cerr << "Error: "<< str << " [" << file << ":" << line << "]" << std::endl;
+  debug << "Error: "<< str << " [" << file << ":" << line << "]" << std::endl;
   exit(EXIT_FAILURE);
-}
-#endif
-
-#if defined(SOSAGE_DEBUG)
-
-#  if defined(SOSAGE_ANDROID)
-inline void debug (const std::string& str)
-{
-  __android_log_print (ANDROID_LOG_INFO, "Sosage Info", "%s", str.c_str());
-}
-#elif defined(SOSAGE_EMSCRIPTEN) || defined(SOSAGE_WINDOWS)
-inline void debug (const std::string& str)
-{
-  SDL_Log("%s", str.c_str());
-}
-#  else
-inline void debug (const std::string& str)
-{
-  std::cerr << str << std::endl;
-}
-#  endif
-template <typename ... Args>
-inline void debug (const Args& ... args)
-{
-  debug (to_string(std::forward<const Args>(args)...));
-}
-#else
-template <typename ... Args>
-inline void debug (const Args& ...)
-{
-
 }
 #endif
 

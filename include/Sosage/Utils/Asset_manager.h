@@ -38,7 +38,7 @@ namespace Sosage
 
 namespace IO = Third_party::SDL_file;
 
-constexpr auto packages = { "general", "images", "images_cutscenes", "sounds" };
+constexpr auto packages = { "general", "locale", "images", "images_cutscenes", "sounds" };
 
 class Asset_manager;
 
@@ -179,7 +179,7 @@ public:
             fname.resize(ext);
             fname = fname + ".png";
           }
-          else if (fname.find(".lz4") == std::string::npos) // uncompressed file
+          else if (!contains (fname, ".lz4")) // uncompressed file
           {
             passet.size = asset.binary_read<unsigned int>();
             passet.position = asset.tell();

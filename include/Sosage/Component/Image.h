@@ -54,6 +54,7 @@ public:
          const std::string& text, bool outlined = false);
   Image (const std::string& id, std::shared_ptr<Image> copy);
   virtual ~Image() { /*debug("Destructor of ", id());*/ }
+  void compose_with (const std::shared_ptr<Image>& other);
   virtual std::string str() const;
   void set_relative_origin (double ratio_x, double ratio_y);
   const Core::Graphic::Image& core() const { return m_core; }
@@ -75,6 +76,7 @@ public:
   void rescale (double z);
   void set_scale (double scale);
   void set_alpha (unsigned char alpha) { m_core.alpha = alpha; }
+  unsigned char alpha() const { return m_core.alpha; }
   void set_highlight (unsigned char alpha) { m_core.highlight_alpha = alpha; }
   bool is_target_inside (int x, int y) const;
 };

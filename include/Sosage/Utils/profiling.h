@@ -80,7 +80,7 @@ public:
   {
     if (m_master)
     {
-      debug ("[Profiling ", m_id, "] ");
+      debug << "[Profiling " << m_id << "] " << std::endl;
       display();
     }
   }
@@ -117,22 +117,22 @@ public:
     for (const auto& d : m_duration)
       total += d;
     std::sort(m_duration.begin(), m_duration.end());
-    debug ("Min = ", to_string(m_duration.front()),
-           ", 10% = ", to_string(m_duration[m_duration.size() / 10]),
-        ", median = ", to_string(m_duration[m_duration.size() / 2]),
-        ", 90% = ", to_string(m_duration[9 * m_duration.size() / 10]),
-        ", max = ", to_string(m_duration.back()),
-        ", total = ", to_string(total));
+    debug << "Min = " << m_duration.front()
+        << ", 10% = " << m_duration[m_duration.size() / 10]
+        << ", median = " << m_duration[m_duration.size() / 2]
+        << ", 90% = " << m_duration[9 * m_duration.size() / 10]
+        << ", max = " << m_duration.back()
+        << ", total = " << total << std::endl;
   }
 #else
   double mean_duration() const { return m_duration / double(m_nb); }
 
   void display() const
   {
-    debug(to_string(m_duration)
-          + ((m_nb > 1)
-             ? " (" + to_string(mean_duration()) + " per iteration, " + std::to_string(m_nb) + " iterations)"
-             : ""));
+    debug << m_duration
+          << ((m_nb > 1)
+              ? " (" + to_string(mean_duration()) + " per iteration, " + std::to_string(m_nb) + " iterations)"
+             : "") << std::endl;
   }
 #endif
 
@@ -154,7 +154,7 @@ public:
   Counter (const std::string& id) : m_id (id), m_nb(0) { }
   ~Counter ()
   {
-    debug ("[Profiling ", m_id, "] ", m_nb, " iteration(s)");
+    debug << "[Profiling " << m_id << "] " << m_nb << " iteration(s)" << std::endl;
   }
 
   void increment() { ++ m_nb; }

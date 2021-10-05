@@ -42,8 +42,9 @@ constexpr int world_height = 1080;
 constexpr int world_depth = 3240;
 
 constexpr int inventory_height = 150;
-constexpr int inventory_active_zone = 5;
+constexpr int inventory_active_zone = 50;
 constexpr int inventory_margin = 20;
+constexpr double inventory_speed = 0.25;
 
 constexpr int object_reach_x = 150;
 constexpr int object_reach_y = 65;
@@ -52,11 +53,11 @@ constexpr int follow_factor = 1500;
 
 constexpr int label_height = 50;
 constexpr int label_margin = 20;
-constexpr int label_diff = 20;
+constexpr int label_diff = 5;
 
 constexpr int camera_limit_left = world_width / 4;
 constexpr int camera_limit_right = (3 * world_width) / 4;
-constexpr double camera_speed = 0.1;
+constexpr double camera_speed = 1.0;
 
 constexpr double char_spoken_time = 0.05;
 constexpr double min_reading_time = 1.5;
@@ -87,13 +88,12 @@ enum Depth
   interface_depth = 1000000,
   inventory_depth,
   dialog_depth,
+  label_depth,
+  action_button_depth,
   overlay_depth,
-  menu_back_depth,
   menu_front_depth,
   menu_button_depth,
   menu_text_depth,
-  label_depth,
-  action_button_depth,
   cursor_depth,
   loading_depth
 };

@@ -83,14 +83,7 @@ public:
     Component::Handle_set new_set;
     for (Component::Handle c : m_data)
       if (!filter(c))
-      {
-        //debug("Keeping ", c->id());
         new_set.insert(c);
-      }
-      else
-      {
-        //debug("Deleting ", c->id());
-      }
     m_data.swap (new_set);
   }
 
@@ -142,6 +135,21 @@ public:
   }
 
   template <typename T>
+  typename T::const_reference value (const std::string& key)
+  {
+    return get<T>(key)->value();
+  }
+
+  template <typename T>
+  typename T::value_type value (const std::string& key,
+                                const typename T::value_type& default_value)
+  {
+    if (auto t = request<T>(key))
+      return t->value();
+    return default_value;
+  }
+
+  template <typename T>
   std::shared_ptr<T> get (const std::string& key)
   {
     count_get();
@@ -149,11 +157,11 @@ public:
 #ifdef SOSAGE_DEBUG
     if (out == std::shared_ptr<T>())
     {
-      debug("Candidate are:");
+      debug << "Candidate are:" << std::endl;
       std::string entity (key.begin(), key.begin() + key.find_first_of(':'));
       for (Component::Handle h : m_data)
         if (h->entity() == entity)
-          debug (" * ", h->id());
+          debug << " * " << h->id() << std::endl;
     }
 #endif
     check (out != std::shared_ptr<T>(), "Cannot find " + key);
@@ -173,6 +181,12 @@ public:
   std::shared_ptr<T> get (const Fast_access_component& fac)
   {
     return Component::cast<T>(m_fast_access_components[std::size_t(fac)]);
+  }
+
+  template <typename T>
+  typename T::const_reference value (const Fast_access_component& fac)
+  {
+    return Component::cast<T>(m_fast_access_components[std::size_t(fac)])->value();
   }
 
   void emit (const std::string& signal)
@@ -217,15 +231,18 @@ private:
     sorted.reserve (m_access_count.size());
     std::copy (m_access_count.begin(), m_access_count.end(),
                std::back_inserter (sorted));
-    std::sort (sorted.begin(), sorted.end(),
+    auto end = std::partition
+               (sorted.begin(), sorted.end(),
+                [](const auto& p) -> bool { return isupper(p.first[0]); });
+    std::sort (sorted.begin(), end,
                [](const auto& a, const auto& b) -> bool
                {
                  return a.second > b.second;
                });
-    debug ("[Profiling component access count (10 first)]");
-    for (std::size_t i = 0; i < 10; ++ i)
-      debug (" * ", sorted[i].first, " (accessed ",
-             sorted[i].second, " times)");
+    debug << "[Profiling system component access count (25 first)]" << std::endl;
+    for (std::size_t i = 0; i < 25; ++ i)
+      debug << " * " << sorted[i].first << " (accessed "
+            << sorted[i].second << " times)" << std::endl;
   }
 #else
   inline void count_access (const std::string&) { }

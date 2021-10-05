@@ -52,7 +52,7 @@ inline Asset open (const std::string& filename, bool write = false)
   out.buffer = SDL_RWFromFile(filename.c_str(), write ? "w" : "r");
   if (out.buffer == nullptr)
   {
-    debug ("File ", filename, " not found");
+    debug << "File " << filename << " not found" << std::endl;
     throw Sosage::No_such_file();
   }
 
@@ -66,7 +66,7 @@ inline Asset open (const void* memory, std::size_t size)
   out.buffer = SDL_RWFromConstMem(memory, int(size));
   if (out.buffer == nullptr)
   {
-    debug ("Can't read memory buffer");
+    debug << "Can't read memory buffer" << std::endl;
     throw Sosage::No_such_file();
   }
 

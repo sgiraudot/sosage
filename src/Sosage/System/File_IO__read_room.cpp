@@ -312,20 +312,19 @@ void File_IO::read_room (const std::string& file_name)
 
   callback->value()();
 
-  const std::string& origin = get<C::String>("Game:new_room_origin")->value();
+  const std::string& origin = value<C::String>("Game:new_room_origin");
   if (origin == "Saved_game")
     set<C::Boolean>("Game:in_new_room", true);
   else
   {
     auto origin_coord = get<C::Position>(origin + ":position");
     auto origin_looking = get<C::Boolean>(origin + ":looking_right");
-    const std::string& player = get<C::String>(origin + ":player")->value();
+    const std::string& player = value<C::String>(origin + ":player");
     set<C::String>("Player:name", player);
     get<C::Position>(player + "_body:position")->set(origin_coord->value());
     set<C::Boolean>("Game:in_new_room", origin_looking->value());
     // Reset camera
     get<C::Absolute_position>(CAMERA__POSITION)->set(Point(0,0));
-    get<C::Double>("Camera:target")->set(0);
   }
   emit ("Game:loading_done");
   emit ("Window:rescaled");
@@ -403,7 +402,7 @@ void File_IO::read_animation (const Core::File_IO::Node& node)
   img->on() = false;
   img->set_relative_origin(0.5, 1.0);
   img->set_collision(UNCLICKABLE);
-  debug("Animation ", id, " at position ", img->z());
+  debug << "Animation " << id << " at position " << img->z() << std::endl;
 }
 
 void File_IO::read_code (const std::string& id)
@@ -702,7 +701,7 @@ void File_IO::read_object (const std::string& id)
         img->set_relative_origin(0.5, 1.0);
       img->set_collision(box_collision ? BOX : PIXEL_PERFECT);
 
-      debug("Object ", id, ":", state, " at position ", img->z());
+      debug << "Object " << id << ":" << state << " at position " << img->z() << std::endl;
 
       conditional_handle->add(state, img);
     }
@@ -926,7 +925,7 @@ void File_IO::read_scenery (const Core::File_IO::Node& node)
     auto img = set<C::Image>(id + ":image", skin, z);
     img->set_collision(UNCLICKABLE);
     img->set_relative_origin(0.5, 1.0);
-    debug("Scenery ", id, " at position ", img->z());
+    debug << "Scenery " << id << " at position " << img->z() << std::endl;
   }
 }
 

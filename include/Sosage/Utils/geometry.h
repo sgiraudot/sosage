@@ -165,7 +165,7 @@ class Vector : public Point
 {
 public:
 
-  Vector (double x, double y)
+  Vector (double x = 0, double y = 0)
     : Point (x, y)
   { }
 

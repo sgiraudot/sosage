@@ -48,11 +48,15 @@ std::string package (const std::string& filename)
 {
   std::string out = "";
 
+  if (contains(filename, "locale.yaml") ||
+      std::count(filename.begin(), filename.end(), '.') == 3) // locale files have 3 points, like image.fr_FR.sdl_surface.lz4
+    return "locale";
+
   for (const std::string& p : packages)
   {
     std::string pp = p;
     std::replace (pp.begin(), pp.end(), '_', '/');
-    if (filename.find(p) != std::string::npos && p.size() > out.size())
+    if (contains(filename, pp) && p.size() > out.size())
       out = p;
   }
 
@@ -145,7 +149,7 @@ void compile_package (const std::string& root)
     if (extension == "data")
       continue;
 
-    if (path.find("_map.png") != std::string::npos)
+    if (contains (path, "_map.png"))
     {
       std::cerr << "Packaging " << path << " precomputed graph" << std::endl;
       std::string abs_map_path = abs_path;
@@ -216,7 +220,7 @@ void decompile_package (const std::string& filename)
     binary_read(ifile, path);
     std::string fname = std::string (path.begin(), path.end());
     std::cerr << fname << std::endl;
-    if (fname.find(".sdl_surface.lz4") != std::string::npos) // custom surface
+    if (contains (fname, ".sdl_surface.lz4"))
     {
       auto width = binary_read<unsigned short>(ifile);
       auto height= binary_read<unsigned short>(ifile);
@@ -231,7 +235,7 @@ void decompile_package (const std::string& filename)
       sizes.insert (std::make_pair (fname, uncompressed_size));
       map.insert (std::make_pair (fname, std::make_pair(begin, end)));
     }
-    else if (fname.find(".lz4") == std::string::npos) // uncompressed file
+    else if (!contains (fname, ".lz4")) // uncompressed file
     {
       auto file_size = binary_read<unsigned int>(ifile);
       std::size_t begin = ifile.tellg();
@@ -267,7 +271,7 @@ void decompile_package (const std::string& filename)
     std::size_t end = m.second.second;
     std::size_t output_size = sizes[p];
     std::replace (p.begin(), p.end(), '/', '_');
-    if (p.find(".lz4") == std::string::npos) // uncompressed file
+    if (!contains(p, ".lz4")) // uncompressed file
     {
       std::ofstream ofile(p, std::ios::binary);
       ofile.write (buffer.data() + begin, end - begin);

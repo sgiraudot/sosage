@@ -40,6 +40,9 @@ class Position : public Base
 {
 public:
 
+  using const_reference = Point;
+  using value_type = Point;
+
   Position (const std::string& id) : Base(id) { }
 
   virtual void set (const Point& p) = 0;
@@ -78,6 +81,14 @@ public:
   Relative_position (const std::string& id, Position_handle ref,
                      const Sosage::Vector& diff = Sosage::Vector(0,0),
                      double factor = 1.);
+
+  Absolute_position_handle absolute_reference()
+  {
+    if (auto r = cast<Absolute_position>(m_ref))
+      return r;
+    return cast<Relative_position>(m_ref)->absolute_reference();
+  }
+
   virtual Point value() const { return m_factor * m_ref->value() + m_diff; }
   virtual void set (const Point& p) { m_diff = Sosage::Vector(m_factor * m_ref->value(), p); }
   void set (const Sosage::Vector& v) { m_diff = v; }

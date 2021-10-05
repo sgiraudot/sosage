@@ -35,6 +35,7 @@
 #include <Sosage/Config/version.h>
 #include <Sosage/Engine.h>
 #include <Sosage/System/Animation.h>
+#include <Sosage/System/Control.h>
 #include <Sosage/System/File_IO.h>
 #include <Sosage/System/Graphic.h>
 #include <Sosage/System/Input.h>
@@ -43,6 +44,7 @@
 #include <Sosage/System/Sound.h>
 #include <Sosage/System/Time.h>
 #include <Sosage/Utils/Asset_manager.h>
+#include <Sosage/Utils/error.h>
 #include <Sosage/Utils/profiling.h>
 
 #include <ctime>
@@ -58,6 +60,10 @@ namespace Sosage
 std::string Asset_manager::folder_name = "";
 std::vector<Buffer> Asset_manager::buffers;
 Package_asset_map Asset_manager::package_asset_map;
+#ifdef SOSAGE_DEBUG_BUFFER
+Debug_buffer debug_buffer;
+std::ostream debug(&debug_buffer);
+#endif
 
 #ifdef SOSAGE_EMSCRIPTEN
 Engine* emscripten_global_engine_ptr;
@@ -69,7 +75,7 @@ void emscripten_main_loop()
 
 Engine::Engine (int argc, char** argv)
 {
-  debug ("Running Sosage ", Sosage::Version::str());
+  debug << "Running Sosage " << Sosage::Version::str() << std::endl;
   srand(static_cast<unsigned int>(time(nullptr)));
 
   handle_cmdline_args(argc, argv);
@@ -92,7 +98,6 @@ int Engine::run (const std::string& folder_name)
   // Init main variables
   auto status = m_content.set_fac<Component::Status>(GAME__STATUS, "Game:status");
   m_content.set_fac<Component::Absolute_position>(CAMERA__POSITION, "Camera:position", Point(0,0));
-  m_content.set<Component::Double>("Camera:target", 0.0);
   m_content.set<Component::Inventory>("Game:inventory");
   m_content.set<Component::Set<std::string> > ("Game:visited_rooms");
 
@@ -105,6 +110,7 @@ int Engine::run (const std::string& folder_name)
 
   auto file_io = System::make_handle<System::File_IO>(m_content);
   auto graphic = System::make_handle<System::Graphic>(m_content);
+  auto control = System::make_handle<System::Control>(m_content);
   auto interface = System::make_handle<System::Interface>(m_content);
   auto time = System::make_handle<System::Time>(m_content);
   auto animation = System::make_handle<System::Animation>(m_content);
@@ -112,6 +118,7 @@ int Engine::run (const std::string& folder_name)
   // Create all systems
   m_systems.push_back (file_io);
   m_systems.push_back (System::make_handle<System::Input>(m_content));
+  m_systems.push_back (control);
   m_systems.push_back (interface);
   m_systems.push_back (System::make_handle<System::Logic>(m_content));
   m_systems.push_back (animation);
@@ -138,9 +145,10 @@ int Engine::run (const std::string& folder_name)
 
 
   file_io->read_init ();
-  interface->init(); // init interface
+  control->init();
+  interface->init();
 
-  debug("Init done, entering main loop");
+  debug << "Init done, entering main loop" << std::endl;
 
 #ifdef SOSAGE_EMSCRIPTEN
   emscripten_set_main_loop (emscripten_main_loop, 0, 0);
@@ -172,7 +180,7 @@ bool Engine::run()
   }
   catch (std::runtime_error& error)
   {
-    std::dynamic_pointer_cast<System::Graphic>(m_systems[6])->display_error (error.what());
+    std::dynamic_pointer_cast<System::Graphic>(m_systems[7])->display_error (error.what());
     throw error;
   }
 #endif

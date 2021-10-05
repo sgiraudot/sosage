@@ -27,10 +27,12 @@
 #ifndef SOSAGE_UTILS_CONVERSIONS_H
 #define SOSAGE_UTILS_CONVERSIONS_H
 
+#include <algorithm>
 #include <array>
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace Sosage
 {
@@ -83,6 +85,28 @@ template <typename T, typename ... Ts>
 inline std::string to_string (const T& t, const Ts& ... ts)
 {
   return to_string(t) + to_string(std::forward<const Ts>(ts)...);
+}
+
+template <typename Set, typename T>
+bool contains (const Set& set, const T& t)
+{
+  return (set.find(t) != set.end());
+}
+
+template <typename T>
+bool contains (const std::vector<T>& vec, const T& t)
+{
+  return std::find (vec.begin(), vec.end(), t) != vec.end();
+}
+
+inline bool contains (const std::string& str, const char* sub)
+{
+  return str.find(sub) != std::string::npos;
+}
+
+inline bool contains (const std::string& str, const std::string& sub)
+{
+  return str.find(sub) != std::string::npos;
 }
 
 } // namespace Sosage

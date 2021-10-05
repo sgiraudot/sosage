@@ -39,6 +39,11 @@ namespace Sosage::Component
 template <typename T>
 class Simple : public Base
 {
+public:
+
+  using const_reference = const T&;
+  using value_type = T;
+
 protected:
 
   T m_value;

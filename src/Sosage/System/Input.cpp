@@ -105,8 +105,6 @@ void Input::run()
 
   for (const Event& ev : m_current_events)
   {
-    //debug("New event ", ev.to_string());
-
     if (ev == Event(KEY_UP, ESCAPE) ||
         ev == Event(KEY_UP, ANDROID_BACK) ||
         ev == Event(BUTTON_UP, START))
@@ -117,20 +115,20 @@ void Input::run()
 
     if (ev == Event(KEY_UP, SPACE))
     {
-      if (status()->value() == PAUSED)
+      if (status()->is(PAUSED))
         status()->pop();
       else
         status()->push(PAUSED);
     }
 
     if (ev == Event(WINDOW, FOREGROUND)
-        && status()->value() == PAUSED)
+        && status()->is(PAUSED))
       status()->pop();
     if (ev == Event(WINDOW, BACKGROUND)
-        && status()->value() != PAUSED)
+        && !status()->is (PAUSED))
       status()->push(PAUSED);
 
-    if (status()->value() == PAUSED)
+    if (status()->is (PAUSED))
       continue;
 
     if (ev == Event(KEY_UP, D))
@@ -161,7 +159,7 @@ void Input::run()
     }
 
     // If paused, ignore mouse events
-    if (status()->value() == LOCKED)
+    if (status()->is (LOCKED))
       continue;
 
     if (mode->value() == MOUSE)
@@ -210,7 +208,7 @@ void Input::run()
     }
     else // if (mode->value() == GAMEPAD)
     {
-      Vector previous_stick = get<C::Simple<Vector>>(STICK__DIRECTION)->value();
+      Vector previous_stick = value<C::Simple<Vector>>(STICK__DIRECTION);
 
       if (gamepad->value() == KEYBOARD)
       {
@@ -284,7 +282,7 @@ void Input::run()
         get<C::Simple<Vector>>(STICK__DIRECTION)->set(vec);
       }
 
-      if (previous_stick != get<C::Simple<Vector>>(STICK__DIRECTION)->value())
+      if (previous_stick != value<C::Simple<Vector>>(STICK__DIRECTION))
         emit("Stick:moved");
     }
 
