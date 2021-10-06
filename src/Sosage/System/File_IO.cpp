@@ -79,6 +79,7 @@ File_IO::File_IO (Content& content)
 
 void File_IO::run()
 {
+  start_timer();
   if (auto new_room = request<C::String>("Game:new_room"))
   {
     if (request<C::String>("Game:new_room_origin"))
@@ -90,6 +91,7 @@ void File_IO::run()
     }
     remove ("Game:new_room");
   }
+  stop_timer ("File_IO");
 }
 
 void File_IO::clean_content()

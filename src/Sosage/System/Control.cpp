@@ -77,6 +77,7 @@ Control::Control(Content& content)
 
 void Control::run()
 {
+  start_timer();
   const Input_mode& new_mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   const Status& new_status = status()->value();
 
@@ -94,6 +95,7 @@ void Control::run()
   auto iter = m_dispatcher.find(key);
   if (iter != m_dispatcher.end())
     (iter->second)();
+  stop_timer("Control");
 }
 
 void Control::update_exit()

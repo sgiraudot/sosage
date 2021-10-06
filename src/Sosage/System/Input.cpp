@@ -47,6 +47,8 @@ Input::Input (Content& content)
 
 void Input::run()
 {
+  start_timer();
+
   bool keyboard_used = false;
   bool mouse_used = false;
   bool touchscreen_used = false;
@@ -290,6 +292,7 @@ void Input::run()
   }
 
   m_current_events.clear();
+  stop_timer("Input");
 }
 
 

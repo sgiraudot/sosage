@@ -75,13 +75,18 @@ public:
     m_latest = m_time;
   }
 
-  void wait(bool verbose)
+  bool wait(bool verbose)
   {
     Time::Unit now = Time::now();
     Time::Duration duration = now - m_latest;
 
+    bool out = true;
+
     if (duration > m_refresh_time)
+    {
       debug << "Warning: frame lasted " << duration << " (max is " << m_refresh_time << ")" << std::endl;
+      out = false;
+    }
     adapt_fps (duration > m_refresh_time);
 
     if constexpr (!Config::emscripten)
@@ -110,6 +115,8 @@ public:
     m_latest = now;
 
     m_time = (m_latest - m_start) / 1000.;
+
+    return out;
   }
 
   double fps() const { return m_fps; }

@@ -78,15 +78,20 @@ Logic::Logic (Content& content)
 
 void Logic::run ()
 {
+  start_timer();
   m_current_time = value<C::Double> (CLOCK__TIME);
 
   if (status()->is (CUTSCENE) || status()->was (CUTSCENE))
   {
     run_cutscene();
+    stop_timer("Logic");
     return;
   }
   if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU))
+  {
+    stop_timer("Logic");
     return;
+  }
   std::set<Timed_handle> new_timed_handle;
 
   bool still_waiting // for this world to stop hating
@@ -237,6 +242,7 @@ void Logic::run ()
   }
 
   update_debug_info (get<C::Debug>(GAME__DEBUG));
+  stop_timer("Logic");
 }
 
 void Logic::run_cutscene()

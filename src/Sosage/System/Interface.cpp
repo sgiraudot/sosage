@@ -52,6 +52,7 @@ Interface::Interface (Content& content)
 
 void Interface::run()
 {
+  start_timer();
   update_menu();
   update_active_objects();
   update_action_selector();
@@ -61,6 +62,7 @@ void Interface::run()
   update_dialog_choices();
   update_skip_message();
   update_cursor();
+  stop_timer("Interface");
 }
 
 void Interface::init()

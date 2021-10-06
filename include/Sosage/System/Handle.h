@@ -51,6 +51,22 @@ public:
   virtual void init() { }
   virtual void run() = 0;
 
+#ifdef SOSAGE_PROFILE
+  Time::Unit m_start;
+  void start_timer ()
+  {
+    m_start = Time::now();
+  }
+  void stop_timer (const std::string& id)
+  {
+    set<Component::Int>(id + ":time", Time::now() - m_start);
+  }
+
+#else
+  void start_timer () { }
+  void stop_timer (const char*) { }
+#endif
+
   template <typename T>
   std::shared_ptr<T> get (const std::string& key) { return m_content.get<T>(key); }
   template <typename T>

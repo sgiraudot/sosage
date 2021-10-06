@@ -117,12 +117,12 @@ public:
     for (const auto& d : m_duration)
       total += d;
     std::sort(m_duration.begin(), m_duration.end());
-    debug << "Min = " << m_duration.front()
-        << ", 10% = " << m_duration[m_duration.size() / 10]
-        << ", median = " << m_duration[m_duration.size() / 2]
-        << ", 90% = " << m_duration[9 * m_duration.size() / 10]
-        << ", max = " << m_duration.back()
-        << ", total = " << total << std::endl;
+    debug << "Min = " << to_string(m_duration.front())
+        << ", 10% = " << to_string(m_duration[m_duration.size() / 10])
+        << ", median = " << to_string(m_duration[m_duration.size() / 2])
+        << ", 90% = " << to_string(m_duration[9 * m_duration.size() / 10])
+        << ", max = " << to_string(m_duration.back())
+        << ", total = " << to_string(total) << std::endl;
   }
 #else
   double mean_duration() const { return m_duration / double(m_nb); }

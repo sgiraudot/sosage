@@ -130,6 +130,7 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
                               bool open_left, bool open_right,
                               const Collision_type& collision, double scale, bool arrow)
 {
+  SOSAGE_TIMER_START(Interface__create_label);
   const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
   auto group = set<C::Group>(id + ":group");
@@ -206,6 +207,7 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
     }
   }
 
+  SOSAGE_TIMER_START(Interface__compose_images);
   if (left)
   {
     if (back)
@@ -216,6 +218,7 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
   {
     back->compose_with (right);
   }
+  SOSAGE_TIMER_STOP(Interface__compose_images);
 
   back->on() = true;
   back->set_relative_origin(0.5, 0.5);
@@ -226,6 +229,8 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
 
   back = set<C::Image>(id + "_back:image", back);
   group->add(back);
+
+  SOSAGE_TIMER_STOP(Interface__create_label);
 }
 
 void Interface::animate_label (const std::string& id, const Animation_style& style,
@@ -332,7 +337,6 @@ void Interface::update_label (const std::string& id,
     }
     set<C::Relative_position>(id + "_back:position", pos, Vector(-back_width / 2, 0));
   }
-
 }
 
 void Interface::update_label_position (const std::string& id, double scale)
@@ -430,6 +434,7 @@ void Interface::highlight_object (const std::string& id, unsigned char highlight
 
 void Interface::set_action_selector (const std::string& id)
 {
+  SOSAGE_TIMER_START(Interface__set_action_selector);
   debug << "Set action selector to " << id << std::endl;
   const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   if (mode == GAMEPAD)
@@ -549,6 +554,7 @@ void Interface::set_action_selector (const std::string& id)
       }
     }
   }
+  SOSAGE_TIMER_STOP(Interface__set_action_selector);
 }
 
 void Interface::reset_action_selector()

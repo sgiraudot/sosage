@@ -44,6 +44,7 @@ Sound::Sound (Content& content)
 
 void Sound::run()
 {
+  start_timer();
   auto music = request<C::Music>("Game:music");
 
   if (receive("Music:start"))
@@ -122,6 +123,8 @@ void Sound::run()
 
   for (const std::string& id : to_remove)
     remove (id);
+
+  stop_timer("Sound");
 }
 
 } // namespace Sosage::System

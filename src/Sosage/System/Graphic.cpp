@@ -61,6 +61,7 @@ void Graphic::init()
 
 void Graphic::run()
 {
+  start_timer();
   if (auto name = request<C::String>("Game:name"))
   {
     m_core.update_window (locale(name->value()), value<C::String>("Icon:filename"));
@@ -71,6 +72,7 @@ void Graphic::run()
   {
     m_core.clear_managers();
     run_loading();
+    stop_timer("Graphic");
     return;
   }
 
@@ -92,6 +94,7 @@ void Graphic::run()
   images.clear();
 
   m_core.end();
+  stop_timer("Graphic");
 }
 
 void Graphic::get_images (std::vector<C::Image_handle>& images)

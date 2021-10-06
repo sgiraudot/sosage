@@ -38,13 +38,24 @@ Time::Time (Content& content)
   : Base (content)
 {
   set_fac<C::Debug>(GAME__DEBUG, "Game:debug", m_content, m_clock);
-  set_fac<C::Double> (CLOCK__TIME, "clock:time", 0.);
+  set_fac<C::Double> (CLOCK__TIME, "Clock:time", 0.);
 }
 
 void Time::run()
 {
   SOSAGE_TIMER_START(System_Time__run);
-  m_clock.wait(true);
+  bool frame_under_refresh_time = m_clock.wait(true);
+#ifdef SOSAGE_PROFILE
+  if (!frame_under_refresh_time)
+  {
+    for (const std::string& id: { "Animation", "Control", "File_IO", "Graphic",
+         "Input", "Interface", "Logic", "Sound" })
+    {
+      debug << " * " << id << " took " << value<C::Int>(id + ":time") << "ms" << std::endl;
+    }
+  }
+#endif
+
   get<C::Double> (CLOCK__TIME)->set(m_clock.time());
   SOSAGE_TIMER_STOP(System_Time__run);
 }
