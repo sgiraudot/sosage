@@ -560,6 +560,7 @@ void File_IO::read_init ()
   }
 
   read_locale();
+  read_hints();
 }
 
 void File_IO::read_locale()
@@ -645,6 +646,23 @@ void File_IO::read_locale()
     get<C::String>(GAME__CURRENT_LOCAL)->set(prefered);
   }
 }
+
+void File_IO::read_hints()
+{
+  Core::File_IO input ("data/hints.yaml");
+  input.parse();
+
+  for (std::size_t i = 0; i < input["hints"].size(); ++ i)
+  {
+    const Core::File_IO::Node& hint = input["hints"][i];
+    std::string id = hint["id"].string();
+    set<C::String>(id + ":question", hint["question"].string());
+    set<C::String>(id + ":answer", hint["answer"].string());
+  }
+
+  set<C::Set<std::string>>("Hints:list");
+}
+
 
 void File_IO::read_cutscene (const std::string& file_name)
 {

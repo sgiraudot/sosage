@@ -95,6 +95,7 @@ public:
     : Base(id) { }
 
   void insert (const T& t) { this->m_value.insert (t); }
+  void erase (const T& t) { this->m_value.erase (t); }
 
   typename set_t::const_iterator begin() const { return this->m_value.begin(); }
   typename set_t::const_iterator end() const { return this->m_value.end(); }

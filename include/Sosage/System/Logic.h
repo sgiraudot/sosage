@@ -89,6 +89,7 @@ private:
   void create_dialog (const std::string& character,
                       const std::string& text,
                       std::vector<Component::Image_handle>& dialog);
+  void create_hints();
 
 };
 

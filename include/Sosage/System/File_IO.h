@@ -61,6 +61,7 @@ public:
 
   void read_init ();
   void read_locale ();
+  void read_hints ();
 
   void read_cutscene (const std::string& file_name);
 

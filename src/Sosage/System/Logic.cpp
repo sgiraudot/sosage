@@ -689,9 +689,10 @@ bool Logic::function_play (const std::vector<std::string>& args)
       double duration = to_double(args[2]);
       set<C::String>(character + ":start_animation", target);
 
-      m_timed.insert (std::make_pair (m_current_time + duration,
-                                      C::make_handle<C::Signal>
-                                      (character + ":stop_animation")));
+      if (duration > 0)
+        m_timed.insert (std::make_pair (m_current_time + duration,
+                                        C::make_handle<C::Signal>
+                                        (character + ":stop_animation")));
     }
     else
     {
@@ -785,6 +786,8 @@ bool Logic::function_set (const std::vector<std::string>& args)
   {
     if (auto boolean = request<C::Boolean>(target + ":visible"))
       emit (target + ":set_visible");
+    else if (auto question = request<C::String>(target + ":question"))
+      get<C::Set<std::string>>("Hints:list")->insert (target);
     else
     {
       auto image = get<C::Image>(target + ":image");
@@ -802,7 +805,12 @@ bool Logic::function_set (const std::vector<std::string>& args)
     }
   }
   else if (option == "hidden")
-    emit (target + ":set_hidden");
+  {
+    if (auto question = request<C::String>(target + ":question"))
+      get<C::Set<std::string>>("Hints:list")->erase(target);
+    else
+      emit (target + ":set_hidden");
+  }
 
   return true;
 }
@@ -855,6 +863,8 @@ bool Logic::function_system (const std::vector<std::string>& args)
     }
     return false;
   }
+  else if (option == "hints")
+    create_hints();
   else if (option == "exit")
     emit ("Game:exit");
 
@@ -911,11 +921,15 @@ bool Logic::function_talk (const std::vector<std::string>& args)
     m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), img));
     m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), pos));
   }
-  emit (id + ":start_talking");
 
-  m_timed.insert (std::make_pair (m_current_time + nb_seconds_lips_moving,
-                                  C::make_handle<C::Signal>
-                                  (id + ":stop_talking")));
+  if (id != "Hinter")
+  {
+    emit (id + ":start_talking");
+
+    m_timed.insert (std::make_pair (m_current_time + nb_seconds_lips_moving,
+                                    C::make_handle<C::Signal>
+                                    (id + ":stop_talking")));
+  }
   return true;
 }
 
@@ -992,6 +1006,42 @@ void Logic::create_dialog (const std::string& character,
     }
   }
 
+}
+
+void Logic::create_hints()
+{
+  auto dialog = set<C::Dialog>("Hints:dialog", "End_hints");
+  set<C::String>("Hinter:color", "FFFFFF");
+  const std::string& player = value<C::String>("Player:name");
+  set<C::Variable>("Hinter_body:position", get<C::Position>(player + "_body:position"));
+
+  auto first = dialog->add_vertex ("Hinter", "*" + locale_get("Hint_welcome:text") + "*");
+  auto choice = dialog->add_vertex();
+  dialog->add_edge(dialog->vertex_in(), first);
+  dialog->add_edge(first, choice);
+
+  for (const std::string& h : get<C::Set<std::string>>("Hints:list")->value())
+  {
+    auto va = dialog->add_vertex ("Hinter", "*" + locale_get (h + ":answer") + "*");
+    dialog->add_edge(choice, va, true, locale_get (h + ":question"));
+    dialog->add_edge(va, choice);
+  }
+
+  auto closing = dialog->add_vertex ("Hinter", "*" + locale_get("Hint_bye:text") + "*");
+  dialog->add_edge(choice, closing, false, locale_get("Hint_end:text"));
+  dialog->add_edge(closing, dialog->vertex_out());
+
+  emit(player + ":stop_walking");
+  remove(player + ":path", true);
+  auto action = set<C::Action>("Hints:action");
+  set<C::Variable>("Character:action", action);
+  action->add("play", { "animation", "telephone", "-1" });
+  action->add("dialog", { "Hints" });
+
+  auto end = set<C::Action>("End_hints:action");
+  end->add("stop", { "animation", player });
+
+  set<C::String>(player + ":start_animation", "telephone");
 }
 
 
