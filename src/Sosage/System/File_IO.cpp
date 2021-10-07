@@ -304,16 +304,15 @@ void File_IO::write_savefile()
   output.end_section();
 
   output.start_section("states");
-  for (C::Handle c : m_content)
+  for (C::Handle c : components("state"))
     if (!c->is_system())
       if (auto s = C::cast<C::String>(c))
-        if (c->component() == "state")
         output.write_list_item ("id", c->entity(), "value", s->value());
   output.end_section();
 
   output.start_section("positions");
-  for (C::Handle c : m_content)
-    if (c->component() == "position" && c->entity() != "Cursor" && c->entity() != "Loading_spin")
+  for (C::Handle c : components("position"))
+    if (c->entity() != "Cursor" && c->entity() != "Loading_spin")
       if (auto pos = C::cast<C::Position>(c))
         output.write_list_item ("id", c->entity(), "value",
                                 { pos->value().x(), pos->value().y() });
@@ -321,22 +320,21 @@ void File_IO::write_savefile()
   output.end_section();
 
   output.start_section("integers");
-  for (C::Handle c : m_content)
+  for (C::Handle c : components("value"))
     if (!c->is_system())
       if (auto i = C::cast<C::Int>(c))
         output.write_list_item ("id", c->entity(), "value", i->value());
   output.end_section();
 
   output.start_section("visibility");
-  for (C::Handle c : m_content)
+  for (C::Handle c : components("visible"))
     if (!c->is_system())
       if (auto b = C::cast<C::Boolean>(c))
-        if (b->component() == "visible")
         output.write_list_item ("id", b->entity(), "value", b->value());
   output.end_section();
 
   output.start_section("active_animations");
-  for (C::Handle c : m_content)
+  for (C::Handle c : components("image"))
     if (!c->is_system())
       if (auto a = C::cast<C::Animation>(c))
         if (a->on() && a->loop())

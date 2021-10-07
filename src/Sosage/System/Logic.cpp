@@ -726,7 +726,7 @@ bool Logic::function_play (const std::vector<std::string>& args)
     }
   }
   else if (option == "sound")
-    emit ("play_sound:" + target);
+    emit (target + "play_sound:");
   else if (option == "music")
   {
     set<C::Variable>("Game:music", get<C::Music>(target + ":music"));

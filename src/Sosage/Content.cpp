@@ -40,12 +40,14 @@ Content::Content()
 
 void Content::remove (const std::string& key, bool optional)
 {
-  Component::Handle_set::iterator iter = m_data.find(std::make_shared<Component::Base>(key));
-  if (optional && iter == m_data.end())
+  auto t = std::make_shared<Component::Base>(key);
+  Component::Handle_set& hset = components(t->component());
+  Component::Handle_set::iterator iter = hset.find(t);
+  if (optional && iter == hset.end())
     return;
   
-  check (iter != m_data.end(), "Entity " + key + " doesn't exist");
-  m_data.erase(iter);
+  check (iter != hset.end(), "Entity " + key + " doesn't exist");
+  hset.erase(iter);
 }
 
 

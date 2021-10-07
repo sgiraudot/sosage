@@ -91,10 +91,6 @@ void Sound::run()
     }
   }
 
-  if (receive ("Click:play_sound"))
-    m_core.play_sound (get<C::Sound>("Click:sound")->core(),
-                       value<C::Int>("Sounds:volume") / 10.);
-
   if (receive ("code:play_failure"))
     m_core.play_sound
       (get<C::Sound>
@@ -112,14 +108,12 @@ void Sound::run()
        value<C::Int>("Sounds:volume") / 10.);
 
   std::vector<std::string> to_remove;
-  for (C::Handle h : m_content)
-    if (auto ev = C::cast<C::Signal>(h))
-      if (ev->entity() == "play_sound")
-      {
-        m_core.play_sound (get<C::Sound> (ev->component() + ":sound")->core(),
-                           value<C::Int>("Sounds:volume") / 10.);
-        to_remove.push_back (ev->id());
-      }
+  for (C::Handle ev : components("play_sound"))
+  {
+    m_core.play_sound (get<C::Sound> (ev->entity() + ":sound")->core(),
+                       value<C::Int>("Sounds:volume") / 10.);
+    to_remove.push_back (ev->id());
+  }
 
   for (const std::string& id : to_remove)
     remove (id);

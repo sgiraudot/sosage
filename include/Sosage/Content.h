@@ -37,8 +37,6 @@
 #include <array>
 #include <functional>
 
-//#define SOSAGE_LOG_CONTENT
-
 namespace Sosage
 {
 
@@ -46,14 +44,8 @@ class Content
 {
 private:
 
-  Component::Handle_set m_data;
+  Component::Component_map m_data;
   std::array<Component::Handle, NUMBER_OF_KEYS> m_fast_access_components;
-#ifdef SOSAGE_LOG_CONTENT
-  std::ofstream m_log;
-  inline void log (const std::string& str) { m_log << str << std::endl; }
-#else
-  inline void log (const std::string&) { }
-#endif
 
 public:
 
@@ -74,32 +66,40 @@ public:
 
   }
   std::size_t size() const { return m_data.size(); }
-  Component::Handle_set::const_iterator begin() const { return m_data.begin(); }
-  Component::Handle_set::const_iterator end() const { return m_data.end(); }
+  Component::Component_map::const_iterator begin() const { return m_data.begin(); }
+  Component::Component_map::const_iterator end() const { return m_data.end(); }
+  Component::Handle_set& components (const std::string& s)
+  {
+    auto iter = m_data.insert (std::make_pair(s, nullptr));
+    if (iter.second)
+      iter.first->second = new Component::Handle_set();
+    return *(iter.first->second);
+  }
+
   void remove (const std::string& key, bool optional = false);
 
   void clear (const std::function<bool(Component::Handle)>& filter)
   {
-    Component::Handle_set new_set;
-    for (Component::Handle c : m_data)
-      if (!filter(c))
-        new_set.insert(c);
-    m_data.swap (new_set);
+    for (auto& hset : m_data)
+    {
+      Component::Handle_set& old_set = *(hset.second);
+      Component::Handle_set new_set;
+      for (Component::Handle c : old_set)
+        if (!filter(c))
+          new_set.insert(c);
+      old_set.swap (new_set);
+    }
   }
 
   template <typename T>
   void set (const std::shared_ptr<T>& t)
   {
     count_set_ptr();
-    Component::Handle_set::iterator iter = m_data.find(t);
-    log ("find " + t->id());
-    if (iter != m_data.end())
-    {
-      m_data.erase(iter);
-      log ("erase " + t->id());
-    }
-    m_data.insert(t);
-    log ("insert " + t->id());
+    Component::Handle_set& hset = components(t->component());
+    Component::Handle_set::iterator iter = hset.find(t);
+    if (iter != hset.end())
+      hset.erase(iter);
+    hset.insert(t);
   }
 
   template <typename T, typename ... Args>
@@ -125,9 +125,10 @@ public:
   {
     count_access(key);
     count_request();
-    Component::Handle_set::iterator iter = m_data.find(std::make_shared<Component::Base>(key));
-    log ("find " + key);
-    if (iter == m_data.end())
+    auto cmp = std::make_shared<Component::Base>(key);
+    Component::Handle_set& hset = components(cmp->component());
+    Component::Handle_set::iterator iter = hset.find(std::make_shared<Component::Base>(key));
+    if (iter == hset.end())
       return std::shared_ptr<T>();
 
     std::shared_ptr<T> out = Component::cast<T>(*iter);
@@ -155,6 +156,7 @@ public:
     count_get();
     std::shared_ptr<T> out = request<T>(key);
 #ifdef SOSAGE_DEBUG
+#if 0
     if (out == std::shared_ptr<T>())
     {
       debug << "Candidate are:" << std::endl;
@@ -163,6 +165,7 @@ public:
         if (h->entity() == entity)
           debug << " * " << h->id() << std::endl;
     }
+#endif
 #endif
     check (out != std::shared_ptr<T>(), "Cannot find " + key);
     return out;
@@ -198,15 +201,17 @@ public:
   {
     count_access(signal);
     count_request();
+
+    auto cmp = std::make_shared<Component::Base>(signal);
+    Component::Handle_set& hset = components(cmp->component());
+
     Component::Handle_set::iterator iter
-        = m_data.find(std::make_shared<Component::Base>(signal));
-    log ("find " + signal);
-    if (iter == m_data.end())
+        = hset.find(std::make_shared<Component::Base>(signal));
+    if (iter == hset.end())
       return false;
     if (!Component::cast<Component::Signal>(*iter))
       return false;
-    m_data.erase (iter);
-    log ("erase " + signal);
+    hset.erase (iter);
     return true;
   }
 

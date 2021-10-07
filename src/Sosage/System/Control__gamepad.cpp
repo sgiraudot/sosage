@@ -533,36 +533,35 @@ std::vector<std::string> Control::detect_active_objects()
 
   // Find objects with labels close to player
   std::vector<std::string> out;
-  for (const auto& e : m_content)
+  for (auto e : components("label"))
     if (auto label = C::cast<C::Absolute_position>(e))
-      if (label->component() == "label")
-      {
-        auto pos = get<C::Position>(label->entity() + ":view");
+    {
+      auto pos = get<C::Position>(label->entity() + ":view");
 
-        double dx = std::abs(position->value().x() - pos->value().x());
-        double dy = std::abs(position->value().y() - pos->value().y());
+      double dx = std::abs(position->value().x() - pos->value().x());
+      double dy = std::abs(position->value().y() - pos->value().y());
 
-        // Object out of reach
-        if (dx > Config::object_reach_x + Config::object_reach_hysteresis ||
-            dy > Config::object_reach_y + Config::object_reach_hysteresis)
-          continue;
+      // Object out of reach
+      if (dx > Config::object_reach_x + Config::object_reach_hysteresis ||
+          dy > Config::object_reach_y + Config::object_reach_hysteresis)
+        continue;
 
-        // Inactive object
-        if (!request<C::Image>(label->entity() + ":image"))
-          continue;
+      // Inactive object
+      if (!request<C::Image>(label->entity() + ":image"))
+        continue;
 
-        // Inventory objet
-        if (value<C::String>(label->entity() + ":state") == "inventory")
-          continue;
+      // Inventory objet
+      if (value<C::String>(label->entity() + ":state") == "inventory")
+        continue;
 
-        // Object in reach
-        if (dx <= Config::object_reach_x && dy <= Config::object_reach_y)
-          out.emplace_back (label->entity());
+      // Object in reach
+      if (dx <= Config::object_reach_x && dy <= Config::object_reach_y)
+        out.emplace_back (label->entity());
 
-        // Object in hysteresis range
-        else if (contains(active_objects, label->entity()))
-          out.emplace_back (label->entity());
-      }
+      // Object in hysteresis range
+      else if (contains(active_objects, label->entity()))
+        out.emplace_back (label->entity());
+    }
 
   // Sort by X position
   std::sort (out.begin(), out.end(),

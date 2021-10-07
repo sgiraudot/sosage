@@ -99,7 +99,7 @@ void Graphic::run()
 
 void Graphic::get_images (std::vector<C::Image_handle>& images)
 {
-  for (const auto& e : m_content)
+  for (const auto& e : components("image"))
     if (auto img = C::cast<C::Image>(e))
       images.push_back(img);
 }

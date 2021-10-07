@@ -617,7 +617,7 @@ std::string Control::first_collision
 (C::Position_handle cursor, const std::function<bool(C::Image_handle)>& filter)
 {
   C::Image_handle out;
-  for (const auto& e : m_content)
+  for (const auto& e : components("image"))
     if (auto img = C::cast<C::Image>(e))
       if (filter(img) & collides(cursor, img))
         if (!out || img->z() > out->z())

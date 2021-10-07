@@ -272,7 +272,7 @@ void File_IO::read_room (const std::string& file_name)
 #ifdef SOSAGE_DEBUG
   // Display layers of images for easy room creation
   std::vector<C::Image_handle> images;
-  for (C::Handle h : m_content)
+  for (C::Handle h : components("image"))
     if (auto img = C::cast<C::Image>(h))
       images.push_back(img);
 
