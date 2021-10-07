@@ -388,6 +388,7 @@ void Interface::delete_label (const std::string& id)
     return;
   debug << "Delete label " << id << std::endl;
 
+  remove(id + ":global_position", true);
   double current_time = value<C::Double>(CLOCK__TIME);
   group->apply<C::Image>([&](auto img_old)
   {
@@ -395,6 +396,7 @@ void Interface::delete_label (const std::string& id)
     auto img = set<C::Image>(img_old->entity() + "_old:image", img_old);
     set<C::Variable>(img_old->entity() + "_old:position", get<C::Position>(img_old->entity() + ":position"));
     remove(img_old->id());
+    remove(img_old->entity() + ":position");
     set<C::GUI_image_animation>(img->entity() + ":animation", current_time, current_time + Config::inventory_speed,
                                 img, img->scale(), img->scale(), img->alpha(), 0, true);
   });

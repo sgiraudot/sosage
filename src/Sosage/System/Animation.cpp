@@ -120,7 +120,13 @@ void Animation::run_gui_frame()
   for (C::GUI_animation_handle a : to_remove)
   {
     if (a->remove_after())
-      remove(a->object_id());
+    {
+      const std::string& object_id = a->object_id();
+      remove(object_id);
+      std::size_t pos = object_id.find(":image");
+      if (pos != std::string::npos)
+        remove(std::string(object_id.begin(), object_id.begin() + pos) + ":position");
+    }
     remove(a->id());
   }
 }
