@@ -35,7 +35,31 @@ Content::Content()
   , m_log ("content.log")
 #endif
 {
+  // For some components, we want to quickly access to the whole
+  // list, so we separate them in specific Handle sets
+  auto reserved_components
+      = { "animation",
+          "image",
+          "label",
+          "lookat",
+          "path",
+          "play_sound",
+          "position",
+          "set_visible",
+          "set_hidden",
+          "start_animation",
+          "start_talking",
+          "state",
+          "stop_animation",
+          "stop_talking",
+          "stop_walking",
+          "value",
+          "visible" };
 
+  m_data.resize(reserved_components.size() + 1);
+  std::size_t idx = 1;
+  for (const auto& c : reserved_components)
+    m_map_component.insert (std::make_pair(c, idx ++));
 }
 
 void Content::remove (const std::string& key, bool optional)

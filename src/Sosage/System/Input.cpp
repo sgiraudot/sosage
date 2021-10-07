@@ -143,16 +143,12 @@ void Input::run()
     if (ev == Event(KEY_UP, P))
     {
       std::size_t nb_small = 0;
-      for (const auto& c : m_content)
+      std::size_t i = 0;
+      for (const auto& comp : m_content)
       {
-        debug << c.first << ": " << c.second->size();
-        if (c.second->size() <= 3)
-        {
+        debug << i << ": " << comp.size() << std::endl;
+        if (comp.size() <= 3)
           ++ nb_small;
-          for (auto c : *(c.second))
-            debug << " " << c->entity();
-        debug << std::endl;
-        }
       }
       std::cerr << m_content.size() << " UNIQUE COMPONENTS" << std::endl;
       std::cerr << "(" << nb_small << " small ones -> "

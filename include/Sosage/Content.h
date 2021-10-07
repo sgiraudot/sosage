@@ -46,6 +46,7 @@ private:
 
   Component::Component_map m_data;
   std::array<Component::Handle, NUMBER_OF_KEYS> m_fast_access_components;
+  std::unordered_map<std::string, std::size_t> m_map_component;
 
 public:
 
@@ -70,10 +71,10 @@ public:
   Component::Component_map::const_iterator end() const { return m_data.end(); }
   Component::Handle_set& components (const std::string& s)
   {
-    auto iter = m_data.insert (std::make_pair(s, nullptr));
-    if (iter.second)
-      iter.first->second = new Component::Handle_set();
-    return *(iter.first->second);
+    auto iter = m_map_component.find(s);
+    if (iter == m_map_component.end())
+        return m_data[0];
+    return m_data[iter->second];
   }
 
   void remove (const std::string& key, bool optional = false);
@@ -82,7 +83,7 @@ public:
   {
     for (auto& hset : m_data)
     {
-      Component::Handle_set& old_set = *(hset.second);
+      Component::Handle_set& old_set = hset;
       Component::Handle_set new_set;
       for (Component::Handle c : old_set)
         if (!filter(c))

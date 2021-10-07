@@ -117,20 +117,20 @@ std::shared_ptr<T> make_handle (Args ... args)
   return std::make_shared<T>(args...);
 }
 
-struct Hash_entity
+struct Hash_id
 {
   std::size_t operator() (const Handle& h) const
-  { return std::hash<std::string>()(h->entity()); }
+  { return std::hash<std::string>()(h->id()); }
 };
 
-struct Equal_entity
+struct Equal_ids
 {
   bool operator() (const Handle& a, const Handle& b) const
-  { return (a->entity() == b->entity()); }
+  { return (a->id() == b->id()); }
 };
 
-using Handle_set = std::unordered_set<Handle, Hash_entity, Equal_entity>;
-using Component_map = std::unordered_map<std::string, Handle_set*>;
+using Handle_set = std::unordered_set<Handle, Hash_id, Equal_ids>;
+using Component_map = std::vector<Handle_set>;
     
 } // namespace Sosage::Component
 
