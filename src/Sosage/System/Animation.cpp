@@ -133,37 +133,10 @@ void Animation::run_gui_frame()
 
 void Animation::run_animation_frame()
 {
-  std::vector<C::Boolean_handle> visibles;
-  std::vector<C::Position_handle> lookats;
-  std::vector<C::Signal_handle> signals;
-  std::vector<C::Path_handle> paths;
-  std::vector<C::String_handle> start_anims;
-  std::vector<C::Animation_handle> animations;
-
-  SOSAGE_TIMER_START(Animation__run_animation_frame__get_content);
   for (auto c : m_content)
     if (auto b = C::cast<C::Boolean>(c))
-    {
       if (b->component() == "visible")
-        visibles.emplace_back (b);
-    }
-    else if (c->component() == "lookat")
-      lookats.emplace_back (C::cast<C::Position>(c));
-    else if (auto s = C::cast<C::Signal>(c))
-      signals.emplace_back (s);
-    else if (auto p = C::cast<C::Path>(c))
-      paths.emplace_back (p);
-    else if (c->component() == "start_animation")
-      start_anims.emplace_back (C::cast<C::String>(c));
-    else if (auto anim = C::cast<C::Animation>(c))
-    {
-      if (anim->on())
-        animations.push_back(anim);
-    }
-  SOSAGE_TIMER_STOP(Animation__run_animation_frame__get_content);
-
-  for (auto b : visibles)
-    b->begin_temporary_true();
+        b->begin_temporary_true();
 
   if (auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game:new_characters"))
   {
@@ -191,124 +164,136 @@ void Animation::run_animation_frame()
   }
 
   std::vector<std::string> to_remove;
+  std::vector<C::Animation_handle> animations;
 
   // First check if some character should change looking direction
-  for (auto lookat : lookats)
+  for (auto c : m_content)
   {
-    debug << "lookat" << std::endl;
-    std::string id = lookat->entity();
-    auto abody = get<C::Animation>(id + "_idle:image");
-    auto ahead = get<C::Animation>(id + "_head:image");
-    auto pbody = get<C::Position>(id + "_body:position");
-    auto phead = get<C::Position>(id + "_head:position");
-    auto pmouth = get<C::Position>(id + "_mouth:position");
-
-    Vector direction (phead->value(), lookat->value());
-    bool looking_right = (direction.x() > 0);
-
-    if (looking_right)
+    if (c->component() == "lookat")
     {
-      phead->set (pbody->value() - abody->core().scaling
-                  * Vector(value<C::Position>(id + "_head:gap_right")));
-      pmouth->set (phead->value() - ahead->core().scaling
-                   * Vector(value<C::Position>(id + "_mouth:gap_right")));
-    }
-    else
-    {
-      phead->set (pbody->value() - abody->core().scaling
-                  * Vector(value<C::Position>(id + "_head:gap_left")));
-      pmouth->set (phead->value() - ahead->core().scaling
-                   * Vector(value<C::Position>(id + "_mouth:gap_left")));
-    }
+      debug << "lookat" << std::endl;
+      std::string id = c->entity();
+      auto lookat = C::cast<C::Position>(c);
+      auto abody = get<C::Animation>(id + "_idle:image");
+      auto ahead = get<C::Animation>(id + "_head:image");
+      auto pbody = get<C::Position>(id + "_body:position");
+      auto phead = get<C::Position>(id + "_head:position");
+      auto pmouth = get<C::Position>(id + "_mouth:position");
 
-    generate_random_idle_animation (id, looking_right);
-    to_remove.push_back (lookat->id());
+      Vector direction (phead->value(), lookat->value());
+      bool looking_right = (direction.x() > 0);
+
+      if (looking_right)
+      {
+        phead->set (pbody->value() - abody->core().scaling
+                    * Vector(value<C::Position>(id + "_head:gap_right")));
+        pmouth->set (phead->value() - ahead->core().scaling
+                     * Vector(value<C::Position>(id + "_mouth:gap_right")));
+      }
+      else
+      {
+        phead->set (pbody->value() - abody->core().scaling
+                    * Vector(value<C::Position>(id + "_head:gap_left")));
+        pmouth->set (phead->value() - ahead->core().scaling
+                     * Vector(value<C::Position>(id + "_mouth:gap_left")));
+      }
+
+      generate_random_idle_animation (id, looking_right);
+      to_remove.push_back (c->id());
+    }
   }
+
 
   // Then check animations stopping
-  for (auto c : signals)
-  {
-    std::string id = c->entity();
-    if (c->component() == "stop_talking")
+  for (auto c : m_content)
+    if (C::cast<C::Signal>(c))
     {
-      generate_random_idle_head_animation (id,
-                                           get<C::Animation>(id + "_head:image")
-                                           ->frames().front().y == 0);
-      to_remove.push_back (c->id());
-    }
-    else if (c->component() == "stop_walking")
-    {
-      if (get<C::Animation>(id + "_walking:image")->on())
+      std::string id = c->entity();
+      if (c->component() == "stop_talking")
       {
-        bool looking_right = (get<C::Animation>(id + "_walking:image")->frames().front().y != 2);
-        generate_random_idle_animation (id, looking_right);
-        place_and_scale_character(id, looking_right);
+        generate_random_idle_head_animation (id,
+                                             get<C::Animation>(id + "_head:image")
+                                             ->frames().front().y == 0);
+        to_remove.push_back (c->id());
       }
-      to_remove.push_back (c->id());
+      else if (c->component() == "stop_walking")
+      {
+        if (get<C::Animation>(id + "_walking:image")->on())
+        {
+          bool looking_right = (get<C::Animation>(id + "_walking:image")->frames().front().y != 2);
+          generate_random_idle_animation (id, looking_right);
+          place_and_scale_character(id, looking_right);
+        }
+        to_remove.push_back (c->id());
+      }
+      else if (c->component() == "stop_animation")
+      {
+        debug << "stop_animation" << std::endl;
+        if (auto head = request<C::Animation>(id + "_head:image"))
+          generate_random_idle_body_animation (id, head->frames().front().y == 0);
+        else
+          get<C::Image>(id + ":image")->on() = false;
+        to_remove.push_back (c->id());
+      }
     }
-    else if (c->component() == "stop_animation")
-    {
-      debug << "stop_animation" << std::endl;
-      if (auto head = request<C::Animation>(id + "_head:image"))
-        generate_random_idle_body_animation (id, head->frames().front().y == 0);
-      else
-        get<C::Image>(id + ":image")->on() = false;
-      to_remove.push_back (c->id());
-    }
-  }
 
   bool has_moved = false;
 
   std::unordered_set<std::string> just_started;
 
   // Then check all other cases
-  for (auto path : paths)
+  for (auto c : m_content)
   {
-    if (!compute_movement_from_path(path))
-      to_remove.push_back(path->id());
-    else if (path->entity() == value<C::String>("Player:name"))
-      has_moved = true;
-  }
-
-  for (auto c : signals)
-  {
-    std::string id = c->entity();
-    if (c->component() == "start_talking")
+    if (auto path = C::cast<C::Path>(c))
     {
-      if (value<C::Boolean>(id + ":visible"))
-        generate_random_mouth_animation (id);
-      to_remove.push_back(c->id());
+      if (!compute_movement_from_path(path))
+        to_remove.push_back(c->id());
+      else if (path->entity() == value<C::String>("Player:name"))
+        has_moved = true;
+    }
+    else if (C::cast<C::Signal>(c))
+    {
+      std::string id = c->entity();
+      if (c->component() == "start_talking")
+      {
+        if (value<C::Boolean>(id + ":visible"))
+          generate_random_mouth_animation (id);
+        to_remove.push_back(c->id());
+      }
+      else if (c->component() == "start_animation")
+      {
+        get<C::Animation>(id + ":image")->on() = true;
+        just_started.insert (id);
+        to_remove.push_back(c->id());
+      }
+      else if (c->component() == "set_visible")
+      {
+        auto b = get<C::Boolean>(id + ":visible");
+        b->end_temporary_true();
+        b->set (true);
+        b->begin_temporary_true();
+        to_remove.push_back(c->id());
+      }
+      else if (c->component() == "set_hidden")
+      {
+        auto b = get<C::Boolean>(id + ":visible");
+        b->end_temporary_true();
+        b->set (false);
+        b->begin_temporary_true();
+        to_remove.push_back(c->id());
+      }
     }
     else if (c->component() == "start_animation")
     {
-      get<C::Animation>(id + ":image")->on() = true;
-      just_started.insert (id);
-      to_remove.push_back(c->id());
+      auto anim = C::cast<C::String>(c);
+      std::string id = c->entity();
+      debug << "start_animation" << std::endl;
+      generate_animation (id, anim->value());
+      to_remove.push_back (c->id());
     }
-    else if (c->component() == "set_visible")
-    {
-      auto b = get<C::Boolean>(id + ":visible");
-      b->end_temporary_true();
-      b->set (true);
-      b->begin_temporary_true();
-      to_remove.push_back(c->id());
-    }
-    else if (c->component() == "set_hidden")
-    {
-      auto b = get<C::Boolean>(id + ":visible");
-      b->end_temporary_true();
-      b->set (false);
-      b->begin_temporary_true();
-      to_remove.push_back(c->id());
-    }
-  }
-
-  for (auto anim : start_anims)
-  {
-    std::string id = anim->entity();
-    debug << "start_animation" << std::endl;
-    generate_animation (id, anim->value());
-    to_remove.push_back (anim->id());
+    else if (auto anim = C::cast<C::Animation>(c))
+      if (anim->on())
+        animations.push_back(anim);
   }
 
   for (const std::string& c : to_remove)
@@ -322,9 +307,11 @@ void Animation::run_animation_frame()
       if (!animation->next_frame())
         animation->on() = false;
 
-  for (auto b : visibles)
-    if (b->component() == "visible")
-      b->end_temporary_true();
+  for (auto c : m_content)
+    if (auto b = C::cast<C::Boolean>(c))
+      if (b->component() == "visible")
+        b->end_temporary_true();
+
 }
 
 bool Animation::run_loading()
