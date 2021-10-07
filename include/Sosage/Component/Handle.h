@@ -28,6 +28,7 @@
 #define SOSAGE_COMPONENT_HANDLE_H
 
 #include <Sosage/Utils/error.h>
+#include <Sosage/Utils/profiling.h>
 
 #include <memory>
 #include <string>
@@ -39,18 +40,29 @@ namespace Sosage::Component
 class Base
 {
   std::string m_id; // entity:component
+  std::string m_entity;
+  std::string m_component;
   
 public:
-  Base(const std::string& id) : m_id (id) { }
+  Base(const std::string& id) : m_id (id)
+  {
+    std::size_t pos = m_id.find_first_of(':');
+    if (pos == std::string::npos)
+      return;
+    // This is a duplicate storage, but as we both need to often use id and entity/component,
+    // it's better to lose a bit of memory and avoid always creating strings
+    m_entity = std::string (m_id.begin(), m_id.begin() + pos);
+    m_component = std::string (m_id.begin() + pos + 1, m_id.end());
+  }
   virtual ~Base() { }
 
   bool is_system() const { return isupper(m_id[0]); }
 
   const std::string& id() const { return m_id; }
 
-  std::string entity() const
+  const std::string& entity() const
   {
-    return std::string (m_id.begin(), m_id.begin() + m_id.find_first_of(':'));
+    return m_entity;
   }
 
   // Special handling of entity for characters
@@ -62,7 +74,7 @@ public:
       if (pos != std::string::npos)
         return std::string (m_id.begin(), m_id.begin() + pos);
     }
-    return std::string (m_id.begin(), m_id.begin() + m_id.find_first_of(':'));
+    return entity();
   }
 
   // Special handling of entity for binary actions
@@ -77,14 +89,13 @@ public:
     return std::string (m_id.begin(), m_id.begin() + m_id.find_last_of('_'));
   }
 
-  std::string component() const
+  const std::string& component() const
   {
-    return std::string (m_id.begin() + m_id.find_last_of(':') + 1, m_id.end());
+    SOSAGE_COUNT(Component__component);
+    return m_component;
   }
 
   virtual std::string str() const { return m_id; }
-
-  void set_id (const std::string& id) { m_id = id; }
 };
 
 using Handle = std::shared_ptr<Base>;
@@ -108,7 +119,8 @@ std::shared_ptr<T> make_handle (Args ... args)
 
 struct Hash_ids
 {
-  std::size_t operator() (const Handle& h) const
+  template <typename T>
+  std::size_t operator() (const T& h) const
   {
     return std::hash<std::string>()(h->id());
   }
@@ -116,8 +128,9 @@ struct Hash_ids
 
 struct Equal_ids
 {
-  bool operator() (const Handle& a,
-                   const Handle& b) const
+  template <typename T>
+  bool operator() (const T& a,
+                   const T& b) const
   {
     return (a->id() == b->id());
   }

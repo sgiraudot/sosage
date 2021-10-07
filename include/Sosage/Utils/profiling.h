@@ -122,7 +122,8 @@ public:
         << ", median = " << to_string(m_duration[m_duration.size() / 2])
         << ", 90% = " << to_string(m_duration[9 * m_duration.size() / 10])
         << ", max = " << to_string(m_duration.back())
-        << ", total = " << to_string(total) << std::endl;
+        << ", total = " << to_string(total)
+        << ", mean = " << to_string(total / m_duration.size()) << std::endl;
   }
 #else
   double mean_duration() const { return m_duration / double(m_nb); }

@@ -136,6 +136,54 @@ void Input::run()
     if (ev == Event(KEY_UP, D))
       get<C::Boolean>("Game:debug")->toggle();
 
+#ifdef SOSAGE_PROFILE
+    if (ev == Event(KEY_UP, P))
+    {
+      debug << "Profiling access:" << std::endl;
+
+      {
+        std::size_t nb = 0;
+        Time::Unit start = Time::now();
+        for (std::size_t i = 0; i < 10; ++ i)
+          for (auto c : m_content)
+            if (C::cast<C::Image>(c))
+              ++ nb;
+            else if (C::cast<C::Position>(c))
+              ++ nb;
+            else if (C::cast<C::String>(c))
+              ++ nb;
+        Time::Unit end = Time::now();
+        debug << "Casting all 10 times took " << (end-start) << "ms" << std::endl;
+      }
+
+      {
+        std::size_t nb = 0;
+        Time::Unit start = Time::now();
+        for (std::size_t i = 0; i < 10; ++ i)
+          for (auto c : m_content)
+            if (c->component() == "image")
+              ++ nb;
+            else if (c->component() == "position")
+              ++ nb;
+            else if (c->component() == "text")
+              ++ nb;
+        Time::Unit end = Time::now();
+        debug << "String comparing all 10 times took " << (end-start) << "ms" << std::endl;
+      }
+
+      std::vector<std::string> all;
+      for (auto c : m_content)
+        all.emplace_back (c->id());
+      std::sort (all.begin(), all.end());
+      static int nb = 0;
+      std::ofstream os ("components" + std::to_string(nb) + ".log");
+      ++ nb;
+      for (const auto& s : all)
+        os << s << std::endl;
+      os.close();
+    }
+#endif
+
     if (ev == Event(KEY_UP, Sosage::C))
     {
       get<C::Boolean>("Game:console")->toggle();
