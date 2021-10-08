@@ -93,9 +93,15 @@ void Interface::create_object_label (const std::string& id)
 
     auto cursor = get<C::Position>(CURSOR__POSITION);
     update_label(id + "_label", open_left, open_right, cursor, 1.0, arrow);
-    if (force_right || value<C::Position>(id + "_label_back:position").x() >
-        Config::world_width - Config::label_height)
+    if (force_right || value<C::Position>(id + "_label_back:position").x()
+        + get<C::Image>(id + "_label_back:image")->width() / 2
+        > Config::world_width - Config::label_height)
+    {
+      open_left = false;
+      open_right = true;
+      create_label (false, id + "_label", locale(name), open_left, open_right, UNCLICKABLE, 1.0, arrow);
       update_label(id + "_label", open_left, open_right, cursor, 1.0, arrow);
+    }
   }
   else
   {
