@@ -391,6 +391,13 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
     if (pos == (*path)[path->current()])
     {
       path->current() ++;
+      if (path->current() == path->size())
+      {
+        out = false;
+        generate_random_idle_animation(id, get<C::Animation>(id + "_head:image")
+                                       ->frames().front().y == 0);
+        break;
+      }
       continue;
     }
     Vector current_vector (pos, (*path)[path->current()]);
@@ -406,7 +413,6 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
     pos = (*path)[path->current()];
     if (path->current() + 1 == path->size()) // Movement over, next position is target
     {
-      pos = (*path)[path->current()];
       out = false;
       generate_random_idle_animation(id, current_vector.x() > 0);
       break;
