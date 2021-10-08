@@ -927,7 +927,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   for (auto img : dialog)
   {
     auto pos = set<C::Absolute_position> (img->entity() + ":position", Point(x,y));
-    y += img->height() * 1.1 * size_factor;
+    y += 80 * size_factor;
 
     m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), img));
     m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), pos));
