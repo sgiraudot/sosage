@@ -356,12 +356,15 @@ void Interface::update_action_selector()
 
       // Action selector not up to date
       bool uptodate = (status()->is (IDLE) && m_action_selector[0] == target->value() + "_move")
-          || (status()->is (IN_INVENTORY) && m_action_selector[0] == target->value() + "_use")
-          || (status()->is (OBJECT_CHOICE) && m_action_selector[1] == target->value() + "_Ok");
+                      || (status()->is (IN_INVENTORY) && m_action_selector[0] == target->value() + "_use")
+                      || (status()->is (OBJECT_CHOICE) && m_action_selector[1] == target->value() + "_Ok");
 
       if (status()->is (IDLE))
         if (auto right = request<C::Boolean>(target->value() + "_goto:right"))
           uptodate = m_action_selector[1] == target->value() + "_goto";
+
+      if (receive("Action_selector:force_update"))
+        uptodate = false;
 
       if (garbage_mouse_selector || !uptodate)
       {

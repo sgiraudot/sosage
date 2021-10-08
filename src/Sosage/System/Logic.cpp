@@ -787,6 +787,11 @@ bool Logic::function_set (const std::vector<std::string>& args)
       img->z() = Config::inventory_depth;
       img->on() = false;
     }
+
+    // Changing the state an object might change the labels of its
+    // related action, force an update if using gamepad
+    if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+      emit("Action_selector:force_update");
   }
   else if (option == "visible")
   {
