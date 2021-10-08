@@ -593,7 +593,7 @@ void Interface::update_code_hover()
          - Vector (0.5  * window->width(),
                    0.5 * window->height()));
   }
-  else
+  else if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == MOUSE)
   {
     remove("Code_hover:image", true);
   }
