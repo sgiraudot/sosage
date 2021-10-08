@@ -207,7 +207,6 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
     }
   }
 
-  SOSAGE_TIMER_START(Interface__compose_images);
   if (left)
   {
     if (back)
@@ -218,7 +217,6 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
   {
     back->compose_with (right);
   }
-  SOSAGE_TIMER_STOP(Interface__compose_images);
 
   back->on() = true;
   back->set_relative_origin(0.5, 0.5);
