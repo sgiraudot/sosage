@@ -187,6 +187,8 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
     int margin = Config::label_margin;
     if (request<C::String>("Interface:source_object"))
       margin *= 2;
+    else if (open_left && open_right)
+      margin *= 3;
     else if (!arrow && (open_left || open_right))
       margin *= 2;
 

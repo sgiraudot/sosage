@@ -452,6 +452,10 @@ void Interface::update_object_switcher()
         gamepad_on = !keyboard_on;
       }
 
+#if 0 // Just to test gamepad display using keyboard
+  std::swap(keyboard_on, gamepad_on);
+#endif
+
   if (keyboard_on && get<C::Image>("Keyboard_switcher_left:image")->alpha() != 255)
     fade_action_selector ("Keyboard_switcher", true);
   else if (gamepad_on && get<C::Image>("Gamepad_switcher_left:image")->alpha() != 255)
