@@ -266,6 +266,42 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
       set<C::GUI_image_animation>(id + "_back:animation", current_time, current_time + Config::inventory_speed,
                                   get<C::Image>(id + "_back:image"), from_back, to_back,
                                   alpha_back, alpha_back);
+
+      // If label not centered, position must change a bit
+      std::size_t pos = id.find("_label");
+      if (pos != std::string::npos)
+      {
+        std::string object_id (id.begin(), id.begin() + pos);
+        if (auto right = request<C::Boolean>(object_id + "_goto:right"))
+        {
+          double gap = get<C::Image>(id + "_back:image")->width() / 2.;
+          if (!right->value())
+            gap = -gap;
+          double gap_from = from_back * gap;
+          double gap_to = to_back * gap;
+
+          auto pos = get<C::Relative_position>(id + "_back:position");
+          auto pos_to = pos->value();
+          auto pos_from = pos_to - Vector(gap_from, 0) + Vector(gap_to, 0);
+          pos->set(pos_from);
+          set<C::GUI_position_animation>(id + "_back_pos:animation", current_time, current_time + Config::inventory_speed,
+                                         pos, pos_to);
+
+          double label_gap = get<C::Image>(id + ":image")->width() / 2.;
+          if (!right->value())
+            label_gap = -label_gap;
+
+          double label_from = 2*gap_from - from * Config::label_margin - round (from * label_gap);
+          double label_to = 2*gap_to - to * Config::label_margin - round (to * label_gap);
+
+          auto lpos = get<C::Relative_position>(id + ":position");
+          auto lpos_to = lpos->value();
+          auto lpos_from = lpos_to - Vector(label_from, 0) + Vector(label_to, 0);
+          lpos->set(lpos_from);
+          set<C::GUI_position_animation>(id + "_pos:animation", current_time, current_time + Config::inventory_speed,
+                                         lpos, lpos_to);
+        }
+      }
     }
     else
     {
