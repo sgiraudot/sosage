@@ -177,7 +177,7 @@ void Animation::run_animation_frame()
     auto phead = get<C::Position>(id + "_head:position");
     auto pmouth = get<C::Position>(id + "_mouth:position");
 
-    Vector direction (phead->value(), lookat->value());
+    Vector direction (pbody->value(), lookat->value());
     bool looking_right = (direction.x() > 0);
 
     if (looking_right)
