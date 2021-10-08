@@ -98,6 +98,18 @@ void Control::idle_sub_update_active_objects()
       set<C::String>("Interface:active_object", new_active_objects.front());
     }
   }
+
+  if (auto previous = request<C::String>("Interface:previous_active_object"))
+  {
+    if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
+      for (const std::string& a : active_objects->value())
+        if (a == previous->value())
+        {
+          set<C::String>("Interface:active_object", a);
+          break;
+        }
+    remove ("Interface:previous_active_object");
+  }
 }
 
 void Control::idle_sub_switch_active_object (bool right)
@@ -198,6 +210,7 @@ void Control::object_choice_sub_triggered (const std::string& key)
       set_action (action_id, "Default_inventory");
       remove("Interface:source_object");
     }
+    set<C::String>("Interface:previous_active_inventory_object", active_object->value());
     remove("Interface:active_object");
     status()->pop();
     emit("Click:play_sound");
@@ -207,6 +220,7 @@ void Control::object_choice_sub_triggered (const std::string& key)
     status()->pop();
     remove("Interface:target_object", true);
     remove("Interface:source_object", true);
+    set<C::String>("Interface:previous_active_inventory_object", active_object->value());
     remove("Interface:active_object");
     emit("Click:play_sound");
   }
@@ -270,6 +284,7 @@ void Control::inventory_sub_triggered (const std::string& key)
     std::string action_id = active_object->value() + "_look";
     set_action (action_id, "Default_look");
     status()->pop();
+    set<C::String>("Interface:previous_active_inventory_object", active_object->value());
     remove ("Interface:active_object");
   }
   else if (key == "move") // use
@@ -277,6 +292,7 @@ void Control::inventory_sub_triggered (const std::string& key)
     std::string action_id = active_object->value() + "_use";
     set_action (action_id, "Default_use");
     status()->pop();
+    set<C::String>("Interface:previous_active_inventory_object", active_object->value());
     remove ("Interface:active_object");
   }
   else if (key == "take") // combine
@@ -291,6 +307,7 @@ void Control::inventory_sub_triggered (const std::string& key)
   else // if (action == "inventory")
   {
     status()->pop();
+    set<C::String>("Interface:previous_active_inventory_object", active_object->value());
     remove ("Interface:active_object");
   }
 

@@ -166,9 +166,9 @@ void Control::begin_status (const Status& s)
     }
     else if (s == IN_INVENTORY || s == OBJECT_CHOICE)
     {
+      auto inventory = get<C::Inventory>("Game:inventory");
       if (auto source = request<C::String>("Interface:source_object"))
       {
-        auto inventory = get<C::Inventory>("Game:inventory");
         for (std::size_t i = 0; i < inventory->size(); ++ i)
           if (inventory->get(i) == source->value())
           {
@@ -180,7 +180,20 @@ void Control::begin_status (const Status& s)
           }
       }
       else
-        set<C::String>("Interface:active_object", get<C::Inventory>("Game:inventory")->get(0));
+      {
+        std::size_t idx = 0;
+        if (auto previous = request<C::String>("Interface:previous_active_inventory_object"))
+        {
+          for (std::size_t i = 0; i < inventory->size(); ++ i)
+            if (inventory->get(i) == previous->value())
+            {
+              idx = i;
+              break;
+            }
+          remove ("Interface:previous_active_inventory_object");
+        }
+        set<C::String>("Interface:active_object", inventory->get(idx));
+      }
     }
     else if (s == IN_CODE)
     {
@@ -196,6 +209,9 @@ void Control::end_status (const Status& s)
 {
   if (s == IDLE)
   {
+    if (m_mode == GAMEPAD)
+      if (auto active = request<C::String>("Interface:active_object"))
+        set<C::String>("Interface:previous_active_object", active->value());
     remove ("Interface:active_object", true);
     remove ("Interface:active_objects", true);
   }
