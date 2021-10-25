@@ -59,7 +59,7 @@ public:
 #if defined(SOSAGE_ANDROID)
     __android_log_print (ANDROID_LOG_DEBUG, "Sosage", "%s", this->str().c_str());
 #else
-    SDL_LogDebug("%s", str.c_str());
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "%s", this->str().c_str());
 #endif
     this->str("");
     return 0;
