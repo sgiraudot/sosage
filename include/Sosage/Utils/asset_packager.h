@@ -129,10 +129,17 @@ void write_image (std::ofstream& ofile, const std::string& filename)
 }
 
 
-void compile_package (const std::string& root)
+void compile_package (const std::string& input_folder, const std::string& output_folder)
 {
-  Package_files files = open_packages(root);
-  Asset_manager::init(root + "/", true);
+  // Prepare package
+  std::filesystem::create_directory(output_folder + "/data/");
+  std::filesystem::create_directory(output_folder + "/resources");
+  std::filesystem::copy(input_folder + "/resources", output_folder + "/resources");
+  std::filesystem::copy(input_folder + "/config.cmake", output_folder);
+  std::string root = input_folder + "/data/";
+
+  Package_files files = open_packages(output_folder + "/data/");
+  Asset_manager::init(root, true);
 
   std::size_t root_size = root.size();
   if (root[root.size() - 1] != '/')
@@ -202,7 +209,7 @@ void compile_package (const std::string& root)
     binary_write(*(f.second), zero_size);
 }
 
-void decompile_package (const std::string& filename)
+void decompile_package (const std::string& filename, const std::string& folder)
 {
   std::ifstream ifile (filename, std::ios::binary);
 
@@ -279,7 +286,7 @@ void decompile_package (const std::string& filename)
     else
     {
       p.resize(p.size() - 4);
-      p = "dump/" + p;
+      p = folder + "/" + p;
 
       std::ofstream ofile(p, std::ios::binary);
       Buffer out (output_size);
