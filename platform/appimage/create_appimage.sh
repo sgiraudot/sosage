@@ -30,6 +30,6 @@ cd ..
 
 echo [Building AppImage]
 
-$LinuxDeploy --appdir install_dir -e install_dir/usr/bin/superflu-riteurnz --output appimage
+$LinuxDeploy --appdir install_dir -e install_dir/usr/bin/superfluous-returnz --output appimage
 
 echo [All done]
