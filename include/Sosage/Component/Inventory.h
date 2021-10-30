@@ -27,7 +27,7 @@
 #ifndef SOSAGE_COMPONENT_INVENTORY_H
 #define SOSAGE_COMPONENT_INVENTORY_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 
 #include <vector>
 
@@ -42,22 +42,17 @@ class Inventory : public Base
 public:
 
   Inventory (const std::string& id);
-
-  void clear() { m_data.clear(); m_position = 0; }
-
-  std::vector<std::string>::const_iterator begin() const { return m_data.begin(); }
-  std::vector<std::string>::const_iterator end() const { return m_data.end(); }
-
+  void clear();
+  std::vector<std::string>::const_iterator begin() const;
+  std::vector<std::string>::const_iterator end() const;
   void add (const std::string& entity);
   void remove (const std::string& entity);
   void next();
   void prev();
-
   std::size_t size() const;
   std::size_t position() const;
   std::string get (std::size_t i) const;
-  const std::vector<std::string>& data() const { return m_data; }
-
+  const std::vector<std::string>& data() const;
 };
 
 using Inventory_handle = std::shared_ptr<Inventory>;

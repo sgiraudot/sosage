@@ -27,7 +27,6 @@
 #ifndef SOSAGE_COMPONENT_ANIMATION_H
 #define SOSAGE_COMPONENT_ANIMATION_H
 
-#include <Sosage/Component/Handle.h>
 #include <Sosage/Component/Image.h>
 
 #include <vector>
@@ -44,10 +43,7 @@ public:
     int x;
     int y;
     int duration;
-    int ellapsed;
-    Frame (int x = 0, int y = 0, int duration = 1)
-      : x(x), y(y), duration(duration), ellapsed(0)
-    { }
+    int ellapsed = 0;
   };
 
 private:
@@ -63,11 +59,11 @@ public:
   Animation (const std::string& id, const std::string& file_name, int z,
              int width_subdiv, int height_subdiv, bool loop,
              const Collision_type& collision = BOX, bool with_highlight = false);
-  int width_subdiv() const { return m_width_subdiv; }
-  int height_subdiv() const { return m_height_subdiv; }
-  const std::vector<Frame>& frames() const { return m_frames; }
-  std::vector<Frame>& frames() { return m_frames; }
-  bool loop() const { return m_loop; }
+  int width_subdiv() const;
+  int height_subdiv() const;
+  const std::vector<Frame>& frames() const;
+  std::vector<Frame>& frames();
+  bool loop() const;
   int reset(bool all_frames = true, int duration = 1);
   virtual int xmin() const;
   virtual int xmax() const;

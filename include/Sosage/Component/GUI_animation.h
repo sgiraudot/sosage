@@ -27,7 +27,8 @@
 #ifndef SOSAGE_COMPONENT_GUI_ANIMATION_H
 #define SOSAGE_COMPONENT_GUI_ANIMATION_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
+#include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
 
 namespace Sosage::Component
@@ -42,24 +43,9 @@ class GUI_animation : public Base
 public:
 
   GUI_animation (const std::string& id, double start_time, double end_time,
-                 bool remove_after)
-    : Base(id), m_start_time (start_time), m_end_time(end_time), m_remove_after(remove_after)
-  { }
-
-  bool update (double current_time)
-  {
-    if (current_time >= m_end_time)
-    {
-      finalize();
-      return false;
-    }
-
-    update_impl(current_time);
-    return true;
-  }
-
-  bool remove_after() const { return m_remove_after; }
-
+                 bool remove_after);
+  bool update (double current_time);
+  bool remove_after() const;
   virtual void cancel () = 0;
   virtual void finalize () = 0;
   virtual void update_impl (double current_time) = 0;
@@ -67,11 +53,7 @@ public:
 
 protected:
 
-  double smooth_function(double vstart, double vend, double t) const
-  {
-    return vstart + (vend - vstart) * std::sqrt(std::sin((t-m_start_time)*M_PI
-                                                         / (2 * (m_end_time-m_start_time))));
-  }
+  double smooth_function(double vstart, double vend, double t) const;
 };
 
 using GUI_animation_handle = std::shared_ptr<GUI_animation>;
@@ -85,36 +67,12 @@ class GUI_position_animation : public GUI_animation
 public:
 
   GUI_position_animation (const std::string& id, double start_time, double end_time,
-                          Position_handle position, Point target, bool remove_after = false)
-    : GUI_animation(id, start_time, end_time, remove_after)
-    , m_position(position)
-    , m_start_pos(position->value()), m_end_pos(target)
-  { }
-
-  void update (const Point& point)
-  {
-    if (m_end_pos == point)
-      return;
-    m_end_pos = point;
-  }
-
-  virtual void cancel()
-  {
-    m_position->set(m_start_pos);
-  }
-
-  virtual void finalize()
-  {
-    m_position->set(m_end_pos);
-  }
-
-  virtual void update_impl (double current_time)
-  {
-    m_position->set (Point(smooth_function (m_start_pos.x(), m_end_pos.x(), current_time),
-                           smooth_function (m_start_pos.y(), m_end_pos.y(), current_time)));
-  }
-
-  virtual const std::string& object_id() { return m_position->id(); }
+                          Position_handle position, Point target, bool remove_after = false);
+  void update (const Point& point);
+  virtual void cancel();
+  virtual void finalize();
+  virtual void update_impl (double current_time);
+  virtual const std::string& object_id();
 };
 
 using GUI_position_animation_handle = std::shared_ptr<GUI_position_animation>;
@@ -132,37 +90,11 @@ public:
   GUI_image_animation (const std::string& id, double start_time, double end_time,
                        Image_handle image, double start_scale, double end_scale,
                        unsigned char start_alpha, unsigned char end_alpha,
-                       bool remove_after = false)
-    : GUI_animation(id, start_time, end_time, remove_after)
-    , m_image (image)
-    , m_start_scale (start_scale), m_end_scale (end_scale)
-    , m_start_alpha (start_alpha), m_end_alpha (end_alpha)
-  { }
-
-  virtual void cancel()
-  {
-    m_image->set_scale (m_start_scale);
-    m_image->set_alpha (m_start_alpha);
-    m_image->set_highlight (0);
-  }
-
-  virtual void finalize()
-  {
-    m_image->set_scale (m_end_scale);
-    m_image->set_alpha (m_end_alpha);
-    m_image->set_highlight (0);
-    if (m_end_alpha == 0)
-      m_image->on() = false;
-  }
-
-  virtual void update_impl (double current_time)
-  {
-    m_image->set_scale(smooth_function (m_start_scale, m_end_scale, current_time));
-    m_image->set_alpha(smooth_function (m_start_alpha, m_end_alpha, current_time));
-    m_image->set_highlight (0);
-  }
-
-  virtual const std::string& object_id() { return m_image->id(); }
+                       bool remove_after = false);
+  virtual void cancel();
+  virtual void finalize();
+  virtual void update_impl (double current_time);
+  virtual const std::string& object_id();
 };
 
 using GUI_image_animation_handle = std::shared_ptr<GUI_image_animation>;

@@ -1,5 +1,5 @@
 /*
-  [src/Sosage/Utils/binary_io.cpp]
+  [include/Sosage/Utils/binary_io.h]
   Read and write variables in binary.
 
   =====================================================================
@@ -35,28 +35,15 @@ namespace Sosage
 
 using Buffer = std::vector<char>;
 
-
 template <typename T>
 void binary_write (std::ostream& os, const T& t)
 {
   os.write (reinterpret_cast<const char*>(&t), sizeof(T));
 }
 
-inline void binary_write (std::ostream& os, const std::size_t& t)
-{
-  unsigned int tt = static_cast<unsigned int>(t);
-  binary_write (os, tt);
-}
-
-inline void binary_write (std::ostream& os, const Buffer& b)
-{
-  os.write (b.data(), b.size());
-}
-
-inline void binary_write (std::ostream& os, const std::string& str)
-{
-  os.write (str.data(), str.size());
-}
+void binary_write (std::ostream& os, const std::size_t& t);
+void binary_write (std::ostream& os, const Buffer& b);
+void binary_write (std::ostream& os, const std::string& str);
 
 template <typename T>
 T binary_read (std::istream& is)
@@ -66,12 +53,8 @@ T binary_read (std::istream& is)
   return t;
 }
 
-inline void binary_read (std::istream& is, Buffer& b)
-{
-  is.read (b.data(), b.size());
-}
-
+void binary_read (std::istream& is, Buffer& b);
 
 } // namespace Sosage
 
-#endif // BINARY_IO_H
+#endif // SOSAGE_UTILS_BINARY_IO_H

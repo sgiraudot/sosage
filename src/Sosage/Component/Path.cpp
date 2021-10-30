@@ -47,4 +47,31 @@ std::string Path::str() const
   return out;
 }
 
+std::size_t Path::size() const
+{
+  return m_steps.size();
+}
+
+const Point& Path::operator[] (const std::size_t& idx) const
+{
+  dbg_check(idx < m_steps.size(), "Accessing index " + std::to_string(idx) + " in path of size " + std::to_string(m_steps.size()));
+  return m_steps[idx];
+}
+
+Point& Path::operator[] (const std::size_t& idx)
+{
+  dbg_check(idx < m_steps.size(), "Accessing index " + std::to_string(idx) + " in path of size " + std::to_string(m_steps.size()));
+  return m_steps[idx];
+}
+
+const std::size_t& Path::current() const
+{
+  return m_current;
+}
+
+std::size_t& Path::current()
+{
+  return m_current;
+}
+
 } // namespace Sosage::Component

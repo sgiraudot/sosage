@@ -27,7 +27,7 @@
 #ifndef SOSAGE_COMPONENT_CONDITION_H
 #define SOSAGE_COMPONENT_CONDITION_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 #include <Sosage/Component/Simple.h>
 
 namespace Sosage::Component
@@ -55,14 +55,12 @@ private:
   bool m_memory;
 public:
 
-  Boolean (const std::string& id, const bool& value)
-    : Condition(id), m_value(value), m_memory(value) { }
-  void set(const bool& value) { m_value = value; }
-  void toggle() { m_value = !m_value; }
-  virtual bool value() const { return m_value; }
-
-  void begin_temporary_true() { m_memory = m_value; m_value = true; }
-  void end_temporary_true() { m_value = m_memory; }
+  Boolean (const std::string& id, const bool& value);
+  void set(const bool& value);
+  void toggle();
+  virtual bool value() const;
+  void begin_temporary_true();
+  void end_temporary_true();
 };
 
 using Boolean_handle = std::shared_ptr<Boolean>;
@@ -110,9 +108,8 @@ class And : public Condition
 public:
 
   And (const std::string& id,
-       Condition_handle first, Condition_handle second)
-    : Condition(id), m_values(first, second) { }
-  virtual bool value() const { return (m_values.first->value() && m_values.second->value()); }
+       Condition_handle first, Condition_handle second);
+  virtual bool value() const;
 };
 
 using And_handle = std::shared_ptr<And>;
@@ -124,9 +121,8 @@ class Or : public Condition
 public:
 
   Or (const std::string& id,
-      Condition_handle first, Condition_handle second)
-    : Condition(id), m_values(first, second) { }
-  virtual bool value() const { return (m_values.first->value() || m_values.second->value()); }
+      Condition_handle first, Condition_handle second);
+  virtual bool value() const;
 };
 
 using Or_handle = std::shared_ptr<Or>;
@@ -137,9 +133,8 @@ class Not : public Condition
   
 public:
 
-  Not (const std::string& id, Condition_handle value)
-    : Condition(id), m_value(value) { }
-  virtual bool value() const { return !(m_value->value()); }
+  Not (const std::string& id, Condition_handle value);
+  virtual bool value() const;
 };
 
 using Not_handle = std::shared_ptr<Not>;
@@ -155,18 +150,10 @@ Simple_condition_handle<T> make_simple_condition (Simple_handle<T> handle, const
 {
   return make_handle<Simple_condition<T> >(handle->entity() + ":simple_cond", handle, value);
 }
-inline And_handle make_and (Condition_handle h0, Condition_handle h1)
-{
-  return make_handle<And>(h0->entity() + "_" + h1->entity() + ":and", h0, h1);
-}
-inline Or_handle make_or (Condition_handle h0, Condition_handle h1)
-{
-  return make_handle<Or>(h0->entity() + "_" + h1->entity() + ":or", h0, h1);
-}
-inline Not_handle make_not (Condition_handle handle)
-{
-  return make_handle<Not>(handle->entity() + ":not", handle);
-}
+
+And_handle make_and (Condition_handle h0, Condition_handle h1);
+Or_handle make_or (Condition_handle h0, Condition_handle h1);
+Not_handle make_not (Condition_handle handle);
 
 } // namespace Sosage::Component
 

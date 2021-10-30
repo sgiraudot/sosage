@@ -25,7 +25,6 @@
 */
 
 #include <Sosage/Component/Music.h>
-#include <Sosage/Config/config.h>
 
 namespace Sosage::Component
 {
@@ -46,6 +45,19 @@ std::string Music::str() const
   return this->id();
 }
 
+const Core::Sound::Music& Music::core() const
+{
+  return m_core;
+}
 
+const bool& Music::on() const
+{
+  return m_on;
+}
+
+bool& Music::on()
+{
+  return m_on;
+}
 
 } // namespace Sosage::Component

@@ -26,7 +26,6 @@
 
 #include <Sosage/Component/Cropped.h>
 #include <Sosage/Core/Graphic.h>
-#include <Sosage/Config/config.h>
 
 namespace Sosage::Component
 {
@@ -46,6 +45,26 @@ void Cropped::crop (int xmin, int xmax, int ymin, int ymax)
   m_xmax = xmax;
   m_ymin = ymin;
   m_ymax = ymax;
+}
+
+int Cropped::xmin() const
+{
+  return m_xmin;
+}
+
+int Cropped::xmax() const
+{
+  return m_xmax;
+}
+
+int Cropped::ymin() const
+{
+  return m_ymin;
+}
+
+int Cropped::ymax() const
+{
+  return m_ymax;
 }
 
 } // namespace Sosage::Component

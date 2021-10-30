@@ -32,7 +32,7 @@
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Simple.h>
-#include <Sosage/System/Handle.h>
+#include <Sosage/System/Base.h>
 
 #include <set>
 

@@ -36,6 +36,7 @@
 #include <Sosage/Component/Variable.h>
 #include <Sosage/System/Interface.h>
 #include <Sosage/Utils/color.h>
+#include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/gamepad_labels.h>
 
 #include <queue>

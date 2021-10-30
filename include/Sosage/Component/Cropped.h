@@ -27,10 +27,7 @@
 #ifndef SOSAGE_COMPONENT_CROPPED_H
 #define SOSAGE_COMPONENT_CROPPED_H
 
-#include <Sosage/Component/Handle.h>
 #include <Sosage/Component/Image.h>
-
-#include <vector>
 
 namespace Sosage::Component
 {
@@ -47,13 +44,11 @@ public:
 public:
 
   Cropped (const std::string& id, const std::string& file_name, int z);
-
   void crop (int xmin, int xmax, int ymin, int ymax);
-  
-  virtual int xmin() const { return m_xmin; }
-  virtual int xmax() const { return m_xmax; }
-  virtual int ymin() const { return m_ymin; }
-  virtual int ymax() const { return m_ymax; }
+  virtual int xmin() const;
+  virtual int xmax() const;
+  virtual int ymin() const;
+  virtual int ymax() const;
 };
 
 using Cropped_handle = std::shared_ptr<Cropped>;

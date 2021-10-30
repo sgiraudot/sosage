@@ -27,7 +27,6 @@
 #ifndef SOSAGE_COMPONENT_CAST_H
 #define SOSAGE_COMPONENT_CAST_H
 
-#include <Sosage/Component/Handle.h>
 #include <Sosage/Component/Conditional.h>
 
 #include <memory>

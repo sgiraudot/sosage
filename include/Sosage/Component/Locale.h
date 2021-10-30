@@ -27,9 +27,8 @@
 #ifndef SOSAGE_COMPONENT_LOCALE_H
 #define SOSAGE_COMPONENT_LOCALE_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 
-#include <string>
 #include <unordered_map>
 
 namespace Sosage::Component
@@ -38,24 +37,13 @@ namespace Sosage::Component
 class Locale : public Base
 {
   using Dictionary = std::unordered_map<std::string, std::string>;
-
   Dictionary m_dict;
 
 public:
 
-  Locale (const std::string& id)
-    : Base(id)
-  { }
-
-  void add (const std::string& line, const std::string& translation)
-  { m_dict.insert (std::make_pair(line, translation)); }
-
-  const std::string& get (const std::string& line)
-  {
-    auto iter = m_dict.find (line);
-    check (iter != m_dict.end(), "Line " + line + " not found in locale " + this->id());
-    return iter->second;
-  }
+  Locale (const std::string& id);
+  void add (const std::string& line, const std::string& translation);
+  const std::string& get (const std::string& line);
 };
 
 using Locale_handle = std::shared_ptr<Locale>;

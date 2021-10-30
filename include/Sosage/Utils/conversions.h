@@ -28,37 +28,16 @@
 #define SOSAGE_UTILS_CONVERSIONS_H
 
 #include <algorithm>
-#include <array>
-#include <sstream>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace Sosage
 {
 
-inline bool is_int (const std::string& str)
-{
-  for (const char& c : str)
-    if (!std::isdigit(c))
-      return false;
-  return true;
-}
-
-inline int to_int (const std::string& str)
-{
-  return std::atoi (str.c_str());
-}
-
-inline double to_double (const std::string& str)
-{
-  return std::atof (str.c_str());
-}
-
-inline bool  to_bool (const std::string& str)
-{
-  return (str == "true");
-}
+bool is_int (const std::string& str);
+int to_int (const std::string& str);
+double to_double (const std::string& str);
+bool to_bool (const std::string& str);
 
 template <typename T>
 inline std::string to_string (const T& t)
@@ -66,20 +45,9 @@ inline std::string to_string (const T& t)
   return std::to_string(t);
 }
 
-inline const std::string& to_string (const std::string& str)
-{
-  return str;
-}
-
-inline std::string to_string (const char* str)
-{
-  return std::string(str);
-}
-
-inline std::string to_string (const bool& t)
-{
-  return (t ? "true" : "false");
-}
+const std::string& to_string (const std::string& str);
+std::string to_string (const char* str);
+std::string to_string (const bool& t);
 
 template <typename T, typename ... Ts>
 inline std::string to_string (const T& t, const Ts& ... ts)
@@ -99,15 +67,10 @@ bool contains (const std::vector<T>& vec, const T& t)
   return std::find (vec.begin(), vec.end(), t) != vec.end();
 }
 
-inline bool contains (const std::string& str, const char* sub)
-{
-  return str.find(sub) != std::string::npos;
-}
+bool contains (const std::string& str, const char* sub);
+bool contains (const std::string& str, const std::string& sub);
 
-inline bool contains (const std::string& str, const std::string& sub)
-{
-  return str.find(sub) != std::string::npos;
-}
+int random_int (int min, int max);
 
 } // namespace Sosage
 

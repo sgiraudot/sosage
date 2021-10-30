@@ -28,7 +28,6 @@
 #define SOSAGE_COMPONENT_VARIABLE_H
 
 #include <Sosage/Component/Conditional.h>
-#include <Sosage/Component/Handle.h>
 
 namespace Sosage::Component
 {
@@ -39,12 +38,9 @@ class Variable : public Conditional_base
 
 public:
 
-  Variable (const std::string& id, Handle target)
-    : Conditional_base(id), m_target(target)
-  { }
-
-  void set (Handle target) { m_target = target; }
-  virtual Handle get() const { return m_target; }
+  Variable (const std::string& id, Handle target);
+  void set (Handle target);
+  virtual Handle get() const;
 };
 
 using Variable_handle = std::shared_ptr<Variable>;

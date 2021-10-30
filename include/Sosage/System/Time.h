@@ -28,8 +28,8 @@
 #define SOSAGE_SYSTEM_TIME_H
 
 #include <Sosage/Content.h>
-#include <Sosage/System/Sound.h>
-#include <Sosage/Utils/time.h>
+#include <Sosage/System/Base.h>
+#include <Sosage/Utils/Clock.h>
 
 namespace Sosage::System
 {

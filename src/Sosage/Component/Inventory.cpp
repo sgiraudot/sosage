@@ -36,6 +36,22 @@ Inventory::Inventory (const std::string& id)
   : Base (id), m_position(0)
 { }
 
+void Inventory::clear()
+{
+  m_data.clear();
+  m_position = 0;
+}
+
+std::vector<std::string>::const_iterator Inventory::begin() const
+{
+  return m_data.begin();
+}
+
+std::vector<std::string>::const_iterator Inventory::end() const
+{
+  return m_data.end();
+}
+
 void Inventory::add (const std::string& entity)
 {
   m_data.push_back (entity);
@@ -80,5 +96,9 @@ std::string Inventory::get (std::size_t i) const
   return m_data[i];
 }
 
+const std::vector<std::string>& Inventory::data() const
+{
+  return m_data;
+}
 
 } // namespace Sosage::Component

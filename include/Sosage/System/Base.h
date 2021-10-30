@@ -1,5 +1,5 @@
 /*
-  [include/Sosage/System/Handle.h]
+  [include/Sosage/System/Base.h]
   Virtual basis for all systems.
 
   =====================================================================
@@ -24,16 +24,15 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_SYSTEM_HANDLE_H
-#define SOSAGE_SYSTEM_HANDLE_H
+#ifndef SOSAGE_SYSTEM_BASE_H
+#define SOSAGE_SYSTEM_BASE_H
 
-#include <Sosage/Component/Locale.h>
+#include <Sosage/Component/Handle_set.h>
 #include <Sosage/Component/Status.h>
 #include <Sosage/Content.h>
 
 #include <memory>
 #include <string>
-#include <unordered_set>
 
 namespace Sosage::System
 {
@@ -44,31 +43,26 @@ protected:
 
   Content& m_content;
 
+#ifdef SOSAGE_PROFILE
+  Time::Unit m_start;
+#endif
+
 public:
 
-  Base (Content& content) : m_content (content) { }
-  virtual ~Base() { }
-  virtual void init() { }
+  Base (Content& content);
+  virtual ~Base();
+  virtual void init();
   virtual void run() = 0;
 
 #ifdef SOSAGE_PROFILE
-  Time::Unit m_start;
-  void start_timer ()
-  {
-    m_start = Time::now();
-  }
-  void stop_timer (const std::string& id)
-  {
-    set<Component::Int>(id + ":time", Time::now() - m_start);
-  }
-
+  void start_timer ();
+  void stop_timer (const std::string& id);
 #else
-  void start_timer () { }
-  void stop_timer (const char*) { }
+  void start_timer ();
+  void stop_timer (const char*);
 #endif
 
-  Component::Handle_set& components (const std::string& s) { return m_content.components(s); }
-
+  Component::Handle_set& components (const std::string& s);
   template <typename T>
   std::shared_ptr<T> get (const std::string& key) { return m_content.get<T>(key); }
   template <typename T>
@@ -92,23 +86,12 @@ public:
   template <typename T, typename ... Args>
   std::shared_ptr<T> set_fac (const Fast_access_component& fac, Args&& ... args)
   { return m_content.set_fac<T>(fac, std::forward<Args>(args)...); }
-  void remove (const std::string& key, bool optional = false) { m_content.remove(key, optional); }
-  void emit (const std::string& signal) { m_content.emit (signal); }
-  bool receive (const std::string& signal) { return m_content.receive(signal); }
-  Component::Status_handle status() { return get<Component::Status>(GAME__STATUS); }
-
-  const std::string& locale (const std::string& line)
-  {
-    if (auto l = request<Component::Locale>("Game:locale"))
-      return l->get(line);
-    // else
-    return line;
-  }
-
-  const std::string& locale_get (const std::string& id)
-  {
-    return locale (value<Component::String>(id));
-  }
+  void remove (const std::string& key, bool optional = false);
+  void emit (const std::string& signal);
+  bool receive (const std::string& signal);
+  Component::Status_handle status();
+  const std::string& locale (const std::string& line);
+  const std::string& locale_get (const std::string& id);
 };
 
 using Handle = std::shared_ptr<Base>;
@@ -119,7 +102,6 @@ std::shared_ptr<T> make_handle (Args& ... args)
   return std::make_shared<T>(args...);
 }
 
-
 } // namespace Sosage::Component
 
-#endif // SOSAGE_COMPONENT_HANDLE_H
+#endif // SOSAGE_COMPONENT_BASE_H

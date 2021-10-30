@@ -27,6 +27,7 @@
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/binary_io.h>
+#include <Sosage/Utils/error.h>
 #include <Sosage/Utils/profiling.h>
 
 #include <algorithm>
@@ -44,6 +45,36 @@
 
 namespace Sosage::Component
 {
+
+double Ground_map::deviation (Ground_map::GVertex v) const
+{
+  if (m_graph.incident_edges(v).size() != 2)
+    return std::numeric_limits<double>::max();
+
+  GVertex v0 = m_graph.incident_vertex(v, 0);
+  GVertex v1 = m_graph.incident_vertex(v, 1);
+
+  Line l (m_graph[v0].point, m_graph[v1].point);
+  Point proj = l.projection (m_graph[v].point);
+  return distance (m_graph[v].point, proj);
+}
+
+Ground_map::Neighbor_query::operator bool() const
+{
+  return (vertex != Graph::null_vertex() || edge != Graph::null_edge());
+}
+
+Ground_map::GVertex Ground_map::add_vertex (std::map<Point, Ground_map::GVertex>& map_p2v,
+                                            const Point& p, const unsigned char& red)
+{
+  auto it = map_p2v.insert (std::make_pair (p, Graph::null_vertex()));
+  if (it.second)
+  {
+    GVertex v = m_graph.add_vertex ({p, red});
+    it.first->second = v;
+  }
+  return it.first->second;
+}
 
 Ground_map::Ground_map (const std::string& id,
                         const std::string& file_name,
@@ -245,7 +276,7 @@ void Ground_map::read (const std::string& filename)
     auto x = asset.binary_read<int>();
     auto y = asset.binary_read<int>();
     auto red = asset.binary_read<unsigned char>();
-    m_graph.add_vertex (Vertex (Point(x,y), red));
+    m_graph.add_vertex ({Point(x,y), red});
   }
 
   auto nb_edges = asset.binary_read<unsigned short>();
@@ -304,7 +335,7 @@ void Ground_map::find_path (Point origin,
 
   if (eorigin != Graph::null_edge())
   {
-    vorigin = m_latest_graph.add_vertex(origin);
+    vorigin = m_latest_graph.add_vertex({origin});
     GVertex v0 = m_latest_graph.source(eorigin);
     GVertex v1 = m_latest_graph.target(eorigin);
     m_latest_graph.delete_edge(eorigin);
@@ -312,11 +343,11 @@ void Ground_map::find_path (Point origin,
     to_add.insert (std::make_pair (vorigin, v1));
   }
   else if (vorigin == Graph::null_vertex())
-    vorigin = m_latest_graph.add_vertex(origin);
+    vorigin = m_latest_graph.add_vertex({origin});
     
   if (etarget != Graph::null_edge())
   {
-    vtarget = m_latest_graph.add_vertex(target);
+    vtarget = m_latest_graph.add_vertex({target});
     GVertex v0 = m_latest_graph.source(etarget);
     GVertex v1 = m_latest_graph.target(etarget);
     m_latest_graph.delete_edge(etarget);
@@ -325,7 +356,7 @@ void Ground_map::find_path (Point origin,
   }
   else if (vtarget == Graph::null_vertex())
   {
-    vtarget = m_latest_graph.add_vertex(target);
+    vtarget = m_latest_graph.add_vertex({target});
     debug_gm << "New target vertex " << vtarget << std::endl;
   }
 
@@ -609,7 +640,7 @@ Ground_map::Neighbor_query Ground_map::closest_simplex (const Point& p) const
     }
   }
   
-  return Neighbor_query (vertex, edge, min_dist, point);
+  return {vertex, edge, min_dist, point};
 }
 
 void Ground_map::shortest_path (GVertex vorigin, GVertex vtarget,

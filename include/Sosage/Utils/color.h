@@ -28,7 +28,6 @@
 #define SOSAGE_UTILS_COLOR_H
 
 #include <array>
-#include <sstream>
 #include <string>
 
 namespace Sosage
@@ -36,17 +35,7 @@ namespace Sosage
 
 using RGB_color = std::array<unsigned char, 3>;
 using RGBA_color = std::array<unsigned char, 4>;
-
-inline RGB_color color_from_string (const std::string& str)
-{
-  std::stringstream ss(str);
-  int num;
-  ss >> std::hex >> num;
-  return { (unsigned char)(num / 0x10000),
-           (unsigned char)((num / 0x100) % 0x100),
-           (unsigned char)(num % 0x100) };
-}
-
+RGB_color color_from_string (const std::string& str);
 
 } // namespace Sosage
 

@@ -30,7 +30,7 @@
 #include <Sosage/Component/Image.h>
 #include <Sosage/Core/Graphic.h>
 #include <Sosage/Content.h>
-#include <Sosage/System/Handle.h>
+#include <Sosage/System/Base.h>
 
 #include <vector>
 

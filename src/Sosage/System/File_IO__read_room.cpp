@@ -31,7 +31,6 @@
 #include <Sosage/Component/Dialog.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
-#include <Sosage/Component/Hints.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Music.h>
@@ -234,24 +233,6 @@ void File_IO::read_room (const std::string& file_name)
       callback->value();
     }
 
-  auto hints = set<C::Hints>("Game:hints");
-
-  if (input.has("hints"))
-    for (std::size_t i = 0; i < input["hints"].size(); ++ i)
-    {
-      const Core::File_IO::Node& node = input["hints"][i];
-      std::string id = node["id"].string();
-      std::string state = node["state"].string();
-      std::string text = node["text"].string();
-
-      auto condition = C::make_handle<C::String_conditional>
-        ("Hint:condition", get<C::String>(id + ":state"));
-      condition->add(state, C::make_handle<C::String>("Hint:text", text));
-      hints->add (condition);
-    }
-
-  callback->value()();
-
   const std::string& origin = value<C::String>("Game:new_room_origin");
   if (origin == "Saved_game")
     set<C::Boolean>("Game:in_new_room", true);
@@ -332,7 +313,7 @@ void File_IO::read_animation (const std::string& id, const Core::File_IO::Node& 
       int idx = node["frames"][i].integer();
       int x = idx % width;
       int y = idx / width;
-      img->frames().emplace_back (x, y, duration);
+      img->frames().push_back ({x, y, duration});
     }
   }
   else

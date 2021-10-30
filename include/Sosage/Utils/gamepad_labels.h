@@ -30,27 +30,11 @@
 #include <Sosage/Utils/enum.h>
 
 #include <string>
-#include <unordered_map>
 
 namespace Sosage
 {
 
-std::string gamepad_label (const Gamepad_type& type, const Event_value& value)
-{
-  static std::unordered_map<Event_value, std::string>
-      japan = { {NORTH, "X"}, {EAST, "A"}, {SOUTH, "B"}, {WEST, "Y"} };
-  static std::unordered_map<Event_value, std::string>
-      usa = { {NORTH, "Y"}, {EAST, "B"}, {SOUTH, "A"}, {WEST, "X"} };
-  static std::unordered_map<Event_value, std::string>
-      keyboard = { {NORTH, "I"}, {EAST, "L"}, {SOUTH, "K"}, {WEST, "J"} };
-
-  if (type == JAPAN) return japan[value];
-  if (type == USA) return usa[value];
-  if (type == KEYBOARD) return keyboard[value];
-
-  // no label
-  return "";
-}
+std::string gamepad_label (const Gamepad_type& type, const Event_value& value);
 
 }
 

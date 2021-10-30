@@ -27,7 +27,7 @@
 #ifndef SOSAGE_COMPONENT_SIGNAL_H
 #define SOSAGE_COMPONENT_SIGNAL_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 
 namespace Sosage::Component
 {
@@ -36,8 +36,7 @@ class Signal : public Base
 {
 public:
 
-  Signal (const std::string& id) : Base(id) { }
-  
+  Signal (const std::string& id);
 };
 
 using Signal_handle = std::shared_ptr<Signal>;

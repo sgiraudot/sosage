@@ -27,6 +27,7 @@
 #include <Sosage/Config/config.h>
 #include <Sosage/Config/platform.h>
 #include <Sosage/Third_party/SDL_events.h>
+#include <Sosage/Utils/conversions.h>
 
 #include <iostream>
 

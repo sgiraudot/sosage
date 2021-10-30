@@ -28,7 +28,7 @@
 #define SOSAGE_ENGINE_H
 
 #include <Sosage/Content.h>
-#include <Sosage/System/Handle.h>
+#include <Sosage/System/Base.h>
 #include <Sosage/Utils/error.h>
 
 namespace Sosage

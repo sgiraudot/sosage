@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/Utils/random.h]
-  Generates pseudo-random numbers
+  [src/Sosage/Utils/gamepad_labels.cpp]
+  Handle different types of Gamepad.
 
   =====================================================================
 
@@ -24,19 +24,28 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_UTILS_RANDOM_H
-#define SOSAGE_UTILS_RANDOM_H
+#include <Sosage/Utils/gamepad_labels.h>
 
-#include <cstdlib>
+#include <unordered_map>
 
 namespace Sosage
 {
 
-inline int random_int (int min, int max)
+std::string gamepad_label (const Gamepad_type& type, const Event_value& value)
 {
-  return min + (rand() % (max - min));
+  static std::unordered_map<Event_value, std::string>
+      japan = { {NORTH, "X"}, {EAST, "A"}, {SOUTH, "B"}, {WEST, "Y"} };
+  static std::unordered_map<Event_value, std::string>
+      usa = { {NORTH, "Y"}, {EAST, "B"}, {SOUTH, "A"}, {WEST, "X"} };
+  static std::unordered_map<Event_value, std::string>
+      keyboard = { {NORTH, "I"}, {EAST, "L"}, {SOUTH, "K"}, {WEST, "J"} };
+
+  if (type == JAPAN) return japan[value];
+  if (type == USA) return usa[value];
+  if (type == KEYBOARD) return keyboard[value];
+
+  // no label
+  return "";
 }
 
 } // namespace Sosage
-
-#endif // SOSAGE_UTILS_RANDOM_H

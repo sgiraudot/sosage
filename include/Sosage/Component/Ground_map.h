@@ -27,12 +27,11 @@
 #ifndef SOSAGE_COMPONENT_GROUND_MAP_H
 #define SOSAGE_COMPONENT_GROUND_MAP_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 #include <Sosage/Core/Graphic.h>
 #include <Sosage/Utils/geometry.h>
 #include <Sosage/Utils/graph.h>
 
-#include <queue>
 #include <map>
 
 namespace Sosage::Component
@@ -43,17 +42,13 @@ class Ground_map : public Base
   struct Vertex
   {
     Point point;
-    unsigned char red;
-    double dist;
-    Vertex (const Point& point = Point(), unsigned char red = 0)
-      : point (point), red (red), dist(0)
-    { }
+    unsigned char red = 0;
+    double dist = 0;
   };
 
   struct Edge
   {
-    bool border;
-    Edge() : border(true) { }
+    bool border = true;
   };
 
   using Graph = Sosage::Graph<Vertex, Edge, false>;
@@ -61,38 +56,15 @@ class Ground_map : public Base
   using GEdge = typename Graph::Edge;
   using Edge_condition = std::function<bool(const GEdge&)>;
 
-  double deviation(GVertex v) const
-  {
-    if (m_graph.incident_edges(v).size() != 2)
-      return std::numeric_limits<double>::max();
-
-    GVertex v0 = m_graph.incident_vertex(v, 0);
-    GVertex v1 = m_graph.incident_vertex(v, 1);
-
-    Line l (m_graph[v0].point, m_graph[v1].point);
-    Point proj = l.projection (m_graph[v].point);
-    return distance (m_graph[v].point, proj);
-  }
+  double deviation(GVertex v) const;
 
   struct Neighbor_query
   {
-    GVertex vertex;
-    GEdge edge;
-    double dist;
+    GVertex vertex = Graph::null_vertex();
+    GEdge edge = Graph::null_edge();
+    double dist = std::numeric_limits<double>::max();
     Point point;
-
-    Neighbor_query()
-      : vertex (Graph::null_vertex())
-      , edge (Graph::null_edge())
-      , dist (std::numeric_limits<double>::max())
-    { }
-
-    Neighbor_query (const GVertex& vertex, const GEdge& edge,
-                    double dist, const Point& point)
-      : vertex (vertex), edge (edge), dist (dist), point (point)
-    { }
-
-    operator bool() const { return (vertex != Graph::null_vertex() || edge != Graph::null_edge()); }
+    operator bool() const;
   };
 
   struct Compare_ordered_pair
@@ -120,26 +92,13 @@ class Ground_map : public Base
   Graph m_latest_graph;
 
   GVertex add_vertex (std::map<Point, GVertex>& map_p2v,
-                      const Point& p, const unsigned char& red)
-  {
-    auto it = map_p2v.insert (std::make_pair (p, Graph::null_vertex()));
-    if (it.second)
-    {
-      GVertex v = m_graph.add_vertex (Vertex(p, red));
-      it.first->second = v;
-    }
-    return it.first->second;
-  }
-
+                      const Point& p, const unsigned char& red);
   void build_graph (const std::function<void()>& callback);
 
 public:
 
   Ground_map (const std::string& id, const std::string& file_name, int front_z, int back_z,
               const std::function<void()>& callback);
-
-  ~Ground_map () { }
-
   void write (const std::string& filename);
   void read (const std::string& filename);
 

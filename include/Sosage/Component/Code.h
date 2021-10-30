@@ -27,7 +27,7 @@
 #ifndef SOSAGE_COMPONENT_CODE_H
 #define SOSAGE_COMPONENT_CODE_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 
 #include <vector>
 
@@ -44,12 +44,8 @@ class Code : public Base
     int y;
     int w;
     int h;
-    std::size_t x_index;
-    std::size_t y_index;
-
-    Button (const std::string value, int x, int y, int w, int h)
-      : value (value), x(x), y(y), w(w), h(h)
-    { }
+    std::size_t x_index = 0;
+    std::size_t y_index = 0;
   };
 
   std::vector<Button> m_buttons;
@@ -61,7 +57,6 @@ class Code : public Base
 public:
 
   Code (const std::string& id);
-
   void add_button (const std::string& value, int x, int y, int w, int h);
   void add_answer_item (const std::string& value);
   bool hover (int x = -1, int y = -1);
@@ -70,13 +65,10 @@ public:
   void reset();
   bool failure();
   bool success();
-
-  int xmin() { return m_buttons[m_hover].x; }
-  int xmax() { return m_buttons[m_hover].x + m_buttons[m_hover].w; }
-  int ymin() { return m_buttons[m_hover].y; }
-  int ymax() { return m_buttons[m_hover].y + m_buttons[m_hover].h; }
-  
-  
+  int xmin();
+  int xmax();
+  int ymin();
+  int ymax();
 };
 
 using Code_handle = std::shared_ptr<Code>;

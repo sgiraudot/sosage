@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/Component/Hints.h]
-  System for storing and selecting hints.
+  [src/Sosage/Component/Group.cpp]
+  Group of components with factorized modifications.
 
   =====================================================================
 
@@ -24,33 +24,23 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_COMPONENT_HINTS_H
-#define SOSAGE_COMPONENT_HINTS_H
-
-#include <Sosage/Component/Conditional.h>
-#include <Sosage/Component/Handle.h>
-
-#include <vector>
+#include <Sosage/Component/Group.h>
 
 namespace Sosage::Component
 {
 
-class Hints : public Base
+Group::Group (const std::string& id)
+  : Base(id)
+{ }
+
+void Group::add (Handle h)
 {
-private:
+  m_items.emplace_back(h);
+}
 
-  std::vector<Conditional_base_handle> m_values;
-  
-public:
-
-  Hints (const std::string& id);
-  std::string next() const;
-  
-  void add (Conditional_base_handle condition) { m_values.push_back (condition); }
-};
-
-using Hints_handle = std::shared_ptr<Hints>;
+void Group::remove (Handle h)
+{
+  m_items.erase (std::find(m_items.begin(), m_items.end(), h));
+}
 
 } // namespace Sosage::Component
-
-#endif // SOSAGE_COMPONENT_HINT_H

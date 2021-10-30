@@ -25,7 +25,6 @@
 */
 
 #include <Sosage/Component/Debug.h>
-#include <Sosage/Component/Hints.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Status.h>
@@ -51,7 +50,6 @@ std::string Debug::debug_str()
   out += m_content.get<Component::Status>(GAME__STATUS)->str() + "\n\n";
 
   out += std::to_string(m_content.size()) + " components in memory\n";
-  out += "Next hint: " + m_content.get<Component::Hints>("Game:hints")->next() + "\n\n";
 
   const std::string& player = m_content.get<Component::String>("Player:name")->value();
   auto img = m_content.get<Component::Image>(player + "_idle:image");
@@ -63,5 +61,4 @@ std::string Debug::debug_str()
   return out;
 }
 
-
-}
+} // namespace Sosage::Component

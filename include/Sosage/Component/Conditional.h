@@ -27,9 +27,8 @@
 #ifndef SOSAGE_COMPONENT_CONDITIONAL_H
 #define SOSAGE_COMPONENT_CONDITIONAL_H
 
+#include <Sosage/Component/Base.h>
 #include <Sosage/Component/Condition.h>
-#include <Sosage/Component/Simple.h>
-#include <Sosage/Component/Handle.h>
 
 #include <unordered_map>
 #include <vector>
@@ -40,8 +39,7 @@ namespace Sosage::Component
 class Conditional_base : public Base
 {
 public:
-  Conditional_base (const std::string& id) : Base(id) { }
-
+  Conditional_base (const std::string& id);
   virtual Handle get() const = 0;
 };
 
@@ -59,7 +57,6 @@ public:
                Condition_handle condition,
                Handle if_true,
                Handle if_false = Handle());
-
   virtual ~Conditional();
   virtual std::string str() const;
   virtual Handle get() const;

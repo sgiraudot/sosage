@@ -27,7 +27,7 @@
 #ifndef SOSAGE_COMPONENT_MUSIC_H
 #define SOSAGE_COMPONENT_MUSIC_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 #include <Sosage/Core/Sound.h>
 
 namespace Sosage::Component
@@ -44,10 +44,9 @@ public:
   Music (const std::string& id, const std::string& file_name);
   virtual ~Music();
   virtual std::string str() const;
-  const Core::Sound::Music& core() const { return m_core; }
-  const bool& on() const { return m_on; }
-  bool& on() { return m_on; }
-
+  const Core::Sound::Music& core() const;
+  const bool& on() const;
+  bool& on();
 };
 
 using Music_handle = std::shared_ptr<Music>;

@@ -29,6 +29,19 @@
 namespace Sosage::Component
 {
 
+Action::Step::Step (const std::string& function, const std::vector<std::string>& args)
+  : m_function (function), m_args (args)
+{ }
+
+const std::string& Action::Step::function() const
+{
+  return m_function;
+}
+const std::vector<std::string>& Action::Step::args() const
+{
+  return m_args;
+}
+
 Action::Action (const std::string& id)
   : Base (id)
 { }
@@ -53,5 +66,24 @@ std::string Action::str() const
   return out;
 }
 
+std::size_t Action::size() const
+{
+  return m_steps.size();
+}
+
+std::vector<Action::Step>::const_iterator Action::begin() const
+{
+  return m_steps.begin();
+}
+
+std::vector<Action::Step>::const_iterator Action::end() const
+{
+  return m_steps.end();
+}
+
+const Action::Step& Action::operator[] (const std::size_t& idx) const
+{
+  return m_steps[idx];
+}
 
 } // namespace Sosage::Component

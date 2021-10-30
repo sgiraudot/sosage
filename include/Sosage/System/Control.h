@@ -29,7 +29,7 @@
 
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Position.h>
-#include <Sosage/System/Handle.h>
+#include <Sosage/System/Base.h>
 
 namespace Sosage::System
 {
@@ -46,11 +46,7 @@ class Control : public Base
 
   struct Hash_status_mode_pair
   {
-    std::size_t operator() (const Status_input_pair& p) const
-    {
-      return std::hash<std::size_t>()(std::size_t(p.first))
-          ^  std::hash<std::size_t>()(std::size_t(p.second));
-    }
+    std::size_t operator() (const Status_input_pair& p) const;
   };
 
   std::unordered_map<Status_input_pair, Function, Hash_status_mode_pair> m_dispatcher;
@@ -60,8 +56,6 @@ public:
   Control (Content& content);
 
   virtual void run();
-
-  virtual void init() { }
 
 private:
 

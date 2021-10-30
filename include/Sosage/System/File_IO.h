@@ -32,7 +32,7 @@
 #include <Sosage/Config/config.h>
 #include <Sosage/Content.h>
 #include <Sosage/Core/File_IO.h>
-#include <Sosage/System/Handle.h>
+#include <Sosage/System/Base.h>
 
 #include <unordered_set>
 

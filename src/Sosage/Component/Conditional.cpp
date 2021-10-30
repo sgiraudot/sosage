@@ -25,9 +25,14 @@
 */
 
 #include <Sosage/Component/Conditional.h>
+#include <Sosage/Utils/error.h>
 
 namespace Sosage::Component
 {
+
+Conditional_base::Conditional_base (const std::string& id)
+  : Base(id)
+{ }
 
 Conditional::Conditional (const std::string& id,
                           Condition_handle condition,

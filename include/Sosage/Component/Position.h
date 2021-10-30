@@ -27,11 +27,8 @@
 #ifndef SOSAGE_COMPONENT_POSITION_H
 #define SOSAGE_COMPONENT_POSITION_H
 
-#include <Sosage/Component/Image.h>
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 #include <Sosage/Utils/geometry.h>
-
-#include <vector>
 
 namespace Sosage::Component
 {
@@ -43,7 +40,7 @@ public:
   using const_reference = Point;
   using value_type = Point;
 
-  Position (const std::string& id) : Base(id) { }
+  Position (const std::string& id);
 
   virtual void set (const Point& p) = 0;
   virtual Point value() const = 0;
@@ -61,10 +58,10 @@ public:
 
   Absolute_position (const std::string& id, const Point& coord, bool absolute = true);
   virtual std::string str() const;
-  virtual Point value () const { return m_pos; }
-  virtual void set (const Point& p) { m_pos = p; }
-  bool absolute() const { return m_absolute; }
-  bool& absolute() { return m_absolute; }
+  virtual Point value () const;
+  virtual void set (const Point& p);
+  bool absolute() const;
+  bool& absolute();
 };
 
 using Absolute_position_handle = std::shared_ptr<Absolute_position>;
@@ -81,18 +78,11 @@ public:
   Relative_position (const std::string& id, Position_handle ref,
                      const Sosage::Vector& diff = Sosage::Vector(0,0),
                      double factor = 1.);
-
-  Absolute_position_handle absolute_reference()
-  {
-    if (auto r = cast<Absolute_position>(m_ref))
-      return r;
-    return cast<Relative_position>(m_ref)->absolute_reference();
-  }
-
-  virtual Point value() const { return m_factor * m_ref->value() + m_diff; }
-  virtual void set (const Point& p) { m_diff = Sosage::Vector(m_factor * m_ref->value(), p); }
-  void set (const Sosage::Vector& v) { m_diff = v; }
-  bool absolute() const { return m_ref->absolute(); }
+  Absolute_position_handle absolute_reference();
+  virtual Point value() const;
+  virtual void set (const Point& p);
+  void set (const Sosage::Vector& v);
+  bool absolute() const;
 };
 
 } // namespace Sosage::Component

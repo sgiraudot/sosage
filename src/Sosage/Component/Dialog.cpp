@@ -29,25 +29,92 @@
 namespace Sosage::Component
 {
 
+
 Dialog::Dialog (const std::string& id, const std::string& end)
   : Base(id)
 {
-  m_vin = m_graph.add_vertex(Vertex("", "IN"));
-  m_vout = m_graph.add_vertex(Vertex(end,"OUT"));
+  m_vin = m_graph.add_vertex({"", "IN"});
+  m_vout = m_graph.add_vertex({end,"OUT"});
 }
 
 Dialog::GVertex Dialog::add_vertex (const std::string& character, const std::string& line)
 {
-  GVertex out = m_graph.add_vertex (Vertex(character, line));
+  GVertex out = m_graph.add_vertex ({character, line});
   return out;
 }
 
 Dialog::GEdge Dialog::add_edge (Dialog::GVertex source, Dialog::GVertex target,
                                 bool once, const std::string& line)
 {
-  return m_graph.add_edge (source, target, Edge (once, line));
+  return m_graph.add_edge (source, target, {(once ? ONCE : ALWAYS), line});
 }
 
+bool Dialog::has_incident_edges (Dialog::GVertex v)
+{
+  return !m_graph.incident_edges(v).empty();
+}
 
+Dialog::GVertex Dialog::current() const
+{
+  return m_current;
+}
 
-} // namespace Sosage::Component::
+Dialog::GVertex Dialog::vertex_in() const
+{
+  return m_vin;
+}
+
+Dialog::GVertex Dialog::vertex_out() const
+{
+  return m_vout;
+}
+
+void Dialog::init (Dialog::GVertex current)
+{
+  if (current == Graph::null_vertex())
+  {
+    m_current = m_vin;
+    next();
+  }
+  else
+    m_current = current;
+}
+
+void Dialog::next()
+{
+  m_current = m_graph.incident_vertex(m_current, 0);
+}
+
+void Dialog::next (int choice)
+{
+  int i = 0;
+  for (GEdge e : m_graph.incident_edges(m_current))
+    if (m_graph[e].status != DISABLED)
+    {
+      if (i == choice)
+      {
+        if (m_graph[e].status == ONCE)
+          m_graph[e].status = DISABLED;
+        m_current = m_graph.target(e);
+        return;
+      }
+      ++ i;
+    }
+}
+
+bool Dialog::is_over() const
+{
+  return (m_current == m_vout);
+}
+
+bool Dialog::is_line() const
+{
+  return (m_graph[m_current].character != "");
+}
+
+std::pair<std::string, std::string> Dialog::line() const
+{
+  return std::make_pair (m_graph[m_current].character, m_graph[m_current].line);
+}
+
+} // namespace Sosage::Component

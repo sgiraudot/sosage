@@ -28,6 +28,7 @@
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Status.h>
+#include <Sosage/Config/config.h>
 #include <Sosage/System/Input.h>
 
 #include <map>
@@ -313,6 +314,11 @@ void Input::run()
 
   m_current_events.clear();
   stop_timer("Input");
+}
+
+typename std::vector<bool>::reference Input::key_on(const Event_value& value)
+{
+  return m_keys_on[std::size_t(value)];
 }
 
 

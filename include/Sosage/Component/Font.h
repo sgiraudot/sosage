@@ -27,9 +27,8 @@
 #ifndef SOSAGE_COMPONENT_FONT_H
 #define SOSAGE_COMPONENT_FONT_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 #include <Sosage/Core/Graphic.h>
-#include <Sosage/Utils/geometry.h>
 
 namespace Sosage::Component
 {
@@ -42,8 +41,8 @@ private:
 public:
 
   Font (const std::string& id, const std::string& file_name, int size);
-  virtual ~Font() { }
-  const Core::Graphic::Font& core() const { return m_core; }
+  virtual ~Font();
+  const Core::Graphic::Font& core() const;
 };
 
 using Font_handle = std::shared_ptr<Font>;

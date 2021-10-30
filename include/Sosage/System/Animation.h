@@ -30,7 +30,7 @@
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Content.h>
-#include <Sosage/System/Handle.h>
+#include <Sosage/System/Base.h>
 
 namespace Sosage::System
 {

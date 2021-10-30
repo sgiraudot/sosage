@@ -25,8 +25,6 @@
 */
 
 #include <Sosage/Component/Animation.h>
-#include <Sosage/Core/Graphic.h>
-#include <Sosage/Config/config.h>
 
 namespace Sosage::Component
 {
@@ -43,6 +41,31 @@ Animation::Animation (const std::string& id, const std::string& file_name, int z
   reset();
 }
 
+int Animation::width_subdiv() const
+{
+  return m_width_subdiv;
+}
+
+int Animation::height_subdiv() const
+{
+  return m_height_subdiv;
+}
+
+const std::vector<Animation::Frame>& Animation::frames() const
+{
+  return m_frames;
+}
+
+std::vector<Animation::Frame>& Animation::frames()
+{
+  return m_frames;
+}
+
+bool Animation::loop() const
+{
+  return m_loop;
+}
+
 int Animation::reset (bool all_frames, int duration)
 {
   int out = 0;
@@ -52,12 +75,12 @@ int Animation::reset (bool all_frames, int duration)
     for (int i = 0; i < m_height_subdiv; ++ i)
       for (int j = 0; j < m_width_subdiv; ++ j)
       {
-        m_frames.push_back (Frame(j,i,duration));
+        m_frames.push_back ({j,i,duration});
         out += 1;
       }
   else
   {
-    m_frames.push_back (Frame(0,0,duration));
+    m_frames.push_back ({0,0,duration});
     out = 1;
   }
   m_current = 0;

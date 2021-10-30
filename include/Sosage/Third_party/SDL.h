@@ -27,13 +27,11 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_H
 #define SOSAGE_THIRD_PARTY_SDL_H
 
-#include <Sosage/Config/config.h>
 #include <Sosage/Utils/Bitmap_2.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/Resource_manager.h>
 
 #include <SDL.h>
-#include <SDL_image.h>
 #include <SDL_ttf.h>
 
 #include <array>
@@ -79,16 +77,8 @@ public:
     int height;
 
     Image (Texture texture = Texture(), Bitmap mask = Bitmap(), int width = -1, int height = -1,
-           double scaling = 1., unsigned char alpha = 255)
-      : texture (texture), mask(mask),
-        scaling (scaling), texture_downscale(1), alpha(alpha),
-        width(width), height(height)
-    { }
-
-    void free_mask()
-    {
-      mask = nullptr;
-    }
+           double scaling = 1., unsigned char alpha = 255);
+    void free_mask();
   };
 
   struct Surface_access
@@ -96,87 +86,12 @@ public:
     SDL_Surface* surface;
     int bpp;
 
-    Surface_access (SDL_Surface* surface)
-      : surface (surface)
-    {
-      SDL_LockSurface(surface);
-      bpp = surface->format->BytesPerPixel;
-    }
-
-    std::size_t width() { return surface->w; }
-    std::size_t height() { return surface->h; }
-
-    RGBA_color get (std::size_t x, std::size_t y) const
-    {
-      Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
-      Uint32 data;
-      switch (bpp)
-      {
-        case 1:
-          data = *p;
-          break;
-
-        case 2:
-          data = *(Uint16 *)p;
-          break;
-
-        case 3:
-          if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-            data = Uint32(p[0] << 16 | p[1] << 8 | p[2]);
-          else
-            data = Uint32(p[0] | p[1] << 8 | p[2] << 16);
-          break;
-
-        case 4:
-          data = *(Uint32 *)p;
-          break;
-
-        default:
-          exit(0);
-      }
-      unsigned char r, g, b, a;
-      SDL_GetRGBA(data, surface->format, &r, &g, &b, &a);
-      return { r, g, b, a };
-    }
-
-    void set (std::size_t x, std::size_t y, const RGBA_color& color) const
-    {
-      Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
-      Uint32 data = SDL_MapRGBA(surface->format, color[0], color[1], color[2], color[3]);
-
-      switch (bpp)
-      {
-        case 1:
-          *p = data;
-          break;
-
-        case 2:
-          *(Uint16 *)p = data;
-          break;
-
-        case 3:
-          if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
-          {
-            p[0] = (data>> 16) & 0xff;
-            p[1] = (data >> 8) & 0xff;
-            p[2] = data & 0xff;
-          }
-          else
-          {
-            p[0] = data & 0xff;
-            p[1] = (data >> 8) & 0xff;
-            p[2] = (data >> 16) & 0xff;
-          }
-          break;
-
-        case 4:
-          *(Uint32 *)p = data;
-          break;
-      }
-    }
-
-    void release() { SDL_UnlockSurface(surface); }
-
+    Surface_access (SDL_Surface* surface);
+    std::size_t width();
+    std::size_t height();
+    RGBA_color get (std::size_t x, std::size_t y) const;
+    void set (std::size_t x, std::size_t y, const RGBA_color& color) const;
+    void release();
   };
 
   using Font = std::pair<Font_base, Font_base>;

@@ -27,8 +27,8 @@
 #ifndef SOSAGE_COMPONENT_IMAGE_H
 #define SOSAGE_COMPONENT_IMAGE_H
 
+#include <Sosage/Component/Base.h>
 #include <Sosage/Component/Font.h>
-#include <Sosage/Component/Handle.h>
 #include <Sosage/Core/Graphic.h>
 #include <Sosage/Utils/enum.h>
 #include <Sosage/Utils/geometry.h>
@@ -53,31 +53,30 @@ public:
   Image (const std::string& id, Font_handle font, const std::string& color_str,
          const std::string& text, bool outlined = false);
   Image (const std::string& id, std::shared_ptr<Image> copy);
-  virtual ~Image() { /*debug("Destructor of ", id());*/ }
   void compose_with (const std::shared_ptr<Image>& other);
   virtual std::string str() const;
   void set_relative_origin (double ratio_x, double ratio_y);
-  const Core::Graphic::Image& core() const { return m_core; }
-  const Point& origin() const { return m_origin; }
-  Point& origin() { return m_origin; }
-  const bool& on() const { return m_on; }
-  bool& on() { return m_on; }
-  const Collision_type& collision() const { return m_collision; }
+  const Core::Graphic::Image& core() const;
+  const Point& origin() const;
+  Point& origin();
+  const bool& on() const;
+  bool& on();
+  const Collision_type& collision() const;
   void set_collision(const Collision_type& collision);
-  virtual int xmin() const { return 0; }
-  virtual int xmax() const { return Core::Graphic::width(m_core); }
-  virtual int ymin() const { return 0; }
-  virtual int ymax() const { return Core::Graphic::height(m_core); }
-  int width() const { return xmax() - xmin(); }
-  int height() const { return ymax() - ymin(); }
-  const int& z() const { return m_z; }
-  int& z() { return m_z; }
-  double scale() const { return m_core.scaling; }
+  virtual int xmin() const;
+  virtual int xmax() const;
+  virtual int ymin() const;
+  virtual int ymax() const;
+  int width() const;
+  int height() const;
+  const int& z() const;
+  int& z();
+  double scale() const;
   void rescale (double z);
   void set_scale (double scale);
-  void set_alpha (unsigned char alpha) { m_core.alpha = alpha; }
-  unsigned char alpha() const { return m_core.alpha; }
-  void set_highlight (unsigned char alpha) { m_core.highlight_alpha = alpha; }
+  void set_alpha (unsigned char alpha);
+  unsigned char alpha() const;
+  void set_highlight (unsigned char alpha);
   bool is_target_inside (int x, int y) const;
 };
 

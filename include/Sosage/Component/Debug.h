@@ -29,7 +29,7 @@
 
 #include <Sosage/Component/Condition.h>
 #include <Sosage/Content.h>
-#include <Sosage/Utils/time.h>
+#include <Sosage/Utils/Clock.h>
 
 namespace Sosage::Component
 {

@@ -27,7 +27,7 @@
 #ifndef SOSAGE_COMPONENT_DIALOG_H
 #define SOSAGE_COMPONENT_DIALOG_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 #include <Sosage/Utils/graph.h>
 
 namespace Sosage::Component
@@ -39,9 +39,6 @@ class Dialog : public Base
   {
     std::string character;
     std::string line;
-
-    Vertex (const std::string& character = "", const std::string& line = "")
-      : character (character), line (line) { }
   };
 
   enum Edge_status { ALWAYS, ONCE, DISABLED };
@@ -50,9 +47,6 @@ class Dialog : public Base
   {
     Edge_status status;
     std::string line;
-
-    Edge (bool once = false, const std::string& line = "")
-      : status(once ? ONCE : ALWAYS), line(line) { }
   };
 
   using Graph = Sosage::Graph<Vertex, Edge, true>;
@@ -72,61 +66,20 @@ private:
 public:
 
   Dialog (const std::string& id, const std::string& end = "");
-
   GVertex add_vertex (const std::string& character = "",
                       const std::string& line = "");
-
   GEdge add_edge (GVertex source, GVertex target,
                   bool once = false, const std::string& line = "");
-
-  bool has_incident_edges (GVertex v) { return !m_graph.incident_edges(v).empty(); }
-
-  GVertex current() const { return m_current; }
-  GVertex vertex_in() const { return m_vin; }
-  GVertex vertex_out() const { return m_vout; }
-
-  void init(GVertex current = Graph::null_vertex())
-  {
-    if (current == Graph::null_vertex())
-    {
-      m_current = m_vin;
-      next();
-    }
-    else
-      m_current = current;
-  }
-
-  void next()
-  {
-    m_current = m_graph.incident_vertex(m_current, 0);
-  }
-
-  void next (int choice)
-  {
-    int i = 0;
-    for (GEdge e : m_graph.incident_edges(m_current))
-      if (m_graph[e].status != DISABLED)
-      {
-        if (i == choice)
-        {
-          if (m_graph[e].status == ONCE)
-            m_graph[e].status = DISABLED;
-          m_current = m_graph.target(e);
-          return;
-        }
-        ++ i;
-      }
-  }
-
-  bool is_over() const { return (m_current == m_vout); }
-
-  bool is_line() const
-  {
-    return (m_graph[m_current].character != "");
-  }
-
-  std::pair<std::string, std::string> line() const
-  { return std::make_pair (m_graph[m_current].character, m_graph[m_current].line); }
+  bool has_incident_edges (GVertex v);
+  GVertex current() const;
+  GVertex vertex_in() const;
+  GVertex vertex_out() const;
+  void init(GVertex current = Graph::null_vertex());
+  void next();
+  void next (int choice);
+  bool is_over() const;
+  bool is_line() const;
+  std::pair<std::string, std::string> line() const;
 
   template <typename Container>
   void get_choices (Container& choices)
@@ -135,7 +88,6 @@ public:
       if (m_graph[e].status != DISABLED)
         choices.push_back (m_graph[e].line);
   }
-
 };
 
 using Dialog_handle = std::shared_ptr<Dialog>;

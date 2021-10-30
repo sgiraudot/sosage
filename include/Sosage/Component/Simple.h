@@ -27,9 +27,8 @@
 #ifndef SOSAGE_COMPONENT_SIMPLE_H
 #define SOSAGE_COMPONENT_SIMPLE_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 
-#include <string>
 #include <unordered_set>
 #include <vector>
 
@@ -104,9 +103,7 @@ public:
 template <typename T>
 using Set_handle = std::shared_ptr<Set<T> >;
 
-
 } // namespace Sosage::Component
-
 
 #endif // SOSAGE_COMPONENT_SIMPLE_H
 

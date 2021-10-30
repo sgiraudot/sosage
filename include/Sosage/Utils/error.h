@@ -29,19 +29,10 @@
 
 #include <Sosage/Config/options.h>
 #include <Sosage/Config/platform.h>
-#include <Sosage/Utils/conversions.h>
 
 #include <utility>
-
-#ifdef SOSAGE_ANDROID
-#include <android/log.h>
-#endif
-
-#if defined(SOSAGE_EMSCRIPTEN) || defined(SOSAGE_WINDOWS)
-#include <SDL.h>
-#endif
-
 #include <iostream>
+#include <sstream>
 
 namespace Sosage
 {
@@ -54,16 +45,7 @@ namespace Sosage
 class Debug_buffer : public std::stringbuf
 {
 public:
-  virtual int sync()
-  {
-#if defined(SOSAGE_ANDROID)
-    __android_log_print (ANDROID_LOG_DEBUG, "Sosage", "%s", this->str().c_str());
-#else
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "%s", this->str().c_str());
-#endif
-    this->str("");
-    return 0;
-  }
+  virtual int sync();
 };
 
 extern Debug_buffer debug_buffer;
@@ -80,18 +62,7 @@ extern std::ostream debug;
 #define dbg_check(test, msg) (static_cast<void>(0))
 #endif
 
-#if defined(SOSAGE_ASSERTIONS_AS_EXCEPTIONS)
-inline void check_impl (const char* file, int line, const std::string& str)
-{
-  throw std::runtime_error(str + " [" + file + ":" + std::to_string(line) + "]");
-}
-#else
-inline void check_impl (const char* file, int line, const std::string& str)
-{
-  debug << "Error: "<< str << " [" << file << ":" << line << "]" << std::endl;
-  exit(EXIT_FAILURE);
-}
-#endif
+void check_impl (const char* file, int line, const std::string& str);
 
 struct No_such_file : public std::exception { };
 

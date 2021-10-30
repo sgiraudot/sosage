@@ -27,9 +27,6 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_TIME_H
 #define SOSAGE_THIRD_PARTY_SDL_TIME_H
 
-#include <Sosage/Utils/error.h>
-#include <Sosage/Config/config.h>
-
 #include <SDL_timer.h>
 
 namespace Sosage::Third_party
@@ -42,14 +39,8 @@ public:
   using Unit = Uint32;
   using Duration = Uint32;
 
-  static Unit now()
-  {
-    Unit out = SDL_GetTicks();
-    debug << "Ticks = " << out << std::endl;
-    return out;
-  }
-
-  static void wait (const Duration& d) { SDL_Delay (d); }
+  static Unit now();
+  static void wait (const Duration& d);
 };
 
 } // namespace Sosage::Third_party

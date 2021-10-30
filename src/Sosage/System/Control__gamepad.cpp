@@ -30,6 +30,7 @@
 #include <Sosage/Component/Menu.h>
 #include <Sosage/Component/Variable.h>
 #include <Sosage/System/Control.h>
+#include <Sosage/Utils/conversions.h>
 
 #include <queue>
 

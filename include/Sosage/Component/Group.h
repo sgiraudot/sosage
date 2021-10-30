@@ -27,10 +27,9 @@
 #ifndef SOSAGE_COMPONENT_GROUP_H
 #define SOSAGE_COMPONENT_GROUP_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 #include <Sosage/Component/cast.h>
 
-#include <cstdlib>
 #include <functional>
 #include <vector>
 
@@ -45,9 +44,9 @@ private:
 
 public:
 
-  Group (const std::string& id) : Base(id) { }
-  void add (Handle h) { m_items.emplace_back(h); }
-  void remove (Handle h) { m_items.erase (std::find(m_items.begin(), m_items.end(), h)); }
+  Group (const std::string& id);
+  void add (Handle h);
+  void remove (Handle h);
 
   template <typename Comp>
   void apply (const std::function<void(std::shared_ptr<Comp>)>& functor)

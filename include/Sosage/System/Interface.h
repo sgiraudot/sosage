@@ -32,7 +32,7 @@
 #include <Sosage/Component/Menu.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Content.h>
-#include <Sosage/System/Handle.h>
+#include <Sosage/System/Base.h>
 
 #include <string>
 #include <vector>

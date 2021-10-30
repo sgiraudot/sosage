@@ -31,7 +31,6 @@
 #include <Sosage/Component/Cutscene.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
-#include <Sosage/Component/Hints.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Locale.h>
@@ -46,6 +45,7 @@
 #include <Sosage/System/File_IO.h>
 #include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/color.h>
+#include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/locale.h>
 #include <Sosage/Utils/profiling.h>
 
@@ -726,7 +726,7 @@ void File_IO::read_cutscene (const std::string& file_name)
           int idx = node["frames"][i].integer();
           int x = idx % width;
           int y = idx / width;
-          anim->frames().emplace_back (x, y, duration);
+          anim->frames().push_back ({x, y, duration});
         }
       }
       else
@@ -827,7 +827,7 @@ void File_IO::read_cutscene (const std::string& file_name)
             else if (relative_time == 1)
               real_time = time;
 
-            element.keyframes.emplace_back (real_time, x, y, z, zoom);
+            element.keyframes.push_back ({real_time, x, y, z, zoom});
           }
         }
         else

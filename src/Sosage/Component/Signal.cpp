@@ -1,6 +1,6 @@
 /*
-  [src/Sosage/Component/Hints.cpp]
-  System for storing and selecting hints.
+  [src/Sosage/Component/Signal.cpp]
+  Used to communicate string-based signals between systems.
 
   =====================================================================
 
@@ -24,24 +24,13 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#include <Sosage/Component/cast.h>
-#include <Sosage/Component/Hints.h>
+#include <Sosage/Component/Signal.h>
 
 namespace Sosage::Component
 {
 
-Hints::Hints (const std::string& id)
-  : Base (id)
+Signal::Signal (const std::string& id)
+  : Base(id)
 { }
-
-std::string Hints::next() const
-{
-  // Return first hint that hits a fullfilled condition
-  for (const Conditional_base_handle& condition : m_values)
-    if (auto str = cast<Component::String>(condition))
-      return str->value();
-  return "";
-}
-
 
 } // namespace Sosage::Component

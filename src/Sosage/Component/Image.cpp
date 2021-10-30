@@ -88,6 +88,80 @@ void Image::set_relative_origin (double ratio_x, double ratio_y)
   m_origin = Point (width() * ratio_x, height() * ratio_y);
 }
 
+const Core::Graphic::Image& Image::core() const
+{
+  return m_core;
+}
+
+const Point& Image::origin() const
+{
+  return m_origin;
+}
+
+Point& Image::origin()
+{
+  return m_origin;
+}
+
+const bool& Image::on() const
+{
+  return m_on;
+}
+
+bool& Image::on()
+{
+  return m_on;
+}
+
+const Collision_type& Image::collision() const
+{
+  return m_collision;
+}
+
+int Image::xmin() const
+{
+  return 0;
+}
+
+int Image::xmax() const
+{
+  return Core::Graphic::width(m_core);
+}
+
+int Image::ymin() const
+{
+  return 0;
+}
+
+int Image::ymax() const
+{
+  return Core::Graphic::height(m_core);
+}
+
+int Image::width() const
+{
+  return xmax() - xmin();
+}
+
+int Image::height() const
+{
+  return ymax() - ymin();
+}
+
+const int& Image::z() const
+{
+  return m_z;
+}
+
+int& Image::z()
+{
+  return m_z;
+}
+
+double Image::scale() const
+{
+  return m_core.scaling;
+}
 
 void Image::rescale (double z)
 {
@@ -101,6 +175,21 @@ void Image::set_scale (double scale)
   Core::Graphic::rescale (m_core, scale);
 }
 
+void Image::set_alpha (unsigned char alpha)
+{
+  m_core.alpha = alpha;
+}
+
+unsigned char Image::alpha() const
+{
+  return m_core.alpha;
+}
+
+void Image::set_highlight (unsigned char alpha)
+{
+  m_core.highlight_alpha = alpha;
+}
+
 bool Image::is_target_inside (int x, int y) const
 {
   check (m_core.mask != nullptr, "Checkin pixel perfect collision without mask");
@@ -109,6 +198,5 @@ bool Image::is_target_inside (int x, int y) const
              + " x " + std::to_string(y) + "/" + std::to_string(height()));
   return (*m_core.mask)(x, y);
 }
-
 
 } // namespace Sosage::Component

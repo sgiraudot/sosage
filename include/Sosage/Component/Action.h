@@ -27,9 +27,8 @@
 #ifndef SOSAGE_COMPONENT_ACTION_H
 #define SOSAGE_COMPONENT_ACTION_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 
-#include <cstdlib>
 #include <vector>
 
 namespace Sosage::Component
@@ -48,12 +47,9 @@ public:
 
   public:
 
-    Step (const std::string& function, const std::vector<std::string>& args)
-      : m_function (function), m_args (args)
-    { }
-
-    const std::string& function() const { return m_function; }
-    const std::vector<std::string>& args() const { return m_args; }
+    Step (const std::string& function, const std::vector<std::string>& args);
+    const std::string& function() const;
+    const std::vector<std::string>& args() const;
   };
 
 private:
@@ -65,12 +61,10 @@ public:
   Action (const std::string& id);
   void add (const std::string& function, const std::vector<std::string>& args);
   std::string str() const;
-
-  std::size_t size() const { return m_steps.size(); }
-  std::vector<Step>::const_iterator begin() const { return m_steps.begin(); }
-  std::vector<Step>::const_iterator end() const { return m_steps.end(); }
-  const Step& operator[] (const std::size_t& idx) const { return m_steps[idx]; }
-
+  std::size_t size() const;
+  std::vector<Step>::const_iterator begin() const;
+  std::vector<Step>::const_iterator end() const;
+  const Step& operator[] (const std::size_t& idx) const;
 };
 
 using Action_handle = std::shared_ptr<Action>;

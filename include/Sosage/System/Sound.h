@@ -30,7 +30,7 @@
 #include <Sosage/Content.h>
 #include <Sosage/Core/Sound.h>
 #include <Sosage/Config/platform.h>
-#include <Sosage/System/Handle.h>
+#include <Sosage/System/Base.h>
 
 namespace Sosage::System
 {

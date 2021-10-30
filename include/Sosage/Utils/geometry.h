@@ -27,7 +27,6 @@
 #ifndef SOSAGE_UTILS_GEOMETRY_H
 #define SOSAGE_UTILS_GEOMETRY_H
 
-#include <Sosage/Config/config.h>
 #include <Sosage/Utils/enum.h>
 #include <Sosage/Utils/error.h>
 
@@ -37,20 +36,13 @@
 namespace Sosage
 {
 
-inline int round (const double& x) { return int(std::lround(x)); }
+int round (const double& x);
 
 template <typename T>
 inline T square (const T& t) { return t*t; }
 
-inline double distance (double xa, double ya, double xb, double yb)
-{
-  return std::sqrt (square(xa - xb) + square(ya - yb));
-}
-
-inline double angle (double x, double y)
-{
-  return std::atan2 (y, x);
-}
+double distance (double xa, double ya, double xb, double yb);
+double angle (double x, double y);
 
 struct Box
 {
@@ -59,16 +51,12 @@ struct Box
   double xmax;
   double ymax;
 
-  Box (double xmin, double ymin, double xmax, double ymax)
-    : xmin(xmin), ymin(ymin), xmax(xmax), ymax(ymax)
-  { }
-
   friend Box operator+ (const Box& a, const Box& b)
   {
-    return Box (std::min (a.xmin, b.xmin),
-                std::min (a.xmin, b.xmin),
-                std::max (a.xmax, b.xmax),
-                std::max (a.ymax, b.ymax));
+    return {std::min (a.xmin, b.xmin),
+          std::min (a.xmin, b.xmin),
+          std::max (a.xmax, b.xmax),
+          std::max (a.ymax, b.ymax)};
   }
 
   friend bool intersect (const Box& a, const Box& b)
@@ -90,20 +78,13 @@ class Point
   
 public:
 
-  Point (const double& x = 0, const double& y = 0)
-    : m_x (x), m_y (y)
-  { }
-  
-  Point (const std::pair<double, double>& coord)
-    : Point (coord.first, coord.second)
-  { }
-
-  double x() const { return m_x; }
-  double y() const { return m_y; }
-  int X() const { return round(m_x); }
-  int Y() const { return round(m_y); }
-
-  Box box() const { return Box(m_x, m_y, m_x, m_y); }
+  Point (const double& x = 0, const double& y = 0);
+  Point (const std::pair<double, double>& coord);
+  double x() const;
+  double y() const;
+  int X() const;
+  int Y() const;
+  Box box() const;
 
   friend std::string to_string(const Point& p)
   {
@@ -160,36 +141,15 @@ public:
   }
 };
 
-
 class Vector : public Point
 {
 public:
 
-  Vector (double x = 0, double y = 0)
-    : Point (x, y)
-  { }
-
-  Vector (const Point& a, const Point& b)
-    : Point (b.x() - a.x(), b.y() - a.y())
-  {
-    
-  }
-  
-  Vector (const Point& p)
-    : Point (p.x(), p.y())
-  {
-    
-  }
-  
-  double length() const
-  {
-    return std::sqrt(square (x()) + square (y()));
-  }
-  void normalize()
-  {
-    double l = length();
-    *this = Vector(x() / l, y() / l);
-  }
+  Vector (double x = 0, double y = 0);
+  Vector (const Point& a, const Point& b);
+  Vector (const Point& p);
+  double length() const;
+  void normalize();
 
   friend std::string to_string(const Vector& v)
   {
@@ -229,24 +189,9 @@ class Line
   
 public:
 
-  Line (const Point& a, const Point& b)
-    : m_reference (a),
-      m_direction (a, b)
-  {
-    m_direction.normalize();
-  }
-
-  Point projection (const Point& p)
-  {
-    Vector ref (m_reference, p);
-
-    double length = ref * m_direction;
-
-    return m_reference + length * m_direction;
-  }
-
-  const Vector& direction() const { return m_direction; }
-
+  Line (const Point& a, const Point& b);
+  Point projection (const Point& p) const;
+  const Vector& direction() const;
 };
 
 class Segment
@@ -256,36 +201,12 @@ class Segment
 
 public:
 
-  Segment (const Point& source, const Point& target)
-    : m_source (source), m_target (target)
-  { }
-
-  Vector to_vector() const
-  {
-    return Vector(m_source, m_target);
-  }
-
-  Line to_line() const
-  {
-    return Line(m_source, m_target);
-  }
-
-  Box box() const { return m_source.box() + m_target.box(); }
-
-  double length() const
-  {
-    return distance (m_source.x(), m_source.y(), m_target.x(), m_target.y());
-  }
-  
-  std::pair<Point, bool> projection (const Point& p) const
-  {
-    Line l = to_line();
-    Point proj = l.projection(p);
-    Vector vproj (m_source, proj);
-    return std::make_pair (proj,
-                           (vproj * l.direction() > 0
-                            && distance (m_source, proj) < length()));
-  }
+  Segment (const Point& source, const Point& target);
+  Vector to_vector() const;
+  Line to_line() const;
+  Box box() const;
+  double length() const;
+  std::pair<Point, bool> projection (const Point& p) const;
   
   friend std::ostream& operator<< (std::ostream& os, const Segment& s)
   {

@@ -27,7 +27,8 @@
 #ifndef SOSAGE_CONTENT_H
 #define SOSAGE_CONTENT_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
+#include <Sosage/Component/Handle_set.h>
 #include <Sosage/Component/Signal.h>
 #include <Sosage/Component/cast.h>
 #include <Sosage/Utils/enum.h>
@@ -51,46 +52,15 @@ private:
 public:
 
   Content ();
-
   Content (const Content&) = delete;
-
-  ~Content()
-  {
-    display_access();
-  }
-
-  void clear()
-  {
-    for (std::size_t i = 0; i < NUMBER_OF_KEYS; ++ i)
-      m_fast_access_components[i] = nullptr;
-    m_data.clear();
-
-  }
-  std::size_t size() const { return m_data.size(); }
-  Component::Component_map::const_iterator begin() const { return m_data.begin(); }
-  Component::Component_map::const_iterator end() const { return m_data.end(); }
-  Component::Handle_set& components (const std::string& s)
-  {
-    auto iter = m_map_component.find(s);
-    if (iter == m_map_component.end())
-        return m_data[0];
-    return m_data[iter->second];
-  }
-
+  ~Content();
+  void clear();
+  void clear (const std::function<bool(Component::Handle)>& filter);
+  std::size_t size() const;
+  Component::Component_map::const_iterator begin() const;
+  Component::Component_map::const_iterator end() const;
+  Component::Handle_set& components (const std::string& s);
   void remove (const std::string& key, bool optional = false);
-
-  void clear (const std::function<bool(Component::Handle)>& filter)
-  {
-    for (auto& hset : m_data)
-    {
-      Component::Handle_set& old_set = hset;
-      Component::Handle_set new_set;
-      for (Component::Handle c : old_set)
-        if (!filter(c))
-          new_set.insert(c);
-      old_set.swap (new_set);
-    }
-  }
 
   template <typename T>
   void set (const std::shared_ptr<T>& t)
@@ -193,66 +163,23 @@ public:
     return Component::cast<T>(m_fast_access_components[std::size_t(fac)])->value();
   }
 
-  void emit (const std::string& signal)
-  {
-    set<Component::Signal>(signal);
-  }
-
-  bool receive (const std::string& signal)
-  {
-    count_access(signal);
-    count_request();
-
-    auto cmp = std::make_shared<Component::Base>(signal);
-    Component::Handle_set& hset = components(cmp->component());
-
-    Component::Handle_set::iterator iter
-        = hset.find(std::make_shared<Component::Base>(signal));
-    if (iter == hset.end())
-      return false;
-    if (!Component::cast<Component::Signal>(*iter))
-      return false;
-    hset.erase (iter);
-    return true;
-  }
+  void emit (const std::string& signal);
+  bool receive (const std::string& signal);
 
 private:
 
-  inline void count_set_ptr() { SOSAGE_COUNT (Content__set_ptr); }
-  inline void count_set_args() { SOSAGE_COUNT (Content__set_args); }
-  inline void count_request() { SOSAGE_COUNT (Content__request); }
-  inline void count_get() { SOSAGE_COUNT (Content__get); }
+  void count_set_ptr();
+  void count_set_args();
+  void count_request();
+  void count_get();
 
 #ifdef SOSAGE_PROFILE
   std::unordered_map<std::string, std::size_t> m_access_count;
-  inline void count_access (const std::string& k)
-  {
-    auto inserted = m_access_count.insert (std::make_pair (k, 1));
-    if (!inserted.second)
-      inserted.first->second ++;
-  }
-  inline void display_access()
-  {
-    std::vector<std::pair<std::string, std::size_t> > sorted;
-    sorted.reserve (m_access_count.size());
-    std::copy (m_access_count.begin(), m_access_count.end(),
-               std::back_inserter (sorted));
-    auto end = std::partition
-               (sorted.begin(), sorted.end(),
-                [](const auto& p) -> bool { return isupper(p.first[0]); });
-    std::sort (sorted.begin(), end,
-               [](const auto& a, const auto& b) -> bool
-               {
-                 return a.second > b.second;
-               });
-    debug << "[Profiling system component access count (25 first)]" << std::endl;
-    for (std::size_t i = 0; i < 25; ++ i)
-      debug << " * " << sorted[i].first << " (accessed "
-            << sorted[i].second << " times)" << std::endl;
-  }
+  void count_access (const std::string& k);
+  void display_access();
 #else
-  inline void count_access (const std::string&) { }
-  inline void display_access () { }
+  void count_access (const std::string&);
+  void display_access ();
 #endif
 };
 

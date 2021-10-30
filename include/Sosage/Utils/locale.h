@@ -27,52 +27,12 @@
 #ifndef SOSAGE_UTILS_LOCALE_H
 #define SOSAGE_UTILS_LOCALE_H
 
-#include <Sosage/Config/platform.h>
-
-#if defined(SOSAGE_ANDROID)
-#  include <jni.h>
-#elif defined(SOSAGE_WINDOWS)
-#  include <wchar.h>
-#  include <winnls.h>
-#else
-#  include <locale>
-#endif
+#include <string>
 
 namespace Sosage
 {
 
-std::string get_locale()
-{
-#if defined(SOSAGE_ANDROID)
-  JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
-  jobject activity = (jobject)SDL_AndroidGetActivity();
-  jclass jni_class(env->GetObjectClass(activity));
-  jmethodID method_id = env->GetStaticMethodID(jni_class, "getLocale", "()Ljava/lang/String;");
-  jstring jstr = (jstring) env->CallStaticObjectMethod(jni_class, method_id);
-  const char *str = env->GetStringUTFChars(jstr, 0);
-  std::string out (str);
-  env->ReleaseStringUTFChars(jstr, str);
-  env->DeleteLocalRef(jstr);
-  env->DeleteLocalRef(jni_class);
-  return out;
-#elif defined(SOSAGE_WINDOWS)
-  wchar_t name[LOCALE_NAME_MAX_LENGTH];
-  int l = GetUserDefaultLocaleName(name, LOCALE_NAME_MAX_LENGTH);
-  if (l == 0)
-    return "";
-  std::wstring ws (name, name + l);
-  return std::string(ws.begin(), ws.end());
-#else
-  try // std::locale might throw runtime error if no locale declared
-  {
-    return std::locale("").name();
-  }
-  catch (std::runtime_error&)
-  {
-  }
-  return "";
-#endif
-}
+std::string get_locale();
 
 } // namespace Sosage
 

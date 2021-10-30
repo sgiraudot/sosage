@@ -32,7 +32,7 @@
 #include <Sosage/Component/Status.h>
 #include <Sosage/Config/config.h>
 #include <Sosage/System/Animation.h>
-#include <Sosage/Utils/random.h>
+#include <Sosage/Utils/conversions.h>
 
 namespace Sosage::System
 {
@@ -515,23 +515,15 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
       }
 
       // Stand still for a while
-      head->frames().push_back
-        (C::Animation::Frame
-         (pose, row_index, next_blink));
-      mouth->frames().push_back
-        (C::Animation::Frame
-         (0, row_index, next_blink));
+      head->frames().push_back ({pose, row_index, next_blink});
+      mouth->frames().push_back ({0, row_index, next_blink});
 
       if (remaining == 0)
         break;
 
       // Blink eyes
-      head->frames().push_back
-        (C::Animation::Frame
-         (1, row_index, 1));
-      mouth->frames().push_back
-        (C::Animation::Frame
-         (0, row_index, 1));;
+      head->frames().push_back ({1, row_index, 1});
+      mouth->frames().push_back ({0, row_index, 1});
     }
 
     if (random_int(0,4) == 0)
@@ -589,14 +581,10 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
   for (int i = 0; i < 10; ++ i)
   {
     // Stand still for a while
-    image->frames().push_back
-      (C::Animation::Frame
-       (pose, row_index, random_int(20, 150)));
+    image->frames().push_back ({pose, row_index, random_int(20, 150)});
 
     // Transition
-    image->frames().push_back
-      (C::Animation::Frame
-       (0, row_index, 2));
+    image->frames().push_back ({0, row_index, 2});
 
     int new_pose;
     do
@@ -622,9 +610,7 @@ void Animation::generate_random_mouth_animation (const std::string& id)
   int pose = random_int(1,11);
   for (int i = 0; i < 50; ++ i)
   {
-    image->frames().push_back
-      (C::Animation::Frame
-       (pose, row_index, 1));
+    image->frames().push_back ({pose, row_index, 1});
 
     int new_pose;
     do
@@ -660,7 +646,7 @@ void Animation::generate_animation (const std::string& id, const std::string& an
     }
   check (index != -1, "No " + anim + " skin found for " + id);
 
-  image->frames().push_back (C::Animation::Frame (index, row_index, 1));
+  image->frames().push_back ({index, row_index, 1});
 }
 
 void Animation::fade (double begin_time, double end_time, bool fadein)

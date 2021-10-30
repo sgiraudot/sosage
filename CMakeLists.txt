@@ -248,7 +248,12 @@ endif()
 include(CPack)
 
 if(SOSAGE_COMPILE_SCAP)
-  set(SCAP_SRC "src/Sosage/Component/Ground_map.cpp" "src/Sosage/Third_party/SDL.cpp")
+  set(SCAP_SRC "src/Sosage/Component/Base.cpp" "src/Sosage/Component/Ground_map.cpp"
+    "src/Sosage/Third_party/LZ4.cpp" "src/Sosage/Third_party/SDL.cpp"  "src/Sosage/Third_party/SDL_file.cpp"
+    "src/Sosage/Utils/asset_packager.cpp" "src/Sosage/Utils/Asset_manager.cpp" "src/Sosage/Utils/Bitmap_2.cpp"
+     "src/Sosage/Utils/binary_io.cpp" "src/Sosage/Utils/color.cpp"
+    "src/Sosage/Utils/conversions.cpp" "src/Sosage/Utils/error.cpp" "src/Sosage/Utils/geometry.cpp"
+    "src/Sosage/Utils/profiling.cpp")
   add_executable("SCAP" "src/Sosage/SCAP.cpp" ${SCAP_SRC})
   target_link_libraries("SCAP" PUBLIC sosage)
   target_compile_options("SCAP" PUBLIC -DSOSAGE_SCAP)

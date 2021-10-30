@@ -30,8 +30,6 @@
 #include <Sosage/Config/options.h>
 #include <Sosage/Core/Time.h>
 
-#include <algorithm>
-#include <cmath>
 
 #ifdef SOSAGE_PROFILE
 #  define SOSAGE_TIMER_START(x) static Timer x(#x); x.start()
@@ -70,79 +68,15 @@ class Timer
 
 public:
 
-  Timer (const std::string& id, bool master = true) : m_id (id), m_master(master)
+  Timer (const std::string& id, bool master = true);
+  ~Timer();
+  void start();
+  void stop();
+  void display();
 #ifndef SOSAGE_PROFILE_FINELY
-  , m_duration(0), m_nb(0)
+  double mean_duration() const;
 #endif
-  { }
-
-  ~Timer()
-  {
-    if (m_master)
-    {
-      debug << "[Profiling " << m_id << "] " << std::endl;
-      display();
-    }
-  }
-
-  void start()
-  {
-    m_start = Time::now();
-#ifndef SOSAGE_PROFILE_FINELY
-    ++ m_nb;
-#endif
-  }
-
-
-  void stop()
-  {
-#ifdef SOSAGE_PROFILE_FINELY
-    m_duration.push_back(Time::now() - m_start);
-#else
-    m_duration += Time::now() - m_start;
-#endif
-  }
-
-#ifdef SOSAGE_PROFILE_FINELY
-  void display()
-  {
-    if (m_id == "CPU_idle")
-    {
-      std::ofstream ofile ("cpu_idle.plot");
-      for (const auto& t : m_duration)
-        ofile << t << std::endl;
-    }
-
-    Time::Duration total = 0;
-    for (const auto& d : m_duration)
-      total += d;
-    std::sort(m_duration.begin(), m_duration.end());
-    debug << "Min = " << to_string(m_duration.front())
-        << ", 10% = " << to_string(m_duration[m_duration.size() / 10])
-        << ", median = " << to_string(m_duration[m_duration.size() / 2])
-        << ", 90% = " << to_string(m_duration[9 * m_duration.size() / 10])
-        << ", max = " << to_string(m_duration.back())
-        << ", total = " << to_string(total)
-        << ", mean = " << to_string(total / m_duration.size()) << std::endl;
-  }
-#else
-  double mean_duration() const { return m_duration / double(m_nb); }
-
-  void display() const
-  {
-    debug << m_duration
-          << ((m_nb > 1)
-              ? " (" + to_string(mean_duration()) + " per iteration, " + std::to_string(m_nb) + " iterations)"
-             : "") << std::endl;
-  }
-#endif
-
-  std::string to_string (double d) const
-  {
-    if (d < 900)
-      return std::to_string(std::round(d * 100) / 100).substr(0,4) + "ms";
-    return std::to_string(std::round((d / 1000.) * 100) / 100).substr(0,4) + "s";
-  }
+  std::string to_string (double d) const;
 };
 
 class Counter
@@ -152,17 +86,12 @@ class Counter
 
 public:
 
-  Counter (const std::string& id) : m_id (id), m_nb(0) { }
-  ~Counter ()
-  {
-    debug << "[Profiling " << m_id << "] " << m_nb << " iteration(s)" << std::endl;
-  }
-
-  void increment() { ++ m_nb; }
+  Counter (const std::string& id);
+  ~Counter ();
+  void increment();
 };
 
 }
-
 
 #endif // SOSAGE_UTILS_PROFILING_H
 

@@ -42,6 +42,13 @@ namespace Sosage::System
 
 namespace C = Component;
 
+std::size_t Control::Hash_status_mode_pair::operator() (const Status_input_pair& p) const
+{
+  return std::hash<std::size_t>()(std::size_t(p.first))
+      ^  std::hash<std::size_t>()(std::size_t(p.second));
+}
+
+
 Control::Control(Content& content)
   : Base (content)
   , m_status(LOCKED)

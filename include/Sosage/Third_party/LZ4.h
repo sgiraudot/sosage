@@ -28,35 +28,12 @@
 #define SOSAGE_THIRD_PARTY_LZ4_H
 
 #include <Sosage/Utils/binary_io.h>
-#include <Sosage/Utils/error.h>
-
-#include <lz4.h>
-
-#include <vector>
 
 namespace Sosage
 {
 
-inline Buffer lz4_compress_buffer (void* data, std::size_t size)
-{
-  const char* cdata = reinterpret_cast<const char*>(data);
-  unsigned int max_lz4_size = LZ4_compressBound(size);
-  Buffer out (max_lz4_size);
-  unsigned int true_size = LZ4_compress_default(cdata, out.data(), size, max_lz4_size);
-  out.resize(true_size);
-  return out;
-}
-
-inline void lz4_decompress_buffer (void* data, std::size_t size, void* out, std::size_t output_size)
-{
-  const char* cdata = reinterpret_cast<const char*>(data);
-  char* cout = reinterpret_cast<char*>(out);
-  int decompressed_size = LZ4_decompress_safe (cdata, cout, size, output_size);
-
-  check (std::size_t(decompressed_size) == output_size,
-         "LZ4 decompressed size differs from expected ("
-         + to_string(decompressed_size) + " != " + to_string(output_size) + ")");
-}
+Buffer lz4_compress_buffer (void* data, std::size_t size);
+void lz4_decompress_buffer (void* data, std::size_t size, void* out, std::size_t output_size);
 
 }
 

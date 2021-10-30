@@ -29,7 +29,7 @@
 
 #include <Sosage/Content.h>
 #include <Sosage/Core/Input.h>
-#include <Sosage/System/Handle.h>
+#include <Sosage/System/Base.h>
 
 namespace Sosage::System
 {
@@ -51,11 +51,7 @@ public:
 
 private:
 
-  typename std::vector<bool>::reference key_on(const Event_value& value)
-  {
-    return m_keys_on[std::size_t(value)];
-  }
-
+  typename std::vector<bool>::reference key_on(const Event_value& value);
 };
 
 } // namespace Sosage::System

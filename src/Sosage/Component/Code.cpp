@@ -26,9 +26,6 @@
 
 #include <Sosage/Component/Code.h>
 
-#include <algorithm>
-#include <iostream>
-
 namespace Sosage::Component
 {
 
@@ -38,7 +35,7 @@ Code::Code (const std::string& id)
 
 void Code::add_button (const std::string& value, int x, int y, int w, int h)
 {
-  m_buttons.push_back (Button (value, x, y, w, h));
+  m_buttons.push_back ({value, x, y, w, h});
 }
 
 void Code::add_answer_item (const std::string& value)
@@ -184,5 +181,24 @@ bool Code::success()
   return true;
 }
 
+int Code::xmin()
+{
+  return m_buttons[m_hover].x;
+}
+
+int Code::xmax()
+{
+  return m_buttons[m_hover].x + m_buttons[m_hover].w;
+}
+
+int Code::ymin()
+{
+  return m_buttons[m_hover].y;
+}
+
+int Code::ymax()
+{
+  return m_buttons[m_hover].y + m_buttons[m_hover].h;
+}
 
 } // namespace Sosage::Component

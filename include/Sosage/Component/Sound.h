@@ -27,7 +27,7 @@
 #ifndef SOSAGE_COMPONENT_SOUND_H
 #define SOSAGE_COMPONENT_SOUND_H
 
-#include <Sosage/Component/Handle.h>
+#include <Sosage/Component/Base.h>
 #include <Sosage/Core/Sound.h>
 
 namespace Sosage::Component
@@ -43,7 +43,7 @@ public:
   Sound (const std::string& id, const std::string& file_name);
   virtual ~Sound();
   virtual std::string str() const;
-  const Core::Sound::Sound& core() const { return m_core; }
+  const Core::Sound::Sound& core() const;
 };
 
 using Sound_handle = std::shared_ptr<Sound>;

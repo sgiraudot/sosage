@@ -27,7 +27,6 @@
 #ifndef SOSAGE_UTILS_BITMAP_2_H
 #define SOSAGE_UTILS_BITMAP_2_H
 
-
 #include <vector>
 
 namespace Sosage
@@ -47,38 +46,16 @@ private:
 
 public:
 
-  Bitmap_2 (const std::size_t& width, const std::size_t& height, const bool& value = true)
-    : m_data (width * height, value), m_width (width)
-  {
-
-  }
-
-  bool empty() const { return m_data.empty(); }
-  void clear() { m_data.clear(); m_width = 0; }
-  void resize (const std::size_t& width, const std::size_t& height, const bool& value = true)
-  {
-    m_data.resize (width * height, value);
-    m_width = width;
-  }
-  std::size_t width() const { return m_width; }
-  std::size_t height() const { return m_data.size() / m_width; }
-  std::size_t size() const { return m_data.size(); }
-
-  bool operator() (const std::size_t& x, const std::size_t& y) const
-  {
-    return m_data[x + m_width * y];
-  }
-  reference operator() (const std::size_t& x, const std::size_t& y)
-  {
-    return m_data[x + m_width * y];
-  }
-
-  void swap (Bitmap_2& other)
-  {
-    m_data.swap (other.m_data);
-    m_width = other.m_width;
-    other.m_width = 0;
-  }
+  Bitmap_2 (const std::size_t& width, const std::size_t& height, const bool& value = true);
+  bool empty() const;
+  void clear();
+  void resize (const std::size_t& width, const std::size_t& height, const bool& value = true);
+  std::size_t width() const;
+  std::size_t height() const;
+  std::size_t size() const;
+  bool operator() (const std::size_t& x, const std::size_t& y) const;
+  reference operator() (const std::size_t& x, const std::size_t& y);
+  void swap (Bitmap_2& other);
 };
 
 }

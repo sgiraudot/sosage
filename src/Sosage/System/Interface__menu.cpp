@@ -31,6 +31,7 @@
 #include <Sosage/Component/Variable.h>
 #include <Sosage/System/Interface.h>
 #include <Sosage/Utils/color.h>
+#include <Sosage/Utils/conversions.h>
 
 #include <queue>
 
