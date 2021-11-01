@@ -22,6 +22,12 @@ endif()
 
 include(${SOSAGE_DATA_FOLDER}/config.cmake)
 
+# Native Android compilation (on Termux for example)
+# To compile APK, use Gradlew instead
+if (CMAKE_SYSTEM_NAME STREQUAL Android)
+  add_definitions(-DSOSAGE_NATIVE_ANDROID)
+endif()
+
 if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
   include(Sosage_version)
   file(GLOB_RECURSE SOSAGE_SRC "src/Sosage/*.cpp")

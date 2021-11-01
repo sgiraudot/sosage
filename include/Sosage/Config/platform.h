@@ -33,7 +33,7 @@ namespace Sosage
 namespace Config
 {
 
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) && !defined(SOSAGE_NATIVE_ANDROID)
 #define SOSAGE_ANDROID
 constexpr bool android = true;
 constexpr bool mac = false;
