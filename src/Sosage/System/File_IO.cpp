@@ -723,10 +723,23 @@ void File_IO::read_cutscene (const std::string& file_name)
         anim->frames().clear();
         for (std::size_t i = 0; i < node["frames"].size(); ++ i)
         {
-          int idx = node["frames"][i].integer();
+          int idx = 0;
+          int nb = 1;
+          const std::string& str = node["frames"][i].string();
+          std::size_t pos = str.find("x");
+          if (pos != std::string::npos)
+          {
+            nb = to_int (std::string(str.begin(), str.begin() + pos));
+            idx = to_int (std::string(str.begin() + pos + 1, str.end()));
+            debug << "Inserting " << nb << " times frame " << idx << std::endl;
+          }
+          else
+            idx = to_int(str);
+
           int x = idx % width;
           int y = idx / width;
-          anim->frames().push_back ({x, y, duration});
+          for (int j = 0; j < nb; ++ j)
+            anim->frames().push_back ({x, y, duration});
         }
       }
       else

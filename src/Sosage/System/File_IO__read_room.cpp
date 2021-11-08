@@ -43,6 +43,7 @@
 #include <Sosage/Config/version.h>
 #include <Sosage/System/File_IO.h>
 #include <Sosage/Utils/color.h>
+#include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/profiling.h>
 
 namespace Sosage::System
@@ -310,10 +311,22 @@ void File_IO::read_animation (const std::string& id, const Core::File_IO::Node& 
     img->frames().clear();
     for (std::size_t i = 0; i < node["frames"].size(); ++ i)
     {
-      int idx = node["frames"][i].integer();
+      int idx = 0;
+      int nb = 1;
+      const std::string& str = node["frames"][i].string();
+      std::size_t pos = str.find("x");
+      if (pos != std::string::npos)
+      {
+        nb = to_int (std::string(str.begin(), str.begin() + pos));
+        idx = to_int (std::string(str.begin() + pos + 1, str.end()));
+      }
+      else
+        idx = to_int(str);
+
       int x = idx % width;
       int y = idx / width;
-      img->frames().push_back ({x, y, duration});
+      for (int j = 0; j < nb; ++ j)
+        img->frames().push_back ({x, y, duration});
     }
   }
   else
