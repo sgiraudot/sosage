@@ -30,6 +30,7 @@
 #include <Sosage/Component/Base.h>
 
 #include <unordered_set>
+#include <tuple>
 #include <vector>
 
 namespace Sosage::Component
@@ -102,6 +103,34 @@ public:
 
 template <typename T>
 using Set_handle = std::shared_ptr<Set<T> >;
+
+template <typename ... T>
+class Tuple : public Simple<std::tuple<T...> >
+{
+  using tuple_t = std::tuple<T...>;
+  using Base = Simple<tuple_t>;
+
+  template <std::size_t I>
+  using Element_type = typename std::tuple_element<I, tuple_t>::type;
+
+public:
+
+  Tuple (const std::string& id, T ... t)
+    : Base(id, std::make_tuple(t...))
+  { }
+
+  template <std::size_t I>
+  Element_type<I>& get()
+  {
+    return std::get<I>(this->m_value);
+  }
+
+  template <std::size_t I>
+  const Element_type<I>& get() const
+  {
+    return std::get<I>(this->m_value);
+  }
+};
 
 } // namespace Sosage::Component
 

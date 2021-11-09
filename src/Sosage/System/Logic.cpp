@@ -744,9 +744,27 @@ bool Logic::function_set (const std::vector<std::string>& args)
     int x = to_int(args[2]);
     int y = to_int(args[3]);
     int z = to_int(args[4]);
+    if (args.size() == 6) // Smooth move
+    {
+      double duration = to_double(args[5]);
+      int nb_frames = round (duration * Config::animation_fps);
 
-    get<C::Position>(target + ":position")->set (Point(x, y));
-    get<C::Image>(target + ":image")->z() = z;
+      double begin_time = frame_time(m_current_time);
+      double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
+
+      m_timed.insert (std::make_pair (end_time, C::make_handle<C::Signal>("Dummy:event")));
+
+      auto pos = get<C::Position>(target + ":position");
+
+      auto anim = set<C::Tuple<Point, Point, double, double>>
+          (target + ":animation", pos->value(), Point(x,y), begin_time, end_time);
+      m_timed.insert (std::make_pair (end_time,  anim));
+    }
+    else
+    {
+      get<C::Position>(target + ":position")->set (Point(x, y));
+      get<C::Image>(target + ":image")->z() = z;
+    }
   }
   else if (option == "follower")
   {

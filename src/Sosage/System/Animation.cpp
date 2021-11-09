@@ -237,6 +237,19 @@ void Animation::run_animation_frame()
   std::unordered_set<std::string> just_started;
 
   // Then check all other cases
+  for (auto c : components("animation"))
+    if (auto a = C::cast<C::Tuple<Point, Point, double, double>>(c))
+    {
+      double ftime = frame_time(value<C::Double>(CLOCK__TIME));
+      double ratio = (ftime - a->get<2>()) / (a->get<3>() - a->get<2>());
+
+      Point current = ratio * a->get<1>() + (1 - ratio) * a->get<0>();
+      if (ratio > 1)
+        current = a->get<1>();
+
+      get<C::Position>(a->entity() + ":position")->set (current);
+    }
+
   for (auto c : components("path"))
     if (auto path = C::cast<C::Path>(c))
     {
