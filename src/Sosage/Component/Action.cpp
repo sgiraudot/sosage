@@ -25,6 +25,8 @@
 */
 
 #include <Sosage/Component/Action.h>
+#include <Sosage/Utils/conversions.h>
+#include <Sosage/Utils/error.h>
 
 namespace Sosage::Component
 {
@@ -42,13 +44,43 @@ const std::vector<std::string>& Action::Step::args() const
   return m_args;
 }
 
+std::string Action::Step::to_string() const
+{
+  std::string out = m_function + ":[";
+  for (std::size_t i = 0; i < m_args.size(); ++ i)
+  {
+    out += m_args[i];
+    if (i != m_args.size() - 1)
+      out += ", ";
+  }
+
+  return out + "]";
+}
+
 Action::Action (const std::string& id)
-  : Base (id)
+  : Base (id), m_next_step(0), m_on(false), m_still_waiting(false)
 { }
 
 void Action::add (const std::string& function, const std::vector<std::string>& args)
 {
   m_steps.push_back (Step ("function_" + function, args));
+}
+
+void Action::launch()
+{
+  m_on = true;
+  m_next_step = 0;
+}
+
+void Action::stop()
+{
+  m_on = false;
+  m_timed.clear();
+}
+
+bool Action::on() const
+{
+ return m_on;
 }
 
 std::string Action::str() const
@@ -81,9 +113,49 @@ std::vector<Action::Step>::const_iterator Action::end() const
   return m_steps.end();
 }
 
-const Action::Step& Action::operator[] (const std::size_t& idx) const
+const std::set<Action::Timed_handle>& Action::scheduled() const
 {
-  return m_steps[idx];
+  return m_timed;
+}
+
+void Action::schedule (double time, Handle h)
+{
+  m_timed.insert (std::make_pair (time, h));
+}
+
+void Action::update_scheduled (const std::function<bool(Timed_handle)>& predicate)
+{
+  m_still_waiting = true;
+
+  if (m_timed.empty())
+    return;
+
+  std::set<Timed_handle> new_timed_handle;
+  for (const Timed_handle& th : m_timed)
+    if (predicate(th))
+      new_timed_handle.insert(th);
+    else if (th.second->id() == "wait")
+    {
+      debug << "Stop waiting" << std::endl;
+      m_still_waiting = false;
+    }
+
+  m_timed.swap(new_timed_handle);
+}
+
+bool Action::ready() const
+{
+  return !m_still_waiting || m_timed.empty();
+}
+
+const Action::Step& Action::next_step()
+{
+  check (m_next_step < m_steps.size(), "Trying to access step " + to_string(m_next_step)
+         + " of action " + this->id() + " of size " + to_string(m_steps.size()));
+  const Step& out = m_steps[m_next_step ++];
+  if (m_next_step == m_steps.size())
+    m_on = false;
+  return out;
 }
 
 } // namespace Sosage::Component

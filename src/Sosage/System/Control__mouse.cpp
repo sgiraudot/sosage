@@ -124,9 +124,9 @@ void Control::idle_sub_click (const std::string& target)
     {
       std::string action_id = target + "_inventory_" + source->value();
       if (auto action = request<C::Action>(action_id + ":action"))
-        set<C::Variable>("Character:action", action);
+        set<C::Variable>("Character:triggered_action", action);
       else
-        set<C::Variable>("Character:action", get<C::Action>("Default_inventory:action"));
+        set<C::Variable>("Character:triggered_action", get<C::Action>("Default_inventory:action"));
       remove("Interface:source_object");
     }
     // Object is path to another room

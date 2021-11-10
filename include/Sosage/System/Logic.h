@@ -34,8 +34,6 @@
 #include <Sosage/Component/Simple.h>
 #include <Sosage/System/Base.h>
 
-#include <set>
-
 namespace Sosage::System
 {
 
@@ -43,16 +41,10 @@ class Logic : public Base
 {
 private:
 
-  using Timed_handle = std::pair<double, Component::Handle>;
-  std::set<Timed_handle> m_timed;
-
   double m_current_time;
-
-  Component::Action_handle m_current_action;
-  std::size_t m_next_step;
-
   using Function = std::function<bool(const std::vector<std::string>&)>;
   std::unordered_map<std::string, Function> m_dispatcher;
+  Component::Action_handle m_current_action;
 
 public:
 
@@ -64,15 +56,13 @@ private:
 
   void run_cutscene();
 
-  void clear_timed(bool action_goto);
-
   bool compute_path_from_target (Component::Position_handle target,
                                  std::string id = "");
   bool compute_path_from_direction (const Vector& direction);
   void follow (const std::string& follower);
   void update_debug_info (Component::Debug_handle debug_info);
 
-  bool apply_step (Component::Action::Step step);
+  bool apply_next_step (Component::Action_handle action);
 
   bool function_add (const std::vector<std::string>& args);
   bool function_camera (const std::vector<std::string>& args);

@@ -62,7 +62,6 @@ namespace C = Component;
 
 Logic::Logic (Content& content)
   : Base (content), m_current_time(0)
-  , m_current_action (nullptr), m_next_step (0)
 {
   INIT_DISPATCHER(function_add);
   INIT_DISPATCHER(function_camera);
@@ -74,6 +73,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(function_stop);
   INIT_DISPATCHER(function_system);
   INIT_DISPATCHER(function_talk);
+  set<C::Action>("Logic:action");
 }
 
 void Logic::run ()
@@ -92,39 +92,63 @@ void Logic::run ()
     stop_timer("Logic");
     return;
   }
-  std::set<Timed_handle> new_timed_handle;
 
-  bool still_waiting // for this world to stop hating
-      = true;
-
-  for (const Timed_handle& th : m_timed)
-    if (th.first == 0) // special case for Path
-    {
-      auto saved_path = C::cast<C::Path>(th.second);
-      auto current_path = request<C::Path>(saved_path->id());
-      if (saved_path == current_path)
-        new_timed_handle.insert(th);
-    }
-    else if (th.first <= m_current_time)
-    {
-      if (C::cast<C::Signal>(th.second))
-        set (th.second);
-      else if (th.second->id() == "wait")
-        still_waiting = false;
-      else
-        remove (th.second->id());
-    }
-    else
-      new_timed_handle.insert(th);
-  m_timed.swap(new_timed_handle);
+  std::set<std::string> done;
+  for (auto c : components("action"))
+    if (auto a = C::cast<C::Action>(c))
+      if (c->entity() != "Character")
+      {
+        a->update_scheduled
+            ([&](const C::Action::Timed_handle& th) -> bool
+        {
+          if (th.first == 0) // special case for Path
+          {
+            auto saved_path = C::cast<C::Path>(th.second);
+            auto current_path = request<C::Path>(saved_path->id());
+            if (saved_path == current_path)
+              return true;
+            return false;
+          }
+          if (th.first <= m_current_time)
+          {
+            if (C::cast<C::Signal>(th.second))
+              set (th.second);
+            else if (th.second->id() != "wait")
+              remove (th.second->id());
+            return false;
+          }
+          // else
+          return true;
+        });
+      }
 
   if (receive ("Cursor:clicked"))
   {
     compute_path_from_target(get<C::Position>(CURSOR__POSITION));
 
     // Cancel current action
-    clear_timed(true);
-    m_current_action = nullptr;
+    if (auto action = request<C::Action>("Character:action"))
+    {
+      auto logic_action = get<C::Action>("Logic:action");
+
+      for (const auto& th : action->scheduled())
+      {
+        if (th.first == 0) // special case for Path
+          continue;
+        if (th.second->id().find("Comment_") == 0) // keep dialogs when moving
+          logic_action->schedule (th.first, th.second);
+        else
+        {
+          if (C::cast<C::Signal>(th.second))
+            set (th.second);
+          else
+            remove (th.second->id());
+        }
+      }
+
+      action->stop();
+      remove("Character:action");
+    }
   }
   if (receive ("Stick:moved"))
   {
@@ -161,9 +185,8 @@ void Logic::run ()
 
     cropped->on() = true;
 
-    m_timed.insert (std::make_pair (m_current_time + Config::button_click_duration,
-                                    C::make_handle<C::Signal>
-                                    ("code:stop_flashing")));
+    get<C::Action>("Logic:action")->schedule (m_current_time + Config::button_click_duration,
+                                              C::make_handle<C::Signal>("code:stop_flashing"));
 
     if (code->failure())
     {
@@ -174,9 +197,8 @@ void Logic::run ()
     {
       code->reset();
       emit ("code:play_success");
-      m_timed.insert (std::make_pair (m_current_time + Config::button_click_duration,
-                                      C::make_handle<C::Signal>
-                                      ("code:quit")));
+      get<C::Action>("Logic:action")->schedule (m_current_time + Config::button_click_duration,
+                                                C::make_handle<C::Signal>("code:quit"));
     }
     else
       emit ("code:play_click");
@@ -198,9 +220,7 @@ void Logic::run ()
     remove("Code_hover:image", true);
     status()->pop();
 
-    m_current_action = get<C::Action>
-      (get<C::Code>("Game:code")->entity() + ":action");
-    m_next_step = 0;
+    get<C::Action>(get<C::Code>("Game:code")->entity() + ":action")->launch();
   }
 
   if (auto follower = request<C::String>("Follower:name"))
@@ -208,38 +228,47 @@ void Logic::run ()
 
   if (auto new_room_origin = request<C::String>("Game:new_room_origin"))
   {
-    m_current_action = get<C::Action>(new_room_origin->value() + ":action");
-    m_next_step = 0;
+    get<C::Action>(new_room_origin->value() + ":action")->launch();
     remove ("Game:new_room_origin");
   }
 
-  auto action = request<C::Action>("Character:action");
-  if (action && action != m_current_action)
+  if (auto triggered_action = request<C::Action>("Character:triggered_action"))
   {
-    clear_timed(false);
-    m_current_action = action;
-    m_next_step = 0;
-    remove ("Character:action", true);
+    if (auto action = request<C::Action>("Character:action"))
+    {
+      debug << "Action " << action->entity() << " interrupted" << std::endl;
+      for (const auto& th : action->scheduled())
+      {
+        if (th.first != 0) // special case for Path
+        {
+          if (C::cast<C::Signal>(th.second))
+            set (th.second);
+          else if (th.second->id() != "wait")
+            remove (th.second->id());
+        }
+      }
+      action->stop();
+    }
+    triggered_action->launch();
+    debug << "Action " << triggered_action->entity() << " launched" << std::endl;
+    set<C::Variable>("Character:action", triggered_action);
+    remove ("Character:triggered_action");
   }
 
-  if (m_current_action)
-  {
-    if (!still_waiting || m_timed.empty())
-    {
-      if (m_next_step == m_current_action->size())
+  for (auto c : components("action"))
+    if (auto a = C::cast<C::Action>(c))
+      if (c->entity() != "Character")
       {
-        m_current_action = nullptr;
-      }
-      else
-        while (m_next_step != m_current_action->size())
+        if (!a->on() || !a->ready())
+          continue;
+        debug << "Applying steps of action " << a->id() << std::endl;
+        do
         {
-          const C::Action::Step& s = (*m_current_action)[m_next_step ++];
-
-          if (!apply_step(s))
+          if (!apply_next_step (a))
             break;
         }
-    }
-  }
+        while (a->on());
+      }
 
   update_debug_info (get<C::Debug>(GAME__DEBUG));
   stop_timer("Logic");
@@ -338,27 +367,6 @@ void Logic::run_cutscene()
       check (false, "Can't find cutscene element " + el.id);
     }
   }
-}
-
-void Logic::clear_timed(bool action_goto)
-{
-  std::set<Timed_handle> new_timed_handle;
-
-  for (const Timed_handle& th : m_timed)
-    if (th.first == 0) // special case for Path
-      continue;
-    else if (action_goto && th.second->id().find("Comment_") == 0) // keep dialogs when moving
-    {
-      new_timed_handle.insert(th);
-    }
-    else
-    {
-      if (C::cast<C::Signal>(th.second))
-        set (th.second);
-      else
-        remove (th.second->id());
-    }
-  m_timed.swap(new_timed_handle);
 }
 
 bool Logic::compute_path_from_target (C::Position_handle target,
@@ -466,8 +474,11 @@ void Logic::update_debug_info (C::Debug_handle debug_info)
 
 }
 
-bool Logic::apply_step (C::Action::Step s)
+bool Logic::apply_next_step (C::Action_handle action)
 {
+  m_current_action = action;
+  const C::Action::Step& s = action->next_step();
+  debug << m_current_time << ", applying " << s.to_string() << std::endl;
   check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
          s.function() + " is not a valid function");
   return m_dispatcher[s.function()](s.args());
@@ -488,8 +499,9 @@ bool Logic::function_add (const std::vector<std::string>& args)
     if (!action)
       action = get<C::Action>(id + ":default");
 
-    for (std::size_t i = 0; i < action->size(); ++ i)
-      apply_step ((*action)[i]);
+    action->launch();
+    while (action->on())
+      apply_next_step (action);
   }
   else
   {
@@ -514,9 +526,9 @@ bool Logic::function_camera (const std::vector<std::string>& args)
     auto out = set<C::Boolean> ("Fade:in", fadein);
     if (request<C::Music>("Game:music"))
       emit ("Music:fade");
-    m_timed.insert (std::make_pair (m_current_time + duration, begin));
-    m_timed.insert (std::make_pair (m_current_time + duration, end));
-    m_timed.insert (std::make_pair (m_current_time + duration, out));
+    m_current_action->schedule (m_current_time + duration, begin);
+    m_current_action->schedule (m_current_time + duration, end);
+    m_current_action->schedule (m_current_time + duration, out);
   }
   else if (option == "shake")
   {
@@ -527,10 +539,10 @@ bool Logic::function_camera (const std::vector<std::string>& args)
     auto end = set<C::Double> ("Shake:end", m_current_time + duration);
     auto intens = set<C::Double> ("Shake:intensity", intensity);
     auto camera = set<C::Double> ("Camera:saved_position", value<C::Absolute_position>(CAMERA__POSITION).x());
-    m_timed.insert (std::make_pair (m_current_time + duration, begin));
-    m_timed.insert (std::make_pair (m_current_time + duration, end));
-    m_timed.insert (std::make_pair (m_current_time + duration, intens));
-    m_timed.insert (std::make_pair (m_current_time + duration, camera));
+    m_current_action->schedule (m_current_time + duration, begin);
+    m_current_action->schedule (m_current_time + duration, end);
+    m_current_action->schedule (m_current_time + duration, intens);
+    m_current_action->schedule (m_current_time + duration, camera);
 
   }
   else if (option == "target")
@@ -582,8 +594,7 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
     status()->pop();
     if (dialog->line().first != "")
     {
-      m_current_action = get<C::Action>(dialog->line().first + ":action");
-      m_next_step = 0;
+      set<C::Variable>("Character:triggered_action", get<C::Action>(dialog->line().first + ":action"));
       return false;
     }
   }
@@ -611,10 +622,8 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
   }
 
   if (action->size() != 0)
-  {
-    m_current_action = action;
-    m_next_step = 0;
-  }
+    set<C::Variable>("Character:triggered_action", action);
+
   return false;
 }
 
@@ -638,17 +647,17 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
     if (compute_path_from_target
         (C::make_handle<C::Absolute_position>("Goto:view", Point (to_int(args[0]), to_int(args[1]))),
          id))
-      m_timed.insert (std::make_pair (0, get<C::Path>(id + ":path")));
+     m_current_action->schedule (0, get<C::Path>(id + ":path"));
   }
   else
   {
     std::string target
-        = (args.empty() ? m_current_action->target_entity() : args[0]);
+        = (args.empty() ? get<C::Action>("Character:action")->target_entity() : args[0]);
     debug << "Action_goto " << target << std::endl;
 
     auto position = request<C::Position>(target + ":view");
     if (compute_path_from_target(position, id))
-      m_timed.insert (std::make_pair (0, get<C::Path>(id + ":path")));
+     m_current_action->schedule (0, get<C::Path>(id + ":path"));
   }
 
   return true;
@@ -662,7 +671,7 @@ bool Logic::function_look (const std::vector<std::string>& args)
   if (args.size() == 1)
     target = args[0];
   else
-    target = m_current_action->target_entity();
+    target = get<C::Action>("Character:action")->target_entity();
 
   debug << "Action_look " << target << std::endl;
   const std::string& id = value<C::String>("Player:name");
@@ -696,9 +705,9 @@ bool Logic::function_play (const std::vector<std::string>& args)
       set<C::String>(character + ":start_animation", target);
 
       if (duration > 0)
-        m_timed.insert (std::make_pair (m_current_time + duration,
+       m_current_action->schedule (m_current_time + duration,
                                         C::make_handle<C::Signal>
-                                        (character + ":stop_animation")));
+                                        (character + ":stop_animation"));
     }
     else
     {
@@ -721,7 +730,7 @@ bool Logic::function_play (const std::vector<std::string>& args)
         double latest_frame_time = frame_time(m_current_time);
         double end_time = latest_frame_time + (nb_frames + 0.5) / double(Config::animation_fps);
 
-        m_timed.insert (std::make_pair (end_time, C::make_handle<C::Signal>("Dummy:event")));
+       m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
       }
     }
   }
@@ -739,6 +748,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
 {
   std::string option = args[0];
   std::string target = args[1];
+
   if (option == "coordinates")
   {
     int x = to_int(args[2]);
@@ -752,13 +762,13 @@ bool Logic::function_set (const std::vector<std::string>& args)
       double begin_time = frame_time(m_current_time);
       double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
 
-      m_timed.insert (std::make_pair (end_time, C::make_handle<C::Signal>("Dummy:event")));
+     m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
 
       auto pos = get<C::Position>(target + ":position");
 
       auto anim = set<C::Tuple<Point, Point, double, double>>
           (target + ":animation", pos->value(), Point(x,y), begin_time, end_time);
-      m_timed.insert (std::make_pair (end_time,  anim));
+     m_current_action->schedule (end_time,  anim);
     }
     else
     {
@@ -873,8 +883,7 @@ bool Logic::function_system (const std::vector<std::string>& args)
   else if (option == "trigger")
   {
     std::string id = args[1];
-    m_current_action = get<C::Action>(id + ":action");
-    m_next_step = 0;
+    set<C::Variable>("Character:triggered_action", get<C::Action>(id + ":action"));
   }
   else if (option == "menu")
   {
@@ -888,7 +897,8 @@ bool Logic::function_system (const std::vector<std::string>& args)
     if (args.size() == 2)
     {
       double time = to_double(args[1]);
-      m_timed.insert (std::make_pair (m_current_time + time, C::make_handle<C::Base>("wait")));
+      debug << "Schedule wait until " << m_current_time + time << std::endl;
+      m_current_action-> schedule (m_current_time + time, C::make_handle<C::Base>("wait"));
     }
     return false;
   }
@@ -941,23 +951,22 @@ bool Logic::function_talk (const std::vector<std::string>& args)
     else if (x - size_factor * img->width() / 2 < int(0.1 * Config::world_width))
       x = int(0.1 * Config::world_width + size_factor * img->width() / 2);
 
-
   for (auto img : dialog)
   {
     auto pos = set<C::Absolute_position> (img->entity() + ":position", Point(x,y));
     y += 80 * size_factor;
 
-    m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), img));
-    m_timed.insert (std::make_pair (m_current_time + std::max(1., nb_seconds_read), pos));
+   m_current_action->schedule (m_current_time + std::max(1., nb_seconds_read), img);
+   m_current_action->schedule (m_current_time + std::max(1., nb_seconds_read), pos);
   }
 
   if (id != "Hinter")
   {
     emit (id + ":start_talking");
 
-    m_timed.insert (std::make_pair (m_current_time + nb_seconds_lips_moving,
+   m_current_action->schedule (m_current_time + nb_seconds_lips_moving,
                                     C::make_handle<C::Signal>
-                                    (id + ":stop_talking")));
+                                    (id + ":stop_talking"));
   }
   return true;
 }

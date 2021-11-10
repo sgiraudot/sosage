@@ -29,6 +29,8 @@
 
 #include <Sosage/Component/Base.h>
 
+#include <functional>
+#include <set>
 #include <vector>
 
 namespace Sosage::Component
@@ -50,21 +52,35 @@ public:
     Step (const std::string& function, const std::vector<std::string>& args);
     const std::string& function() const;
     const std::vector<std::string>& args() const;
+    std::string to_string() const;
   };
+
+  using Timed_handle = std::pair<double, Handle>;
 
 private:
 
   std::vector<Step> m_steps;
+  std::set<Timed_handle> m_timed;
+  std::size_t m_next_step;
+  bool m_on;
+  bool m_still_waiting; // for this world to stop hating
 
 public:
 
   Action (const std::string& id);
   void add (const std::string& function, const std::vector<std::string>& args);
+  void launch();
+  void stop();
+  bool on() const;
   std::string str() const;
   std::size_t size() const;
   std::vector<Step>::const_iterator begin() const;
   std::vector<Step>::const_iterator end() const;
-  const Step& operator[] (const std::size_t& idx) const;
+  const std::set<Timed_handle>& scheduled() const;
+  void schedule (double time, Handle h);
+  void update_scheduled (const std::function<bool(Timed_handle)>& predicate);
+  bool ready() const;
+  const Step& next_step();
 };
 
 using Action_handle = std::shared_ptr<Action>;

@@ -722,7 +722,7 @@ void Interface::menu_clicked ()
   {
     delete_menu(menu);
     status()->pop();
-    set<C::Variable>("Character:action", action);
+    set<C::Variable>("Character:triggered_action", action);
   }
 }
 

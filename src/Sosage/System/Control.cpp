@@ -228,9 +228,9 @@ void Control::set_action (const std::string& id, const std::string& default_id)
 {
   debug << "Set action to " << id << " (fallback to " << default_id << ")" << std::endl;
   if (auto action = request<C::Action>(id + ":action"))
-    set<C::Variable>("Character:action", action);
+    set<C::Variable>("Character:triggered_action", action);
   else
-    set<C::Variable>("Character:action", get<C::Action>(default_id + ":action"));
+    set<C::Variable>("Character:triggered_action", get<C::Action>(default_id + ":action"));
 }
 
 } // namespace Sosage::System

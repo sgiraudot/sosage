@@ -38,7 +38,8 @@ Content::Content()
   // For some components, we want to quickly access to the whole
   // list, so we separate them in specific Handle sets
   auto reserved_components
-      = { "animation",
+      = { "action",
+          "animation",
           "image",
           "label",
           "lookat",
