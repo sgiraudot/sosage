@@ -61,6 +61,12 @@ Action::Action (const std::string& id)
   : Base (id), m_next_step(0), m_on(false), m_still_waiting(false)
 { }
 
+void Action::clear()
+{
+ m_steps.clear();
+ stop();
+}
+
 void Action::add (const std::string& function, const std::vector<std::string>& args)
 {
   m_steps.push_back (Step ("function_" + function, args));

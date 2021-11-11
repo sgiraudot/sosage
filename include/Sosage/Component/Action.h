@@ -68,6 +68,7 @@ private:
 public:
 
   Action (const std::string& id);
+  void clear();
   void add (const std::string& function, const std::vector<std::string>& args);
   void launch();
   void stop();

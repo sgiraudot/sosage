@@ -560,11 +560,14 @@ bool Logic::function_camera (const std::vector<std::string>& args)
 bool Logic::function_dialog (const std::vector<std::string>& args)
 {
   check (!args.empty(), "function_dialog() takes 1 argument");
-  auto dialog = get<C::Dialog>(args[0] + ":dialog");
+  std::string id = args[0];
+  bool is_continue = (args.size() > 1);
+  auto dialog = get<C::Dialog>(id + ":dialog");
 
-  auto action = C::make_handle<C::Action>("Dialog:action");
+  auto action = get<C::Action>("Logic:action");
+  action->clear();
 
-  if (args.size() == 1)
+  if (!is_continue)
   {
     status()->push(LOCKED);
     if (auto pos = request<C::Int>("Saved_game:dialog_position"))
@@ -605,7 +608,7 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
     std::tie (character, line) = dialog->line();
     action->add ("talk", { character, line });
     action->add ("system", { "wait" });
-    action->add ("dialog", { args[0], "continue" });
+    action->add ("dialog", { id, "continue" });
   }
   else
   {
@@ -615,13 +618,14 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
     status()->push(DIALOG_CHOICE);
     auto choices = set<C::Vector<std::string> >("Dialog:choices");
     dialog->get_choices (*choices);
-    action->add ("dialog", { args[0], "continue" });
+    action->add ("dialog", { id, "continue" });
 
     // Keep track in case player saves and reload there
-    set<C::String>("Game:current_dialog", args[0]);
+    set<C::String>("Game:current_dialog", id);
   }
 
   if (action->size() != 0)
+    //action->launch();
     set<C::Variable>("Character:triggered_action", action);
 
   return false;
@@ -883,7 +887,7 @@ bool Logic::function_system (const std::vector<std::string>& args)
   else if (option == "trigger")
   {
     std::string id = args[1];
-    set<C::Variable>("Character:triggered_action", get<C::Action>(id + ":action"));
+    get<C::Action>(id + ":action")->launch();
   }
   else if (option == "menu")
   {
