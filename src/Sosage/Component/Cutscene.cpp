@@ -73,7 +73,7 @@ std::vector<Cutscene::Element>::iterator Cutscene::end()
 
 Cutscene::Element& Cutscene::add (const std::string& id)
 {
-  m_display.push_back ({id, {}, false});
+  m_display.push_back ({id, {}, true});
   return m_display.back();
 }
 

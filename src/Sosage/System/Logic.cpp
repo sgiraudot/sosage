@@ -1076,7 +1076,7 @@ void Logic::create_hints()
   emit(player + ":stop_walking");
   remove(player + ":path", true);
   auto action = set<C::Action>("Hints:action");
-  set<C::Variable>("Character:action", action);
+  set<C::Variable>("Character:triggered_action", action);
   action->add("play", { "animation", "telephone", "-1" });
   action->add("dialog", { "Hints" });
 

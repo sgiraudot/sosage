@@ -100,10 +100,14 @@ void File_IO::clean_content()
 
   std::unordered_set<std::string> force_keep;
   auto inventory = get<C::Inventory>("Game:inventory");
+
   if (!full_reset)
   {
     for (const std::string& entity : *inventory)
       force_keep.insert (entity);
+    if (auto phone_numbers = request<C::Vector<std::string>>("phone_numbers:list"))
+      for (const std::string& entity : phone_numbers->value())
+        force_keep.insert (entity);
   }
   else
   {
