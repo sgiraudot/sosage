@@ -933,6 +933,8 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   }
 
   text = locale(text);
+  if (id == "Hinter")
+    text = "*" + text + "*";
 
   std::vector<C::Image_handle> dialog;
   create_dialog (id, text, dialog);
@@ -1057,20 +1059,20 @@ void Logic::create_hints()
   const std::string& player = value<C::String>("Player:name");
   set<C::Variable>("Hinter_body:position", get<C::Position>(player + "_body:position"));
 
-  auto first = dialog->add_vertex ("Hinter", "*" + locale_get("Hint_welcome:text") + "*");
+  auto first = dialog->add_vertex ("Hinter", value<C::String>("Hint_welcome:text"));
   auto choice = dialog->add_vertex();
   dialog->add_edge(dialog->vertex_in(), first);
   dialog->add_edge(first, choice);
 
   for (const std::string& h : get<C::Set<std::string>>("Hints:list")->value())
   {
-    auto va = dialog->add_vertex ("Hinter", "*" + locale_get (h + ":answer") + "*");
-    dialog->add_edge(choice, va, true, locale_get (h + ":question"));
+    auto va = dialog->add_vertex ("Hinter", value<C::String>(h + ":answer"));
+    dialog->add_edge(choice, va, true, value<C::String>(h + ":question"));
     dialog->add_edge(va, choice);
   }
 
-  auto closing = dialog->add_vertex ("Hinter", "*" + locale_get("Hint_bye:text") + "*");
-  dialog->add_edge(choice, closing, false, locale_get("Hint_end:text"));
+  auto closing = dialog->add_vertex ("Hinter", value<C::String>("Hint_bye:text"));
+  dialog->add_edge(choice, closing, false, value<C::String>("Hint_end:text"));
   dialog->add_edge(closing, dialog->vertex_out());
 
   emit(player + ":stop_walking");
