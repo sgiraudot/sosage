@@ -90,7 +90,7 @@ public:
 
   Yaml (const std::string& filename, bool pref_file = false, bool write = false);
   ~Yaml();
-  void parse();
+  bool parse();
   const Node& root() const;
   const Node& operator[] (const std::string& key) const;
   const Node& operator[] (const char* key) const;

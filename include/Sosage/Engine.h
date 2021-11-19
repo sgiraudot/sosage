@@ -43,7 +43,7 @@ public:
 
   Engine (int argc, char** argv);
   ~Engine();
-  int run (const std::string& folder_name);
+  bool run (const std::string& folder_name);
   bool run();
 
 private:

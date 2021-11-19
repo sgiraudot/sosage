@@ -64,8 +64,6 @@ extern std::ostream debug;
 
 void check_impl (const char* file, int line, const std::string& str);
 
-struct No_such_file : public std::exception { };
-
 } // namespace Sosage
 
 #endif // SOSAGE_UTILS_ERROR_H

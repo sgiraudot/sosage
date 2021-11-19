@@ -52,6 +52,11 @@ Asset::Asset (const void* memory, std::size_t size)
 
 Asset::Asset() { }
 
+Asset::operator bool() const
+{
+  return bool(m_base);
+}
+
 void Asset::close()
 {
   IO::close(m_base);
@@ -102,23 +107,16 @@ bool Asset_manager::packaged()
   return !buffers.empty();
 }
 
-void Asset_manager::init (const std::string& folder, bool scap_mode)
+bool Asset_manager::init (const std::string& folder, bool scap_mode)
 {
   folder_name = folder;
   if (scap_mode)
-    return;
+    return true;
 
-  try
-  {
-    Asset asset = open ("general.data");
-    asset.close();
+  if (exists ("general.data"))
     buffers.resize(packages.size());
-  }
-  catch (Sosage::No_such_file&)
-  {
-    Asset asset = open ("data/init.yaml");
-    asset.close();
-  }
+  else if (!exists("data/init.yaml"))
+    return false;
 
   if (packaged())
   {
@@ -197,6 +195,8 @@ void Asset_manager::init (const std::string& folder, bool scap_mode)
     SOSAGE_TIMER_STOP(Asset_manager__depackage);
 
   }
+
+  return true;
 }
 
 Asset Asset_manager::open_pref (const std::string& filename, bool write)
@@ -210,7 +210,10 @@ Asset Asset_manager::open (const std::string& filename, bool file_is_package)
   {
     auto iter = package_asset_map.find(filename);
     if (iter == package_asset_map.end())
-      throw No_such_file();
+    {
+      debug << "Can't find asset " << filename << std::endl;
+      return Asset();
+    }
     Packaged_asset& asset = iter->second;
     if (asset.compressed_size == 0) // uncompressed file
       return Asset (buffers[asset.buffer_id].data() + asset.position, asset.size);
@@ -226,15 +229,8 @@ Asset Asset_manager::open (const std::string& filename, bool file_is_package)
 
 bool Asset_manager::exists (const std::string& filename)
 {
-  try
-  {
-    open (filename);
-  }
-  catch (No_such_file&)
-  {
-    return false;
-  }
-  return true;
+  Asset asset = open (filename);
+  return bool(asset);
 }
 
 std::tuple<int, int, int> Asset_manager::image_info (const std::string& filename)

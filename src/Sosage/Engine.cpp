@@ -91,9 +91,10 @@ Engine::~Engine()
   m_content.clear();
 }
 
-int Engine::run (const std::string& folder_name)
+bool Engine::run (const std::string& folder_name)
 {
-  Asset_manager::init(folder_name);
+  if (!Asset_manager::init(folder_name))
+    return false;
 
   // Init main variables
   auto status = m_content.set_fac<Component::Status>(GAME__STATUS, "Game:status");
@@ -165,7 +166,7 @@ int Engine::run (const std::string& folder_name)
   interface.reset(); // Clear interface before SDL is exited
   m_content.clear();
 
-  return EXIT_SUCCESS;
+  return true;
 }
 
 bool Engine::run()

@@ -164,10 +164,9 @@ void File_IO::read_config()
   int window_height = -1;
 #endif
 
-  try
+  Core::File_IO input ("config.yaml", true);
+  if (input.parse())
   {
-    Core::File_IO input ("config.yaml", true);
-    input.parse();
     if (input.has("locale")) locale = input["locale"].string();
     if (input.has("fullscreen")) fullscreen = input["fullscreen"].boolean();
     if (input.has("input_mode")) input_mode = input["input_mode"].integer();
@@ -183,9 +182,6 @@ void File_IO::read_config()
       window_width = input["window"][0].integer();
       window_height = input["window"][1].integer();
     }
-  }
-  catch (Sosage::No_such_file&)
-  {
   }
 
   set_fac<C::String>(GAME__CURRENT_LOCAL, "Game:current_locale", locale);
@@ -227,10 +223,12 @@ void File_IO::write_config()
   output.write ("window", value<C::Int>("Window:width"), value<C::Int>("Window:height"));
 }
 
-void File_IO::read_savefile()
+bool File_IO::read_savefile()
 {
   Core::File_IO input ("save.yaml", true);
-  input.parse();
+  if (!input.parse())
+    return false;
+
   set<C::String>("Game:new_room", input["room"].string());
   set<C::String>("Game:new_room_origin", "Saved_game");
 
@@ -285,6 +283,8 @@ void File_IO::read_savefile()
     action->add ("dialog", { input["dialog"].string() });
     set<C::Int>("Saved_game:dialog_position", input["dialog_position"].integer());
   }
+
+  return true;
 }
 
 void File_IO::write_savefile()
@@ -552,11 +552,7 @@ void File_IO::read_init ()
     set<C::String>("Game:init_new_room", input["load_cutscene"].string());
   }
 
-  try
-  {
-    read_savefile();
-  }
-  catch(Sosage::No_such_file&)
+  if (!read_savefile())
   {
     set<C::Variable>("Game:new_room", get<C::String>("Game:init_new_room"));
     if (auto orig = request<C::String>("Game:init_new_room_origin"))

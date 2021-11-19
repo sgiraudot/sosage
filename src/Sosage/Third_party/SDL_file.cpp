@@ -31,17 +31,17 @@
 namespace Sosage::Third_party::SDL_file
 {
 
+Asset::operator bool() const
+{
+  return (buffer != nullptr);
+}
+
 Asset open (const std::string& filename, bool write)
 {
   Asset out;
   out.buffer = SDL_RWFromFile(filename.c_str(), write ? "w" : "r");
-  if (out.buffer == nullptr)
-  {
-    debug << "File " << filename << " not found" << std::endl;
-    throw Sosage::No_such_file();
-  }
-
-  out.size = std::size_t(SDL_RWsize (out.buffer));
+  if (out.buffer != nullptr)
+    out.size = std::size_t(SDL_RWsize (out.buffer));
   return out;
 }
 
@@ -49,13 +49,8 @@ Asset open (const void* memory, std::size_t size)
 {
   Asset out;
   out.buffer = SDL_RWFromConstMem(memory, int(size));
-  if (out.buffer == nullptr)
-  {
-    debug << "Can't read memory buffer" << std::endl;
-    throw Sosage::No_such_file();
-  }
-
-  out.size = std::size_t(SDL_RWsize (out.buffer));
+  if (out.buffer != nullptr)
+    out.size = std::size_t(SDL_RWsize (out.buffer));
   return out;
 }
 

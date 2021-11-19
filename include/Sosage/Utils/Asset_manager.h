@@ -54,6 +54,7 @@ class Asset
 public:
 
   Asset();
+  operator bool() const;
   void close();
   SDL_RWops* base();
   std::size_t size() const;
@@ -97,7 +98,7 @@ class Asset_manager
 public:
 
   static bool packaged();
-  static void init (const std::string& folder, bool scap_mode = false);
+  static bool init (const std::string& folder, bool scap_mode = false);
   static Asset open_pref (const std::string& filename, bool write = false);
   static Asset open (const std::string& filename, bool file_is_package = false);
   static bool exists (const std::string& filename);

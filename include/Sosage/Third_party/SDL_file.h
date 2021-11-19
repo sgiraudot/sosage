@@ -36,8 +36,9 @@ namespace Sosage::Third_party::SDL_file
 
 struct Asset
 {
-  SDL_RWops* buffer;
-  std::size_t size;
+  SDL_RWops* buffer = nullptr;
+  std::size_t size = 0;
+  operator bool() const;
 };
 
 Asset open (const std::string& filename, bool write = false);

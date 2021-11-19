@@ -178,11 +178,15 @@ Yaml::Yaml (const std::string& filename, bool pref_file, bool write)
 
 Yaml::~Yaml()
 {
-  m_file.close();
+  if (m_file)
+    m_file.close();
 }
 
-void Yaml::parse()
+bool Yaml::parse()
 {
+  if (!m_file)
+    return false;
+
   unsigned char* buffer = new unsigned char[m_file.size() + 1];
   std::size_t nb_read_total = 0, nb_read = 1;
   unsigned char* buf = buffer;
@@ -292,6 +296,8 @@ void Yaml::parse()
 
   delete[] buffer;
 //    m_root->print();
+
+  return true;
 }
 
 const Yaml::Node& Yaml::root() const
