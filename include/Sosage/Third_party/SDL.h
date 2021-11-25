@@ -56,11 +56,13 @@ public:
 #endif
 
   using Texture_manager = Resource_manager<SDL_Texture>;
+  using Info_manager = Resource_manager<std::tuple<int, int, double>>;
   using Bitmap_manager = Resource_manager<Bitmap_2>;
   using Font_manager = Resource_manager<TTF_Font>;
 
   using Surface = std::shared_ptr<SDL_Surface>;
   using Texture = typename Texture_manager::Resource_handle;
+  using Image_info = typename Info_manager::Resource_handle;
   using Bitmap = typename Bitmap_manager::Resource_handle;
   using Font_base = typename Font_manager::Resource_handle;
 
@@ -100,6 +102,7 @@ public:
   static SDL_Renderer* m_renderer;
   static SDL_RendererInfo m_info;
   static Texture_manager m_textures;
+  static Info_manager m_image_info;
   static Bitmap_manager m_masks;
   static Font_manager m_fonts;
   SDL_Surface* m_icon;

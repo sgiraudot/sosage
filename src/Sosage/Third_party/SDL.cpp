@@ -43,6 +43,7 @@ SDL_Window* SDL::m_window = nullptr;
 SDL_Renderer* SDL::m_renderer = nullptr;
 SDL_RendererInfo SDL::m_info;
 SDL::Texture_manager SDL::m_textures (SDL_DestroyTexture);
+SDL::Info_manager SDL::m_image_info;
 SDL::Bitmap_manager SDL::m_masks;
 SDL::Font_manager SDL::m_fonts (TTF_CloseFont);
 
@@ -212,103 +213,142 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
 {
   SOSAGE_TIMER_START(SDL_Image__load_image);
 
-  SOSAGE_TIMER_START(SDL_Image__load_image_file);
-  SDL_Surface* surf;
-  if (Asset_manager::packaged())
-  {
-    int width, height;
-    int format_int;
-    std::tie (width, height, format_int) = Asset_manager::image_info (file_name);
+  SDL_Surface* surf = nullptr;
+  SDL_Surface* highlight = nullptr;
+  int width = -1;
+  int height = -1;
+  double texture_downscale = 1.;
 
-    surf = SDL_CreateRGBSurfaceWithFormat (0, width, height, 32, format_int);
-    SDL_LockSurface (surf);
-    Asset_manager::open (file_name, surf->pixels);
-    SDL_UnlockSurface (surf);
+  Texture text = m_textures.make_mapped
+      (file_name,
+       [&]() -> SDL_Texture*
+       {
+         SOSAGE_TIMER_START(SDL_Image__load_image_file);
+         if (Asset_manager::packaged())
+         {
+           int width, height;
+           int format_int;
+           std::tie (width, height, format_int) = Asset_manager::image_info (file_name);
+
+           surf = SDL_CreateRGBSurfaceWithFormat (0, width, height, 32, format_int);
+           SDL_LockSurface (surf);
+           Asset_manager::open (file_name, surf->pixels);
+           SDL_UnlockSurface (surf);
+         }
+         else
+         {
+           Asset asset = Asset_manager::open(file_name);
+           surf = IMG_Load_RW (asset.base(), 1);
+         }
+         check (surf != nullptr, "Cannot load image " + file_name
+         + " (" + std::string(SDL_GetError()) + ")");
+
+         SOSAGE_TIMER_STOP(SDL_Image__load_image_file);
+
+         if (with_highlight)
+         {
+           SOSAGE_TIMER_START(SDL_Image__load_image_create_highlight);
+           highlight = SDL_CreateRGBSurface (0, surf->w,
+           surf->h, 32, rmask, gmask, bmask, amask);
+
+           Surface_access source (surf);
+           Surface_access target (highlight);
+
+           for (std::size_t i = 0; i < target.width(); ++ i)
+           for (std::size_t j = 0; j < target.height(); ++ j)
+           target.set(i,j, {255, 255, 255, (unsigned char)(0.5 * source.get(i,j)[3])});
+
+           source.release();
+           target.release();
+           SOSAGE_TIMER_STOP(SDL_Image__load_image_create_highlight);
+         }
+
+         height = surf->h;
+         width = surf->w;
+         int width_max = m_info.max_texture_width;
+         int height_max = m_info.max_texture_height;
+         if (surf->w > width_max || surf->h > height_max)
+         {
+           SOSAGE_TIMER_START(SDL_Image__load_image_texture_downscale);
+           texture_downscale = std::min (double(width_max) / surf->w,
+           double(height_max) / surf->h);
+           debug << file_name << " is too large and will be downscaled by a factor " << texture_downscale << std::endl;
+           SDL_Surface* old = surf;
+           surf = SDL_CreateRGBSurface
+           (old->flags, old->w, old->h,
+           32, old->format->Rmask, old->format->Gmask, old->format->Bmask, old->format->Amask);
+           SDL_BlitSurface (old, nullptr, surf, nullptr);
+           SDL_FreeSurface (old);
+
+           old = surf;
+           surf = SDL_CreateRGBSurface
+           (old->flags, int(texture_downscale * old->w), int(texture_downscale * old->h),
+           32, old->format->Rmask, old->format->Gmask, old->format->Bmask, old->format->Amask);
+           check (surf != nullptr, "Cannot create rectangle surface ("
+           + std::string(SDL_GetError()) + ")");
+
+           int result = SDL_BlitScaled(old, nullptr, surf, nullptr);
+           check (result == 0, "Couldn't blit surface ("
+           + std::string(SDL_GetError()) + ")");
+           SDL_FreeSurface(old);
+           SOSAGE_TIMER_STOP(SDL_Image__load_image_texture_downscale);
+         }
+
+         m_image_info.make_mapped (file_name, [](int w, int h, double td) -> std::tuple<int,int,double>*
+         {
+          return new std::tuple<int,int,double>(w,h,td);
+         },
+         width, height, texture_downscale);
+
+         SOSAGE_TIMER_START(SDL_Image__load_image_texture);
+         SDL_Texture* out = SDL_CreateTextureFromSurface(m_renderer, surf);
+         check (out != nullptr, "Cannot create texture from " + file_name
+         + " (" + std::string(SDL_GetError()) + ")");
+         SOSAGE_TIMER_STOP(SDL_Image__load_image_texture);
+         return out;
+       });
+
+  if (surf != nullptr)
+  {
+    debug << file_name << " was loaded" << std::endl;
   }
   else
   {
-    Asset asset = Asset_manager::open(file_name);
-    surf = IMG_Load_RW (asset.base(), 1);
-  }
-  check (surf != nullptr, "Cannot load image " + file_name
-         + " (" + std::string(SDL_GetError()) + ")");
-
-  SOSAGE_TIMER_STOP(SDL_Image__load_image_file);
-
-  SDL_Surface* highlight = nullptr;
-
-  if (with_highlight)
-  {
-    SOSAGE_TIMER_START(SDL_Image__load_image_create_highlight);
-    highlight = SDL_CreateRGBSurface (0, surf->w,
-                                      surf->h, 32, rmask, gmask, bmask, amask);
-
-    Surface_access source (surf);
-    Surface_access target (highlight);
-
-    for (std::size_t i = 0; i < target.width(); ++ i)
-      for (std::size_t j = 0; j < target.height(); ++ j)
-        target.set(i,j, {255, 255, 255, (unsigned char)(0.5 * source.get(i,j)[3])});
-
-    source.release();
-    target.release();
-    SOSAGE_TIMER_STOP(SDL_Image__load_image_create_highlight);
+    debug << file_name << " was reused" << std::endl;
+    auto info = m_image_info.get(file_name);
+    width = std::get<0>(*info);
+    height = std::get<1>(*info);
+    texture_downscale = std::get<2>(*info);
   }
 
-  int height = surf->h;
-  int width = surf->w;
-  int width_max = m_info.max_texture_width;
-  int height_max = m_info.max_texture_height;
-  double texture_downscale = 1.;
-  if (surf->w > width_max || surf->h > height_max)
-  {
-    SOSAGE_TIMER_START(SDL_Image__load_image_texture_downscale);
-    texture_downscale = std::min (double(width_max) / surf->w,
-                                  double(height_max) / surf->h);
-    debug << file_name << " is too large and will be downscaled by a factor " << texture_downscale << std::endl;
-    SDL_Surface* old = surf;
-    surf = SDL_CreateRGBSurface
-           (old->flags, old->w, old->h,
-            32, old->format->Rmask, old->format->Gmask, old->format->Bmask, old->format->Amask);
-    SDL_BlitSurface (old, nullptr, surf, nullptr);
-    SDL_FreeSurface (old);
-
-    old = surf;
-    surf = SDL_CreateRGBSurface
-           (old->flags, int(texture_downscale * old->w), int(texture_downscale * old->h),
-            32, old->format->Rmask, old->format->Gmask, old->format->Bmask, old->format->Amask);
-    check (surf != nullptr, "Cannot create rectangle surface ("
-           + std::string(SDL_GetError()) + ")");
-
-    int result = SDL_BlitScaled(old, nullptr, surf, nullptr);
-    check (result == 0, "Couldn't blit surface ("
-           + std::string(SDL_GetError()) + ")");
-    SDL_FreeSurface(old);
-    SOSAGE_TIMER_STOP(SDL_Image__load_image_texture_downscale);
-  }
-
-
-  SOSAGE_TIMER_START(SDL_Image__load_image_texture);
-  Texture text = m_textures.make_mapped (file_name, SDL_CreateTextureFromSurface, m_renderer, surf);
-  check (text != Texture(), "Cannot create texture from " + file_name
-         + " (" + std::string(SDL_GetError()) + ")");
-  SOSAGE_TIMER_STOP(SDL_Image__load_image_texture);
   Bitmap mask = nullptr;
   if (with_mask)
   {
-    SOSAGE_TIMER_START(SDL_Image__load_image_mask);
-    mask = m_masks.make_mapped (file_name, create_mask, surf);
-    SOSAGE_TIMER_STOP(SDL_Image__load_image_mask);
+    if (surf == nullptr) // Image already loaded
+      mask = m_masks.get (file_name);
+    else
+    {
+      SOSAGE_TIMER_START(SDL_Image__load_image_mask);
+      check (surf != nullptr, "Cannot create mask from null surface, from " + file_name);
+      mask = m_masks.make_mapped (file_name, create_mask, surf);
+      SOSAGE_TIMER_STOP(SDL_Image__load_image_mask);
+    }
   }
 
   Image out (text, mask, width, height, 1);
   if (with_highlight)
   {
-    SOSAGE_TIMER_START(SDL_Image__load_image_hightlight_2);
-    out.highlight = m_textures.make_mapped (file_name + "highlight",
-                                            SDL_CreateTextureFromSurface, m_renderer, highlight);
-    SDL_FreeSurface (highlight);
-    SOSAGE_TIMER_STOP(SDL_Image__load_image_hightlight_2);
+    if (surf == nullptr)
+      out.highlight = m_textures.get (file_name + "highlight");
+    else
+    {
+      SOSAGE_TIMER_START(SDL_Image__load_image_hightlight_2);
+      check (highlight != nullptr, "Cannot create hightlight from null surface, from " + file_name);
+      out.highlight = m_textures.make_mapped (file_name + "highlight",
+                                              SDL_CreateTextureFromSurface, m_renderer, highlight);
+      SDL_FreeSurface (highlight);
+      SOSAGE_TIMER_STOP(SDL_Image__load_image_hightlight_2);
+    }
   }
 
   out.texture_downscale = texture_downscale;

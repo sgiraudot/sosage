@@ -42,7 +42,8 @@ class Resource_manager
 public:
 
   using Resource_handle = std::shared_ptr<Resource>;
-  using Data = std::unordered_map<std::string, Resource_handle> ;
+  using Data = std::unordered_map<std::string, Resource_handle>;
+  using iterator = typename Data::iterator;
   
 private:
 
@@ -57,6 +58,13 @@ public:
   { }
 
   void clear() { m_data.clear(); }
+
+  Resource_handle get (const std::string& key)
+  {
+    iterator out = m_data.find(key);
+    check (out != m_data.end(), "Can't find resource " + key);
+    return out->second;
+  }
 
   Resource_handle make_single_base (const std::function<Resource*()>& f)
   {
