@@ -32,6 +32,7 @@
 #include <Sosage/Component/Cutscene.h>
 #include <Sosage/Component/Dialog.h>
 #include <Sosage/Component/Ground_map.h>
+#include <Sosage/Component/Group.h>
 #include <Sosage/Component/GUI_animation.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Image.h>
@@ -425,15 +426,15 @@ void Logic::follow (const std::string& follower)
 {
   const std::string& player = value<C::String>("Player:name");
 
-  auto pos_player = get<C::Position>(player + "_idle:position");
-  auto pos_follower = get<C::Position>(follower + "_idle:position");
+  auto pos_player = get<C::Position>(player + "_body:position");
+  auto pos_follower = get<C::Position>(follower + "_body:position");
 
   double dx = std::abs(pos_player->value().x() - pos_follower->value().x());
   double dy = std::abs(pos_player->value().y() - pos_follower->value().y());
 
-  bool is_moving = get<C::Image>(follower + "_walking:image")->on();
+  bool is_moving = value<C::Boolean>(follower + ":walking");
 
-  double z = get<C::Image>(player + "_walking:image")->z();
+  double z = get<C::Image>(player + "_body:image")->z();
 
   int reach_x = Config::object_reach_x * z / Config::follow_factor;
   int reach_y = Config::object_reach_y * z / Config::follow_factor;
@@ -827,7 +828,8 @@ bool Logic::function_set (const std::vector<std::string>& args)
   }
   else if (option == "visible")
   {
-    if (auto boolean = request<C::Boolean>(target + ":visible"))
+    // Character
+    if (auto group = request<C::Group>(target + ":group"))
       emit (target + ":set_visible");
     else if (auto question = request<C::String>(target + ":question"))
       get<C::Set<std::string>>("Hints:list")->insert (target);
@@ -951,12 +953,10 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 
   int y = 100;
 
-  auto img = request<C::Image>(id + "_idle:image");
-  if (!img)
-    img = request<C::Image>(id + "_walking:image");
+  auto img = request<C::Image>(id + "_body:image");
   if (img)
   {
-    int candidate_y = position.Y() - img->height() * img->scale() * 1.5;
+    int candidate_y = position.Y() - img->height() * img->scale() * 2;
     if (candidate_y > y)
       y = candidate_y;
   }

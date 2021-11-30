@@ -52,7 +52,7 @@ std::string Debug::debug_str()
   out += std::to_string(m_content.size()) + " components in memory\n";
 
   const std::string& player = m_content.get<Component::String>("Player:name")->value();
-  auto img = m_content.get<Component::Image>(player + "_idle:image");
+  auto img = m_content.get<Component::Image>(player + "_body:image");
   auto pos = m_content.get<Component::Position>(player + "_body:position");
 
   out += "Player position = [" + std::to_string(pos->value().x())

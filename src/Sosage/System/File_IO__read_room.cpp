@@ -31,6 +31,7 @@
 #include <Sosage/Component/Dialog.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Ground_map.h>
+#include <Sosage/Component/Group.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Music.h>
@@ -63,31 +64,35 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   std::string color = input["color"].string();
   set<C::String> (id + ":color", color);
 
-  auto visible = request<C::Boolean>(id + ":visible");
-  if (!visible)
-    visible = set<C::Boolean>(id + ":visible", true);
+  bool visible = value<C::Boolean>(id + ":visible", true);
+  remove(id + ":visible", true);
+
+  auto walking = set<C::Boolean>(id + ":walking", false);
+
+  auto group = set<C::Group>(id + ":group");
 
   std::string mouth = input["mouth"]["skin"].string("images", "characters", "png");
   auto amouth
-    = C::make_handle<C::Animation>(id + "_mouth:image", mouth,
-                                          0, 11, 2, true);
-  set<C::Conditional>(amouth->id(), visible, amouth);
+    = set<C::Animation>(id + "_mouth:image", mouth,
+                        0, 11, 2, true);
   amouth->set_relative_origin(0.5, 1.0);
+  amouth->on() = visible;
+  group->add(amouth);
 
   std::string head = input["head"]["skin"].string("images", "characters", "png");
   int head_size = input["head"]["size"].integer();
   auto ahead
-    = C::make_handle<C::Animation>(id + "_head:image", head,
-                                   0, head_size, 2, true);
-  set<C::Conditional>(ahead->id(), visible, ahead);
+    = set<C::Animation>(id + "_head:image", head,
+                        0, head_size, 2, true);
   ahead->set_relative_origin(0.5, 1.0);
+  ahead->on() = visible;
+  group->add(ahead);
 
   std::string walk = input["walk"]["skin"].string("images", "characters", "png");
-  auto awalk = C::make_handle<C::Animation>(id + "_walking:image", walk,
-                                            0, 8, 4, true);
-  set<C::Conditional>(awalk->id(), visible, awalk);
+  auto awalk = C::make_handle<C::Animation>(id + "_body:image", walk,
+                                 0, 8, 4, true);
   awalk->set_relative_origin(0.5, 0.95);
-  awalk->on() = false;
+  awalk->on() = visible;
 
   std::string idle = input["idle"]["skin"].string("images", "characters", "png");
   std::vector<std::string> positions;
@@ -96,11 +101,13 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
 
   set<C::Vector<std::string> >(id + "_idle:values", positions);
 
-  auto aidle = C::make_handle<C::Animation>(id + "_idle:image", idle,
+  auto aidle = C::make_handle<C::Animation>(id + "_body:image", idle,
                                             0, positions.size(), 2, true);
-  set<C::Conditional>(aidle->id(), visible, aidle);
   aidle->set_relative_origin(0.5, 0.95);
+  aidle->on() = visible;
 
+  auto abody = set<C::Conditional>(id + "_body:image", walking, awalk, aidle);
+  group->add(abody);
 
   int hdx_right = input["head"]["dx_right"].integer();
   int hdx_left = input["head"]["dx_left"].integer();
@@ -129,9 +136,6 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
     get<C::Absolute_position>(id + "_head:position")->absolute() = false;
     get<C::Absolute_position>(id + "_mouth:position")->absolute() = false;
   }
-
-  set<C::Variable>(id + "_walking:position", pbody);
-  set<C::Variable>(id + "_idle:position", pbody);
 
   auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game:new_characters");
   if (!new_char)

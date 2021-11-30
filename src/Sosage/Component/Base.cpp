@@ -61,7 +61,7 @@ const std::string& Base::entity() const
 // Special handling of entity for characters
 std::string Base::character_entity() const
 {
-  for (const std::string& postfix : { "_body", "_head", "_idle", "_mouth", "_walking" })
+  for (const std::string& postfix : { "_body", "_head", "_mouth" })
   {
     std::size_t pos = m_id.find(postfix);
     if (pos != std::string::npos)

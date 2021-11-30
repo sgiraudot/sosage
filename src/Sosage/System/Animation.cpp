@@ -26,6 +26,7 @@
 
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Ground_map.h>
+#include <Sosage/Component/Group.h>
 #include <Sosage/Component/GUI_animation.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
@@ -133,10 +134,6 @@ void Animation::run_gui_frame()
 
 void Animation::run_animation_frame()
 {
-  for (auto c : components("visible"))
-    if (auto b = C::cast<C::Boolean>(c))
-      b->begin_temporary_true();
-
   if (auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game:new_characters"))
   {
     for (const auto& nc : new_char->value())
@@ -171,7 +168,7 @@ void Animation::run_animation_frame()
     debug << "lookat" << std::endl;
     const std::string& id = c->entity();
     auto lookat = C::cast<C::Position>(c);
-    auto abody = get<C::Animation>(id + "_idle:image");
+    auto abody = get<C::Animation>(id + "_body:image");
     auto ahead = get<C::Animation>(id + "_head:image");
     auto pbody = get<C::Position>(id + "_body:position");
     auto phead = get<C::Position>(id + "_head:position");
@@ -212,9 +209,9 @@ void Animation::run_animation_frame()
   for (auto c : components("stop_walking"))
   {
     const std::string& id = c->entity();
-    if (get<C::Animation>(id + "_walking:image")->on())
+    if (value<C::Boolean>(id + ":walking"))
     {
-      bool looking_right = (get<C::Animation>(id + "_walking:image")->frames().front().y != 2);
+      bool looking_right = (get<C::Animation>(id + "_body:image")->frames().front().y != 2);
       generate_random_idle_animation (id, looking_right);
       place_and_scale_character(id, looking_right);
     }
@@ -262,8 +259,7 @@ void Animation::run_animation_frame()
   for (auto c : components("start_talking"))
   {
     const std::string& id = c->entity();
-    if (value<C::Boolean>(id + ":visible"))
-      generate_random_mouth_animation (id);
+    generate_random_mouth_animation (id);
     to_remove.push_back(c->id());
   }
 
@@ -289,20 +285,16 @@ void Animation::run_animation_frame()
   for (auto c : components("set_visible"))
   {
     const std::string& id = c->entity();
-    auto b = get<C::Boolean>(id + ":visible");
-    b->end_temporary_true();
-    b->set (true);
-    b->begin_temporary_true();
+    auto g = get<C::Group>(id + ":group");
+    g->apply<C::Image>([](auto img) { img->on() = true; });
     to_remove.push_back(c->id());
   }
 
   for (auto c : components("set_hidden"))
   {
     const std::string& id = c->entity();
-    auto b = get<C::Boolean>(id + ":visible");
-    b->end_temporary_true();
-    b->set (false);
-    b->begin_temporary_true();
+    auto g = get<C::Group>(id + ":group");
+    g->apply<C::Image>([](auto img) { img->on() = false; });
     to_remove.push_back(c->id());
   }
 
@@ -321,10 +313,6 @@ void Animation::run_animation_frame()
     if (!contains(just_started, animation->entity()))
       if (!animation->next_frame())
         animation->on() = false;
-
-  for (auto c : components("visible"))
-    if (auto b = C::cast<C::Boolean>(c))
-        b->end_temporary_true();
 }
 
 bool Animation::run_loading()
@@ -339,11 +327,7 @@ bool Animation::run_loading()
 
 void Animation::place_and_scale_character(const std::string& id, bool looking_right)
 {
-  auto visible = get<C::Boolean>(id + ":visible");
-  bool was_visible = visible->value();
-  visible->set(true);
-  auto abody = get<C::Animation>(id + "_walking:image");
-  auto aidle = get<C::Animation>(id + "_idle:image");
+  auto abody = get<C::Animation>(id + "_body:image");
   auto ahead = get<C::Animation>(id + "_head:image");
   auto amouth = get<C::Animation>(id + "_mouth:image");
   auto pbody = get<C::Position>(id + "_body:position");
@@ -353,7 +337,6 @@ void Animation::place_and_scale_character(const std::string& id, bool looking_ri
 
   double new_z = ground_map->z_at_point (pbody->value());
   abody->rescale (new_z);
-  aidle->rescale (new_z);
   ahead->rescale (new_z);
   ahead->z() += 1;
   amouth->rescale (new_z);
@@ -373,7 +356,6 @@ void Animation::place_and_scale_character(const std::string& id, bool looking_ri
     pmouth->set (phead->value() - ahead->core().scaling
                 * Vector(value<C::Position>(id + "_mouth:gap_left")));
   }
-  visible->set(was_visible);
 }
 
 bool Animation::compute_movement_from_path (C::Path_handle path)
@@ -381,8 +363,8 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
   bool out = true;
 
   std::string id = path->entity();
-  auto abody = get<C::Animation>(id + "_walking:image");
-  auto aidle = get<C::Animation>(id + "_idle:image");
+  get<C::Boolean>(id + ":walking")->set(true);
+  auto abody = get<C::Animation>(id + "_body:image");
   auto ahead = get<C::Animation>(id + "_head:image");
   auto amouth = get<C::Animation>(id + "_mouth:image");
   auto pbody = get<C::Position>(id + "_body:position");
@@ -441,10 +423,9 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
 
 void Animation::set_move_animation (const std::string& id, const Vector& direction)
 {
-  auto image = get<C::Animation>(id + "_walking:image");
+  auto image = get<C::Animation>(id + "_body:image");
   auto head = get<C::Animation>(id + "_head:image");
   auto mouth = get<C::Animation>(id + "_mouth:image");
-  get<C::Animation>(id + "_idle:image")->on() = false;
 
   image->on() = true;
 
@@ -563,8 +544,8 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
 {
   debug << "Generate random idle body animation for character \"" << id << "\"" << std::endl;
 
-  auto image = get<C::Animation>(id + "_idle:image");
-  get<C::Animation>(id + "_walking:image")->on() = false;
+  get<C::Boolean>(id + ":walking")->set(false);
+  auto image = get<C::Animation>(id + "_body:image");
 
   // Reset all
   image->on() = true;
@@ -639,7 +620,8 @@ void Animation::generate_random_mouth_animation (const std::string& id)
 void Animation::generate_animation (const std::string& id, const std::string& anim)
 {
   debug << "Generate animation \"" << anim << "\" for character \"" << id << "\"" << std::endl;
-  auto image = get<C::Animation>(id + "_idle:image");
+  get<C::Boolean>(id + ":walking")->set(false);
+  auto image = get<C::Animation>(id + "_body:image");
   const std::vector<std::string>& positions
     = value<C::Vector<std::string> >(id + "_idle:values");
 
