@@ -101,6 +101,10 @@ public:
   {
     return Point (a.m_x + b.m_x, a.m_y + b.m_y);
   }
+  friend Point operator- (const Point& a, const Point& b)
+  {
+    return Point (a.m_x - b.m_x, a.m_y - b.m_y);
+  }
   friend Point operator* (const double& a, const Point& b)
   {
     return Point (a * b.m_x, a * b.m_y);

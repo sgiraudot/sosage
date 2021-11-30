@@ -33,6 +33,7 @@
 #include <Sosage/Component/Status.h>
 #include <Sosage/Config/config.h>
 #include <Sosage/System/Graphic.h>
+#include <Sosage/Utils/conversions.h>
 
 #include <algorithm>
 #include <vector>
@@ -135,13 +136,13 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
       Point screen_position = p - img->core().scaling * Vector(img->origin());
 
-      int xmin_target = screen_position.X();
-      int ymin_target = screen_position.y();
-      int xmax_target = xmin_target + round(img->core().scaling * (xmax - xmin));
-      int ymax_target = ymin_target + round(img->core().scaling * (ymax - ymin));
+      double xmin_target = screen_position.x();
+      double ymin_target = screen_position.y();
+      double xmax_target = xmin_target + img->core().scaling * (xmax - xmin);
+      double ymax_target = ymin_target + img->core().scaling * (ymax - ymin);
 
-      int limit_width = Config::world_width;
-      int limit_height = Config::world_height;
+      double limit_width = Config::world_width;
+      double limit_height = Config::world_height;
 
       // Skip out of boundaries images
       if ((xmax_target < 0 || xmin_target > limit_width)
@@ -173,12 +174,12 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
       int width = xmax - xmin;
       int height = ymax - ymin;
 
-      int width_target = xmax_target - xmin_target;
-      int height_target = ymax_target - ymin_target;
+      double width_target = xmax_target - xmin_target;
+      double height_target = ymax_target - ymin_target;
 
       m_core.draw (img->core(), xmin, ymin, width, height,
-                   xmin_target, ymin_target,
-                   width_target, height_target);
+                   round(xmin_target), round(ymin_target),
+                   round(width_target), round(height_target));
     }
   }
 
