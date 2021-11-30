@@ -441,7 +441,7 @@ void Logic::follow (const std::string& follower)
   if (!is_moving)
     reach_hysteresis = Config::object_reach_hysteresis * z / Config::follow_factor;
 
-  std::cerr << reach_x << " " << reach_y << " " << reach_hysteresis << std::endl;
+  //std::cerr << reach_x << " " << reach_y << " " << reach_hysteresis << std::endl;
 
   // Object out of reach
   if (dx > reach_x + reach_hysteresis ||
@@ -945,9 +945,21 @@ bool Logic::function_talk (const std::vector<std::string>& args)
       * (Config::min_reading_time + nb_char * Config::char_spoken_time);
   double nb_seconds_lips_moving = nb_char * Config::char_spoken_time;
 
+  Point position = value<C::Position>(id + "_body:position") - value<C::Position>(CAMERA__POSITION);
+
+  int x = position.X();
+
   int y = 100;
-  int x = int(value<C::Position>(id + "_body:position").x()
-              - value<C::Position>(CAMERA__POSITION).x());
+
+  auto img = request<C::Image>(id + "_idle:image");
+  if (!img)
+    img = request<C::Image>(id + "_walking:image");
+  if (img)
+  {
+    int candidate_y = position.Y() - img->height() * img->scale() * 1.5;
+    if (candidate_y > y)
+      y = candidate_y;
+  }
 
   double size_factor = 0.75 * (value<C::Int>("Dialog:size") / double(Config::MEDIUM));
 
