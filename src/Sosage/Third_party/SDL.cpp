@@ -62,7 +62,8 @@ void SDL::Image::free_mask()
 SDL::Surface_access::Surface_access (SDL_Surface* surface)
   : surface (surface)
 {
-  SDL_LockSurface(surface);
+  if (SDL_MUSTLOCK(surface))
+    SDL_LockSurface(surface);
   bpp = surface->format->BytesPerPixel;
 }
 
@@ -80,6 +81,7 @@ RGBA_color SDL::Surface_access::get (std::size_t x, std::size_t y) const
 {
   Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
   Uint32 data;
+
   switch (bpp)
   {
     case 1:
@@ -147,7 +149,8 @@ void SDL::Surface_access::set (std::size_t x, std::size_t y, const RGBA_color& c
 
 void SDL::Surface_access::release()
 {
-  SDL_UnlockSurface(surface);
+  if (SDL_MUSTLOCK(surface))
+    SDL_UnlockSurface(surface);
 }
 
 SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
@@ -248,18 +251,16 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
          if (with_highlight)
          {
            SOSAGE_TIMER_START(SDL_Image__load_image_create_highlight);
-           highlight = SDL_CreateRGBSurface (0, surf->w,
-           surf->h, 32, rmask, gmask, bmask, amask);
+           highlight = SDL_CreateRGBSurfaceWithFormat (0, surf->w,
+           surf->h, 32, SDL_PIXELFORMAT_ABGR8888);
+           SDL_BlitSurface (surf, nullptr, highlight, nullptr);
 
-           Surface_access source (surf);
-           Surface_access target (highlight);
+           Surface_access access (highlight);
+           for (std::size_t j = 0; j < access.height(); ++ j)
+           for (std::size_t i = 0; i < access.width(); ++ i)
+           access.set(i,j, {255, 255, 255, (unsigned char)(0.5 * access.get(i,j)[3])});
 
-           for (std::size_t i = 0; i < target.width(); ++ i)
-           for (std::size_t j = 0; j < target.height(); ++ j)
-           target.set(i,j, {255, 255, 255, (unsigned char)(0.5 * source.get(i,j)[3])});
-
-           source.release();
-           target.release();
+           access.release();
            SOSAGE_TIMER_STOP(SDL_Image__load_image_create_highlight);
          }
 
@@ -444,8 +445,8 @@ Bitmap_2* SDL::create_mask (SDL_Surface* surf)
 
   Surface_access access (surf);
 
-  for (std::size_t x = 0; x < out->width(); ++ x)
-    for (std::size_t y = 0; y < out->height(); ++ y)
+  for (std::size_t y = 0; y < out->height(); ++ y)
+    for (std::size_t x = 0; x < out->width(); ++ x)
       (*out)(x, y) = (access.get(x,y)[3] != 0);
 
   access.release();
@@ -635,6 +636,13 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
 
   int result = SDL_GetRendererInfo (m_renderer, &m_info);
   check (result == 0, "Cannot create SDL Renderer Info");
+
+  debug << "Renderer name: " << m_info.name << std::endl;
+  debug << "Supported texture formats: " << std::endl;
+  for (Uint32 i = 0; i < m_info.num_texture_formats; ++ i)
+  {
+    debug << SDL_GetPixelFormatName (m_info.texture_formats[i]) << std::endl;
+  }
 
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
 
