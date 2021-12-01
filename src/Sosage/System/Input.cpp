@@ -159,7 +159,8 @@ void Input::run()
 
     if (ev == Event(KEY_UP, Sosage::C))
     {
-      get<C::Boolean>("Game:console")->toggle();
+      get<C::Position>(CAMERA__POSITION)->set(Point(200,200));
+      get<C::Double>(CAMERA__ZOOM)->set(2.);
     }
 
     if constexpr (!Config::emscripten) // Do not prevent web users to use F1/F2/etc

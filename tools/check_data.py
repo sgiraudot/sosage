@@ -4,24 +4,23 @@ import subprocess
 import yaml
 import re
 
-if len(sys.argv) != 2:
+if len(sys.argv) < 2:
     print("Usage: " + sys.argv[0] + " [data_folder]")
     exit()
 
+root_folder = sys.argv[1]
+verbose = False
+if len(sys.argv) > 2 and sys.argv[2] == '-v':
+    verbose = True
+exit_at_first_error = True
+    
 errors = []
 def error(string):
-    errors.append([refname, string])
-
-def fake_run_cmd(cmd):
-    print(' '.join(cmd))
-
-def run_cmd(cmd):
-#    fake_run_cmd(cmd)
-    if args.verbose:
-        subprocess.run(' '.join(cmd), shell=True, check=True)
+    if exit_at_first_error:
+        print("[" + refname + "] " + string)
+        exit(0)
     else:
-        subprocess.run(' '.join(cmd), stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL, shell=True, check=True)
+        errors.append([refname, string])
 
 def load_yaml(filename):
     try:
@@ -64,6 +63,11 @@ def get(data, key):
     return child(data, key)
 
 def test(data, key, func=None, args=None):
+    if verbose:
+        if "id" in data:
+            print("Testing " + data["id"] + " on key " + key + " with " + str(func))
+        else:
+            print("Testing on key " + key + " with " + str(func))
     value = get(data, key)
     if value is None:
         if "id" in data:
@@ -148,10 +152,13 @@ def test_action(key, value):
             error(key + " uses ill-formed arguments: " + str(args))
             continue
         if action == "add":
-            if check_signature(key, "add", args, ["string", "int"]):
+            if check_signature(key, "add", args, ["string", "string"]):
                 id = args[0]
-                if id not in integer_ids:
-                    error(key + " uses function add on non-existing integer " + id)
+                if is_convertible_to_int(args[1]):
+                    if id not in integer_ids:
+                        error(key + " uses function add on non-existing integer " + id)
+                elif args[1] not in action_ids:
+                    error(key + " uses function add on non-existing action " + args[1])
         elif action == "camera":
             if len(args) == 0:
                 error(key + " uses function add without arguments")
@@ -162,7 +169,10 @@ def test_action(key, value):
             elif option == "shake":
                 check_signature(key, "camera/shake", args, ["string", "float", "float"])
             elif option == "target":
-                check_signature(key, "camera/target", args, ["string", "int"])
+                if len(args) == 4:
+                    check_signature(key, "camera/target", args, ["string", "int", "int", "int"])
+                else:
+                    check_signature(key, "camera/target", args, ["string", "int"])
             else:
                 error(key + " uses function add with unrecognized option " + str(option))
         elif action == "dialog":
@@ -226,10 +236,16 @@ def test_action(key, value):
                 continue
             option = args[0]
             if option == "coordinates":
-                if check_signature(key, "set/coordinates", args, ["string", "string", "int", "int", "int"]):
-                    id = args[1]
-                    if id not in object_ids and id not in scenery_ids:
-                        error(key + " uses function set on non-existing (or non-reachable) id " + id)
+                if len(args) == 6:
+                    if check_signature(key, "set/coordinates", args, ["string", "string", "int", "int", "int", "int"]):
+                        id = args[1]
+                        if id not in object_ids and id not in scenery_ids:
+                            error(key + " uses function set on non-existing (or non-reachable) id " + id)
+                else:
+                    if check_signature(key, "set/coordinates", args, ["string", "string", "int", "int", "int"]):
+                        id = args[1]
+                        if id not in object_ids and id not in scenery_ids:
+                            error(key + " uses function set on non-existing (or non-reachable) id " + id)
             elif option == "state":
                 if len(args) == 3:
                     if check_signature(key, "set/state", args, ["string", "string", "string"]):
@@ -258,12 +274,12 @@ def test_action(key, value):
             elif option == "visible":
                 if check_signature(key, "set/visible", args, ["string", "string"]):
                     id = args[1]
-                    if id not in room_ids:
+                    if id not in room_ids and id not in hints_ids:
                         error(key + " uses function set/visible on non-existing id " + id)
             elif option == "hidden":
                 if check_signature(key, "set/hidden", args, ["string", "string"]):
                     id = args[1]
-                    if id not in room_ids:
+                    if id not in room_ids and id not in hints_ids:
                         error(key + " uses function set/hidden on non-existing id " + id)
             else:
                 error(key + " uses function set with unrecognized option " + str(option))
@@ -292,6 +308,8 @@ def test_action(key, value):
                     pass
             elif option == "lock":
                 check_signature(key, "system/lock", args, ["string"])
+            elif option == "hints":
+                check_signature(key, "system/hints", args, ["string"])
             elif option == "trigger":
                 if check_signature(key, "system/trigger", args, ["string", "string"]):
                     id = args[1]
@@ -310,21 +328,20 @@ def test_action(key, value):
             elif option == "exit":
                 check_signature(key, "system/exit", args, ["string"])
             else:
-                error(key + " uses function stop with unrecognized option " + str(option))
+                error(key + " uses function system with unrecognized option " + str(option))
         elif action == "talk":
             if len(args) == 1:
                 pass
             else:
                 if check_signature(key, "talk", args, ["string", "string"]):
                     id = args[0]
-                    if id not in character_ids:
+                    if id not in character_ids and id != "superflu":
                         error(key + " uses function talk on non-existing character " + id)
         else:
             error(key + " contains unknown action " + action)
             continue
 
 
-root_folder = sys.argv[1]
 data_folder = root_folder + "/data/"
 yaml_files = []
 
@@ -346,6 +363,15 @@ all_ids = set()
 ref_ids = {}
 inventory_ids = set()
 all_states = {}
+hints_ids = set()
+
+data = load_yaml(data_folder + "hints.yaml")
+if test(data, "hints"):
+    for h in data["hints"]:
+        if test(h, "id"):
+            all_ids, hints_id = test_id_unicity(hints_ids, h["id"])
+        test(h, "question")
+        test(h, "answer")
 
 iteration = 0
 for filename in yaml_files:
@@ -423,9 +449,16 @@ for filename in yaml_files:
                         test(s, "frames", is_array)
                         for f in s["frames"]:
                             if type(f) is not int:
-                                error(s["id"] + " has a non-integer frame (" + str(f) + ")")
-                                continue
-                            if f >= nb_frames:
+                                if 'x' not in f:
+                                    error(s["id"] + " has a non-integer frame (" + str(f) + ")")
+                                    continue
+                                else:
+                                    ff = f.split('x')
+                                    if len(ff) != 2:
+                                        error(s["id"] + " has a ill-formed frame (" + str(f) + ")")
+                                    if int(ff[1]) >= nb_frames:
+                                           error(s["id"] + " has out-of-bound frame index " + str(f) + "/" + str(nb_frames))
+                            elif f >= nb_frames:
                                 error(s["id"] + " has out-of-bound frame index " + str(f) + "/" + str(nb_frames))
         if test(data, "timeline"):
             ids_on = set()
@@ -534,16 +567,27 @@ for filename in yaml_files:
         if "actions" in data:
             for a in data["actions"]:
                 refname = filename + ":actions"
-                if test(a, "id"):
+                id = ''
+                if "id" in a:
+                    id = a["id"]
                     refname = filename + ":" + a["id"]
-                    room_ids.add(a["id"])
-                    action_ids.add(a["id"])
-                    #all_ids, ref_ids = test_id_unicity(all_ids, a["id"], ref_ids)
+                    all_ids, ref_ids = test_id_unicity(all_ids, id, ref_ids)
+                else:
+                    fname = data_folder + "actions/" + a + ".yaml"
+                    if not os.path.exists(fname):
+                        error(fname + " does not exist")
+                        continue
+                    else:
+                        id = a
+                        a = load_yaml(fname)
+                action_ids.add(id)
+                room_ids.add(id)
+                    
                 if test(a, "states"):
-                    all_states[a["id"]] = set()
+                    all_states[id] = set()
                     for s in a["states"]:
                         if test(s, "id"):
-                            all_states[a["id"]].add(s["id"])
+                            all_states[id].add(s["id"])
 
         animation_ids = set()
         if "animations" in data:
@@ -715,8 +759,12 @@ for filename in yaml_files:
         if "actions" in data:
             for a in data["actions"]:
                 refname = filename + ":actions"
-                if test(a, "id"):
+                if "id" in a:
                     refname = filename + ":" + a["id"]
+                else:
+                    refname = filename + ":" + a
+                    fname = data_folder + "actions/" + a + ".yaml"
+                    a = load_yaml(fname)
                 if test(a, "states"):
                     for s in a["states"]:
                         test(s, "effect", test_action)

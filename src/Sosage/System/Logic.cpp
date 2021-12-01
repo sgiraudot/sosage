@@ -548,12 +548,22 @@ bool Logic::function_camera (const std::vector<std::string>& args)
   }
   else if (option == "target")
   {
-    check (args.size() == 2, "function_camera(target) takes 1 arguments");
-    int target = to_int(args[1]);
+    check (2 <= args.size() && args.size() <= 4, "function_camera(target) takes 1, 2 or 3 arguments");
+    int xtarget = to_int(args[1]);
+    int ytarget = (args.size() > 2 ? to_int(args[2]) : 0);
     auto position = get<C::Position>(CAMERA__POSITION);
 
-    set<C::GUI_position_animation>("Camera:animation", m_current_time, m_current_time + Config::camera_speed,
-                                   position, Point (target, position->value().y()));
+
+    if (args.size() == 4)
+    {
+      double zoom = to_double(args[3]);
+      position->set (Point (xtarget, ytarget));
+      get<C::Double>(CAMERA__ZOOM)->set(zoom);
+    }
+    else
+      set<C::GUI_position_animation>("Camera:animation", m_current_time, m_current_time + Config::camera_speed,
+                                     position, Point (xtarget, ytarget));
+
   }
   return true;
 }
@@ -607,6 +617,10 @@ bool Logic::function_dialog (const std::vector<std::string>& args)
     std::string character;
     std::string line;
     std::tie (character, line) = dialog->line();
+    const std::string& player = value<C::String>("Player:name");
+    if (player != character)
+      action->add ("look", { character });
+
     action->add ("talk", { character, line });
     action->add ("system", { "wait" });
     action->add ("dialog", { id, "continue" });
@@ -670,16 +684,27 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
 
 bool Logic::function_look (const std::vector<std::string>& args)
 {
-  check (args.size() <= 1, "function_goto() takes at most 1 argument");
+  check (args.size() <= 2, "function_look() takes at most 2 argument");
 
   std::string target = "";
-  if (args.size() == 1)
-    target = args[0];
-  else
+  std::string id = "";
+  if (args.empty())
+  {
+    id = value<C::String>("Player:name");
     target = get<C::Action>("Character:action")->target_entity();
+  }
+  else if (args.size() == 1)
+  {
+    id = value<C::String>("Player:name");
+    target = args[0];
+  }
+  else // if (args.size() == 2)
+  {
+    id = args[0];
+    target = args[1];
+  }
 
-  debug << "Action_look " << target << std::endl;
-  const std::string& id = value<C::String>("Player:name");
+  debug << "Action_look " << id << " " << target << std::endl;
 
   if (target == "default" || !request<C::Position>(target + ":position"))
     set<C::Absolute_position>(id + ":lookat",
@@ -790,6 +815,11 @@ bool Logic::function_set (const std::vector<std::string>& args)
   }
   else if (option == "player")
     set<C::String>("Player:name", target);
+  else if (option == "scale")
+  {
+    double scale = to_double(args[2]);
+    get<C::Image>(target + ":image")->set_scale(scale);
+  }
   else if (option == "state")
   {
     auto current_state = get<C::String>(target + ":state");
@@ -947,19 +977,16 @@ bool Logic::function_talk (const std::vector<std::string>& args)
       * (Config::min_reading_time + nb_char * Config::char_spoken_time);
   double nb_seconds_lips_moving = nb_char * Config::char_spoken_time;
 
-  Point position = value<C::Position>(id + "_body:position") - value<C::Position>(CAMERA__POSITION);
+  Point position = value<C::Double>(CAMERA__ZOOM)
+                   * (value<C::Position>(id + "_body:position") - value<C::Position>(CAMERA__POSITION));
 
   int x = position.X();
 
-  int y = 100;
-
   auto img = request<C::Image>(id + "_body:image");
-  if (img)
-  {
-    int candidate_y = position.Y() - img->height() * img->scale() * 2;
-    if (candidate_y > y)
-      y = candidate_y;
-  }
+  if (!img)
+    img = get<C::Image>(value<C::String>("Player:name") + "_body:image");
+
+  int y = position.Y() - value<C::Double>(CAMERA__ZOOM) * img->height() * img->scale() * 1.2;
 
   double size_factor = 0.75 * (value<C::Int>("Dialog:size") / double(Config::MEDIUM));
 
@@ -969,10 +996,12 @@ bool Logic::function_talk (const std::vector<std::string>& args)
     else if (x - size_factor * img->width() / 2 < int(0.1 * Config::world_width))
       x = int(0.1 * Config::world_width + size_factor * img->width() / 2);
 
+  std::reverse(dialog.begin(), dialog.end());
+
   for (auto img : dialog)
   {
     auto pos = set<C::Absolute_position> (img->entity() + ":position", Point(x,y));
-    y += 80 * size_factor;
+    y -= 80 * size_factor;
 
    m_current_action->schedule (m_current_time + std::max(1., nb_seconds_read), img);
    m_current_action->schedule (m_current_time + std::max(1., nb_seconds_read), pos);

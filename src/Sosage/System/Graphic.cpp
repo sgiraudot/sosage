@@ -113,7 +113,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
                return (a->z() < b->z());
              });
 
-  double xcamera = value<C::Absolute_position>(CAMERA__POSITION).x();
+  const Point& camera = value<C::Absolute_position>(CAMERA__POSITION);
 
   for (const auto& img : images)
   {
@@ -125,9 +125,12 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
       auto position = get<C::Position>(img->entity() + ":position");
       Point p = position->value();
-
+      double zoom = 1.;
       if (!position->absolute())
-        p = p + Vector (-xcamera, 0);
+      {
+        p = p - camera;
+        zoom = value<C::Double>(CAMERA__ZOOM);
+      }
 
       int xmin = img->xmin();
       int ymin = img->ymin();
@@ -136,10 +139,10 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
 
       Point screen_position = p - img->core().scaling * Vector(img->origin());
 
-      double xmin_target = screen_position.x();
-      double ymin_target = screen_position.y();
-      double xmax_target = xmin_target + img->core().scaling * (xmax - xmin);
-      double ymax_target = ymin_target + img->core().scaling * (ymax - ymin);
+      double xmin_target = zoom * screen_position.x();
+      double ymin_target = zoom * screen_position.y();
+      double xmax_target = zoom * (screen_position.x() + img->core().scaling * (xmax - xmin));
+      double ymax_target = zoom * (screen_position.y() + img->core().scaling * (ymax - ymin));
 
       double limit_width = Config::world_width;
       double limit_height = Config::world_height;
@@ -152,22 +155,22 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
       // Cut if image goes beyond boundaries
       if (xmin_target < 0)
       {
-        xmin -= xmin_target / img->core().scaling;
+        xmin -= xmin_target / (img->core().scaling * zoom);
         xmin_target = 0;
       }
       if (ymin_target < 0)
       {
-        ymin -= ymin_target / img->core().scaling;
+        ymin -= ymin_target / (img->core().scaling * zoom);
         ymin_target = 0;
       }
       if (xmax_target > limit_width)
       {
-        xmax -= (xmax_target - limit_width) / img->core().scaling;
+        xmax -= (xmax_target - limit_width) / (img->core().scaling * zoom);
         xmax_target = limit_width;
       }
       if (ymax_target > limit_height)
       {
-        ymax -= (ymax_target - limit_height) / img->core().scaling;
+        ymax -= (ymax_target - limit_height) / (img->core().scaling * zoom);
         ymax_target = limit_height;
       }
 
@@ -190,14 +193,16 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
         ground_map->for_each_vertex
         ([&](const Point& point)
         {
-           m_core.draw_square (int(point.x() - xcamera), point.Y(), 10);
+          Point p = point - camera;
+          m_core.draw_square (p.X(), p.Y(), 10);
         });
 
         ground_map->for_each_edge
         ([&](const Point& source, const Point& target, bool border)
         {
-           m_core.draw_line (int(source.x() - xcamera), source.Y(),
-                            int(target.x() - xcamera), target.Y(),
+          Point s = source - camera;
+          Point t = target - camera;
+          m_core.draw_line (s.X(), s.Y(), t.X(), t.Y(),
                             (border ? 255 : 0), 0, (border ? 0 : 255));
         });
 
@@ -205,15 +210,15 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
         auto path = request<C::Path>(id + ":path");
         if (path)
         {
-          Point current = value<C::Position>(id + "_body:position");
-          m_core.draw_square (int(current.x() - xcamera), current.Y(), 10, 0, 255, 0);
+          Point current = value<C::Position>(id + "_body:position") - camera;
+          m_core.draw_square (current.X(), current.Y(), 10, 0, 255, 0);
 
           for (std::size_t p = path->current(); p < path->size(); ++ p)
           {
-            Point next = (*path)[p];
-            m_core.draw_square (int(next.x() - xcamera), next.Y(), 10, 0, 255, 0);
-            m_core.draw_line (int(current.x() - xcamera), current.Y(),
-                              int(next.x() - xcamera), next.Y(), 0, 255, 0);
+            Point next = (*path)[p] - camera;
+            m_core.draw_square (next.X(), next.Y(), 10, 0, 255, 0);
+            m_core.draw_line (current.X(), current.Y(),
+                              next.X(), next.Y(), 0, 255, 0);
             current = next;
           }
         }
@@ -230,10 +235,9 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
         if (!request<C::String>(id + ":name"))
           continue;
 
-        auto view = get<C::Position>(id + ":view");
+        auto view = value<C::Position>(id + ":view") - camera;
 
-        m_core.draw_rectangle (int(view->value().x() - xcamera),
-                               int(view->value().y()),
+        m_core.draw_rectangle (view.X(), view.Y(),
                                2 * Config::object_reach_x, 2 * Config::object_reach_y,
                                255, 0, 0, 16);
       }

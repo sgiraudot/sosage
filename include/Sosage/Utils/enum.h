@@ -161,6 +161,7 @@ enum Event_value
 enum Fast_access_component
 {
   CAMERA__POSITION,
+  CAMERA__ZOOM,
   CURSOR__POSITION,
   CLOCK__TIME,
   GAME__DEBUG,

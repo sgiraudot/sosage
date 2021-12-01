@@ -137,6 +137,8 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
     get<C::Absolute_position>(id + "_mouth:position")->absolute() = false;
   }
 
+  set<C::Variable>(id + ":position", pbody);
+
   auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game:new_characters");
   if (!new_char)
     new_char = set<C::Vector<std::pair<std::string, bool> > >("Game:new_characters");
