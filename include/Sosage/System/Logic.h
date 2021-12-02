@@ -64,13 +64,20 @@ private:
 
   bool apply_next_step (Component::Action_handle action);
 
+  bool subfunction_fade (bool fadein, double duration);
+  bool subfunction_trigger_dialog (const std::vector<std::string>& args);
+  void create_dialog (const std::string& character,
+                      const std::string& text,
+                      std::vector<Component::Image_handle>& dialog);
+  void create_hints();
+
+  // Implemented in Logic__functions.cpp
   bool function_add (const std::vector<std::string>& args);
   bool function_camera (const std::vector<std::string>& args);
   bool function_control (const std::vector<std::string>& args);
   bool function_exit (const std::vector<std::string>& args);
   bool function_fadein (const std::vector<std::string>& args);
   bool function_fadeout (const std::vector<std::string>& args);
-  bool subfunction_fade (bool fadein, double duration);
   bool function_goto (const std::vector<std::string>& args);
   bool function_hide (const std::vector<std::string>& args);
   bool function_load (const std::vector<std::string>& args);
@@ -85,15 +92,8 @@ private:
   bool function_stop (const std::vector<std::string>& args);
   bool function_talk (const std::vector<std::string>& args);
   bool function_trigger (const std::vector<std::string>& args);
-  bool subfunction_trigger_dialog (const std::vector<std::string>& args);
   bool function_unlock (const std::vector<std::string>& args);
   bool function_wait (const std::vector<std::string>& args);
-
-
-  void create_dialog (const std::string& character,
-                      const std::string& text,
-                      std::vector<Component::Image_handle>& dialog);
-  void create_hints();
 
 };
 
