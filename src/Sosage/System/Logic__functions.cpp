@@ -58,6 +58,10 @@ namespace Sosage::System
 
 namespace C = Component;
 
+/*
+  - add: [ID integer_id, INT diff]  -> adds diff to the value of integer_id
+  - add: [ID list_id, ID action_id] -> appends action_id to list_id
+ */
 bool Logic::function_add (const std::vector<std::string>& args)
 {
   check (args.size() == 2, "function_add takes 2 arguments");
@@ -87,6 +91,11 @@ bool Logic::function_add (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - camera: [INT x]                    -> Smooth scrolling to (x,0)
+  - camera: [INT x, INT y]             -> Smooth scrolling to (x,y)
+  - camera: [INT x, INT y, FLOAT zoom] -> Raw cut to coordinates (x,y) with wanted zoom
+ */
 bool Logic::function_camera (const std::vector<std::string>& args)
 {
   check (1 <= args.size() && args.size() <= 3, "function_camera takes 1, 2 or 3 arguments");
@@ -106,6 +115,10 @@ bool Logic::function_camera (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - control: [ID player_id]                 -> controls player_id and remove follower if any
+  - control: [ID player_id, ID follower_id] -> controls player_id and make follower_id follow
+ */
 bool Logic::function_control (const std::vector<std::string>& args)
 {
   check (args.size() == 1 or args.size() == 2, "function_load control takes 1 or 2 arguments");
@@ -122,24 +135,39 @@ bool Logic::function_control (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - exit: [] -> exits the game
+ */
 bool Logic::function_exit (const std::vector<std::string>&)
 {
   emit ("Game:exit");
   return true;
 }
 
+/*
+  - fadein: [FLOAT duration] -> camera fades in with the wanted duration
+ */
 bool Logic::function_fadein (const std::vector<std::string>& args)
 {
   check (args.size() == 1, "function_fadein takes 1 argument");
   return subfunction_fade (true, to_double(args[0]));
 }
 
+/*
+  - fadeout: [FLOAT duration] -> camera fades out with the wanted duration
+ */
 bool Logic::function_fadeout (const std::vector<std::string>& args)
 {
   check (args.size() == 1, "function_fadein takes 1 argument");
   return subfunction_fade (false, to_double(args[0]));
 }
 
+/*
+  - goto: [ID target_id]                  -> player goes to target_id
+  - goto: [INT x, INT y]                  -> player goes to coordinates (x,y)
+  - goto: [ID character_id, ID target_id] -> character goes to target_id
+  - goto: [ID character_id, INT x, INT y] -> character goes to coordinates (x,y)
+ */
 bool Logic::function_goto (const std::vector<std::string>& init_args)
 {
   check (init_args.size() <= 3, "function_goto takes at most 3 arguments");
@@ -177,6 +205,10 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
   return true;
 }
 
+/*
+  - hide: [ID hint_id]   -> makes hint unavailable
+  - hide: [ID target_id] -> makes target_id invisible
+ */
 bool Logic::function_hide (const std::vector<std::string>& args)
 {
   check (args.size() == 1, "function_hide takes 1 argument");
@@ -188,6 +220,9 @@ bool Logic::function_hide (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - load: [ID room_id, ID origin_id] -> loads room and triggers wanted origin
+ */
 bool Logic::function_load (const std::vector<std::string>& args)
 {
   check (args.size() == 2, "function_load takes 2 arguments");
@@ -196,12 +231,20 @@ bool Logic::function_load (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - lock: [] -> locks interface
+ */
 bool Logic::function_lock (const std::vector<std::string>&)
 {
   status()->push(LOCKED);
   return true;
 }
 
+/*
+  - look: []                              -> player looks at current object
+  - look: [ID target_id]                  -> player looks at target_id
+  - look: [ID character_id, ID target_id] -> character looks at target_id
+ */
 bool Logic::function_look (const std::vector<std::string>& args)
 {
   check (args.size() <= 2, "function_look takes at most 2 argument");
@@ -239,6 +282,10 @@ bool Logic::function_look (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - move: [ID target_id, INT x, INT y, INT z]                 -> immediately moves target to the coordinates (x,y,z)
+  - move: [ID target_id, INT x, INT y, INT z, FLOAT duration] -> smoothly moves target to coordinates (x,y,z) with wanted duration
+ */
 bool Logic::function_move (const std::vector<std::string>& args)
 {
   check (args.size() == 4 || args.size() == 5, "function_move takes 4 or 5 arguments");
@@ -270,6 +317,12 @@ bool Logic::function_move (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - play: [ID animation_id]                           -> starts animation
+  - play: [ID music_id]                               -> starts music
+  - play: [ID sound_id]                               -> plays sound
+  - play: [ID character_animation_id, FLOAT duration] -> plays animation of player character for the wanted duration
+ */
 bool Logic::function_play (const std::vector<std::string>& args)
 {
   check (args.size() == 2 || args.size() == 1, "function_play takes 1 or 2 arguments");
@@ -327,6 +380,9 @@ bool Logic::function_play (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - rescale: [ID target_id, FLOAT scale] -> rescales target to the wanted scale
+ */
 bool Logic::function_rescale (const std::vector<std::string>& args)
 {
   check (args.size() == 2, "function_rescale takes 2 arguments");
@@ -336,7 +392,10 @@ bool Logic::function_rescale (const std::vector<std::string>& args)
   return true;
 }
 
-
+/*
+  - set: [ID target_id, ID state_id]                      -> change state of tarfget to state_id
+  - set: [ID target_id, ID state_from_id, ID state_to_id] -> change state of target to state_to_id ONLY if current state is state_from_id
+ */
 bool Logic::function_set (const std::vector<std::string>& args)
 {
   check (args.size() == 2 || args.size() == 3, "function_set takes 2 or 3 arguments");
@@ -376,6 +435,9 @@ bool Logic::function_set (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - shake: [FLOAT intensity, FLOAT duration] -> shakes the camera with wanted intensity and duration
+ */
 bool Logic::function_shake (const std::vector<std::string>& args)
 {
   check (args.size() == 2, "function_shake takes 2 arguments");
@@ -392,6 +454,10 @@ bool Logic::function_shake (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - show: [ID hint_id] -> makes hint available
+  - show: [ID target_id] -> makes target visible
+ */
 bool Logic::function_show (const std::vector<std::string>& args)
 {
   check (args.size() == 1, "function_show takes 2 arguments");
@@ -418,6 +484,10 @@ bool Logic::function_show (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - stop: ["music"]         -> stops the music
+  - stop: [ID character_id] -> stops the character's current animation
+ */
 bool Logic::function_stop (const std::vector<std::string>& args)
 {
   check (args.size() == 1, "function_stop takes 1 argument");
@@ -432,6 +502,10 @@ bool Logic::function_stop (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - talk: [STRING line]                  -> makes player say the line
+  - talk: [ID character_id, STRING line] -> makes character say the line
+ */
 bool Logic::function_talk (const std::vector<std::string>& args)
 {
   check (args.size() == 1 || args.size() == 2, "function_stop takes 1 or 2 arguments");
@@ -505,6 +579,12 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - trigger: [ID action_id] -> triggers the wanted action
+  - trigger: [ID dialog_id] -> triggers the wanted dialog
+  - trigger: [ID menu_id]   -> triggers the wanted menu
+  - trigger: ["hints"]      -> triggers hints
+ */
 bool Logic::function_trigger (const std::vector<std::string>& args)
 {
   check (!args.empty(), "function_trigger takes at least 1 argument");
@@ -534,12 +614,19 @@ bool Logic::function_trigger (const std::vector<std::string>& args)
   return true;
 }
 
+/*
+  - unlock: [] -> releases the interface to the user
+ */
 bool Logic::function_unlock (const std::vector<std::string>&)
 {
   status()->pop();
   return true;
 }
 
+/*
+  - wait: []               -> waits until all ongoing events (talking, moving, etc.) are finished
+  - wait: [FLOAT duration] -> waits for the wanted duration
+ */
 bool Logic::function_wait (const std::vector<std::string>& args)
 {
   check (args.size() <= 1, "function_wait takes 0 or 1 argument");
