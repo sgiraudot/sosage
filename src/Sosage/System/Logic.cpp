@@ -27,16 +27,12 @@
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Code.h>
-#include <Sosage/Component/Condition.h>
 #include <Sosage/Component/Cropped.h>
 #include <Sosage/Component/Cutscene.h>
 #include <Sosage/Component/Dialog.h>
 #include <Sosage/Component/Ground_map.h>
-#include <Sosage/Component/Group.h>
-#include <Sosage/Component/GUI_animation.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Image.h>
-#include <Sosage/Component/Inventory.h>
 #include <Sosage/Component/Music.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
