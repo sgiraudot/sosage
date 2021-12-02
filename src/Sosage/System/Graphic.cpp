@@ -155,22 +155,22 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
       // Cut if image goes beyond boundaries
       if (xmin_target < 0)
       {
-        xmin -= xmin_target / (img->core().scaling * zoom);
+        xmin -= round(xmin_target / (img->core().scaling * zoom));
         xmin_target = 0;
       }
       if (ymin_target < 0)
       {
-        ymin -= ymin_target / (img->core().scaling * zoom);
+        ymin -= round(ymin_target / (img->core().scaling * zoom));
         ymin_target = 0;
       }
       if (xmax_target > limit_width)
       {
-        xmax -= (xmax_target - limit_width) / (img->core().scaling * zoom);
+        xmax -= round((xmax_target - limit_width) / (img->core().scaling * zoom));
         xmax_target = limit_width;
       }
       if (ymax_target > limit_height)
       {
-        ymax -= (ymax_target - limit_height) / (img->core().scaling * zoom);
+        ymax -= round((ymax_target - limit_height) / (img->core().scaling * zoom));
         ymax_target = limit_height;
       }
 

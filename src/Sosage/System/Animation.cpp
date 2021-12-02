@@ -494,7 +494,7 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
   int pose = 0;
   for (int i = 0; i < 10; ++ i)
   {
-    int remaining = random_int(20, 150);
+    int remaining = random_int(30, 300);
 
     while (true)
     {
@@ -575,7 +575,7 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
   for (int i = 0; i < 10; ++ i)
   {
     // Stand still for a while
-    image->frames().push_back ({pose, row_index, random_int(20, 150)});
+    image->frames().push_back ({pose, row_index, random_int(50, 500)});
 
     // Transition
     image->frames().push_back ({0, row_index, 2});
