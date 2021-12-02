@@ -66,14 +66,28 @@ private:
 
   bool function_add (const std::vector<std::string>& args);
   bool function_camera (const std::vector<std::string>& args);
-  bool function_dialog (const std::vector<std::string>& args);
+  bool function_control (const std::vector<std::string>& args);
+  bool function_exit (const std::vector<std::string>& args);
+  bool function_fadein (const std::vector<std::string>& args);
+  bool function_fadeout (const std::vector<std::string>& args);
+  bool subfunction_fade (bool fadein, double duration);
   bool function_goto (const std::vector<std::string>& args);
+  bool function_hide (const std::vector<std::string>& args);
+  bool function_load (const std::vector<std::string>& args);
+  bool function_lock (const std::vector<std::string>& args);
   bool function_look (const std::vector<std::string>& args);
+  bool function_move (const std::vector<std::string>& args);
   bool function_play (const std::vector<std::string>& args);
+  bool function_rescale (const std::vector<std::string>& args);
   bool function_set (const std::vector<std::string>& args);
+  bool function_shake (const std::vector<std::string>& args);
+  bool function_show (const std::vector<std::string>& args);
   bool function_stop (const std::vector<std::string>& args);
-  bool function_system (const std::vector<std::string>& args);
   bool function_talk (const std::vector<std::string>& args);
+  bool function_trigger (const std::vector<std::string>& args);
+  bool subfunction_trigger_dialog (const std::vector<std::string>& args);
+  bool function_unlock (const std::vector<std::string>& args);
+  bool function_wait (const std::vector<std::string>& args);
 
 
   void create_dialog (const std::string& character,

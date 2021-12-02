@@ -66,14 +66,27 @@ Logic::Logic (Content& content)
 {
   INIT_DISPATCHER(function_add);
   INIT_DISPATCHER(function_camera);
-  INIT_DISPATCHER(function_dialog);
+  INIT_DISPATCHER(function_control);
+  INIT_DISPATCHER(function_exit);
+  INIT_DISPATCHER(function_fadein);
+  INIT_DISPATCHER(function_fadeout);
   INIT_DISPATCHER(function_goto);
+  INIT_DISPATCHER(function_hide);
+  INIT_DISPATCHER(function_load);
+  INIT_DISPATCHER(function_lock);
   INIT_DISPATCHER(function_look);
+  INIT_DISPATCHER(function_move);
   INIT_DISPATCHER(function_play);
+  INIT_DISPATCHER(function_rescale);
   INIT_DISPATCHER(function_set);
+  INIT_DISPATCHER(function_shake);
+  INIT_DISPATCHER(function_show);
   INIT_DISPATCHER(function_stop);
-  INIT_DISPATCHER(function_system);
   INIT_DISPATCHER(function_talk);
+  INIT_DISPATCHER(function_trigger);
+  INIT_DISPATCHER(function_unlock);
+  INIT_DISPATCHER(function_wait);
+
   set<C::Action>("Logic:action");
 }
 
@@ -487,7 +500,7 @@ bool Logic::apply_next_step (C::Action_handle action)
 
 bool Logic::function_add (const std::vector<std::string>& args)
 {
-  check (args.size() == 2, "function_add() takes 2 arguments");
+  check (args.size() == 2, "function_add takes 2 arguments");
   std::string id = args[0];
 
   auto integer = request<C::Int>(id + ":value");
@@ -516,138 +529,73 @@ bool Logic::function_add (const std::vector<std::string>& args)
 
 bool Logic::function_camera (const std::vector<std::string>& args)
 {
-  std::string option = args[0];
-  if (option == "fadein" || option == "fadeout")
+  check (1 <= args.size() && args.size() <= 3, "function_camera takes 1, 2 or 3 arguments");
+  int xtarget = to_int(args[0]);
+  int ytarget = (args.size() > 1 ? to_int(args[1]) : 0);
+  auto position = get<C::Position>(CAMERA__POSITION);
+
+  if (args.size() == 3)
   {
-    check (args.size() == 2, "function_camera(fadein/fadeout) takes 1 argument");
-    bool fadein = (option == "fadein");
-    double duration = to_double(args[1]);
-    auto begin = set<C::Double> ("Fade:begin", m_current_time);
-    auto end = set<C::Double> ("Fade:end", m_current_time + duration);
-    auto out = set<C::Boolean> ("Fade:in", fadein);
-    if (request<C::Music>("Game:music"))
-      emit ("Music:fade");
-    m_current_action->schedule (m_current_time + duration, begin);
-    m_current_action->schedule (m_current_time + duration, end);
-    m_current_action->schedule (m_current_time + duration, out);
+    double zoom = to_double(args[2]);
+    position->set (Point (xtarget, ytarget));
+    get<C::Double>(CAMERA__ZOOM)->set(zoom);
   }
-  else if (option == "shake")
-  {
-    check (args.size() == 3, "function_camera(shake) takes 2 arguments");
-    double intensity  = to_double(args[1]);
-    double duration = to_double(args[2]);
-    auto begin = set<C::Double> ("Shake:begin", m_current_time);
-    auto end = set<C::Double> ("Shake:end", m_current_time + duration);
-    auto intens = set<C::Double> ("Shake:intensity", intensity);
-    auto camera = set<C::Double> ("Camera:saved_position", value<C::Absolute_position>(CAMERA__POSITION).x());
-    m_current_action->schedule (m_current_time + duration, begin);
-    m_current_action->schedule (m_current_time + duration, end);
-    m_current_action->schedule (m_current_time + duration, intens);
-    m_current_action->schedule (m_current_time + duration, camera);
-
-  }
-  else if (option == "target")
-  {
-    check (2 <= args.size() && args.size() <= 4, "function_camera(target) takes 1, 2 or 3 arguments");
-    int xtarget = to_int(args[1]);
-    int ytarget = (args.size() > 2 ? to_int(args[2]) : 0);
-    auto position = get<C::Position>(CAMERA__POSITION);
-
-
-    if (args.size() == 4)
-    {
-      double zoom = to_double(args[3]);
-      position->set (Point (xtarget, ytarget));
-      get<C::Double>(CAMERA__ZOOM)->set(zoom);
-    }
-    else
-      set<C::GUI_position_animation>("Camera:animation", m_current_time, m_current_time + Config::camera_speed,
-                                     position, Point (xtarget, ytarget));
-
-  }
+  else
+    set<C::GUI_position_animation>("Camera:animation", m_current_time, m_current_time + Config::camera_speed,
+                                   position, Point (xtarget, ytarget));
   return true;
 }
 
-bool Logic::function_dialog (const std::vector<std::string>& args)
+bool Logic::function_control (const std::vector<std::string>& args)
 {
-  check (!args.empty(), "function_dialog() takes 1 argument");
-  std::string id = args[0];
-  bool is_continue = (args.size() > 1);
-  auto dialog = get<C::Dialog>(id + ":dialog");
+  check (args.size() == 1 or args.size() == 2, "function_load control takes 1 or 2 arguments");
+  std::string leader = args[0];
+  set<C::String>("Player:name", leader);
 
-  auto action = get<C::Action>("Logic:action");
-  action->clear();
-
-  if (!is_continue)
+  if (args.size() == 2)
   {
-    status()->push(LOCKED);
-    if (auto pos = request<C::Int>("Saved_game:dialog_position"))
-    {
-      dialog->init (pos->value());
-      remove ("Saved_game:dialog_position");
-    }
-    else
-      dialog->init();
-  }
-  else if (auto choice = request<C::Int>("Dialog:choice"))
-  {
-    action->add ("talk",
-    { get<C::Vector<std::string> >("Dialog:choices")
-      ->value()[std::size_t(choice->value())] });
-    action->add ("system", { "wait" });
-    dialog->next(choice->value());
-    remove("Dialog:choice");
+    std::string follower = args[1];
+    set<C::String>("Follower:name", follower);
   }
   else
-  {
-    dialog->next();
-  }
+    remove ("Follower:name");
+  return true;
+}
 
-  if (dialog->is_over())
-  {
-    status()->pop();
-    if (dialog->line().first != "")
-    {
-      set<C::Variable>("Character:triggered_action", get<C::Action>(dialog->line().first + ":action"));
-      return false;
-    }
-  }
-  else if (dialog->is_line())
-  {
-    std::string character;
-    std::string line;
-    std::tie (character, line) = dialog->line();
-    const std::string& player = value<C::String>("Player:name");
-    if (player != character)
-      action->add ("look", { character });
+bool Logic::function_exit (const std::vector<std::string>&)
+{
+  emit ("Game:exit");
+  return true;
+}
 
-    action->add ("talk", { character, line });
-    action->add ("system", { "wait" });
-    action->add ("dialog", { id, "continue" });
-  }
-  else
-  {
-    // Keep track in case player saves and reload there
-    set<C::Int>("Game:dialog_position", dialog->current());
+bool Logic::function_fadein (const std::vector<std::string>& args)
+{
+  check (args.size() == 1, "function_fadein takes 1 argument");
+  return subfunction_fade (true, to_double(args[0]));
+}
 
-    status()->push(DIALOG_CHOICE);
-    auto choices = set<C::Vector<std::string> >("Dialog:choices");
-    dialog->get_choices (*choices);
-    action->add ("dialog", { id, "continue" });
+bool Logic::function_fadeout (const std::vector<std::string>& args)
+{
+  check (args.size() == 1, "function_fadein takes 1 argument");
+  return subfunction_fade (false, to_double(args[0]));
+}
 
-    // Keep track in case player saves and reload there
-    set<C::String>("Game:current_dialog", id);
-  }
-
-  if (action->size() != 0)
-    //action->launch();
-    set<C::Variable>("Character:triggered_action", action);
-
-  return false;
+bool Logic::subfunction_fade (bool fadein, double duration)
+{
+  auto begin = set<C::Double> ("Fade:begin", m_current_time);
+  auto end = set<C::Double> ("Fade:end", m_current_time + duration);
+  auto out = set<C::Boolean> ("Fade:in", fadein);
+  if (request<C::Music>("Game:music"))
+    emit ("Music:fade");
+  m_current_action->schedule (m_current_time + duration, begin);
+  m_current_action->schedule (m_current_time + duration, end);
+  m_current_action->schedule (m_current_time + duration, out);
+  return true;
 }
 
 bool Logic::function_goto (const std::vector<std::string>& init_args)
 {
+  check (init_args.size() <= 3, "function_goto takes at most 3 arguments");
   std::string id = "";
   std::vector<std::string> args;
   if (init_args.size() > 0 && request<C::Image>(init_args[0] + "_head:image"))
@@ -682,9 +630,34 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
   return true;
 }
 
+bool Logic::function_hide (const std::vector<std::string>& args)
+{
+  check (args.size() == 1, "function_hide takes 1 argument");
+  std::string target = args[0];
+  if (auto question = request<C::String>(target + ":question"))
+    get<C::Set<std::string>>("Hints:list")->erase(target);
+  else
+    emit (target + ":set_hidden");
+  return true;
+}
+
+bool Logic::function_load (const std::vector<std::string>& args)
+{
+  check (args.size() == 2, "function_load takes 2 arguments");
+  set<C::String>("Game:new_room", args[0]);
+  set<C::String>("Game:new_room_origin", args[1]);
+  return true;
+}
+
+bool Logic::function_lock (const std::vector<std::string>&)
+{
+  status()->push(LOCKED);
+  return true;
+}
+
 bool Logic::function_look (const std::vector<std::string>& args)
 {
-  check (args.size() <= 2, "function_look() takes at most 2 argument");
+  check (args.size() <= 2, "function_look takes at most 2 argument");
 
   std::string target = "";
   std::string id = "";
@@ -719,235 +692,202 @@ bool Logic::function_look (const std::vector<std::string>& args)
   return true;
 }
 
-bool Logic::function_play (const std::vector<std::string>& args)
+bool Logic::function_move (const std::vector<std::string>& args)
 {
-  std::string option = args[0];
-  std::string target = args[1];
-
-  if (option == "animation")
+  check (args.size() == 4 || args.size() == 5, "function_move takes 4 or 5 arguments");
+  std::string target = args[0];
+  int x = to_int(args[1]);
+  int y = to_int(args[2]);
+  int z = to_int(args[3]);
+  if (args.size() == 5) // Smooth move
   {
-    check (args.size() == 3 || args.size() == 2, "function_play(animation) takes 1 or 2 arguments");
-    if (args.size() == 3) // Target is character
-    {
-      const std::string& character = value<C::String>("Player:name");
+    double duration = to_double(args[4]);
+    int nb_frames = round (duration * Config::animation_fps);
 
-      double duration = to_double(args[2]);
-      set<C::String>(character + ":start_animation", target);
+    double begin_time = frame_time(m_current_time);
+    double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
 
-      if (duration > 0)
-       m_current_action->schedule (m_current_time + duration,
-                                        C::make_handle<C::Signal>
-                                        (character + ":stop_animation"));
-    }
-    else
-    {
-      auto animation = get<C::Animation>(target + ":image");
-      emit (target + ":start_animation");
+   m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
 
-      if (animation->loop())
-      {
-        // If animation loop, add a fake state so that it's reloaded
-        // on if we exist and reener the room
-        set<C::String>(target + ":state", "Dummy");
-      }
-      else
-      {
-        // If animation does not loop, insert dummy timed Event
-        // so that sync waits for the end of the animation
-        int nb_frames = 0;
-        for (const auto& f : animation->frames())
-          nb_frames += f.duration;
-        double latest_frame_time = frame_time(m_current_time);
-        double end_time = latest_frame_time + (nb_frames + 0.5) / double(Config::animation_fps);
+    auto pos = get<C::Position>(target + ":position");
 
-       m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
-      }
-    }
+    auto anim = set<C::Tuple<Point, Point, double, double>>
+        (target + ":animation", pos->value(), Point(x,y), begin_time, end_time);
+   m_current_action->schedule (end_time,  anim);
   }
-  else if (option == "sound")
-    emit (target + ":play_sound");
-  else if (option == "music")
+  else
   {
-    set<C::Variable>("Game:music", get<C::Music>(target + ":music"));
-    emit ("Music:start");
+    get<C::Position>(target + ":position")->set (Point(x, y));
+    get<C::Image>(target + ":image")->z() = z;
   }
   return true;
 }
 
+bool Logic::function_play (const std::vector<std::string>& args)
+{
+  check (args.size() == 2 || args.size() == 1, "function_play takes 1 or 2 arguments");
+  std::string target = args[0];
+
+  if (request<C::Handle>(target + ":sound"))
+  {
+    emit (target + ":play_sound");
+    return true;
+  }
+  if (auto music = request<C::Music>(target + ":music"))
+  {
+    set<C::Variable>("Game:music", music);
+    emit ("Music:start");
+    return true;
+  }
+
+  // else, animation
+  if (args.size() == 2) // Target is character
+  {
+    const std::string& character = value<C::String>("Player:name");
+
+    double duration = to_double(args[1]);
+    set<C::String>(character + ":start_animation", target);
+
+    if (duration > 0)
+      m_current_action->schedule (m_current_time + duration,
+                                  C::make_handle<C::Signal>
+                                  (character + ":stop_animation"));
+  }
+  else
+  {
+    auto animation = get<C::Animation>(target + ":image");
+    emit (target + ":start_animation");
+
+    if (animation->loop())
+    {
+      // If animation loop, add a fake state so that it's reloaded
+      // on if we exist and reener the room
+      set<C::String>(target + ":state", "Dummy");
+    }
+    else
+    {
+      // If animation does not loop, insert dummy timed Event
+      // so that sync waits for the end of the animation
+      int nb_frames = 0;
+      for (const auto& f : animation->frames())
+        nb_frames += f.duration;
+      double latest_frame_time = frame_time(m_current_time);
+      double end_time = latest_frame_time + (nb_frames + 0.5) / double(Config::animation_fps);
+
+      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+    }
+  }
+  return true;
+}
+
+bool Logic::function_rescale (const std::vector<std::string>& args)
+{
+  check (args.size() == 2, "function_rescale takes 2 arguments");
+  std::string target = args[0];
+  double scale = to_double(args[1]);
+  get<C::Image>(target + ":image")->set_scale(scale);
+  return true;
+}
+
+
 bool Logic::function_set (const std::vector<std::string>& args)
 {
-  std::string option = args[0];
-  std::string target = args[1];
+  check (args.size() == 2 || args.size() == 3, "function_set takes 2 or 3 arguments");
+  std::string target = args[0];
+  auto current_state = get<C::String>(target + ":state");
+  std::string state = args[1];
 
-  if (option == "coordinates")
+  if (args.size() == 3)
   {
-    int x = to_int(args[2]);
-    int y = to_int(args[3]);
-    int z = to_int(args[4]);
-    if (args.size() == 6) // Smooth move
-    {
-      double duration = to_double(args[5]);
-      int nb_frames = round (duration * Config::animation_fps);
-
-      double begin_time = frame_time(m_current_time);
-      double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
-
-     m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
-
-      auto pos = get<C::Position>(target + ":position");
-
-      auto anim = set<C::Tuple<Point, Point, double, double>>
-          (target + ":animation", pos->value(), Point(x,y), begin_time, end_time);
-     m_current_action->schedule (end_time,  anim);
-    }
-    else
-    {
-      get<C::Position>(target + ":position")->set (Point(x, y));
-      get<C::Image>(target + ":image")->z() = z;
-    }
+    if (state != current_state->value())
+      return true;
+    state = args[2];
   }
-  else if (option == "follower")
+
+  if (current_state->value() == "inventory")
   {
-    if (target == "")
-      remove ("Follower:name");
-    else
-      set<C::String>("Follower:name", target);
+    get<C::Inventory>("Game:inventory")->remove(target);
+    //get<C::Absolute_position>(target + ":position")->absolute() = false;
   }
-  else if (option == "player")
-    set<C::String>("Player:name", target);
-  else if (option == "scale")
+
+  current_state->set (state);
+  if (state == "inventory")
   {
-    double scale = to_double(args[2]);
-    get<C::Image>(target + ":image")->set_scale(scale);
-  }
-  else if (option == "state")
-  {
-    auto current_state = get<C::String>(target + ":state");
-    std::string state;
-
-    if (args.size() == 3)
-      state = args[2];
-    else // if (step.size() == 4)
-    {
-      if (args[2] != current_state->value())
-        return true;
-      state = args[3];
-    }
-
-    if (current_state->value() == "inventory")
-    {
-      get<C::Inventory>("Game:inventory")->remove(target);
-     //get<C::Absolute_position>(target + ":position")->absolute() = false;
-    }
-
-    current_state->set (state);
-    if (state == "inventory")
-    {
-      get<C::Inventory>("Game:inventory")->add(target);
-      auto img
+    get<C::Inventory>("Game:inventory")->add(target);
+    auto img
         = get<C::Image>(target + ":image");
-      img->set_relative_origin(0.5, 0.5);
-      img->z() = Config::inventory_depth;
-      img->on() = false;
-    }
-
-    // Changing the state an object might change the labels of its
-    // related action, force an update if using gamepad
-    if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
-      emit("Action_selector:force_update");
+    img->set_relative_origin(0.5, 0.5);
+    img->z() = Config::inventory_depth;
+    img->on() = false;
   }
-  else if (option == "visible")
+
+  // Changing the state an object might change the labels of its
+  // related action, force an update if using gamepad
+  if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+    emit("Action_selector:force_update");
+
+  return true;
+}
+
+bool Logic::function_shake (const std::vector<std::string>& args)
+{
+  check (args.size() == 2, "function_shake takes 2 arguments");
+  double intensity  = to_double(args[0]);
+  double duration = to_double(args[1]);
+  auto begin = set<C::Double> ("Shake:begin", m_current_time);
+  auto end = set<C::Double> ("Shake:end", m_current_time + duration);
+  auto intens = set<C::Double> ("Shake:intensity", intensity);
+  auto camera = set<C::Double> ("Camera:saved_position", value<C::Absolute_position>(CAMERA__POSITION).x());
+  m_current_action->schedule (m_current_time + duration, begin);
+  m_current_action->schedule (m_current_time + duration, end);
+  m_current_action->schedule (m_current_time + duration, intens);
+  m_current_action->schedule (m_current_time + duration, camera);
+  return true;
+}
+
+bool Logic::function_show (const std::vector<std::string>& args)
+{
+  check (args.size() == 1, "function_show takes 2 arguments");
+  std::string target = args[0];
+  if (auto group = request<C::Group>(target + ":group")) // Character
+    emit (target + ":set_visible");
+  else if (auto question = request<C::String>(target + ":question"))
+    get<C::Set<std::string>>("Hints:list")->insert (target);
+  else
   {
-    // Character
-    if (auto group = request<C::Group>(target + ":group"))
-      emit (target + ":set_visible");
-    else if (auto question = request<C::String>(target + ":question"))
-      get<C::Set<std::string>>("Hints:list")->insert (target);
-    else
+    auto image = get<C::Image>(target + ":image");
+    set<C::Variable>("Game:window", image);
+    emit ("Interface:show_window");
+
+    auto code = request<C::Code>(target + ":code");
+    if (code)
     {
-      auto image = get<C::Image>(target + ":image");
-      set<C::Variable>("Game:window", image);
-      emit ("Interface:show_window");
-
-      auto code = request<C::Code>(target + ":code");
-      if (code)
-      {
-        status()->push (IN_CODE);
-        set<C::Variable>("Game:code", code);
-      }
-      else
-        status()->push (IN_WINDOW);
+      status()->push (IN_CODE);
+      set<C::Variable>("Game:code", code);
     }
-  }
-  else if (option == "hidden")
-  {
-    if (auto question = request<C::String>(target + ":question"))
-      get<C::Set<std::string>>("Hints:list")->erase(target);
     else
-      emit (target + ":set_hidden");
+      status()->push (IN_WINDOW);
   }
-
   return true;
 }
 
 bool Logic::function_stop (const std::vector<std::string>& args)
 {
-  std::string option = args[0];
-  if (option == "animation")
-  {
-    std::string target = args[1];
-    emit (target + ":stop_animation");
-  }
-  else if (option == "music")
+  check (args.size() == 1, "function_stop takes 1 argument");
+  std::string target = args[0];
+  if (target == "music")
   {
     remove("Game:music");
     emit ("Music:stop");
   }
-  return true;
-}
-
-bool Logic::function_system (const std::vector<std::string>& args)
-{
-  std::string option = args[0];
-  if (option == "load")
-  {
-    set<C::String>("Game:new_room",args[1]);
-    set<C::String>("Game:new_room_origin", args[2]);
-  }
-  else if (option == "lock")
-    status()->push(LOCKED);
-  else if (option == "trigger")
-  {
-    std::string id = args[1];
-    get<C::Action>(id + ":action")->launch();
-  }
-  else if (option == "menu")
-  {
-    set<C::String>("Game:triggered_menu", args[1]);
-    emit("Show:menu");
-  }
-  else if (option == "unlock")
-    status()->pop();
-  else if (option == "wait")
-  {
-    if (args.size() == 2)
-    {
-      double time = to_double(args[1]);
-      debug << "Schedule wait until " << m_current_time + time << std::endl;
-      m_current_action-> schedule (m_current_time + time, C::make_handle<C::Base>("wait"));
-    }
-    return false;
-  }
-  else if (option == "hints")
-    create_hints();
-  else if (option == "exit")
-    emit ("Game:exit");
-
+  else
+    emit (target + ":stop_animation");
   return true;
 }
 
 bool Logic::function_talk (const std::vector<std::string>& args)
 {
+  check (args.size() == 1 || args.size() == 2, "function_stop takes 1 or 2 arguments");
   std::string id;
   std::string text;
 
@@ -1016,6 +956,130 @@ bool Logic::function_talk (const std::vector<std::string>& args)
                                     (id + ":stop_talking"));
   }
   return true;
+}
+
+bool Logic::function_trigger (const std::vector<std::string>& args)
+{
+  check (!args.empty(), "function_trigger takes at least 1 argument");
+  std::string id = args[0];
+  // Dialog
+  if (request<C::Dialog>(id + ":dialog"))
+    return subfunction_trigger_dialog (args);
+
+  // Action
+  if (auto action = request<C::Action>(id + ":action"))
+  {
+    action->launch();
+    return true;
+  }
+
+  // Hints
+  if (id == "hints")
+  {
+    create_hints();
+    return true;
+  }
+
+  // else Menu
+  set<C::String>("Game:triggered_menu", id);
+  emit("Show:menu");
+
+  return true;
+}
+
+bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
+{
+  std::string id = args[0];
+  bool is_continue = (args.size() > 1);
+  auto dialog = get<C::Dialog>(id + ":dialog");
+
+  auto action = get<C::Action>("Logic:action");
+  action->clear();
+
+  if (!is_continue)
+  {
+    status()->push(LOCKED);
+    if (auto pos = request<C::Int>("Saved_game:dialog_position"))
+    {
+      dialog->init (pos->value());
+      remove ("Saved_game:dialog_position");
+    }
+    else
+      dialog->init();
+  }
+  else if (auto choice = request<C::Int>("Dialog:choice"))
+  {
+    action->add ("talk",
+    { get<C::Vector<std::string> >("Dialog:choices")
+      ->value()[std::size_t(choice->value())] });
+    action->add ("wait", {});
+    dialog->next(choice->value());
+    remove("Dialog:choice");
+  }
+  else
+  {
+    dialog->next();
+  }
+
+  if (dialog->is_over())
+  {
+    status()->pop();
+    if (dialog->line().first != "")
+    {
+      set<C::Variable>("Character:triggered_action", get<C::Action>(dialog->line().first + ":action"));
+      return false;
+    }
+  }
+  else if (dialog->is_line())
+  {
+    std::string character;
+    std::string line;
+    std::tie (character, line) = dialog->line();
+    const std::string& player = value<C::String>("Player:name");
+    if (player != character)
+      action->add ("look", { character });
+
+    action->add ("talk", { character, line });
+    action->add ("wait", {});
+    action->add ("trigger", { id, "continue" });
+  }
+  else
+  {
+    // Keep track in case player saves and reload there
+    set<C::Int>("Game:dialog_position", dialog->current());
+
+    status()->push(DIALOG_CHOICE);
+    auto choices = set<C::Vector<std::string> >("Dialog:choices");
+    dialog->get_choices (*choices);
+    action->add ("trigger", { id, "continue" });
+
+    // Keep track in case player saves and reload there
+    set<C::String>("Game:current_dialog", id);
+  }
+
+  if (action->size() != 0)
+    //action->launch();
+    set<C::Variable>("Character:triggered_action", action);
+
+  return false;
+}
+
+bool Logic::function_unlock (const std::vector<std::string>&)
+{
+  status()->pop();
+  return true;
+}
+
+bool Logic::function_wait (const std::vector<std::string>& args)
+{
+  check (args.size() <= 1, "function_wait takes 0 or 1 argument");
+  if (args.size() == 1)
+  {
+    double time = to_double(args[0]);
+    debug << "Schedule wait until " << m_current_time + time << std::endl;
+    m_current_action-> schedule (m_current_time + time, C::make_handle<C::Base>("wait"));
+  }
+  return false;
 }
 
 void Logic::create_dialog (const std::string& character,
@@ -1120,11 +1184,11 @@ void Logic::create_hints()
   remove(player + ":path", true);
   auto action = set<C::Action>("Hints:action");
   set<C::Variable>("Character:triggered_action", action);
-  action->add("play", { "animation", "telephone", "-1" });
-  action->add("dialog", { "Hints" });
+  action->add("play", { "telephone", "-1" });
+  action->add("trigger", { "Hints" });
 
   auto end = set<C::Action>("End_hints:action");
-  end->add("stop", { "animation", player });
+  end->add("stop", { player });
 
   set<C::String>(player + ":start_animation", "telephone");
 }

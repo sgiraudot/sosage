@@ -243,8 +243,8 @@ bool File_IO::read_savefile()
   double camera_target = input["camera"].floating();
   get<C::Absolute_position>(CAMERA__POSITION)->set (Point(camera_target, 0));
   auto action = set<C::Action>("Saved_game:action");
-  action->add ("play", { "music", input["music"].string() });
-  action->add ("camera", { "fadein", "0.5" });
+  action->add ("play", { input["music"].string() });
+  action->add ("fadein", { "0.5" });
 
   for (std::size_t i = 0; i < input["states"].size(); ++ i)
   {
@@ -275,12 +275,12 @@ bool File_IO::read_savefile()
   for (std::size_t i = 0; i < input["active_animations"].size(); ++ i)
   {
     const Core::File_IO::Node& ianimation = input["active_animations"][i];
-    action->add ("play", { "animation", ianimation.string() });
+    action->add ("play", { ianimation.string() });
   }
 
   if (input.has("dialog"))
   {
-    action->add ("dialog", { input["dialog"].string() });
+    action->add ("trigger", { input["dialog"].string() });
     set<C::Int>("Saved_game:dialog_position", input["dialog_position"].integer());
   }
 
