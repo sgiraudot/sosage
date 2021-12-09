@@ -20,7 +20,10 @@ def error(string):
         print("[" + refname + "] " + string)
         exit(0)
     else:
-        errors.append([refname, string])
+        errors.append([True, refname, string])
+
+def warning(string):
+    errors.append([False, refname, string])
 
 def load_yaml(filename):
     try:
@@ -143,6 +146,16 @@ def check_signature(key, funcname, args, signature):
                 error(key + " uses function " + funcname + " with non-float argument " + str(args[i]))
                 return False
     return True
+
+def check_line(line):
+    if '…' in line:
+        warning("forbidden symbol '…' found in line " + line)
+    for locale in locales:
+        if line not in translation[locale]:
+            warning("missing " + locale + " translation of '" + line + "'")
+
+def is_line(key, value):
+    check_line(value)
 
 def test_step(key, action, args):
     if action == "add":
@@ -299,11 +312,12 @@ def test_step(key, action, args):
 
     elif action == "talk":
         if len(args) == 1:
-            pass
+            check_line(args[0])
         elif len(args) == 2:
             id = args[0]
             if id not in character_ids and id != "superflu":
                 error(key + " uses function talk on non-existing character " + id)
+            check_line(args[1])
         else:
             error(key + " uses function talk with unhandled #arg = " + str(len(args)))
 
@@ -355,13 +369,21 @@ inventory_ids = set()
 all_states = {}
 hints_ids = set()
 
+data = load_yaml(data_folder + "locale.yaml")
+locales = [ l["id"] for l in data["locales"] if l["id"] != 'fr_FR']
+
+translation = { l: {} for l in locales }
+for line in data["lines"]:
+    for locale in locales:
+        translation[locale][line['fr_FR']] = line[locale]
+
 data = load_yaml(data_folder + "hints.yaml")
 if test(data, "hints"):
     for h in data["hints"]:
         if test(h, "id"):
             all_ids, hints_id = test_id_unicity(hints_ids, h["id"])
-        test(h, "question")
-        test(h, "answer")
+        test(h, "question", is_line)
+        test(h, "answer", is_line)
 
 iteration = 0
 for filename in yaml_files:
@@ -377,7 +399,7 @@ for filename in yaml_files:
         continue
 
     if filename.startswith("characters/"):
-        test(data, "name")
+        test(data, "name", is_line)
         test(data, "coordinates/0", is_int)
         test(data, "coordinates/1", is_int)
         test(data, "looking_right", is_bool)
@@ -415,7 +437,7 @@ for filename in yaml_files:
                 if a not in values:
                     error(str(a) + " is not a valid button")
     elif filename.startswith("cutscenes/"):
-        test(data, "name")
+        test(data, "name", is_line)
         if test(data, "content"):
             ids = set()
             for s in data["content"]:
@@ -425,6 +447,8 @@ for filename in yaml_files:
                     test(s, "skin", file_exists, ["images/cutscenes", "png"])
                 elif "music" in s:
                     test(s, "music", file_exists, ["sounds/musics", "ogg"])
+                elif "text" in s:
+                    test(s, "text", is_line)
                 if "keyframes" in s:
                     for k in s["keyframes"]:
                         test(k, "time", is_int)
@@ -488,7 +512,7 @@ for filename in yaml_files:
             for l in data["lines"]:
                 if "choices" in l:
                     for c in l["choices"]:
-                        test(c, "line")
+                        test(c, "line", is_line)
                         test(c, "once", is_bool)
                         if test(c, "goto"):
                             if c["goto"] not in ids:
@@ -496,7 +520,8 @@ for filename in yaml_files:
                             if c["goto"] == "end":
                                 has_end = True
                 elif "line" in l:
-                    test(l, "line", is_array, 2)
+                    if test(l, "line", is_array, 2):
+                        test(l, "line/1", is_line)
                 elif "target" not in l:
                     if test(l, "goto"):
                         if l["goto"] not in ids:
@@ -507,7 +532,7 @@ for filename in yaml_files:
                 error("dialog has no end")
 
     elif filename.startswith("objects/"):
-        test(data, "name")
+        test(data, "name", is_line)
         test(data, "coordinates/0", is_int)
         test(data, "coordinates/1", is_int)
         test(data, "coordinates/2", is_int)
@@ -545,7 +570,7 @@ for filename in yaml_files:
             test(data, "label/1", is_int)
 
     elif filename.startswith("rooms/"):
-        test(data, "name")
+        test(data, "name", is_line)
         test(data, "background", file_exists, ["images/backgrounds", "png"])
         if "ground_map" in data:
             test(data, "ground_map", file_exists, ["images/backgrounds", "png"])
@@ -794,6 +819,9 @@ for filename in yaml_files:
 if not errors:
     print("Data is valid")
 else:
-    print("Data is invalid, some errors found:")
+    print("Data may be invalid:")
     for e in errors:
-        print("[" + e[0] + "] " + e[1])
+        if e[0]:
+            print("Error: [" + e[1] + "] " + e[2])
+        else:
+            print("Warning: [" + e[1] + "] " + e[2])
