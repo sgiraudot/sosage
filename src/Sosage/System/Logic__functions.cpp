@@ -278,6 +278,16 @@ bool Logic::function_look (const std::vector<std::string>& args)
 }
 
 /*
+  - loop: [] -> goes back to the beginning of current action
+ */
+bool Logic::function_loop (const std::vector<std::string>&)
+{
+  m_current_action->stop();
+  m_current_action->launch();
+  return true;
+}
+
+/*
   - move: [ID target_id, INT x, INT y, INT z]                 -> immediately moves target to the coordinates (x,y,z)
   - move: [ID target_id, INT x, INT y, INT z, FLOAT duration] -> smoothly moves target to coordinates (x,y,z) with wanted duration
  */

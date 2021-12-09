@@ -71,6 +71,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(function_load);
   INIT_DISPATCHER(function_lock);
   INIT_DISPATCHER(function_look);
+  INIT_DISPATCHER(function_loop);
   INIT_DISPATCHER(function_move);
   INIT_DISPATCHER(function_play);
   INIT_DISPATCHER(function_rescale);
@@ -393,7 +394,7 @@ bool Logic::compute_path_from_target (C::Position_handle target,
 
   //debug("Target = ", t);
 
-  if (target->component() != "view")
+  if (target->component() != "view" && !contains(target->entity(), "_body"))
     t = t + value<C::Absolute_position>(CAMERA__POSITION);
 
   //debug("Computing path from ", origin, " to ", t);

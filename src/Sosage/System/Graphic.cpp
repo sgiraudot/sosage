@@ -206,16 +206,15 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
                             (border ? 255 : 0), 0, (border ? 0 : 255));
         });
 
-        const std::string& id = value<C::String>("Player:name");
-        auto path = request<C::Path>(id + ":path");
-        if (path)
-        {
-          Point current = value<C::Position>(id + "_body:position") - camera;
-          m_core.draw_square (current.X(), current.Y(), 10, 0, 255, 0);
-
-          for (std::size_t p = path->current(); p < path->size(); ++ p)
+        for (auto c : components("path"))
+          if (auto path = C::cast<C::Path>(c))
           {
-            Point next = (*path)[p] - camera;
+            Point current = value<C::Position>(path->entity() + "_body:position") - camera;
+            m_core.draw_square (current.X(), current.Y(), 10, 0, 255, 0);
+
+            for (std::size_t p = path->current(); p < path->size(); ++ p)
+            {
+              Point next = (*path)[p] - camera;
             m_core.draw_square (next.X(), next.Y(), 10, 0, 255, 0);
             m_core.draw_line (current.X(), current.Y(),
                               next.X(), next.Y(), 0, 255, 0);
