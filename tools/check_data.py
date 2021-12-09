@@ -13,7 +13,7 @@ verbose = False
 if len(sys.argv) > 2 and sys.argv[2] == '-v':
     verbose = True
 exit_at_first_error = True
-    
+
 errors = []
 def error(string):
     if exit_at_first_error:
@@ -144,6 +144,183 @@ def check_signature(key, funcname, args, signature):
                 return False
     return True
 
+def test_step(key, action, args):
+    if action == "add":
+        if check_signature(key, action, args, ["string", "string"]):
+            id = args[0]
+            if is_convertible_to_int(args[1]):
+                if id not in integer_ids:
+                    error(key + " uses function add on non-existing integer " + id)
+            elif args[1] not in action_ids:
+                error(key + " uses function add on non-existing action " + args[1])
+
+    elif action == "camera":
+        if len(args) == 1:
+            check_signature(key, action, args, ["int"])
+        elif len(args) == 2:
+            check_signature(key, action, args, ["int", "int"])
+        elif len(args) == 3:
+            check_signature(key, action, args, ["int", "int", "float"])
+        else:
+            error(key + " uses function camera with unhandled #arg = " + str(len(args)))
+
+    elif action == "control":
+        if len(args) == 1:
+            id = args[0]
+            if id not in character_ids:
+                error(key + " uses function control on non-existing character " + id)
+        elif len(args) == 2:
+            for id in args:
+                if id not in character_ids:
+                    error(key + " uses function control on non-existing character " + id)
+        else:
+            error(key + " uses function control with " + str(len(args)) + " arguments")
+
+    elif action in {"exit", "lock", "loop", "unlock" }:
+        if len(args) != 0:
+            error(key + " uses function exit with arguments " + str(args))
+
+    elif action == "fadein" or action == "fadeout":
+        check_signature(key, action, args, ["float"])
+
+    elif action == "goto":
+        if len(args) == 0:
+            pass
+        elif len(args) == 1:
+            id = args[0]
+            if id not in object_ids and id not in character_ids:
+                error(key + " uses function goto on non-existing (or non-reachable) id " + id)
+        elif len(args) == 2:
+            check_signature(key, action, args, ["int", "int"])
+        elif len(args) == 3:
+            if check_signature(key, action, args, ["string", "int", "int"]):
+                id = args[0]
+                if id not in character_ids:
+                    error(key + " uses function goto on non-existing character " + id)
+        else:
+            error(key + " uses function goto with unhandled #arg = " + str(len(args)))
+
+    elif action == "hide":
+        if check_signature(key, action, args, ["string"]):
+            id = args[0]
+            if id not in room_ids and id not in hints_ids:
+                error(key + " uses function hide on non-existing id " + id)
+
+    elif action == "load":
+        if check_signature(key, load, args, ["string", "string"]):
+            # TODO check entry point
+            pass
+
+    elif action == "look":
+        if len(args) == 0:
+            pass
+        elif len(args) == 1:
+            id = args[0]
+            if id not in object_ids and id not in character_ids:
+                error(key + " uses function look on non-existing (or non-reachable) id " + id)
+        elif len(args) == 2:
+            char_id = args[0]
+            if char_id not in character_ids:
+                error(key + " uses function look on non-existing (or non-reachable) character " + id)
+            id = args[1]
+            if id not in object_ids and id not in character_ids:
+                error(key + " uses function look on non-existing (or non-reachable) id " + id)
+        else:
+            error(key + " uses function look with unhandled #arg = " + str(len(args)))
+
+    elif action == "move":
+        if len(args) == 4:
+            check_signature(key, action, args, ["string", "int", "int", "int"])
+            id = args[0]
+            if id not in object_ids and id not in scenery_ids:
+                error(key + " uses function move on non-existing (or non-reachable) id " + id)
+        elif len(args) == 5:
+            check_signature(key, action, args, ["string", "int", "int", "int", "float"])
+            id = args[0]
+            if id not in object_ids and id not in scenery_ids:
+                error(key + " uses function set on non-existing (or non-reachable) id " + id)
+        else:
+            error(key + " uses function move with unhandled #arg = " + str(len(args)))
+
+    elif action == "play":
+        if len(args) == 1:
+            id = args[0]
+            if id not in animation_ids and id not in music_ids and id not in sound_ids:
+                error(key + " uses function play on non-existing animation/music/sound " + id)
+        elif len(args) == 2:
+            check_signature(key, action, args, ["string", "float"])
+            id = args[0]
+            # TODO check if valid animation of character?
+        else:
+            error(key + " uses function play with unhandled #arg = " + str(len(args)))
+
+    elif action == "rescale":
+        if check_signature(key, action, args, ["string", "float"]):
+            id = args[0]
+            if id not in room_ids:
+                error(key + " uses function rescale on non-existing (or non-reachable) id " + id)
+
+    elif action == "set":
+        if len(args) == 2:
+            check_signature(key, action, args, ["string", "string"])
+            id = args[0]
+            state0 = args[1]
+            if id not in room_ids:
+                error(key + " uses function set on non-existing (or non-reachable) id " + id)
+            if state0 not in all_states[id]:
+                error(key + " uses function set on non-existing state " + state0 + " of " + id)
+        elif len(args) == 3:
+            id = args[0]
+            if id not in room_ids:
+                error(key + " uses function set on non-existing (or non-reachable) id " + id)
+            state0 = args[1]
+            state1 = args[2]
+            if state0 not in all_states[id]:
+                error(key + " uses function set on non-existing state " + state0 + " of " + id)
+            if state1 not in all_states[id]:
+                error(key + " uses function set on non-existing state " + state1 + " of " + id)
+        else:
+            error(key + " uses function set with unhandled #arg = " + str(len(args)))
+
+    elif action == "shake":
+        check_signature(key, action, args, ["float", "float"])
+
+    elif action == "show":
+        if check_signature(key, action, args, ["string"]):
+            id = args[0]
+            if id not in room_ids and id not in hints_ids:
+                error(key + " uses function show on non-existing id " + id)
+
+    elif action == "stop":
+        if check_signature(key, action, args, ["string"]):
+            id = args[0]
+            if id != "music" and id not in animation_ids:
+                error(key + " uses function stop on non-existing animation " + id)
+
+    elif action == "talk":
+        if len(args) == 1:
+            pass
+        elif len(args) == 2:
+            id = args[0]
+            if id not in character_ids and id != "superflu":
+                error(key + " uses function talk on non-existing character " + id)
+        else:
+            error(key + " uses function talk with unhandled #arg = " + str(len(args)))
+
+    elif action == "trigger":
+        if check_signature(key, action, args, ["string"]):
+            id = args[0]
+            menus = { "End", "Exit" } # TODO really test menus
+            if id != "hints" and id not in action_ids and id not in dialog_ids and id not in menus:
+                # TODO check also menu existence
+                error(key + " uses function trigger on non-existing action/dialog/menu " + id)
+
+    elif action == "wait":
+        if len(args) == 0:
+            pass
+        else:
+            check_signature(key, action, args, ["float"])
+
 def test_action(key, value):
     for v in value:
         action = next(iter(v))
@@ -151,195 +328,7 @@ def test_action(key, value):
         if not isinstance(args, list):
             error(key + " uses ill-formed arguments: " + str(args))
             continue
-        if action == "add":
-            if check_signature(key, "add", args, ["string", "string"]):
-                id = args[0]
-                if is_convertible_to_int(args[1]):
-                    if id not in integer_ids:
-                        error(key + " uses function add on non-existing integer " + id)
-                elif args[1] not in action_ids:
-                    error(key + " uses function add on non-existing action " + args[1])
-        elif action == "camera":
-            if len(args) == 0:
-                error(key + " uses function add without arguments")
-                continue
-            option = args[0]
-            if option == "fadein" or option == "fadeout":
-                check_signature(key, "camera/fade", args, ["string", "float"])
-            elif option == "shake":
-                check_signature(key, "camera/shake", args, ["string", "float", "float"])
-            elif option == "target":
-                if len(args) == 4:
-                    check_signature(key, "camera/target", args, ["string", "int", "int", "int"])
-                else:
-                    check_signature(key, "camera/target", args, ["string", "int"])
-            else:
-                error(key + " uses function add with unrecognized option " + str(option))
-        elif action == "dialog":
-            if check_signature(key, "dialog", args, ["string"]):
-                id = args[0]
-                if id not in dialog_ids:
-                    error(key + " uses function dialog on non-existing dialog " + id)
-        elif action == "goto":
-            if len(args) == 0:
-                pass
-            elif len(args) == 1:
-                id = args[0]
-                if id not in object_ids and id not in character_ids:
-                    error(key + " uses function goto on non-existing (or non-reachable) id " + id)
-            elif len(args) == 2:
-                check_signature(key, "goto", args, ["int", "int"])
-            elif len(args) == 3:
-                if check_signature(key, "goto", args, ["string", "int", "int"]):
-                    id = args[0]
-                    if id not in character_ids:
-                        error(key + " uses function goto on non-existing character " + id)
-            else:
-                error(key + " uses function goto with unhandled #arg = " + str(len(args)))
-        elif action == "look":
-            if len(args) == 0:
-                pass
-            elif check_signature(key, "look", args, ["string"]):
-                id = args[0]
-                if id not in object_ids and id not in character_ids:
-                    error(key + " uses function look on non-existing (or non-reachable) id " + id)
-        elif action == "play":
-            if len(args) == 0:
-                error(key + " uses function play without arguments")
-                continue
-            option = args[0]
-            if option == "animation":
-                if len(args) == 2:
-                    if check_signature(key, "play/animation", args, ["string", "string"]):
-                        id = args[1]
-                        if id not in animation_ids:
-                            error(key + " uses function play on non-existing animation " + id)
-                else:
-                    if check_signature(key, "play/animation", args, ["string", "string", "float"]):
-                        id = args[1]
-                        # TODO check if valid animation of character?
-            elif option == "music":
-                if check_signature(key, "play/music", args, ["string", "string"]):
-                    id = args[1]
-                    if id not in music_ids:
-                        error(key + " uses function play on non-existing music " + id)
-            elif option == "sound":
-                if check_signature(key, "play/sound", args, ["string", "string"]):
-                    id = args[1]
-                    if id not in sound_ids:
-                        error(key + " uses function play on non-existing sound " + id)
-            else:
-                error(key + " uses function play with unrecognized option " + str(option))
-        elif action == "set":
-            if len(args) == 0:
-                error(key + " uses function set without arguments")
-                continue
-            option = args[0]
-            if option == "coordinates":
-                if len(args) == 6:
-                    if check_signature(key, "set/coordinates", args, ["string", "string", "int", "int", "int", "int"]):
-                        id = args[1]
-                        if id not in object_ids and id not in scenery_ids:
-                            error(key + " uses function set on non-existing (or non-reachable) id " + id)
-                else:
-                    if check_signature(key, "set/coordinates", args, ["string", "string", "int", "int", "int"]):
-                        id = args[1]
-                        if id not in object_ids and id not in scenery_ids:
-                            error(key + " uses function set on non-existing (or non-reachable) id " + id)
-            elif option == "state":
-                if len(args) == 3:
-                    if check_signature(key, "set/state", args, ["string", "string", "string"]):
-                        id = args[1]
-                        state0 = args[2]
-                        if id not in room_ids:
-                            error(key + " uses function set on non-existing (or non-reachable) id " + id)
-                        if state0 not in all_states[id]:
-                            error(key + " uses function set/state on non-existing state " + state0 + " of " + id)
-                else:
-                    if check_signature(key, "set/state", args, ["string", "string", "string", "string"]):
-                        id = args[1]
-                        if id not in room_ids:
-                            error(key + " uses function set on non-existing (or non-reachable) id " + id)
-                        state0 = args[2]
-                        state1 = args[3]
-                        if state0 not in all_states[id]:
-                            error(key + " uses function set/state on non-existing state " + state0 + " of " + id)
-                        if state1 not in all_states[id]:
-                            error(key + " uses function set/state on non-existing state " + state1 + " of " + id)
-            elif option == "follower":
-                if check_signature(key, "set/follower", args, ["string", "string"]):
-                    id = args[1]
-                    if id not in character_ids:
-                        error(key + " uses function set/follower on non-existing (or non-reachable) id " + id)
-            elif option == "visible":
-                if check_signature(key, "set/visible", args, ["string", "string"]):
-                    id = args[1]
-                    if id not in room_ids and id not in hints_ids:
-                        error(key + " uses function set/visible on non-existing id " + id)
-            elif option == "hidden":
-                if check_signature(key, "set/hidden", args, ["string", "string"]):
-                    id = args[1]
-                    if id not in room_ids and id not in hints_ids:
-                        error(key + " uses function set/hidden on non-existing id " + id)
-            else:
-                error(key + " uses function set with unrecognized option " + str(option))
-        elif action == "stop":
-            if len(args) == 0:
-                error(key + " uses function stop without arguments")
-                continue
-            option = args[0]
-            if option == "animation":
-                if check_signature(key, "stop/animation", args, ["string", "string"]):
-                    id = args[1]
-                    if id not in animation_ids:
-                        error(key + " uses function stop on non-existing animation " + id)
-            elif option == "music":
-                check_signature(key, "stop/music", args, ["string"])
-            else:
-                error(key + " uses function stop with unrecognized option " + str(option))
-        elif action == "system":
-            if len(args) == 0:
-                error(key + " uses function system without arguments")
-                continue
-            option = args[0]
-            if option == "load":
-                if check_signature(key, "system/load", args, ["string", "string", "string"]):
-                    # TODO check entry point
-                    pass
-            elif option == "lock":
-                check_signature(key, "system/lock", args, ["string"])
-            elif option == "hints":
-                check_signature(key, "system/hints", args, ["string"])
-            elif option == "trigger":
-                if check_signature(key, "system/trigger", args, ["string", "string"]):
-                    id = args[1]
-                    if id not in action_ids:
-                        error(key + " uses function system/trigger on non-existing id " + id)
-            elif option == "menu":
-                check_signature(key, "system/unlock", args, ["string", "string"])
-                # TODO check menu existence
-            elif option == "unlock":
-                check_signature(key, "system/unlock", args, ["string"])
-            elif option == "wait":
-                if len(args) == 1:
-                    check_signature(key, "system/wait", args, ["string"])
-                else:
-                    check_signature(key, "system/wait", args, ["string", "float"])
-            elif option == "exit":
-                check_signature(key, "system/exit", args, ["string"])
-            else:
-                error(key + " uses function system with unrecognized option " + str(option))
-        elif action == "talk":
-            if len(args) == 1:
-                pass
-            else:
-                if check_signature(key, "talk", args, ["string", "string"]):
-                    id = args[0]
-                    if id not in character_ids and id != "superflu":
-                        error(key + " uses function talk on non-existing character " + id)
-        else:
-            error(key + " contains unknown action " + action)
-            continue
+        test_step(key, action, args)
 
 
 data_folder = root_folder + "/data/"
@@ -351,7 +340,8 @@ for root, directories, filenames in os.walk(data_folder):
         basename = os.path.basename(fullname)
         name, ext = os.path.splitext(basename)
         if ext != ".yaml":
-            print("Warning: non yaml file found: " + fullname)
+            if "locale.yaml" not in fullname:
+                print("Warning: non yaml file found: " + fullname)
             continue
         relname = fullname.split("data/")[-1]
         yaml_files.append(relname)
@@ -515,7 +505,7 @@ for filename in yaml_files:
                             has_end = True
             if not has_end:
                 error("dialog has no end")
-                
+
     elif filename.startswith("objects/"):
         test(data, "name")
         test(data, "coordinates/0", is_int)
@@ -553,7 +543,7 @@ for filename in yaml_files:
         if not inventory_only:
             test(data, "label/0", is_int)
             test(data, "label/1", is_int)
-            
+
     elif filename.startswith("rooms/"):
         test(data, "name")
         test(data, "background", file_exists, ["images/backgrounds", "png"])
@@ -582,7 +572,7 @@ for filename in yaml_files:
                         a = load_yaml(fname)
                 action_ids.add(id)
                 room_ids.add(id)
-                    
+
                 if test(a, "states"):
                     all_states[id] = set()
                     for s in a["states"]:

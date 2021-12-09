@@ -158,6 +158,7 @@ bool Logic::function_fadeout (const std::vector<std::string>& args)
 }
 
 /*
+  - goto: []                              -> player goes to current object
   - goto: [ID target_id]                  -> player goes to target_id
   - goto: [INT x, INT y]                  -> player goes to coordinates (x,y)
   - goto: [ID character_id, ID target_id] -> character goes to target_id
