@@ -383,7 +383,9 @@ void Logic::run_cutscene()
 bool Logic::compute_path_from_target (C::Position_handle target,
                                       std::string id)
 {
-  auto ground_map = get<C::Ground_map>("Background:ground_map");
+  auto ground_map = request<C::Ground_map>("Background:ground_map");
+  if (!ground_map)
+    return false;
 
   if (id == "")
     id = value<C::String>("Player:name");
@@ -413,7 +415,10 @@ bool Logic::compute_path_from_target (C::Position_handle target,
 
 bool Logic::compute_path_from_direction (const Vector& direction)
 {
-  auto ground_map = get<C::Ground_map>("Background:ground_map");
+  auto ground_map = request<C::Ground_map>("Background:ground_map");
+  if (!ground_map)
+    return false;
+
   const std::string& id = value<C::String>("Player:name");
   auto position = get<C::Position>(id + "_body:position");
   Point origin = position->value();

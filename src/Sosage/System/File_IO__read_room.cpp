@@ -168,19 +168,24 @@ void File_IO::read_room (const std::string& file_name)
   get<C::Set<std::string> >("Game:visited_rooms")->insert (file_name);
 
   std::string background = input["background"].string("images", "backgrounds", "png");
-  std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
-  int front_z = input["front_z"].integer();
-  int back_z = input["back_z"].integer();
+  if (input.has("ground_map"))
+  {
+    std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
+    int front_z = input["front_z"].integer();
+    int back_z = input["back_z"].integer();
+    set<C::Ground_map>("Background:ground_map", ground_map,
+                       front_z, back_z, callback->value());
+  }
+  else
+    set<C::Int>("Background:default_z", input["default_z"].integer());
 
   auto background_img
-    = set<C::Image>("Background:image", background, 0, BOX);
+      = set<C::Image>("Background:image", background, 0, BOX);
   m_latest_room_entities.insert ("Background");
 
   callback->value()();
 
   set<C::Absolute_position>("Background:position", Point(0, 0), false);
-  set<C::Ground_map>("Background:ground_map", ground_map,
-                                       front_z, back_z, callback->value());
 
   callback->value()();
 

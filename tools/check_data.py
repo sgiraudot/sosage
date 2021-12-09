@@ -547,9 +547,12 @@ for filename in yaml_files:
     elif filename.startswith("rooms/"):
         test(data, "name")
         test(data, "background", file_exists, ["images/backgrounds", "png"])
-        test(data, "ground_map", file_exists, ["images/backgrounds", "png"])
-        test(data, "front_z", is_int)
-        test(data, "back_z", is_int)
+        if "ground_map" in data:
+            test(data, "ground_map", file_exists, ["images/backgrounds", "png"])
+            test(data, "front_z", is_int)
+            test(data, "back_z", is_int)
+        else:
+            test(data, "default_z", is_int)
 
         room_ids = inventory_ids.copy()
 

@@ -333,9 +333,12 @@ void Animation::place_and_scale_character(const std::string& id, bool looking_ri
   auto pbody = get<C::Position>(id + "_body:position");
   auto phead = get<C::Position>(id + "_head:position");
   auto pmouth = get<C::Position>(id + "_mouth:position");
-  auto ground_map = get<C::Ground_map>("Background:ground_map");
 
-  double new_z = ground_map->z_at_point (pbody->value());
+  double new_z;
+  if (auto ground_map = request<C::Ground_map>("Background:ground_map"))
+    new_z = ground_map->z_at_point (pbody->value());
+  else
+    new_z = value<C::Int>("Background:default_z");
   abody->rescale (new_z);
   ahead->rescale (new_z);
   ahead->z() += 1;
@@ -374,7 +377,12 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
 
   Point pos = pbody->value();
 
-  double to_walk = Config::character_speed * ground_map->z_at_point (pos) / Config::world_depth;
+  double to_walk = Config::character_speed;
+
+  if (auto ground_map = request<C::Ground_map>("Background:ground_map"))
+    to_walk *= ground_map->z_at_point (pos) / Config::world_depth;
+  else
+    to_walk *= value<C::Int>("Background:default_z");
 
   Vector direction (pos, (*path)[path->current()]);
   direction.normalize();
