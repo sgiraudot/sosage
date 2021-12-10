@@ -234,7 +234,7 @@ void Animation::run_animation_frame()
   std::unordered_set<std::string> just_started;
 
   // Then check all other cases
-  for (auto c : components("animation"))
+  for (auto c : components("move"))
     if (auto a = C::cast<C::Tuple<Point, Point, double, double>>(c))
     {
       double ftime = frame_time(value<C::Double>(CLOCK__TIME));
@@ -246,6 +246,20 @@ void Animation::run_animation_frame()
 
       get<C::Position>(a->entity() + ":position")->set (current);
     }
+
+  for (auto c : components("rescale"))
+    if (auto a = C::cast<C::Tuple<double, double, double, double>>(c))
+    {
+      double ftime = frame_time(value<C::Double>(CLOCK__TIME));
+      double ratio = (ftime - a->get<2>()) / (a->get<3>() - a->get<2>());
+
+      double scale = ratio * a->get<1>() + (1 - ratio) * a->get<0>();
+      if (ratio > 1)
+        scale = a->get<1>();
+
+      get<C::Image>(a->entity() + ":image")->set_scale (scale);
+    }
+
 
   for (auto c : components("path"))
     if (auto path = C::cast<C::Path>(c))
@@ -284,6 +298,7 @@ void Animation::run_animation_frame()
 
   for (auto c : components("set_visible"))
   {
+    debug << "Set " << c->id() << " visible" << std::endl;
     const std::string& id = c->entity();
     auto g = get<C::Group>(id + ":group");
     g->apply<C::Image>([](auto img) { img->on() = true; });
@@ -292,6 +307,7 @@ void Animation::run_animation_frame()
 
   for (auto c : components("set_hidden"))
   {
+    debug << "Set " << c->id() << " hidden" << std::endl;
     const std::string& id = c->entity();
     auto g = get<C::Group>(id + ":group");
     g->apply<C::Image>([](auto img) { img->on() = false; });

@@ -74,6 +74,7 @@ File_IO::File_IO (Content& content)
   INIT_DISPATCHER("musics", read_music);
   INIT_DISPATCHER("scenery", read_scenery);
   INIT_DISPATCHER("sounds", read_sound);
+  INIT_DISPATCHER("texts", read_text);
   INIT_DISPATCHER("windows", read_window);
 }
 

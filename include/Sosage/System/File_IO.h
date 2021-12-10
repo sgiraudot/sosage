@@ -92,6 +92,7 @@ private:
   void read_origin (const std::string& id, const Core::File_IO::Node& input);
   void read_scenery (const std::string& id, const Core::File_IO::Node& input);
   void read_sound (const std::string& id, const Core::File_IO::Node& input);
+  void read_text (const std::string& id, const Core::File_IO::Node& input);
   void read_window (const std::string& id, const Core::File_IO::Node& input);
 
 };

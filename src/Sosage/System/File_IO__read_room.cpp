@@ -167,7 +167,13 @@ void File_IO::read_room (const std::string& file_name)
   set<C::String>("Game:current_room", file_name);
   get<C::Set<std::string> >("Game:visited_rooms")->insert (file_name);
 
-  std::string background = input["background"].string("images", "backgrounds", "png");
+  if (input.has("background"))
+  {
+    std::string background = input["background"].string("images", "backgrounds", "png");
+    auto background_img
+        = set<C::Image>("Background:image", background, 0, BOX);
+    m_latest_room_entities.insert ("Background");
+  }
   if (input.has("ground_map"))
   {
     std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
@@ -178,10 +184,6 @@ void File_IO::read_room (const std::string& file_name)
   }
   else
     set<C::Int>("Background:default_z", input["default_z"].integer());
-
-  auto background_img
-      = set<C::Image>("Background:image", background, 0, BOX);
-  m_latest_room_entities.insert ("Background");
 
   callback->value()();
 
@@ -870,6 +872,22 @@ void File_IO::read_sound (const std::string& id, const Core::File_IO::Node& node
   set<C::Sound>(id + ":sound", sound);
 }
 
+void File_IO::read_text (const std::string& id, const Core::File_IO::Node& node)
+{
+ m_latest_room_entities.insert(id);
+
+ auto dialog_font = get<C::Font> ("Dialog:font");
+ std::string default_color = "000000";
+
+ check (node.has("text"), "Node should either have music, image or text");
+ std::string text = node["text"].string();
+ std::string color = (node.has("color") ? node["color"].string() : default_color);
+ int x = node["coordinates"][0].integer();
+ int y = node["coordinates"][1].integer();
+ set<C::Absolute_position>(id + ":position", Point(x,y));
+ create_locale_dependent_text (id, dialog_font, color, text);
+}
+
 void File_IO::read_window (const std::string& id, const Core::File_IO::Node& node)
 {
   m_latest_room_entities.insert(id);
@@ -889,6 +907,7 @@ void File_IO::read_window (const std::string& id, const Core::File_IO::Node& nod
   set<C::Absolute_position>(id + ":position",
                             Point(Config::world_width / 2,
                                   Config::world_height / 2));
+  set<C::Base>(id + ":is_window");
 }
 
 } // namespace Sosage::System

@@ -75,6 +75,7 @@ private:
   bool function_add (const std::vector<std::string>& args);
   bool function_camera (const std::vector<std::string>& args);
   bool function_control (const std::vector<std::string>& args);
+  bool function_cutscene (const std::vector<std::string>& args);
   bool function_exit (const std::vector<std::string>& args);
   bool function_fadein (const std::vector<std::string>& args);
   bool function_fadeout (const std::vector<std::string>& args);
@@ -92,6 +93,7 @@ private:
   bool function_show (const std::vector<std::string>& args);
   bool function_stop (const std::vector<std::string>& args);
   bool function_talk (const std::vector<std::string>& args);
+  bool function_timer (const std::vector<std::string>& args);
   bool function_trigger (const std::vector<std::string>& args);
   bool function_unlock (const std::vector<std::string>& args);
   bool function_wait (const std::vector<std::string>& args);

@@ -131,6 +131,15 @@ bool Logic::function_control (const std::vector<std::string>& args)
 }
 
 /*
+  - cutscene: [] -> locks interface for cutscene
+ */
+bool Logic::function_cutscene (const std::vector<std::string>&)
+{
+  status()->push(LOCKED);
+  return true;
+}
+
+/*
   - exit: [] -> exits the game
  */
 bool Logic::function_exit (const std::vector<std::string>&)
@@ -211,8 +220,10 @@ bool Logic::function_hide (const std::vector<std::string>& args)
   std::string target = args[0];
   if (auto question = request<C::String>(target + ":question"))
     get<C::Set<std::string>>("Hints:list")->erase(target);
-  else
+  else if (request<C::Group>(target + ":group"))
     emit (target + ":set_hidden");
+  else
+    get<C::Image>(target + ":image")->on() = false;
   return true;
 }
 
@@ -312,7 +323,7 @@ bool Logic::function_move (const std::vector<std::string>& args)
     auto pos = get<C::Position>(target + ":position");
 
     auto anim = set<C::Tuple<Point, Point, double, double>>
-        (target + ":animation", pos->value(), Point(x,y), begin_time, end_time);
+        (target + ":move", pos->value(), Point(x,y), begin_time, end_time);
    m_current_action->schedule (end_time,  anim);
   }
   else
@@ -387,14 +398,33 @@ bool Logic::function_play (const std::vector<std::string>& args)
 }
 
 /*
-  - rescale: [ID target_id, FLOAT scale] -> rescales target to the wanted scale
+  - rescale: [ID target_id, FLOAT scale]                 -> rescales immediately target to the wanted scale
+  - rescale: [ID target_id, FLOAT scale, FLOAT duration] -> rescales smoothly target to the wanted scale with the wanted duration
  */
 bool Logic::function_rescale (const std::vector<std::string>& args)
 {
-  check (args.size() == 2, "function_rescale takes 2 arguments");
+  check (args.size() == 2 || args.size() == 3, "function_rescale takes 2 or 3 arguments");
   std::string target = args[0];
   double scale = to_double(args[1]);
-  get<C::Image>(target + ":image")->set_scale(scale);
+
+  if (args.size() == 3) // Smooth rescale
+  {
+    double duration = to_double(args[2]);
+    int nb_frames = round (duration * Config::animation_fps);
+
+    double begin_time = frame_time(m_current_time);
+    double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
+
+    m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+
+    auto img = get<C::Image>(target + ":image");
+
+    auto anim = set<C::Tuple<double, double, double, double>>
+        (target + ":rescale", img->scale(), scale, begin_time, end_time);
+   m_current_action->schedule (end_time,  anim);
+  }
+  else
+    get<C::Image>(target + ":image")->set_scale(scale);
   return true;
 }
 
@@ -475,17 +505,23 @@ bool Logic::function_show (const std::vector<std::string>& args)
   else
   {
     auto image = get<C::Image>(target + ":image");
-    set<C::Variable>("Game:window", image);
-    emit ("Interface:show_window");
-
-    auto code = request<C::Code>(target + ":code");
-    if (code)
+    if (request<C::Base>(target + ":is_window"))
     {
-      status()->push (IN_CODE);
-      set<C::Variable>("Game:code", code);
+      set<C::Variable>("Game:window", image);
+      emit ("Interface:show_window");
+
+      auto code = request<C::Code>(target + ":code");
+      if (code)
+      {
+        status()->push (IN_CODE);
+        set<C::Variable>("Game:code", code);
+      }
+      else
+        status()->push (IN_WINDOW);
     }
     else
-      status()->push (IN_WINDOW);
+      image->on() = true;
+
   }
   return true;
 }
@@ -586,6 +622,16 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 }
 
 /*
+  - timer: [ID timer_id] -> creates a timer
+ */
+bool Logic::function_timer (const std::vector<std::string>& args)
+{
+  check (args.size() == 1, "function_timer takes 1 argument");
+  set<C::Double>(args[0] + ":init_value", m_current_time);
+  return true;
+}
+
+/*
   - trigger: [ID action_id] -> triggers the wanted action
   - trigger: [ID dialog_id] -> triggers the wanted dialog
   - trigger: [ID menu_id]   -> triggers the wanted menu
@@ -630,17 +676,25 @@ bool Logic::function_unlock (const std::vector<std::string>&)
 }
 
 /*
-  - wait: []               -> waits until all ongoing events (talking, moving, etc.) are finished
-  - wait: [FLOAT duration] -> waits for the wanted duration
+  - wait: []                            -> waits until all ongoing events (talking, moving, etc.) are finished
+  - wait: [FLOAT duration]              -> waits for the wanted duration
+  - wait: [ID timer_id, FLOAT duration] -> waits for the wanted duration from the given timer
  */
 bool Logic::function_wait (const std::vector<std::string>& args)
 {
-  check (args.size() <= 1, "function_wait takes 0 or 1 argument");
+  check (args.size() <= 2, "function_wait takes 0 or 1 argument");
   if (args.size() == 1)
   {
     double time = to_double(args[0]);
     debug << "Schedule wait until " << m_current_time + time << std::endl;
     m_current_action-> schedule (m_current_time + time, C::make_handle<C::Base>("wait"));
+  }
+  else if (args.size() == 2)
+  {
+    const std::string& id = args[0];
+    double time = value<C::Double>(id + ":init_value") + to_double(args[1]);
+    debug << "Schedule wait until " << time << std::endl;
+    m_current_action-> schedule (time, C::make_handle<C::Base>("wait"));
   }
   return false;
 }

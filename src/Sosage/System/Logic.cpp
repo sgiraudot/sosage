@@ -63,6 +63,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(function_add);
   INIT_DISPATCHER(function_camera);
   INIT_DISPATCHER(function_control);
+  INIT_DISPATCHER(function_cutscene);
   INIT_DISPATCHER(function_exit);
   INIT_DISPATCHER(function_fadein);
   INIT_DISPATCHER(function_fadeout);
@@ -80,6 +81,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(function_show);
   INIT_DISPATCHER(function_stop);
   INIT_DISPATCHER(function_talk);
+  INIT_DISPATCHER(function_timer);
   INIT_DISPATCHER(function_trigger);
   INIT_DISPATCHER(function_unlock);
   INIT_DISPATCHER(function_wait);
