@@ -54,8 +54,6 @@ public:
 
 private:
 
-  void run_cutscene();
-
   bool compute_path_from_target (Component::Position_handle target,
                                  std::string id = "");
   bool compute_path_from_direction (const Vector& direction);

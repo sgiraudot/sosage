@@ -82,6 +82,7 @@ public:
   void update_scheduled (const std::function<bool(Timed_handle)>& predicate);
   bool ready() const;
   const Step& next_step();
+  const Step& last_step();
 };
 
 using Action_handle = std::shared_ptr<Action>;
