@@ -220,7 +220,7 @@ def test_step(key, action, args):
                 error(key + " uses function hide on non-existing id " + id)
 
     elif action == "load":
-        if check_signature(key, load, args, ["string", "string"]):
+        if check_signature(key, action, args, ["string", "string"]):
             # TODO check entry point
             pass
 
@@ -243,15 +243,18 @@ def test_step(key, action, args):
 
     elif action == "move":
         if len(args) == 4:
-            check_signature(key, action, args, ["string", "int", "int", "int"])
             id = args[0]
-            if id not in object_ids and id not in scenery_ids:
-                error(key + " uses function move on non-existing (or non-reachable) id " + id)
+            if id in character_ids:
+                check_signature(key, action, args, ["string", "int", "int", "bool"])
+            else:
+                check_signature(key, action, args, ["string", "int", "int", "int"])
+                if id not in object_ids and id not in scenery_ids:
+                    error(key + " uses function move on non-existing (or non-reachable) id " + id)
         elif len(args) == 5:
             check_signature(key, action, args, ["string", "int", "int", "int", "float"])
             id = args[0]
-            if id not in object_ids and id not in scenery_ids:
-                error(key + " uses function set on non-existing (or non-reachable) id " + id)
+            if id not in object_ids and id not in scenery_ids and id not in animation_ids:
+                error(key + " uses function move on non-existing (or non-reachable) id " + id)
         else:
             error(key + " uses function move with unhandled #arg = " + str(len(args)))
 
@@ -268,7 +271,13 @@ def test_step(key, action, args):
             error(key + " uses function play with unhandled #arg = " + str(len(args)))
 
     elif action == "rescale":
-        if check_signature(key, action, args, ["string", "float"]):
+        if len(args) == 2:
+            check_signature(key, action, args, ["string", "float"])
+            id = args[0]
+            if id not in room_ids:
+                error(key + " uses function rescale on non-existing (or non-reachable) id " + id)
+        else:
+            check_signature(key, action, args, ["string", "float", "float"])
             id = args[0]
             if id not in room_ids:
                 error(key + " uses function rescale on non-existing (or non-reachable) id " + id)
@@ -301,7 +310,7 @@ def test_step(key, action, args):
     elif action == "show":
         if check_signature(key, action, args, ["string"]):
             id = args[0]
-            if id not in room_ids and id not in hints_ids:
+            if id not in room_ids and id not in hints_ids and id not in text_ids:
                 error(key + " uses function show on non-existing id " + id)
 
     elif action == "stop":
@@ -332,8 +341,10 @@ def test_step(key, action, args):
     elif action == "wait":
         if len(args) == 0:
             pass
-        else:
+        elif len(args) == 1:
             check_signature(key, action, args, ["float"])
+        else:
+            check_signature(key, action, args, ["string", "float"])
 
 def test_action(key, value):
     for v in value:
@@ -436,72 +447,6 @@ for filename in yaml_files:
             for a in data["answer"]:
                 if a not in values:
                     error(str(a) + " is not a valid button")
-    elif filename.startswith("cutscenes/"):
-        test(data, "name", is_line)
-        if test(data, "content"):
-            ids = set()
-            for s in data["content"]:
-                if test(s, "id"):
-                    ids, _ = test_id_unicity(ids, s["id"])
-                if "skin" in s:
-                    test(s, "skin", file_exists, ["images/cutscenes", "png"])
-                elif "music" in s:
-                    test(s, "music", file_exists, ["sounds/musics", "ogg"])
-                elif "text" in s:
-                    test(s, "text", is_line)
-                if "keyframes" in s:
-                    for k in s["keyframes"]:
-                        test(k, "time", is_int)
-                        test(k, "coordinates", is_array, 3)
-                if "loop" in s:
-                    test(s, "loop", is_bool)
-                if "frames" in s:
-                    if test(s, "length", is_array, 2):
-                        test(s, "length/0", is_int)
-                        test(s, "length/1", is_int)
-                        nb_frames = s["length"][0] * s["length"][1]
-                        test(s, "frames", is_array)
-                        for f in s["frames"]:
-                            if type(f) is not int:
-                                if 'x' not in f:
-                                    error(s["id"] + " has a non-integer frame (" + str(f) + ")")
-                                    continue
-                                else:
-                                    ff = f.split('x')
-                                    if len(ff) != 2:
-                                        error(s["id"] + " has a ill-formed frame (" + str(f) + ")")
-                                    if int(ff[1]) >= nb_frames:
-                                           error(s["id"] + " has out-of-bound frame index " + str(f) + "/" + str(nb_frames))
-                            elif f >= nb_frames:
-                                error(s["id"] + " has out-of-bound frame index " + str(f) + "/" + str(nb_frames))
-        if test(data, "timeline"):
-            ids_on = set()
-            for t in data["timeline"]:
-                test(t, "time", is_time)
-                if "begin" in t:
-                    frame_type = "begin"
-                elif "end" in t:
-                    frame_type = "end"
-                elif "load" in t:
-                    # TODO: test if entry point exists
-                    continue
-                else:
-                    error("frame is neither begin nor end")
-                    continue
-                items = t[frame_type]
-                if not isinstance(items, list):
-                    items = [items]
-                for i in items:
-                    if frame_type == "begin":
-                        if i in ids_on:
-                            error(i + " has already begun")
-                        else:
-                            ids_on.add(i)
-                    else:
-                        if i not in ids_on:
-                            error(i + " has not begun")
-                        else:
-                            ids_on.remove(i)
     elif filename.startswith("dialogs/"):
         if test(data, "lines"):
             ids = { "end" }
@@ -571,13 +516,12 @@ for filename in yaml_files:
 
     elif filename.startswith("rooms/"):
         test(data, "name", is_line)
-        test(data, "background", file_exists, ["images/backgrounds", "png"])
+        if "background" in data:
+            test(data, "background", file_exists, ["images/backgrounds", "png"])
         if "ground_map" in data:
             test(data, "ground_map", file_exists, ["images/backgrounds", "png"])
             test(data, "front_z", is_int)
             test(data, "back_z", is_int)
-        else:
-            test(data, "default_z", is_int)
 
         room_ids = inventory_ids.copy()
 
@@ -601,7 +545,7 @@ for filename in yaml_files:
                 action_ids.add(id)
                 room_ids.add(id)
 
-                if test(a, "states"):
+                if "states" in a:
                     all_states[id] = set()
                     for s in a["states"]:
                         if test(s, "id"):
@@ -728,6 +672,19 @@ for filename in yaml_files:
                     all_ids, ref_ids = test_id_unicity(all_ids, s["id"], ref_ids)
                 test(s, "sound", file_exists, ["sounds/effects", "ogg"])
 
+        text_ids = set()
+        if "texts" in data:
+            for t in data["texts"]:
+                if test(t, "id"):
+                    refname = filename + ":" + t["id"]
+                    room_ids.add(t["id"])
+                    text_ids.add(t["id"])
+                    all_ids, ref_ids = test_id_unicity(all_ids, t["id"], ref_ids)
+                test(t, "text", is_line)
+                test(t, "coordinates/0", is_int)
+                test(t, "coordinates/1", is_int)
+                test(t, "coordinates/2", is_int)
+
         if "codes" in data:
             for c in data["codes"]:
                 refname = filename + ":" + c
@@ -738,19 +695,6 @@ for filename in yaml_files:
                 else:
                     subdata = load_yaml(fname)
                     test(subdata, "on_success", test_action)
-
-        if "origins" in data:
-            for o in data["origins"]:
-                refname = filename + ":origins"
-                if test(o, "id"):
-                    refname = filename + ":" + o["id"]
-                    room_ids.add(o["id"])
-                    all_ids, ref_ids = test_id_unicity(all_ids, o["id"], ref_ids)
-                test(o, "coordinates/0", is_int)
-                test(o, "coordinates/1", is_int)
-                test(o, "looking_right", is_bool)
-                if "action" in o:
-                    test(o, "action", test_action)
 
         if "windows" in data:
             for w in data["windows"]:
@@ -783,9 +727,11 @@ for filename in yaml_files:
                     refname = filename + ":" + a
                     fname = data_folder + "actions/" + a + ".yaml"
                     a = load_yaml(fname)
-                if test(a, "states"):
+                if "states" in a:
                     for s in a["states"]:
                         test(s, "effect", test_action)
+                else:
+                    test(a, "effect", test_action)
 
         for o in object_ids:
             refname = filename + ":" + o
