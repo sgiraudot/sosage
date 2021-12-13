@@ -44,6 +44,7 @@ Content::Content()
           "label",
           "lookat",
           "move",
+          "move60fps",
           "path",
           "play_sound",
           "position",

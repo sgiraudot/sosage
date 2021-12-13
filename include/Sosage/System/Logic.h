@@ -86,6 +86,7 @@ private:
   bool function_look (const std::vector<std::string>& args);
   bool function_loop (const std::vector<std::string>& args);
   bool function_move (const std::vector<std::string>& args);
+  bool function_move60fps (const std::vector<std::string>& args);
   bool function_play (const std::vector<std::string>& args);
   bool function_rescale (const std::vector<std::string>& args);
   bool function_set (const std::vector<std::string>& args);

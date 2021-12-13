@@ -74,6 +74,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(function_look);
   INIT_DISPATCHER(function_loop);
   INIT_DISPATCHER(function_move);
+  INIT_DISPATCHER(function_move60fps);
   INIT_DISPATCHER(function_play);
   INIT_DISPATCHER(function_rescale);
   INIT_DISPATCHER(function_set);

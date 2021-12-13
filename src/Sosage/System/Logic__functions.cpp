@@ -335,6 +335,30 @@ bool Logic::function_move (const std::vector<std::string>& args)
 }
 
 /*
+  - move60fps: [ID target_id, INT x, INT y, INT z, FLOAT duration] -> smoothly moves (GUI fps) target to coordinates (x,y,z) with wanted duration
+ */
+bool Logic::function_move60fps (const std::vector<std::string>& args)
+{
+  check (args.size() == 4 || args.size() == 5, "function_move takes 4 or 5 arguments");
+  std::string target = args[0];
+  int x = to_int(args[1]);
+  int y = to_int(args[2]);
+  int z = to_int(args[3]);
+  double duration = to_double(args[4]);
+  double begin_time = m_current_time;
+  double end_time = begin_time + duration;
+
+  m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+
+  auto pos = get<C::Position>(target + ":position");
+
+  auto anim = set<C::Tuple<Point, Point, double, double>>
+      (target + ":move60fps", pos->value(), Point(x,y), begin_time, end_time);
+  m_current_action->schedule (end_time,  anim);
+  return true;
+}
+
+/*
   - play: [ID animation_id]                           -> starts animation
   - play: [ID music_id]                               -> starts music
   - play: [ID sound_id]                               -> plays sound

@@ -130,6 +130,19 @@ void Animation::run_gui_frame()
     }
     remove(a->id());
   }
+
+  for (auto c : components("move60fps"))
+    if (auto a = C::cast<C::Tuple<Point, Point, double, double>>(c))
+    {
+      double ftime = current_time;
+      double ratio = (ftime - a->get<2>()) / (a->get<3>() - a->get<2>());
+
+      Point current = ratio * a->get<1>() + (1 - ratio) * a->get<0>();
+      if (ratio > 1)
+        current = a->get<1>();
+
+      get<C::Position>(a->entity() + ":position")->set (current);
+    }
 }
 
 void Animation::run_animation_frame()
