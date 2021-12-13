@@ -69,7 +69,6 @@ File_IO::File_IO (Content& content)
   INIT_DISPATCHER("dialogs", read_dialog);
   INIT_DISPATCHER("integers", read_integer);
   INIT_DISPATCHER("objects", read_object);
-  INIT_DISPATCHER("origins", read_origin);
   INIT_DISPATCHER("musics", read_music);
   INIT_DISPATCHER("scenery", read_scenery);
   INIT_DISPATCHER("sounds", read_sound);
@@ -535,16 +534,8 @@ void File_IO::read_init ()
 
   set<C::String>("Inventory:label", input["default"]["inventory_button"]["label"].string());
 
-  if (input.has("load_room"))
-  {
-    set<C::String>("Game:init_new_room", input["load_room"][0].string());
-    set<C::String>("Game:init_new_room_origin", input["load_room"][1].string());
-  }
-  else
-  {
-    check (input.has("load_cutscene"), "Init should either load a room or a cutscene");
-    set<C::String>("Game:init_new_room", input["load_cutscene"].string());
-  }
+  set<C::String>("Game:init_new_room", input["load"][0].string());
+  set<C::String>("Game:init_new_room_origin", input["load"][1].string());
 
   if (!read_savefile())
   {

@@ -245,20 +245,7 @@ void File_IO::read_room (const std::string& file_name)
       callback->value();
     }
 
-  const std::string& origin = value<C::String>("Game:new_room_origin");
-  if (origin == "Saved_game")
-    set<C::Boolean>("Game:in_new_room", true);
-  else
-  {
-    auto origin_coord = get<C::Position>(origin + ":position");
-    auto origin_looking = get<C::Boolean>(origin + ":looking_right");
-    const std::string& player = value<C::String>(origin + ":player");
-    set<C::String>("Player:name", player);
-    get<C::Position>(player + "_body:position")->set(origin_coord->value());
-    set<C::Boolean>("Game:in_new_room", origin_looking->value());
-    // Reset camera
-    get<C::Absolute_position>(CAMERA__POSITION)->set(Point(0,0));
-  }
+  emit ("Game:in_new_room");
   emit ("Game:loading_done");
   emit ("Window:rescaled");
 
@@ -671,25 +658,38 @@ void File_IO::read_action (const std::string& id, const Core::File_IO::Node& nod
   if (node.has("label"))
     set<C::String>(id + ":label", node["label"].string());
 
-  auto state_handle = get_or_set<C::String>(id + ":state");
-  auto conditional_handle = set<C::String_conditional>(id + ":action", state_handle);
-
-  for (std::size_t i = 0; i < node["states"].size(); ++ i)
+  if (node.has("states"))
   {
-    const Core::File_IO::Node& istate = node["states"][i];
+    auto state_handle = get_or_set<C::String>(id + ":state");
+    auto conditional_handle = set<C::String_conditional>(id + ":action", state_handle);
 
-    std::string state = istate["id"].string();
-    if (i == 0 && state_handle->value() == "")
+    for (std::size_t i = 0; i < node["states"].size(); ++ i)
+    {
+      const Core::File_IO::Node& istate = node["states"][i];
+
+      std::string state = istate["id"].string();
+      if (i == 0 && state_handle->value() == "")
         state_handle->set(state);
 
-    auto action = C::make_handle<C::Action>(id + ":action");
+      auto action = C::make_handle<C::Action>(id + ":action");
 
-    for (std::size_t k = 0; k < istate["effect"].size(); ++ k)
-    {
-      std::string function = istate["effect"][k].nstring();
-      action->add (function, istate["effect"][k][function].string_array());
+      for (std::size_t k = 0; k < istate["effect"].size(); ++ k)
+      {
+        std::string function = istate["effect"][k].nstring();
+        action->add (function, istate["effect"][k][function].string_array());
+      }
+      conditional_handle->add(state, action);
     }
-    conditional_handle->add(state, action);
+  }
+  else
+  {
+    auto action = set<C::Action>(id + ":action");
+
+    for (std::size_t k = 0; k < node["effect"].size(); ++ k)
+    {
+      std::string function = node["effect"][k].nstring();
+      action->add (function, node["effect"][k][function].string_array());
+    }
   }
 }
 
@@ -786,27 +786,6 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
   }
 
   return out;
-}
-
-void File_IO::read_origin(const std::string& id, const Core::File_IO::Node& node)
-{
-  m_latest_room_entities.insert(id);
-
-  std::string player = node["player"].string();
-  int x = node["coordinates"][0].integer();
-  int y = node["coordinates"][1].integer();
-  bool looking_right = node["looking_right"].boolean();
-
-  set<C::String>(id + ":player", player);
-  set<C::Absolute_position>(id + ":position", Point(x, y));
-  set<C::Boolean>(id + ":looking_right", looking_right);
-
-  auto action = set<C::Action>(id + ":action");
-  for (std::size_t k = 0; k < node["action"].size(); ++ k)
-  {
-    std::string function = node["action"][k].nstring();
-    action->add (function, node["action"][k][function].string_array());
-  }
 }
 
 void File_IO::read_scenery (const std::string& id, const Core::File_IO::Node& node)

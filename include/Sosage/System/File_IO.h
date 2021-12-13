@@ -87,7 +87,6 @@ private:
   std::pair<Component::Handle, Component::Handle>
   read_object_action (const std::string& id, const std::string& action,
                       const Core::File_IO::Node& input);
-  void read_origin (const std::string& id, const Core::File_IO::Node& input);
   void read_scenery (const std::string& id, const Core::File_IO::Node& input);
   void read_sound (const std::string& id, const Core::File_IO::Node& input);
   void read_text (const std::string& id, const Core::File_IO::Node& input);

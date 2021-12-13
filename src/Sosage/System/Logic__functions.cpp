@@ -126,7 +126,7 @@ bool Logic::function_control (const std::vector<std::string>& args)
     set<C::String>("Follower:name", follower);
   }
   else
-    remove ("Follower:name");
+    remove ("Follower:name", true);
   return true;
 }
 
@@ -300,6 +300,7 @@ bool Logic::function_loop (const std::vector<std::string>&)
 }
 
 /*
+  - move: [ID character_id, INT x, INT y, BOOL looking_right] -> immediately moves player to the coordinates (x,y), looking right/left
   - move: [ID target_id, INT x, INT y, INT z]                 -> immediately moves target to the coordinates (x,y,z)
   - move: [ID target_id, INT x, INT y, INT z, FLOAT duration] -> smoothly moves target to coordinates (x,y,z) with wanted duration
  */
@@ -309,27 +310,37 @@ bool Logic::function_move (const std::vector<std::string>& args)
   std::string target = args[0];
   int x = to_int(args[1]);
   int y = to_int(args[2]);
-  int z = to_int(args[3]);
-  if (args.size() == 5) // Smooth move
+
+  if (request<C::Group>(target + ":group")) // character
   {
-    double duration = to_double(args[4]);
-    int nb_frames = round (duration * Config::animation_fps);
-
-    double begin_time = frame_time(m_current_time);
-    double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
-
-   m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
-
-    auto pos = get<C::Position>(target + ":position");
-
-    auto anim = set<C::Tuple<Point, Point, double, double>>
-        (target + ":move", pos->value(), Point(x,y), begin_time, end_time);
-   m_current_action->schedule (end_time,  anim);
+    bool looking_right = to_bool(args[3]);
+    set<C::Absolute_position>(target + "_body:position", Point(x, y));
+    set<C::Boolean>(target + ":looking_right", looking_right);
   }
   else
   {
-    get<C::Position>(target + ":position")->set (Point(x, y));
-    get<C::Image>(target + ":image")->z() = z;
+    int z = to_int(args[3]);
+    if (args.size() == 5) // Smooth move
+    {
+      double duration = to_double(args[4]);
+      int nb_frames = round (duration * Config::animation_fps);
+
+      double begin_time = frame_time(m_current_time);
+      double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
+
+      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+
+      auto pos = get<C::Position>(target + ":position");
+
+      auto anim = set<C::Tuple<Point, Point, double, double>>
+          (target + ":move", pos->value(), Point(x,y), begin_time, end_time);
+      m_current_action->schedule (end_time,  anim);
+    }
+    else
+    {
+      get<C::Position>(target + ":position")->set (Point(x, y));
+      get<C::Image>(target + ":image")->z() = z;
+    }
   }
   return true;
 }

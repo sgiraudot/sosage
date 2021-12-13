@@ -69,7 +69,7 @@ void Animation::run()
   if (new_frame_id == m_frame_id)
   {
     // Force update when new room is loaded
-    if (request<C::Boolean>("Game:in_new_room"))
+    if (request<C::Signal>("Game:in_new_room"))
       run_animation_frame();
     stop_timer("Animation");
     return;
@@ -157,19 +157,18 @@ void Animation::run_animation_frame()
     remove("Game:new_characters");
   }
 
-  if (auto looking_right = request<C::Boolean>("Game:in_new_room"))
+  if (receive ("Game:in_new_room"))
   {
     const std::string& player = value<C::String>("Player:name");
-    place_and_scale_character (player, looking_right->value());
-    generate_random_idle_animation (player, looking_right->value());
+    bool looking_right = value<C::Boolean>(player + ":looking_right");
+    place_and_scale_character (player, looking_right);
+    generate_random_idle_animation (player, looking_right);
 
     // Relaunch animations
     for (auto c : components("image"))
       if (request<C::String>(c->entity() + ":state"))
         if (auto anim = C::cast<C::Animation>(c))
           anim->on() = true;
-
-    remove("Game:in_new_room");
   }
 
   std::vector<std::string> to_remove;
