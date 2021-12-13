@@ -182,8 +182,6 @@ void File_IO::read_room (const std::string& file_name)
     set<C::Ground_map>("Background:ground_map", ground_map,
                        front_z, back_z, callback->value());
   }
-  else
-    set<C::Int>("Background:default_z", input["default_z"].integer());
 
   callback->value()();
 
