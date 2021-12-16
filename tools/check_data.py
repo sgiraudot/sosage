@@ -328,7 +328,11 @@ def test_step(key, action, args):
                 error(key + " uses function talk on non-existing character " + id)
             check_line(args[1])
         else:
-            error(key + " uses function talk with unhandled #arg = " + str(len(args)))
+            check_signature(key, action, args, ["string", "string", "float"])
+            id = args[0]
+            if id not in character_ids and id != "superflu":
+                error(key + " uses function talk on non-existing character " + id)
+            check_line(args[1])
 
     elif action == "trigger":
         if check_signature(key, action, args, ["string"]):
@@ -424,7 +428,8 @@ for filename in yaml_files:
         test(data, "head/dx_right", is_int)
         test(data, "head/dx_left", is_int)
         test(data, "head/dy", is_int)
-        test(data, "walk/skin", file_exists, ["images/characters", "png"])
+        if "walk" in data:
+            test(data, "walk/skin", file_exists, ["images/characters", "png"])
         test(data, "idle/skin", file_exists, ["images/characters", "png"])
     elif filename.startswith("codes/"):
         if test(data, "states"):

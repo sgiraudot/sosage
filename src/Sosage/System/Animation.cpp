@@ -186,8 +186,17 @@ void Animation::run_animation_frame()
     auto phead = get<C::Position>(id + "_head:position");
     auto pmouth = get<C::Position>(id + "_mouth:position");
 
+    to_remove.push_back (c->id());
+
     Vector direction (pbody->value(), lookat->value());
     bool looking_right = (direction.x() > 0);
+
+    bool currently_looking_right
+        = (get<C::Animation>(id + "_head:image")
+          ->frames().front().y == 0);
+
+    if (looking_right == currently_looking_right)
+      continue;
 
     if (looking_right)
     {
@@ -205,7 +214,6 @@ void Animation::run_animation_frame()
     }
 
     generate_random_idle_animation (id, looking_right);
-    to_remove.push_back (c->id());
   }
 
   // Then check animations stopping

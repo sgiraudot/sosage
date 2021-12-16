@@ -79,8 +79,14 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   amouth->on() = visible;
   group->add(amouth);
 
+  std::vector<std::string> hpositions;
+  for (std::size_t i = 0; i < input["head"]["positions"].size(); ++ i)
+    hpositions.push_back (input["head"]["positions"][i].string());
+
+  set<C::Vector<std::string> >(id + "_head:values", hpositions);
+
   std::string head = input["head"]["skin"].string("images", "characters", "png");
-  int head_size = input["head"]["size"].integer();
+  int head_size = int(hpositions.size());
   auto ahead
     = set<C::Animation>(id + "_head:image", head,
                         0, head_size, 2, true);
