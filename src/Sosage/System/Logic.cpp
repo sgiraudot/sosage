@@ -278,7 +278,7 @@ void Logic::run ()
           status()->pop();
           a->stop();
           const C::Action::Step& s = a->last_step();
-          debug << m_current_time << ", applying " << s.to_string() << std::endl;
+//          debug << m_current_time << ", applying " << s.to_string() << std::endl;
           check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
                  s.function() + " is not a valid function");
           m_dispatcher[s.function()](s.args());
@@ -286,7 +286,7 @@ void Logic::run ()
         }
         if (!a->ready())
           continue;
-        debug << "Applying steps of action " << a->id() << std::endl;
+//        debug << "Applying steps of action " << a->id() << std::endl;
         do
         {
           if (!apply_next_step (a))
@@ -413,7 +413,7 @@ bool Logic::apply_next_step (C::Action_handle action)
 {
   m_current_action = action;
   const C::Action::Step& s = action->next_step();
-  debug << m_current_time << ", applying " << s.to_string() << std::endl;
+  //debug << m_current_time << ", applying " << s.to_string() << std::endl;
   check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
          s.function() + " is not a valid function");
   return m_dispatcher[s.function()](s.args());

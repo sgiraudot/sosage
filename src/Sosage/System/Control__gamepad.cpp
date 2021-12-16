@@ -542,7 +542,9 @@ void Control::menu_sub_switch_active_item (bool right)
 
 std::vector<std::string> Control::detect_active_objects()
 {
-  const std::string& id = value<C::String>("Player:name");
+  const std::string& id = value<C::String>("Player:name", "");
+  if (id == "")
+    return std::vector<std::string>();
   auto position = get<C::Position>(id + "_body:position");
 
   std::unordered_set<std::string> active_objects;

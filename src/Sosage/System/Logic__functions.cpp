@@ -314,7 +314,7 @@ bool Logic::function_move (const std::vector<std::string>& args)
   if (request<C::Group>(target + ":group")) // character
   {
     bool looking_right = to_bool(args[3]);
-    set<C::Absolute_position>(target + "_body:position", Point(x, y));
+    get<C::Absolute_position>(target + "_body:position")->set(Point(x, y));
     set<C::Boolean>(target + ":looking_right", looking_right);
   }
   else
@@ -580,12 +580,13 @@ bool Logic::function_stop (const std::vector<std::string>& args)
 }
 
 /*
-  - talk: [STRING line]                  -> makes player say the line
-  - talk: [ID character_id, STRING line] -> makes character say the line
+  - talk: [STRING line]                                  -> makes player say the line
+  - talk: [ID character_id, STRING line]                 -> makes character say the line
+  - talk: [ID character_id, STRING line, FLOAT duration] -> makes character say the line for the wanted duration
  */
 bool Logic::function_talk (const std::vector<std::string>& args)
 {
-  check (args.size() == 1 || args.size() == 2, "function_stop takes 1 or 2 arguments");
+  check (1 <= args.size() && args.size() <= 3, "function_talk takes 1, 2 or 3 arguments");
   std::string id;
   std::string text;
 
@@ -596,8 +597,6 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   }
   else
   {
-    check (args.size() == 2, "\"comment\" expects 1 or 2 arguments ("
-           + std::to_string(args.size()) + "given)");
     id = args[0];
     text = args[1];
   }
@@ -610,10 +609,17 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   create_dialog (id, text, dialog);
 
   int nb_char = int(text.size());
-  double nb_seconds_read
-      = (value<C::Int>("Dialog:speed") / double(Config::MEDIUM_SPEED))
-      * (Config::min_reading_time + nb_char * Config::char_spoken_time);
+  double nb_seconds_read;
+  if (args.size() == 3)
+    nb_seconds_read = to_double(args[2]);
+  else
+    nb_seconds_read = (value<C::Int>("Dialog:speed") / double(Config::MEDIUM_SPEED))
+                      * (Config::min_reading_time + nb_char * Config::char_spoken_time);
+
   double nb_seconds_lips_moving = nb_char * Config::char_spoken_time;
+
+  debug << "Line displayed for " << nb_seconds_read << " s, lips moving for "
+        << nb_seconds_lips_moving << "s" << std::endl;
 
   Point position = value<C::Double>(CAMERA__ZOOM)
                    * (value<C::Position>(id + "_body:position") - value<C::Position>(CAMERA__POSITION));
@@ -721,14 +727,14 @@ bool Logic::function_wait (const std::vector<std::string>& args)
   if (args.size() == 1)
   {
     double time = to_double(args[0]);
-    debug << "Schedule wait until " << m_current_time + time << std::endl;
+//    debug << "Schedule wait until " << m_current_time + time << std::endl;
     m_current_action-> schedule (m_current_time + time, C::make_handle<C::Base>("wait"));
   }
   else if (args.size() == 2)
   {
     const std::string& id = args[0];
     double time = value<C::Double>(id + ":init_value") + to_double(args[1]);
-    debug << "Schedule wait until " << time << std::endl;
+//    debug << "Schedule wait until " << time << std::endl;
     m_current_action-> schedule (time, C::make_handle<C::Base>("wait"));
   }
   return false;

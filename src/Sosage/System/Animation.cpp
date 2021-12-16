@@ -523,7 +523,7 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
     row_index = 1;
 
   // Generate 10 poses with transitions
-  int pose = 0;
+  int pose = 1;
   for (int i = 0; i < 10; ++ i)
   {
     int remaining = random_int(30, 300);
@@ -548,7 +548,7 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
         break;
 
       // Blink eyes
-      head->frames().push_back ({1, row_index, 1});
+      head->frames().push_back ({0, row_index, 1});
       mouth->frames().push_back ({0, row_index, 1});
     }
 
@@ -557,7 +557,7 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
       int new_pose;
       do
       {
-        new_pose = random_int(2, head->width_subdiv());
+        new_pose = random_int(1, head->width_subdiv());
       }
       while (new_pose == pose);
       pose = new_pose;
@@ -588,9 +588,17 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
   if (!looking_right)
     row_index = 1;
 
+
   std::vector<int> possibles_values;
   const std::vector<std::string>& positions
     = value<C::Vector<std::string> >(id + "_idle:values");
+
+  // Simple case: no animation
+  if (positions.size() == 1)
+  {
+    image->frames().push_back ({0, row_index, 1000});
+    return;
+  }
 
   int pose = 1;
   for (std::size_t i = 0; i < positions.size(); ++ i)

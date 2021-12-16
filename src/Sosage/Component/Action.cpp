@@ -144,7 +144,7 @@ void Action::update_scheduled (const std::function<bool(Timed_handle)>& predicat
       new_timed_handle.insert(th);
     else if (th.second->id() == "wait")
     {
-      debug << "Stop waiting" << std::endl;
+//      debug << "Stop waiting" << std::endl;
       m_still_waiting = false;
     }
 
