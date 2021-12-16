@@ -100,6 +100,8 @@ void Logic::run ()
     return;
   }
 
+  bool skip_dialog = receive("Game:skip_dialog");
+
   std::set<std::string> done;
   for (auto c : components("action"))
     if (auto a = C::cast<C::Action>(c))
@@ -124,7 +126,19 @@ void Logic::run ()
               remove (th.second->id());
             return false;
           }
-          // else
+          else if (skip_dialog)
+          {
+            if (contains(th.second->entity(), "Comment_"))
+            {
+              remove (th.second->id());
+              return false;
+            }
+            else if (th.second->component() == "stop_talking")
+            {
+              set (th.second);
+              return false;
+            }
+          }
           return true;
         });
       }
@@ -521,7 +535,7 @@ void Logic::create_dialog (const std::string& character,
   const std::string& color = value<C::String> (character + ":color");
 
   auto img
-    = set<C::Image> ("Comment:image",
+    = set<C::Image> ("Comment_0:image",
                      font,
                      color,
                      text, true);
@@ -532,7 +546,7 @@ void Logic::create_dialog (const std::string& character,
     dialog.push_back (img);
   else
   {
-    remove("Comment:image");
+    remove("Comment_0:image");
     int nb_imgs = 1 + (img->width() / width_max);
 
     // Find space characters where to cut

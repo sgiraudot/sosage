@@ -109,7 +109,11 @@ void Control::update_exit()
 {
   if (status()->is (LOCKED))
   {
-    receive("Game:escape");
+    if (receive("Game:escape"))
+    {
+      if (request<C::Image>("Comment_0:image"))
+        emit("Game:skip_dialog");
+    }
     return;
   }
   if (receive("Show:menu"))
