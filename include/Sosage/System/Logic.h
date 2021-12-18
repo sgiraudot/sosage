@@ -96,6 +96,7 @@ private:
   bool function_trigger (const std::vector<std::string>& args);
   bool function_unlock (const std::vector<std::string>& args);
   bool function_wait (const std::vector<std::string>& args);
+  bool function_zoom (const std::vector<std::string>& args);
 
 };
 

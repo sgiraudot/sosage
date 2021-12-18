@@ -895,7 +895,6 @@ void File_IO::read_window (const std::string& id, const Core::File_IO::Node& nod
   set<C::Absolute_position>(id + ":position",
                             Point(Config::world_width / 2,
                                   Config::world_height / 2));
-  set<C::Base>(id + ":is_window");
 }
 
 } // namespace Sosage::System

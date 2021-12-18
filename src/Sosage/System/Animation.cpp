@@ -316,21 +316,21 @@ void Animation::run_animation_frame()
     }
   }
 
-  for (auto c : components("set_visible"))
-  {
-    debug << "Set " << c->id() << " visible" << std::endl;
-    const std::string& id = c->entity();
-    auto g = get<C::Group>(id + ":group");
-    g->apply<C::Image>([](auto img) { img->on() = true; });
-    to_remove.push_back(c->id());
-  }
-
   for (auto c : components("set_hidden"))
   {
     debug << "Set " << c->id() << " hidden" << std::endl;
     const std::string& id = c->entity();
     auto g = get<C::Group>(id + ":group");
     g->apply<C::Image>([](auto img) { img->on() = false; });
+    to_remove.push_back(c->id());
+  }
+
+  for (auto c : components("set_visible"))
+  {
+    debug << "Set " << c->id() << " visible" << std::endl;
+    const std::string& id = c->entity();
+    auto g = get<C::Group>(id + ":group");
+    g->apply<C::Image>([](auto img) { img->on() = true; });
     to_remove.push_back(c->id());
   }
 
@@ -714,6 +714,9 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
 
 void Animation::update_camera_target ()
 {
+  auto background = request<C::Image>("Background:image");
+  if (!background)
+    return;
   const std::string& id = value<C::String>("Player:name");
   int xbody = value<C::Position>(id + "_body:position").X();
   double xcamera = value<C::Absolute_position>(CAMERA__POSITION).x();
@@ -723,7 +726,7 @@ void Animation::update_camera_target ()
     target = std::max (0, xbody - Config::camera_limit_right);
   else if (xbody > xcamera + Config::camera_limit_right)
   {
-    int width = get<C::Image>("Background:image")->width();
+    int width = background->width();
     target = std::min (width - Config::world_width, xbody - Config::camera_limit_left);
   }
 

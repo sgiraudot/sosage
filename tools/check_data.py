@@ -189,7 +189,7 @@ def test_step(key, action, args):
         else:
             error(key + " uses function control with " + str(len(args)) + " arguments")
 
-    elif action in {"exit", "lock", "loop", "unlock" }:
+    elif action in {"cutscene", "exit", "lock", "loop", "unlock" }:
         if len(args) != 0:
             error(key + " uses function exit with arguments " + str(args))
 
@@ -257,6 +257,12 @@ def test_step(key, action, args):
                 error(key + " uses function move on non-existing (or non-reachable) id " + id)
         else:
             error(key + " uses function move with unhandled #arg = " + str(len(args)))
+
+    elif action == "move60fps":
+        check_signature(key, action, args, ["string", "int", "int", "int", "float"])
+        id = args[0]
+        if id not in object_ids and id not in scenery_ids and id not in animation_ids:
+            error(key + " uses function move on non-existing (or non-reachable) id " + id)
 
     elif action == "play":
         if len(args) == 1:
@@ -334,6 +340,9 @@ def test_step(key, action, args):
                 error(key + " uses function talk on non-existing character " + id)
             check_line(args[1])
 
+    elif action == "timer":
+        check_signature(key, action, args, ["string"])
+        
     elif action == "trigger":
         if check_signature(key, action, args, ["string"]):
             id = args[0]
@@ -348,8 +357,15 @@ def test_step(key, action, args):
         elif len(args) == 1:
             check_signature(key, action, args, ["float"])
         else:
+            # TODO check timer
             check_signature(key, action, args, ["string", "float"])
 
+    elif action == "zoom":
+        check_signature(key, action, args, ["float"])
+
+    else:
+        error(key + " uses unknown function " + action)
+            
 def test_action(key, value):
     for v in value:
         action = next(iter(v))
@@ -424,13 +440,14 @@ for filename in yaml_files:
         test(data, "mouth/dx_left", is_int)
         test(data, "mouth/dy", is_int)
         test(data, "head/skin")
-        test(data, "head/size", is_int)
         test(data, "head/dx_right", is_int)
         test(data, "head/dx_left", is_int)
         test(data, "head/dy", is_int)
+        test(data, "head/positions", is_array)
         if "walk" in data:
             test(data, "walk/skin", file_exists, ["images/characters", "png"])
         test(data, "idle/skin", file_exists, ["images/characters", "png"])
+        test(data, "idle/positions", is_array)
     elif filename.startswith("codes/"):
         if test(data, "states"):
             all_states[current_id] = set()

@@ -85,6 +85,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(function_trigger);
   INIT_DISPATCHER(function_unlock);
   INIT_DISPATCHER(function_wait);
+  INIT_DISPATCHER(function_zoom);
 
   set<C::Action>("Logic:action");
 }

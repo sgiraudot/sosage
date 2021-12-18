@@ -87,9 +87,9 @@ bool Logic::function_add (const std::vector<std::string>& args)
 }
 
 /*
-  - camera: [INT x]                    -> Smooth scrolling to (x,0)
-  - camera: [INT x, INT y]             -> Smooth scrolling to (x,y)
-  - camera: [INT x, INT y, FLOAT zoom] -> Raw cut to coordinates (x,y) with wanted zoom
+  - camera: [INT x]                        -> Quick smooth scrolling to (x,0)
+  - camera: [INT x, INT y]                 -> Quick smooth scrolling to (x,y)
+  - camera: [INT x, INT y, FLOAT duration] -> Smooth scrolling to (x,y) with wanted duration
  */
 bool Logic::function_camera (const std::vector<std::string>& args)
 {
@@ -100,9 +100,21 @@ bool Logic::function_camera (const std::vector<std::string>& args)
 
   if (args.size() == 3)
   {
-    double zoom = to_double(args[2]);
-    position->set (Point (xtarget, ytarget));
-    get<C::Double>(CAMERA__ZOOM)->set(zoom);
+    double duration = to_double(args[2]);
+    if (duration == 0.)
+      position->set (Point (xtarget, ytarget));
+    else
+    {
+      double begin_time = m_current_time;
+      double end_time = begin_time + duration;
+
+      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+
+      auto anim = set<C::Tuple<Point, Point, double, double>>
+          ("Camera:move60fps", position->value(), Point(xtarget, ytarget),
+           begin_time, end_time);
+      m_current_action->schedule (end_time, anim);
+    }
   }
   else
     set<C::GUI_position_animation>("Camera:animation", m_current_time, m_current_time + Config::camera_speed,
@@ -354,7 +366,7 @@ bool Logic::function_move60fps (const std::vector<std::string>& args)
   std::string target = args[0];
   int x = to_int(args[1]);
   int y = to_int(args[2]);
-  int z = to_int(args[3]);
+  //int z = to_int(args[3]);
   double duration = to_double(args[4]);
   double begin_time = m_current_time;
   double end_time = begin_time + duration;
@@ -540,7 +552,7 @@ bool Logic::function_show (const std::vector<std::string>& args)
   else
   {
     auto image = get<C::Image>(target + ":image");
-    if (request<C::Base>(target + ":is_window"))
+    if (image->z() == Config::interface_depth) // window
     {
       set<C::Variable>("Game:window", image);
       emit ("Interface:show_window");
@@ -738,6 +750,17 @@ bool Logic::function_wait (const std::vector<std::string>& args)
     m_current_action-> schedule (time, C::make_handle<C::Base>("wait"));
   }
   return false;
+}
+
+/*
+  - zoom: [FLOAT value] -> change zoom to wanted value (1 = normal zoom)
+ */
+bool Logic::function_zoom (const std::vector<std::string>& args)
+{
+  check (args.size() == 1, "function_zoom takes 1 argument");
+  double zoom = to_double(args[0]);
+  get<C::Double>(CAMERA__ZOOM)->set(zoom);
+  return true;
 }
 
 } // namespace Sosage::System
