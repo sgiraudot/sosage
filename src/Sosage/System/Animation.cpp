@@ -95,12 +95,12 @@ void Animation::run_gui_frame()
   }
 
   double current_time = value<C::Double>(CLOCK__TIME);
-  if (auto i = request<C::Double>("Shake:intensity"))
+  if (auto shake = request<C::Array<double,4>>("Camera:shake"))
   {
-    double begin = value<C::Double>("Shake:begin");
-    double end = value<C::Double>("Shake:end");
-    double intensity = i->value();
-    double x_start = value<C::Double>("Camera:saved_position");
+    const double& begin = (*shake)[0];
+    const double& end= (*shake)[1];
+    const double& intensity = (*shake)[2];
+    const double& x_start = (*shake)[3];
 
     double current_intensity = intensity * (end - current_time) / (end - begin);
 

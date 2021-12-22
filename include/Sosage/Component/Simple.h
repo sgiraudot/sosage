@@ -29,8 +29,9 @@
 
 #include <Sosage/Component/Base.h>
 
-#include <unordered_set>
+#include <array>
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 
 namespace Sosage::Component
@@ -69,6 +70,26 @@ using Double_handle = std::shared_ptr<Double>;
 using String = Simple<std::string>;
 using String_handle = std::shared_ptr<String>;
 
+template <typename T, std::size_t S>
+class Array : public Simple<std::array<T,S>>
+{
+  using Base = Simple<std::array<T,S>>;
+public:
+
+  template <typename ... T2>
+  Array (const std::string& id, T2 ... t)
+    : Base(id, {t...}) { }
+
+  T& operator[] (const std::size_t& idx)
+  { return this->m_value[idx]; }
+
+  const T& operator[] (const std::size_t& idx) const
+  { return this->m_value[idx]; }
+};
+
+template <typename T, std::size_t S>
+using Array_handle = std::shared_ptr<Array<T,S>>;
+
 template <typename T>
 class Vector : public Simple<std::vector<T> >
 {
@@ -83,6 +104,7 @@ public:
 
 template <typename T>
 using Vector_handle = std::shared_ptr<Vector<T> >;
+
 
 template <typename T>
 class Set : public Simple<std::unordered_set<T> >
@@ -103,6 +125,28 @@ public:
 
 template <typename T>
 using Set_handle = std::shared_ptr<Set<T> >;
+
+template <typename T1, typename T2>
+class Pair : public Simple<std::pair<T1,T2>>
+{
+  using pair_t = std::pair<T1,T2>;
+  using Base = Simple<pair_t>;
+
+public:
+
+  Pair (const std::string& id, const T1& t1, const T2& t2)
+    : Base(id, std::make_pair(t1, t2))
+  { }
+
+  T1& first() { return this->m_value.first(); }
+  const T1& first() const { return this->m_value.first(); }
+  T2& second() { return this->m_value.second(); }
+  const T2& second() const { return this->m_value.second(); }
+
+};
+
+template <typename T1, typename T2>
+using Pair_handle = std::shared_ptr<Pair<T1,T2>>;
 
 template <typename ... T>
 class Tuple : public Simple<std::tuple<T...> >
@@ -131,6 +175,10 @@ public:
     return std::get<I>(this->m_value);
   }
 };
+
+template <typename ... T>
+using Tuple_handle = std::shared_ptr<Tuple<T...>>;
+
 
 } // namespace Sosage::Component
 

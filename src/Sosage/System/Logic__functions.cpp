@@ -526,14 +526,9 @@ bool Logic::function_shake (const std::vector<std::string>& args)
   check (args.size() == 2, "function_shake takes 2 arguments");
   double intensity  = to_double(args[0]);
   double duration = to_double(args[1]);
-  auto begin = set<C::Double> ("Shake:begin", m_current_time);
-  auto end = set<C::Double> ("Shake:end", m_current_time + duration);
-  auto intens = set<C::Double> ("Shake:intensity", intensity);
-  auto camera = set<C::Double> ("Camera:saved_position", value<C::Absolute_position>(CAMERA__POSITION).x());
-  m_current_action->schedule (m_current_time + duration, begin);
-  m_current_action->schedule (m_current_time + duration, end);
-  m_current_action->schedule (m_current_time + duration, intens);
-  m_current_action->schedule (m_current_time + duration, camera);
+  auto shake = set<C::Array<double,4>>("Camera:shake", m_current_time, m_current_time + duration,
+                                       intensity, value<C::Absolute_position>(CAMERA__POSITION).x());
+  m_current_action->schedule (m_current_time + duration, shake);
   return true;
 }
 
