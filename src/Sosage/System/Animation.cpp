@@ -34,6 +34,7 @@
 #include <Sosage/Config/config.h>
 #include <Sosage/System/Animation.h>
 #include <Sosage/Utils/conversions.h>
+#include <Sosage/Utils/helpers.h>
 
 namespace Sosage::System
 {
@@ -151,7 +152,7 @@ void Animation::run_animation_frame()
   {
     for (const auto& nc : new_char->value())
     {
-      place_and_scale_character (nc.first, nc.second);
+      place_and_scale_character (nc.first);
       generate_random_idle_animation (nc.first, nc.second);
     }
     remove("Game:new_characters");
@@ -161,7 +162,7 @@ void Animation::run_animation_frame()
   {
     const std::string& player = value<C::String>("Player:name");
     bool looking_right = value<C::Boolean>(player + ":looking_right");
-    place_and_scale_character (player, looking_right);
+    place_and_scale_character (player);
     generate_random_idle_animation (player, looking_right);
 
     // Relaunch animations
@@ -191,27 +192,8 @@ void Animation::run_animation_frame()
     Vector direction (pbody->value(), lookat->value());
     bool looking_right = (direction.x() > 0);
 
-    bool currently_looking_right
-        = (get<C::Animation>(id + "_head:image")
-          ->frames().front().y == 0);
-
-    if (looking_right == currently_looking_right)
+    if (looking_right == is_looking_right(id))
       continue;
-
-    if (looking_right)
-    {
-      phead->set (pbody->value() - abody->core().scaling
-                  * Vector(value<C::Position>(id + "_head:gap_right")));
-      pmouth->set (phead->value() - ahead->core().scaling
-                   * Vector(value<C::Position>(id + "_mouth:gap_right")));
-    }
-    else
-    {
-      phead->set (pbody->value() - abody->core().scaling
-                  * Vector(value<C::Position>(id + "_head:gap_left")));
-      pmouth->set (phead->value() - ahead->core().scaling
-                   * Vector(value<C::Position>(id + "_mouth:gap_left")));
-    }
 
     generate_random_idle_animation (id, looking_right);
   }
@@ -220,9 +202,7 @@ void Animation::run_animation_frame()
   for (auto c : components("stop_talking"))
   {
     const std::string& id = c->entity();
-    generate_random_idle_head_animation (id,
-                                         get<C::Animation>(id + "_head:image")
-                                         ->frames().front().y == 0);
+    generate_random_idle_head_animation (id, is_looking_right(id));
     to_remove.push_back (c->id());
   }
 
@@ -231,9 +211,8 @@ void Animation::run_animation_frame()
     const std::string& id = c->entity();
     if (value<C::Boolean>(id + ":walking"))
     {
-      bool looking_right = (get<C::Animation>(id + "_body:image")->frames().front().y != 2);
-      generate_random_idle_animation (id, looking_right);
-      place_and_scale_character(id, looking_right);
+      generate_random_idle_animation (id, is_walking_right(id));
+      place_and_scale_character(id);
     }
     to_remove.push_back (c->id());
   }
@@ -242,8 +221,8 @@ void Animation::run_animation_frame()
   {
     const std::string& id = c->entity();
     debug << "stop_animation" << std::endl;
-    if (auto head = request<C::Animation>(id + "_head:image"))
-      generate_random_idle_body_animation (id, head->frames().front().y == 0);
+    if (request<C::Animation>(id + "_head:image"))
+      generate_random_idle_body_animation (id, is_looking_right(id));
     else
       get<C::Image>(id + ":image")->on() = false;
     to_remove.push_back (c->id());
@@ -361,14 +340,12 @@ bool Animation::run_loading()
   return true;
 }
 
-void Animation::place_and_scale_character(const std::string& id, bool looking_right)
+void Animation::place_and_scale_character(const std::string& id)
 {
   auto abody = get<C::Animation>(id + "_body:image");
   auto ahead = get<C::Animation>(id + "_head:image");
   auto amouth = get<C::Animation>(id + "_mouth:image");
   auto pbody = get<C::Position>(id + "_body:position");
-  auto phead = get<C::Position>(id + "_head:position");
-  auto pmouth = get<C::Position>(id + "_mouth:position");
 
   double new_z = Config::world_depth;
   if (auto ground_map = request<C::Ground_map>("Background:ground_map"))
@@ -379,21 +356,6 @@ void Animation::place_and_scale_character(const std::string& id, bool looking_ri
   ahead->z() += 1;
   amouth->rescale (new_z);
   amouth->z() += 2;
-
-  if (looking_right)
-  {
-    phead->set (pbody->value() - abody->core().scaling
-                * Vector(value<C::Position>(id + "_head:gap_right")));
-    pmouth->set (phead->value() - ahead->core().scaling
-                * Vector(value<C::Position>(id + "_mouth:gap_right")));
-  }
-  else
-  {
-    phead->set (pbody->value() - abody->core().scaling
-                * Vector(value<C::Position>(id + "_head:gap_left")));
-    pmouth->set (phead->value() - ahead->core().scaling
-                * Vector(value<C::Position>(id + "_mouth:gap_left")));
-  }
 }
 
 bool Animation::compute_movement_from_path (C::Path_handle path)
@@ -429,8 +391,7 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
       if (path->current() == path->size())
       {
         out = false;
-        generate_random_idle_animation(id, get<C::Animation>(id + "_head:image")
-                                       ->frames().front().y == 0);
+        generate_random_idle_animation(id, is_looking_right(id));
         break;
       }
       continue;
@@ -456,7 +417,7 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
   }
 
   pbody->set(pos);
-  place_and_scale_character(id, direction.x() > 0);
+  place_and_scale_character(id);
 
   return out;
 }

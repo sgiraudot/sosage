@@ -587,7 +587,7 @@ bool Control::collides (C::Position_handle cursor, C::Image_handle img)
   Point p = position->value();
 
   if (auto absol = C::cast<C::Absolute_position>(position))
-    if (!absol->absolute())
+    if (!absol->is_interface())
       p = p + Vector (-value<C::Absolute_position>(CAMERA__POSITION).x(), 0);
 
   Point screen_position = p - img->core().scaling * Vector(img->origin());

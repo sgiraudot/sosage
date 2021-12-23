@@ -45,6 +45,7 @@
 #include <Sosage/System/File_IO.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/conversions.h>
+#include <Sosage/Utils/helpers.h>
 #include <Sosage/Utils/profiling.h>
 
 namespace Sosage::System
@@ -123,30 +124,41 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   int hdx_right = input["head"]["dx_right"].integer();
   int hdx_left = input["head"]["dx_left"].integer();
   int hdy = input["head"]["dy"].integer();
-  set<C::Absolute_position>(id + "_head:gap_right", Point(hdx_right,hdy), false);
-  set<C::Absolute_position>(id + "_head:gap_left", Point(hdx_left,hdy), false);
+  set<C::Simple<Vector>>(id + "_head:gap_right", Vector(hdx_right, hdy));
+  set<C::Simple<Vector>>(id + "_head:gap_left", Vector(hdx_left, hdy));
 
   int mdx_right = input["mouth"]["dx_right"].integer();
   int mdx_left = input["mouth"]["dx_left"].integer();
   int mdy = input["mouth"]["dy"].integer();
-  set<C::Absolute_position>(id + "_mouth:gap_right", Point(mdx_right,mdy), false);
-  set<C::Absolute_position>(id + "_mouth:gap_left", Point(mdx_left,mdy), false);
+  set<C::Simple<Vector>>(id + "_mouth:gap_right", Vector(mdx_right, mdy));
+  set<C::Simple<Vector>>(id + "_mouth:gap_left", Vector(mdx_left, mdy));
 
   // Init position objects if they don't already exist
   auto pbody = request<C::Absolute_position>(id + "_body:position");
   if (!pbody)
   {
     pbody = set<C::Absolute_position>(id + "_body:position", Point(x, y), false);
-    set<C::Absolute_position>(id + "_head:position", Point(x - hdx_right, y - hdy), false);
-    set<C::Absolute_position>(id + "_mouth:position", Point(x - hdx_right - mdx_right,
-                                                   y - hdy - mdy), false);
   }
-  else
-  {
-    pbody->absolute() = false;
-    get<C::Absolute_position>(id + "_head:position")->absolute() = false;
-    get<C::Absolute_position>(id + "_mouth:position")->absolute() = false;
-  }
+
+  auto phead = set<C::Functional_position>
+               (id + "_head:position",
+                [&](const std::string& id) -> Point
+                {
+                  auto abody = get<C::Image>(id + "_body:image");
+                  auto pbody = get<C::Position>(id + "_body:position");
+                  return (pbody->value() - abody->core().scaling
+                          * value<C::Simple<Vector>>(id + (is_looking_right(id) ? "_head:gap_right" : "_head:gap_left")));
+                }, id);
+
+  set<C::Functional_position>
+      (id + "_mouth:position",
+       [&](const std::string& id) -> Point
+       {
+         auto ahead = get<C::Animation>(id + "_head:image");
+         auto phead = get<C::Position>(id + "_head:position");
+         return (phead->value() - ahead->core().scaling
+                 * value<C::Simple<Vector>>(id + (is_looking_right(id) ? "_mouth:gap_right" : "_mouth:gap_left")));
+       }, id);
 
   set<C::Variable>(id + ":position", pbody);
 
@@ -554,7 +566,7 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
   if (!pos)
     pos = set<C::Absolute_position>(id + ":position", Point(x,y), false);
   else
-    pos->absolute() = false;
+    pos->is_interface() = false;
 
   if (input.has("label"))
   {

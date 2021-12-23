@@ -34,8 +34,8 @@ Position::Position (const std::string& id)
   : Base(id)
 { }
 
-Absolute_position::Absolute_position (const std::string& id, const Point& point, bool absolute)
-  : Position(id), m_pos (point), m_absolute (absolute)
+Absolute_position::Absolute_position (const std::string& id, const Point& point, bool is_interface)
+  : Position(id), m_pos (point), m_is_interface (is_interface)
 { }
 
 std::string Absolute_position::str() const
@@ -54,14 +54,14 @@ void Absolute_position::set (const Point& p)
   m_pos = p;
 }
 
-bool Absolute_position::absolute() const
+bool Absolute_position::is_interface() const
 {
-  return m_absolute;
+  return m_is_interface;
 }
 
-bool& Absolute_position::absolute()
+bool& Absolute_position::is_interface()
 {
-  return m_absolute;
+  return m_is_interface;
 }
 
 Relative_position::Relative_position (const std::string& id, Position_handle ref,
@@ -91,9 +91,29 @@ void Relative_position::set (const Sosage::Vector& v)
   m_diff = v;
 }
 
-bool Relative_position::absolute() const
+bool Relative_position::is_interface() const
 {
-  return m_ref->absolute();
+  return m_ref->is_interface();
+}
+
+Functional_position::Functional_position (const std::string& id, const Function& function,
+                                          const std::string& arg, bool is_interface)
+  : Position(id), m_function(function), m_arg(arg), m_is_interface(is_interface)
+{ }
+
+Point Functional_position::value() const
+{
+  return m_function(m_arg);
+}
+
+void Functional_position::set (const Point&)
+{
+  check(false, "Trying to set hardcoded position of functional position");
+}
+
+bool Functional_position::is_interface() const
+{
+  return m_is_interface;
 }
 
 } // namespace Sosage::Component
