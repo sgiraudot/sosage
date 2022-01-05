@@ -126,6 +126,8 @@ const std::set<Action::Timed_handle>& Action::scheduled() const
 
 void Action::schedule (double time, Handle h)
 {
+  if (h->id() == "wait") // If we wait for a given time, forget the other timed elements
+    m_timed.clear();
   m_timed.insert (std::make_pair (time, h));
 }
 
@@ -142,7 +144,7 @@ void Action::update_scheduled (const std::function<bool(Timed_handle)>& predicat
       new_timed_handle.insert(th);
     else if (th.second->id() == "wait")
     {
-      debug << "Stop waiting" << std::endl;
+//      debug << "Stop waiting" << std::endl;
       m_still_waiting = false;
     }
 
@@ -162,6 +164,11 @@ const Action::Step& Action::next_step()
   if (m_next_step == m_steps.size())
     m_on = false;
   return out;
+}
+
+const Action::Step& Action::last_step()
+{
+  return m_steps.back();
 }
 
 } // namespace Sosage::Component

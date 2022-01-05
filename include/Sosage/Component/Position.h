@@ -30,6 +30,8 @@
 #include <Sosage/Component/Base.h>
 #include <Sosage/Utils/geometry.h>
 
+#include <functional>
+
 namespace Sosage::Component
 {
 
@@ -44,7 +46,7 @@ public:
 
   virtual void set (const Point& p) = 0;
   virtual Point value() const = 0;
-  virtual bool absolute() const = 0;
+  virtual bool is_interface() const = 0;
 };
 
 using Position_handle = std::shared_ptr<Position>;
@@ -52,16 +54,16 @@ using Position_handle = std::shared_ptr<Position>;
 class Absolute_position : public Position
 {
   Point m_pos;
-  bool m_absolute;
+  bool m_is_interface;
 
 public:
 
-  Absolute_position (const std::string& id, const Point& coord, bool absolute = true);
+  Absolute_position (const std::string& id, const Point& coord, bool is_interface = true);
   virtual std::string str() const;
   virtual Point value () const;
   virtual void set (const Point& p);
-  bool absolute() const;
-  bool& absolute();
+  bool is_interface() const;
+  bool& is_interface();
 };
 
 using Absolute_position_handle = std::shared_ptr<Absolute_position>;
@@ -82,8 +84,27 @@ public:
   virtual Point value() const;
   virtual void set (const Point& p);
   void set (const Sosage::Vector& v);
-  bool absolute() const;
+  bool is_interface() const;
 };
+
+class Functional_position : public Position
+{
+  using Function = std::function<Point(const std::string&)>;
+  Function m_function;
+  std::string m_arg;
+  bool m_is_interface;
+
+public:
+
+  Functional_position (const std::string& id, const Function& function,
+                       const std::string& arg,
+                       bool is_interface = false);
+
+  virtual Point value() const;
+  virtual void set (const Point& p);
+  bool is_interface() const;
+};
+
 
 } // namespace Sosage::Component
 

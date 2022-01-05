@@ -116,10 +116,14 @@ def is_time(key, value):
     if not is_t:
         error(key + " is not a valid time (" + value + ")")
 
+accessed_files = set()
+        
 def file_exists(key, value, args):
     fname = args[0] + "/" + value + "." + args[1]
     if not os.path.exists(root_folder + "/" + fname):
         error(key + " refers to a non-existing file (" + fname + ")")
+    else:
+        accessed_files.add(root_folder + "/" + fname)
 
 def test_id_unicity(ids, new_id, ref=None):
     if new_id in ids:
@@ -189,7 +193,7 @@ def test_step(key, action, args):
         else:
             error(key + " uses function control with " + str(len(args)) + " arguments")
 
-    elif action in {"exit", "lock", "loop", "unlock" }:
+    elif action in {"cutscene", "exit", "lock", "loop", "unlock" }:
         if len(args) != 0:
             error(key + " uses function exit with arguments " + str(args))
 
@@ -220,7 +224,7 @@ def test_step(key, action, args):
                 error(key + " uses function hide on non-existing id " + id)
 
     elif action == "load":
-        if check_signature(key, load, args, ["string", "string"]):
+        if check_signature(key, action, args, ["string", "string"]):
             # TODO check entry point
             pass
 
@@ -243,17 +247,26 @@ def test_step(key, action, args):
 
     elif action == "move":
         if len(args) == 4:
-            check_signature(key, action, args, ["string", "int", "int", "int"])
             id = args[0]
-            if id not in object_ids and id not in scenery_ids:
-                error(key + " uses function move on non-existing (or non-reachable) id " + id)
+            if id in character_ids:
+                check_signature(key, action, args, ["string", "int", "int", "bool"])
+            else:
+                check_signature(key, action, args, ["string", "int", "int", "int"])
+                if id not in object_ids and id not in scenery_ids:
+                    error(key + " uses function move on non-existing (or non-reachable) id " + id)
         elif len(args) == 5:
             check_signature(key, action, args, ["string", "int", "int", "int", "float"])
             id = args[0]
-            if id not in object_ids and id not in scenery_ids:
-                error(key + " uses function set on non-existing (or non-reachable) id " + id)
+            if id not in object_ids and id not in scenery_ids and id not in animation_ids:
+                error(key + " uses function move on non-existing (or non-reachable) id " + id)
         else:
             error(key + " uses function move with unhandled #arg = " + str(len(args)))
+
+    elif action == "move60fps":
+        check_signature(key, action, args, ["string", "int", "int", "int", "float"])
+        id = args[0]
+        if id not in object_ids and id not in scenery_ids and id not in animation_ids:
+            error(key + " uses function move on non-existing (or non-reachable) id " + id)
 
     elif action == "play":
         if len(args) == 1:
@@ -268,7 +281,13 @@ def test_step(key, action, args):
             error(key + " uses function play with unhandled #arg = " + str(len(args)))
 
     elif action == "rescale":
-        if check_signature(key, action, args, ["string", "float"]):
+        if len(args) == 2:
+            check_signature(key, action, args, ["string", "float"])
+            id = args[0]
+            if id not in room_ids:
+                error(key + " uses function rescale on non-existing (or non-reachable) id " + id)
+        else:
+            check_signature(key, action, args, ["string", "float", "float"])
             id = args[0]
             if id not in room_ids:
                 error(key + " uses function rescale on non-existing (or non-reachable) id " + id)
@@ -301,7 +320,7 @@ def test_step(key, action, args):
     elif action == "show":
         if check_signature(key, action, args, ["string"]):
             id = args[0]
-            if id not in room_ids and id not in hints_ids:
+            if id not in room_ids and id not in hints_ids and id not in text_ids:
                 error(key + " uses function show on non-existing id " + id)
 
     elif action == "stop":
@@ -319,8 +338,15 @@ def test_step(key, action, args):
                 error(key + " uses function talk on non-existing character " + id)
             check_line(args[1])
         else:
-            error(key + " uses function talk with unhandled #arg = " + str(len(args)))
+            check_signature(key, action, args, ["string", "string", "float"])
+            id = args[0]
+            if id not in character_ids and id != "superflu":
+                error(key + " uses function talk on non-existing character " + id)
+            check_line(args[1])
 
+    elif action == "timer":
+        check_signature(key, action, args, ["string"])
+        
     elif action == "trigger":
         if check_signature(key, action, args, ["string"]):
             id = args[0]
@@ -332,9 +358,18 @@ def test_step(key, action, args):
     elif action == "wait":
         if len(args) == 0:
             pass
-        else:
+        elif len(args) == 1:
             check_signature(key, action, args, ["float"])
+        else:
+            # TODO check timer
+            check_signature(key, action, args, ["string", "float"])
 
+    elif action == "zoom":
+        check_signature(key, action, args, ["float"])
+
+    else:
+        error(key + " uses unknown function " + action)
+            
 def test_action(key, value):
     for v in value:
         action = next(iter(v))
@@ -408,13 +443,15 @@ for filename in yaml_files:
         test(data, "mouth/dx_right", is_int)
         test(data, "mouth/dx_left", is_int)
         test(data, "mouth/dy", is_int)
-        test(data, "head/skin")
-        test(data, "head/size", is_int)
+        test(data, "head/skin", file_exists, ["images/characters", "png"])
         test(data, "head/dx_right", is_int)
         test(data, "head/dx_left", is_int)
         test(data, "head/dy", is_int)
-        test(data, "walk/skin", file_exists, ["images/characters", "png"])
+        test(data, "head/positions", is_array)
+        if "walk" in data:
+            test(data, "walk/skin", file_exists, ["images/characters", "png"])
         test(data, "idle/skin", file_exists, ["images/characters", "png"])
+        test(data, "idle/positions", is_array)
     elif filename.startswith("codes/"):
         if test(data, "states"):
             all_states[current_id] = set()
@@ -436,72 +473,6 @@ for filename in yaml_files:
             for a in data["answer"]:
                 if a not in values:
                     error(str(a) + " is not a valid button")
-    elif filename.startswith("cutscenes/"):
-        test(data, "name", is_line)
-        if test(data, "content"):
-            ids = set()
-            for s in data["content"]:
-                if test(s, "id"):
-                    ids, _ = test_id_unicity(ids, s["id"])
-                if "skin" in s:
-                    test(s, "skin", file_exists, ["images/cutscenes", "png"])
-                elif "music" in s:
-                    test(s, "music", file_exists, ["sounds/musics", "ogg"])
-                elif "text" in s:
-                    test(s, "text", is_line)
-                if "keyframes" in s:
-                    for k in s["keyframes"]:
-                        test(k, "time", is_int)
-                        test(k, "coordinates", is_array, 3)
-                if "loop" in s:
-                    test(s, "loop", is_bool)
-                if "frames" in s:
-                    if test(s, "length", is_array, 2):
-                        test(s, "length/0", is_int)
-                        test(s, "length/1", is_int)
-                        nb_frames = s["length"][0] * s["length"][1]
-                        test(s, "frames", is_array)
-                        for f in s["frames"]:
-                            if type(f) is not int:
-                                if 'x' not in f:
-                                    error(s["id"] + " has a non-integer frame (" + str(f) + ")")
-                                    continue
-                                else:
-                                    ff = f.split('x')
-                                    if len(ff) != 2:
-                                        error(s["id"] + " has a ill-formed frame (" + str(f) + ")")
-                                    if int(ff[1]) >= nb_frames:
-                                           error(s["id"] + " has out-of-bound frame index " + str(f) + "/" + str(nb_frames))
-                            elif f >= nb_frames:
-                                error(s["id"] + " has out-of-bound frame index " + str(f) + "/" + str(nb_frames))
-        if test(data, "timeline"):
-            ids_on = set()
-            for t in data["timeline"]:
-                test(t, "time", is_time)
-                if "begin" in t:
-                    frame_type = "begin"
-                elif "end" in t:
-                    frame_type = "end"
-                elif "load" in t:
-                    # TODO: test if entry point exists
-                    continue
-                else:
-                    error("frame is neither begin nor end")
-                    continue
-                items = t[frame_type]
-                if not isinstance(items, list):
-                    items = [items]
-                for i in items:
-                    if frame_type == "begin":
-                        if i in ids_on:
-                            error(i + " has already begun")
-                        else:
-                            ids_on.add(i)
-                    else:
-                        if i not in ids_on:
-                            error(i + " has not begun")
-                        else:
-                            ids_on.remove(i)
     elif filename.startswith("dialogs/"):
         if test(data, "lines"):
             ids = { "end" }
@@ -549,10 +520,10 @@ for filename in yaml_files:
                 sid = s["id"]
                 all_states[current_id].add(sid)
                 if sid == "none":
-                    pass
-                elif sid != "inventory":
+                    continue
+                if sid != "inventory":
                     inventory_only = False
-                elif "skin" in s:
+                if "skin" in s:
                     if sid == "inventory":
                         test(s, "skin", file_exists, ["images/inventory", "png"])
                         inventory_ids.add(current_id)
@@ -571,13 +542,12 @@ for filename in yaml_files:
 
     elif filename.startswith("rooms/"):
         test(data, "name", is_line)
-        test(data, "background", file_exists, ["images/backgrounds", "png"])
+        if "background" in data:
+            test(data, "background", file_exists, ["images/backgrounds", "png"])
         if "ground_map" in data:
             test(data, "ground_map", file_exists, ["images/backgrounds", "png"])
             test(data, "front_z", is_int)
             test(data, "back_z", is_int)
-        else:
-            test(data, "default_z", is_int)
 
         room_ids = inventory_ids.copy()
 
@@ -601,7 +571,7 @@ for filename in yaml_files:
                 action_ids.add(id)
                 room_ids.add(id)
 
-                if test(a, "states"):
+                if "states" in a:
                     all_states[id] = set()
                     for s in a["states"]:
                         if test(s, "id"):
@@ -616,7 +586,7 @@ for filename in yaml_files:
                     room_ids.add(a["id"])
                     animation_ids.add(a["id"])
                     all_ids, ref_ids = test_id_unicity(all_ids, a["id"], ref_ids)
-                test(a, "skin", file_exists, ["images/animations/", "png"])
+                test(a, "skin", file_exists, ["images/animations", "png"])
                 if test(a, "length"):
                     if isinstance(a["length"], list):
                         test(a, "length/0", is_int)
@@ -728,6 +698,19 @@ for filename in yaml_files:
                     all_ids, ref_ids = test_id_unicity(all_ids, s["id"], ref_ids)
                 test(s, "sound", file_exists, ["sounds/effects", "ogg"])
 
+        text_ids = set()
+        if "texts" in data:
+            for t in data["texts"]:
+                if test(t, "id"):
+                    refname = filename + ":" + t["id"]
+                    room_ids.add(t["id"])
+                    text_ids.add(t["id"])
+                    all_ids, ref_ids = test_id_unicity(all_ids, t["id"], ref_ids)
+                test(t, "text", is_line)
+                test(t, "coordinates/0", is_int)
+                test(t, "coordinates/1", is_int)
+                test(t, "coordinates/2", is_int)
+
         if "codes" in data:
             for c in data["codes"]:
                 refname = filename + ":" + c
@@ -738,19 +721,6 @@ for filename in yaml_files:
                 else:
                     subdata = load_yaml(fname)
                     test(subdata, "on_success", test_action)
-
-        if "origins" in data:
-            for o in data["origins"]:
-                refname = filename + ":origins"
-                if test(o, "id"):
-                    refname = filename + ":" + o["id"]
-                    room_ids.add(o["id"])
-                    all_ids, ref_ids = test_id_unicity(all_ids, o["id"], ref_ids)
-                test(o, "coordinates/0", is_int)
-                test(o, "coordinates/1", is_int)
-                test(o, "looking_right", is_bool)
-                if "action" in o:
-                    test(o, "action", test_action)
 
         if "windows" in data:
             for w in data["windows"]:
@@ -783,9 +753,11 @@ for filename in yaml_files:
                     refname = filename + ":" + a
                     fname = data_folder + "actions/" + a + ".yaml"
                     a = load_yaml(fname)
-                if test(a, "states"):
+                if "states" in a:
                     for s in a["states"]:
                         test(s, "effect", test_action)
+                else:
+                    test(a, "effect", test_action)
 
         for o in object_ids:
             refname = filename + ":" + o
@@ -813,8 +785,66 @@ for filename in yaml_files:
 
         if "hints" in data:
             pass
-    else: # init file
-        pass
+    elif filename == "init.yaml":
+        test(data, "version")
+        test(data, "locale", is_array)
+        test(data, "name", is_line)
+        test(data, "icon", file_exists, ["images/interface", "png"])
+        test(data, "cursor/0", file_exists, ["images/interface", "png"])
+        test(data, "cursor/1", file_exists, ["images/interface", "png"])
+        test(data, "cursor/2", file_exists, ["images/interface", "png"])
+        test(data, "cursor/3", file_exists, ["images/interface", "png"])
+        test(data, "loading_spin/0", file_exists, ["images/interface", "png"])
+        test(data, "loading_spin/1", is_int)
+        test(data, "debug_font", file_exists, ["fonts", "ttf"])
+        test(data, "interface_font", file_exists, ["fonts", "ttf"])
+        test(data, "interface_light_font", file_exists, ["fonts", "ttf"])
+        test(data, "dialog_font", file_exists, ["fonts", "ttf"])
+        test(data, "inventory_arrows/0", file_exists, ["images/interface", "png"])
+        test(data, "inventory_arrows/1", file_exists, ["images/interface", "png"])
+        test(data, "inventory_chamfer", file_exists, ["images/interface", "png"])
+        test(data, "click_sound", file_exists, ["sounds/effects", "ogg"])
+        test(data, "circle/0", file_exists, ["images/interface", "png"])
+        test(data, "circle/1", file_exists, ["images/interface", "png"])
+        test(data, "circle/2", file_exists, ["images/interface", "png"])
+        test(data, "menu_background", file_exists, ["images/interface", "png"])
+        test(data, "menu_logo", file_exists, ["images/interface", "png"])
+        test(data, "menu_arrows/0", file_exists, ["images/interface", "png"])
+        test(data, "menu_arrows/1", file_exists, ["images/interface", "png"])
+        test(data, "menu_buttons/0", file_exists, ["images/interface", "png"])
+        test(data, "menu_buttons/1", file_exists, ["images/interface", "png"])
+        test(data, "menu_oknotok/0", file_exists, ["images/interface", "png"])
+        test(data, "menu_oknotok/1", file_exists, ["images/interface", "png"])
+        test(data, "load/0", file_exists, ["data/rooms", "yaml"])
+        test(data, "load/1") # TODO: check action
+        if test(data, "text", is_array):
+            for t in data["text"]:
+                test(t, "id")
+                test(t, "value", is_line)
+                if "icon" in t:
+                    test(t, "icon", file_exists, ["images/interface", "png"])
+        
+        for act in ["look", "move", "take", "inventory_button", "inventory", "use",
+                    "combine", "goto"]:
+            test(data, "default/" + act + "/label", is_line)
+            if "effect" in data["default"][act]:
+                for e in data["default"][act]["effect"]:
+                    test(e, "talk/0", is_line)
+            
+
+
+
+
+for root, directories, filenames in os.walk(root_folder):
+    for filename in filenames:
+        fullname = os.path.join(root, filename)
+        basename = os.path.basename(fullname)
+        name, ext = os.path.splitext(basename)
+        if ext == ".graph" or "en_US" in basename or ext == ".yaml":
+            continue
+        if fullname not in accessed_files:
+            refname = '/'.join(fullname.split('/')[-3:]);
+            warning("unused file")
 
 if not errors:
     print("Data is valid")

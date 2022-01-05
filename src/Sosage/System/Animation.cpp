@@ -34,6 +34,7 @@
 #include <Sosage/Config/config.h>
 #include <Sosage/System/Animation.h>
 #include <Sosage/Utils/conversions.h>
+#include <Sosage/Utils/helpers.h>
 
 namespace Sosage::System
 {
@@ -69,7 +70,7 @@ void Animation::run()
   if (new_frame_id == m_frame_id)
   {
     // Force update when new room is loaded
-    if (request<C::Boolean>("Game:in_new_room"))
+    if (request<C::Signal>("Game:in_new_room"))
       run_animation_frame();
     stop_timer("Animation");
     return;
@@ -83,10 +84,10 @@ void Animation::run()
 
 void Animation::run_gui_frame()
 {
-  if (auto fadein = request<C::Boolean>("Fade:in"))
+  if (auto camera_fade = request<C::Tuple<double, double, bool>>("Camera:fade"))
   {
-    fade (value<C::Double>("Fade:begin"), value<C::Double>("Fade:end"), fadein->value());
-    m_fade_to_remove = fadein->value();
+    fade (camera_fade->get<0>(), camera_fade->get<1>(), camera_fade->get<2>());
+    m_fade_to_remove = camera_fade->get<2>();
   }
   else if (m_fade_to_remove)
   {
@@ -95,12 +96,12 @@ void Animation::run_gui_frame()
   }
 
   double current_time = value<C::Double>(CLOCK__TIME);
-  if (auto i = request<C::Double>("Shake:intensity"))
+  if (auto shake = request<C::Array<double,4>>("Camera:shake"))
   {
-    double begin = value<C::Double>("Shake:begin");
-    double end = value<C::Double>("Shake:end");
-    double intensity = i->value();
-    double x_start = value<C::Double>("Camera:saved_position");
+    const double& begin = (*shake)[0];
+    const double& end= (*shake)[1];
+    const double& intensity = (*shake)[2];
+    const double& x_start = (*shake)[3];
 
     double current_intensity = intensity * (end - current_time) / (end - begin);
 
@@ -130,6 +131,19 @@ void Animation::run_gui_frame()
     }
     remove(a->id());
   }
+
+  for (auto c : components("move60fps"))
+    if (auto a = C::cast<C::Tuple<Point, Point, double, double>>(c))
+    {
+      double ftime = current_time;
+      double ratio = (ftime - a->get<2>()) / (a->get<3>() - a->get<2>());
+
+      Point current = ratio * a->get<1>() + (1 - ratio) * a->get<0>();
+      if (ratio > 1)
+        current = a->get<1>();
+
+      get<C::Position>(a->entity() + ":position")->set (current);
+    }
 }
 
 void Animation::run_animation_frame()
@@ -138,25 +152,24 @@ void Animation::run_animation_frame()
   {
     for (const auto& nc : new_char->value())
     {
-      place_and_scale_character (nc.first, nc.second);
+      place_and_scale_character (nc.first);
       generate_random_idle_animation (nc.first, nc.second);
     }
     remove("Game:new_characters");
   }
 
-  if (auto looking_right = request<C::Boolean>("Game:in_new_room"))
+  if (receive ("Game:in_new_room"))
   {
     const std::string& player = value<C::String>("Player:name");
-    place_and_scale_character (player, looking_right->value());
-    generate_random_idle_animation (player, looking_right->value());
+    bool looking_right = value<C::Boolean>(player + ":looking_right");
+    place_and_scale_character (player);
+    generate_random_idle_animation (player, looking_right);
 
     // Relaunch animations
     for (auto c : components("image"))
       if (request<C::String>(c->entity() + ":state"))
         if (auto anim = C::cast<C::Animation>(c))
           anim->on() = true;
-
-    remove("Game:in_new_room");
   }
 
   std::vector<std::string> to_remove;
@@ -174,35 +187,22 @@ void Animation::run_animation_frame()
     auto phead = get<C::Position>(id + "_head:position");
     auto pmouth = get<C::Position>(id + "_mouth:position");
 
+    to_remove.push_back (c->id());
+
     Vector direction (pbody->value(), lookat->value());
     bool looking_right = (direction.x() > 0);
 
-    if (looking_right)
-    {
-      phead->set (pbody->value() - abody->core().scaling
-                  * Vector(value<C::Position>(id + "_head:gap_right")));
-      pmouth->set (phead->value() - ahead->core().scaling
-                   * Vector(value<C::Position>(id + "_mouth:gap_right")));
-    }
-    else
-    {
-      phead->set (pbody->value() - abody->core().scaling
-                  * Vector(value<C::Position>(id + "_head:gap_left")));
-      pmouth->set (phead->value() - ahead->core().scaling
-                   * Vector(value<C::Position>(id + "_mouth:gap_left")));
-    }
+    if (looking_right == is_looking_right(id))
+      continue;
 
     generate_random_idle_animation (id, looking_right);
-    to_remove.push_back (c->id());
   }
 
   // Then check animations stopping
   for (auto c : components("stop_talking"))
   {
     const std::string& id = c->entity();
-    generate_random_idle_head_animation (id,
-                                         get<C::Animation>(id + "_head:image")
-                                         ->frames().front().y == 0);
+    generate_random_idle_head_animation (id, is_looking_right(id));
     to_remove.push_back (c->id());
   }
 
@@ -211,9 +211,8 @@ void Animation::run_animation_frame()
     const std::string& id = c->entity();
     if (value<C::Boolean>(id + ":walking"))
     {
-      bool looking_right = (get<C::Animation>(id + "_body:image")->frames().front().y != 2);
-      generate_random_idle_animation (id, looking_right);
-      place_and_scale_character(id, looking_right);
+      generate_random_idle_animation (id, is_walking_right(id));
+      place_and_scale_character(id);
     }
     to_remove.push_back (c->id());
   }
@@ -222,8 +221,8 @@ void Animation::run_animation_frame()
   {
     const std::string& id = c->entity();
     debug << "stop_animation" << std::endl;
-    if (auto head = request<C::Animation>(id + "_head:image"))
-      generate_random_idle_body_animation (id, head->frames().front().y == 0);
+    if (request<C::Animation>(id + "_head:image"))
+      generate_random_idle_body_animation (id, is_looking_right(id));
     else
       get<C::Image>(id + ":image")->on() = false;
     to_remove.push_back (c->id());
@@ -234,7 +233,7 @@ void Animation::run_animation_frame()
   std::unordered_set<std::string> just_started;
 
   // Then check all other cases
-  for (auto c : components("animation"))
+  for (auto c : components("move"))
     if (auto a = C::cast<C::Tuple<Point, Point, double, double>>(c))
     {
       double ftime = frame_time(value<C::Double>(CLOCK__TIME));
@@ -246,6 +245,20 @@ void Animation::run_animation_frame()
 
       get<C::Position>(a->entity() + ":position")->set (current);
     }
+
+  for (auto c : components("rescale"))
+    if (auto a = C::cast<C::Tuple<double, double, double, double>>(c))
+    {
+      double ftime = frame_time(value<C::Double>(CLOCK__TIME));
+      double ratio = (ftime - a->get<2>()) / (a->get<3>() - a->get<2>());
+
+      double scale = ratio * a->get<1>() + (1 - ratio) * a->get<0>();
+      if (ratio > 1)
+        scale = a->get<1>();
+
+      get<C::Image>(a->entity() + ":image")->set_scale (scale);
+    }
+
 
   for (auto c : components("path"))
     if (auto path = C::cast<C::Path>(c))
@@ -282,19 +295,21 @@ void Animation::run_animation_frame()
     }
   }
 
-  for (auto c : components("set_visible"))
-  {
-    const std::string& id = c->entity();
-    auto g = get<C::Group>(id + ":group");
-    g->apply<C::Image>([](auto img) { img->on() = true; });
-    to_remove.push_back(c->id());
-  }
-
   for (auto c : components("set_hidden"))
   {
+    debug << "Set " << c->id() << " hidden" << std::endl;
     const std::string& id = c->entity();
     auto g = get<C::Group>(id + ":group");
     g->apply<C::Image>([](auto img) { img->on() = false; });
+    to_remove.push_back(c->id());
+  }
+
+  for (auto c : components("set_visible"))
+  {
+    debug << "Set " << c->id() << " visible" << std::endl;
+    const std::string& id = c->entity();
+    auto g = get<C::Group>(id + ":group");
+    g->apply<C::Image>([](auto img) { img->on() = true; });
     to_remove.push_back(c->id());
   }
 
@@ -325,40 +340,22 @@ bool Animation::run_loading()
   return true;
 }
 
-void Animation::place_and_scale_character(const std::string& id, bool looking_right)
+void Animation::place_and_scale_character(const std::string& id)
 {
   auto abody = get<C::Animation>(id + "_body:image");
   auto ahead = get<C::Animation>(id + "_head:image");
   auto amouth = get<C::Animation>(id + "_mouth:image");
   auto pbody = get<C::Position>(id + "_body:position");
-  auto phead = get<C::Position>(id + "_head:position");
-  auto pmouth = get<C::Position>(id + "_mouth:position");
 
-  double new_z;
+  double new_z = Config::world_depth;
   if (auto ground_map = request<C::Ground_map>("Background:ground_map"))
     new_z = ground_map->z_at_point (pbody->value());
-  else
-    new_z = value<C::Int>("Background:default_z");
+
   abody->rescale (new_z);
   ahead->rescale (new_z);
   ahead->z() += 1;
   amouth->rescale (new_z);
   amouth->z() += 2;
-
-  if (looking_right)
-  {
-    phead->set (pbody->value() - abody->core().scaling
-                * Vector(value<C::Position>(id + "_head:gap_right")));
-    pmouth->set (phead->value() - ahead->core().scaling
-                * Vector(value<C::Position>(id + "_mouth:gap_right")));
-  }
-  else
-  {
-    phead->set (pbody->value() - abody->core().scaling
-                * Vector(value<C::Position>(id + "_head:gap_left")));
-    pmouth->set (phead->value() - ahead->core().scaling
-                * Vector(value<C::Position>(id + "_mouth:gap_left")));
-  }
 }
 
 bool Animation::compute_movement_from_path (C::Path_handle path)
@@ -378,11 +375,8 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
   Point pos = pbody->value();
 
   double to_walk = Config::character_speed;
-
   if (auto ground_map = request<C::Ground_map>("Background:ground_map"))
     to_walk *= ground_map->z_at_point (pos) / Config::world_depth;
-  else
-    to_walk *= value<C::Int>("Background:default_z");
 
   Vector direction (pos, (*path)[path->current()]);
   direction.normalize();
@@ -397,8 +391,7 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
       if (path->current() == path->size())
       {
         out = false;
-        generate_random_idle_animation(id, get<C::Animation>(id + "_head:image")
-                                       ->frames().front().y == 0);
+        generate_random_idle_animation(id, is_looking_right(id));
         break;
       }
       continue;
@@ -424,7 +417,7 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
   }
 
   pbody->set(pos);
-  place_and_scale_character(id, direction.x() > 0);
+  place_and_scale_character(id);
 
   return out;
 }
@@ -499,7 +492,7 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
     row_index = 1;
 
   // Generate 10 poses with transitions
-  int pose = 0;
+  int pose = 1;
   for (int i = 0; i < 10; ++ i)
   {
     int remaining = random_int(30, 300);
@@ -524,7 +517,7 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
         break;
 
       // Blink eyes
-      head->frames().push_back ({1, row_index, 1});
+      head->frames().push_back ({0, row_index, 1});
       mouth->frames().push_back ({0, row_index, 1});
     }
 
@@ -533,7 +526,7 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
       int new_pose;
       do
       {
-        new_pose = random_int(2, head->width_subdiv());
+        new_pose = random_int(1, head->width_subdiv());
       }
       while (new_pose == pose);
       pose = new_pose;
@@ -564,9 +557,17 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
   if (!looking_right)
     row_index = 1;
 
+
   std::vector<int> possibles_values;
   const std::vector<std::string>& positions
     = value<C::Vector<std::string> >(id + "_idle:values");
+
+  // Simple case: no animation
+  if (positions.size() == 1)
+  {
+    image->frames().push_back ({0, row_index, 1000});
+    return;
+  }
 
   int pose = 1;
   for (std::size_t i = 0; i < positions.size(); ++ i)
@@ -674,6 +675,9 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
 
 void Animation::update_camera_target ()
 {
+  auto background = request<C::Image>("Background:image");
+  if (!background)
+    return;
   const std::string& id = value<C::String>("Player:name");
   int xbody = value<C::Position>(id + "_body:position").X();
   double xcamera = value<C::Absolute_position>(CAMERA__POSITION).x();
@@ -683,7 +687,7 @@ void Animation::update_camera_target ()
     target = std::max (0, xbody - Config::camera_limit_right);
   else if (xbody > xcamera + Config::camera_limit_right)
   {
-    int width = get<C::Image>("Background:image")->width();
+    int width = background->width();
     target = std::min (width - Config::world_width, xbody - Config::camera_limit_left);
   }
 

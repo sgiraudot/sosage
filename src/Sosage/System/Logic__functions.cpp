@@ -87,9 +87,9 @@ bool Logic::function_add (const std::vector<std::string>& args)
 }
 
 /*
-  - camera: [INT x]                    -> Smooth scrolling to (x,0)
-  - camera: [INT x, INT y]             -> Smooth scrolling to (x,y)
-  - camera: [INT x, INT y, FLOAT zoom] -> Raw cut to coordinates (x,y) with wanted zoom
+  - camera: [INT x]                        -> Quick smooth scrolling to (x,0)
+  - camera: [INT x, INT y]                 -> Quick smooth scrolling to (x,y)
+  - camera: [INT x, INT y, FLOAT duration] -> Smooth scrolling to (x,y) with wanted duration
  */
 bool Logic::function_camera (const std::vector<std::string>& args)
 {
@@ -100,9 +100,21 @@ bool Logic::function_camera (const std::vector<std::string>& args)
 
   if (args.size() == 3)
   {
-    double zoom = to_double(args[2]);
-    position->set (Point (xtarget, ytarget));
-    get<C::Double>(CAMERA__ZOOM)->set(zoom);
+    double duration = to_double(args[2]);
+    if (duration == 0.)
+      position->set (Point (xtarget, ytarget));
+    else
+    {
+      double begin_time = m_current_time;
+      double end_time = begin_time + duration;
+
+      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+
+      auto anim = set<C::Tuple<Point, Point, double, double>>
+          ("Camera:move60fps", position->value(), Point(xtarget, ytarget),
+           begin_time, end_time);
+      m_current_action->schedule (end_time, anim);
+    }
   }
   else
     set<C::GUI_position_animation>("Camera:animation", m_current_time, m_current_time + Config::camera_speed,
@@ -126,7 +138,16 @@ bool Logic::function_control (const std::vector<std::string>& args)
     set<C::String>("Follower:name", follower);
   }
   else
-    remove ("Follower:name");
+    remove ("Follower:name", true);
+  return true;
+}
+
+/*
+  - cutscene: [] -> locks interface for cutscene
+ */
+bool Logic::function_cutscene (const std::vector<std::string>&)
+{
+  status()->push(CUTSCENE);
   return true;
 }
 
@@ -211,8 +232,10 @@ bool Logic::function_hide (const std::vector<std::string>& args)
   std::string target = args[0];
   if (auto question = request<C::String>(target + ":question"))
     get<C::Set<std::string>>("Hints:list")->erase(target);
-  else
+  else if (request<C::Group>(target + ":group"))
     emit (target + ":set_hidden");
+  else
+    get<C::Image>(target + ":image")->on() = false;
   return true;
 }
 
@@ -289,6 +312,7 @@ bool Logic::function_loop (const std::vector<std::string>&)
 }
 
 /*
+  - move: [ID character_id, INT x, INT y, BOOL looking_right] -> immediately moves player to the coordinates (x,y), looking right/left
   - move: [ID target_id, INT x, INT y, INT z]                 -> immediately moves target to the coordinates (x,y,z)
   - move: [ID target_id, INT x, INT y, INT z, FLOAT duration] -> smoothly moves target to coordinates (x,y,z) with wanted duration
  */
@@ -298,28 +322,62 @@ bool Logic::function_move (const std::vector<std::string>& args)
   std::string target = args[0];
   int x = to_int(args[1]);
   int y = to_int(args[2]);
-  int z = to_int(args[3]);
-  if (args.size() == 5) // Smooth move
+
+  if (request<C::Group>(target + ":group")) // character
   {
-    double duration = to_double(args[4]);
-    int nb_frames = round (duration * Config::animation_fps);
-
-    double begin_time = frame_time(m_current_time);
-    double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
-
-   m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
-
-    auto pos = get<C::Position>(target + ":position");
-
-    auto anim = set<C::Tuple<Point, Point, double, double>>
-        (target + ":animation", pos->value(), Point(x,y), begin_time, end_time);
-   m_current_action->schedule (end_time,  anim);
+    bool looking_right = to_bool(args[3]);
+    get<C::Absolute_position>(target + "_body:position")->set(Point(x, y));
+    set<C::Boolean>(target + ":looking_right", looking_right);
   }
   else
   {
-    get<C::Position>(target + ":position")->set (Point(x, y));
-    get<C::Image>(target + ":image")->z() = z;
+    int z = to_int(args[3]);
+    if (args.size() == 5) // Smooth move
+    {
+      double duration = to_double(args[4]);
+      int nb_frames = round (duration * Config::animation_fps);
+
+      double begin_time = frame_time(m_current_time);
+      double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
+
+      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+
+      auto pos = get<C::Position>(target + ":position");
+
+      auto anim = set<C::Tuple<Point, Point, double, double>>
+          (target + ":move", pos->value(), Point(x,y), begin_time, end_time);
+      m_current_action->schedule (end_time,  anim);
+    }
+    else
+    {
+      get<C::Position>(target + ":position")->set (Point(x, y));
+      get<C::Image>(target + ":image")->z() = z;
+    }
   }
+  return true;
+}
+
+/*
+  - move60fps: [ID target_id, INT x, INT y, INT z, FLOAT duration] -> smoothly moves (GUI fps) target to coordinates (x,y,z) with wanted duration
+ */
+bool Logic::function_move60fps (const std::vector<std::string>& args)
+{
+  check (args.size() == 4 || args.size() == 5, "function_move takes 4 or 5 arguments");
+  std::string target = args[0];
+  int x = to_int(args[1]);
+  int y = to_int(args[2]);
+  //int z = to_int(args[3]);
+  double duration = to_double(args[4]);
+  double begin_time = m_current_time;
+  double end_time = begin_time + duration;
+
+  m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+
+  auto pos = get<C::Position>(target + ":position");
+
+  auto anim = set<C::Tuple<Point, Point, double, double>>
+      (target + ":move60fps", pos->value(), Point(x,y), begin_time, end_time);
+  m_current_action->schedule (end_time,  anim);
   return true;
 }
 
@@ -387,14 +445,33 @@ bool Logic::function_play (const std::vector<std::string>& args)
 }
 
 /*
-  - rescale: [ID target_id, FLOAT scale] -> rescales target to the wanted scale
+  - rescale: [ID target_id, FLOAT scale]                 -> rescales immediately target to the wanted scale
+  - rescale: [ID target_id, FLOAT scale, FLOAT duration] -> rescales smoothly target to the wanted scale with the wanted duration
  */
 bool Logic::function_rescale (const std::vector<std::string>& args)
 {
-  check (args.size() == 2, "function_rescale takes 2 arguments");
+  check (args.size() == 2 || args.size() == 3, "function_rescale takes 2 or 3 arguments");
   std::string target = args[0];
   double scale = to_double(args[1]);
-  get<C::Image>(target + ":image")->set_scale(scale);
+
+  if (args.size() == 3) // Smooth rescale
+  {
+    double duration = to_double(args[2]);
+    int nb_frames = round (duration * Config::animation_fps);
+
+    double begin_time = frame_time(m_current_time);
+    double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
+
+    m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+
+    auto img = get<C::Image>(target + ":image");
+
+    auto anim = set<C::Tuple<double, double, double, double>>
+        (target + ":rescale", img->scale(), scale, begin_time, end_time);
+   m_current_action->schedule (end_time,  anim);
+  }
+  else
+    get<C::Image>(target + ":image")->set_scale(scale);
   return true;
 }
 
@@ -449,14 +526,9 @@ bool Logic::function_shake (const std::vector<std::string>& args)
   check (args.size() == 2, "function_shake takes 2 arguments");
   double intensity  = to_double(args[0]);
   double duration = to_double(args[1]);
-  auto begin = set<C::Double> ("Shake:begin", m_current_time);
-  auto end = set<C::Double> ("Shake:end", m_current_time + duration);
-  auto intens = set<C::Double> ("Shake:intensity", intensity);
-  auto camera = set<C::Double> ("Camera:saved_position", value<C::Absolute_position>(CAMERA__POSITION).x());
-  m_current_action->schedule (m_current_time + duration, begin);
-  m_current_action->schedule (m_current_time + duration, end);
-  m_current_action->schedule (m_current_time + duration, intens);
-  m_current_action->schedule (m_current_time + duration, camera);
+  auto shake = set<C::Array<double,4>>("Camera:shake", m_current_time, m_current_time + duration,
+                                       intensity, value<C::Absolute_position>(CAMERA__POSITION).x());
+  m_current_action->schedule (m_current_time + duration, shake);
   return true;
 }
 
@@ -475,17 +547,23 @@ bool Logic::function_show (const std::vector<std::string>& args)
   else
   {
     auto image = get<C::Image>(target + ":image");
-    set<C::Variable>("Game:window", image);
-    emit ("Interface:show_window");
-
-    auto code = request<C::Code>(target + ":code");
-    if (code)
+    if (image->z() == Config::interface_depth) // window
     {
-      status()->push (IN_CODE);
-      set<C::Variable>("Game:code", code);
+      set<C::Variable>("Game:window", image);
+      emit ("Interface:show_window");
+
+      auto code = request<C::Code>(target + ":code");
+      if (code)
+      {
+        status()->push (IN_CODE);
+        set<C::Variable>("Game:code", code);
+      }
+      else
+        status()->push (IN_WINDOW);
     }
     else
-      status()->push (IN_WINDOW);
+      image->on() = true;
+
   }
   return true;
 }
@@ -509,12 +587,13 @@ bool Logic::function_stop (const std::vector<std::string>& args)
 }
 
 /*
-  - talk: [STRING line]                  -> makes player say the line
-  - talk: [ID character_id, STRING line] -> makes character say the line
+  - talk: [STRING line]                                  -> makes player say the line
+  - talk: [ID character_id, STRING line]                 -> makes character say the line
+  - talk: [ID character_id, STRING line, FLOAT duration] -> makes character say the line for the wanted duration
  */
 bool Logic::function_talk (const std::vector<std::string>& args)
 {
-  check (args.size() == 1 || args.size() == 2, "function_stop takes 1 or 2 arguments");
+  check (1 <= args.size() && args.size() <= 3, "function_talk takes 1, 2 or 3 arguments");
   std::string id;
   std::string text;
 
@@ -525,8 +604,6 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   }
   else
   {
-    check (args.size() == 2, "\"comment\" expects 1 or 2 arguments ("
-           + std::to_string(args.size()) + "given)");
     id = args[0];
     text = args[1];
   }
@@ -539,10 +616,17 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   create_dialog (id, text, dialog);
 
   int nb_char = int(text.size());
-  double nb_seconds_read
-      = (value<C::Int>("Dialog:speed") / double(Config::MEDIUM_SPEED))
-      * (Config::min_reading_time + nb_char * Config::char_spoken_time);
+  double nb_seconds_read;
+  if (args.size() == 3)
+    nb_seconds_read = to_double(args[2]);
+  else
+    nb_seconds_read = (value<C::Int>("Dialog:speed") / double(Config::MEDIUM_SPEED))
+                      * (Config::min_reading_time + nb_char * Config::char_spoken_time);
+
   double nb_seconds_lips_moving = nb_char * Config::char_spoken_time;
+
+  debug << "Line displayed for " << nb_seconds_read << " s, lips moving for "
+        << nb_seconds_lips_moving << "s" << std::endl;
 
   Point position = value<C::Double>(CAMERA__ZOOM)
                    * (value<C::Position>(id + "_body:position") - value<C::Position>(CAMERA__POSITION));
@@ -582,6 +666,16 @@ bool Logic::function_talk (const std::vector<std::string>& args)
                                     C::make_handle<C::Signal>
                                     (id + ":stop_talking"));
   }
+  return true;
+}
+
+/*
+  - timer: [ID timer_id] -> creates a timer
+ */
+bool Logic::function_timer (const std::vector<std::string>& args)
+{
+  check (args.size() == 1, "function_timer takes 1 argument");
+  set<C::Double>(args[0] + ":init_value", m_current_time);
   return true;
 }
 
@@ -630,19 +724,38 @@ bool Logic::function_unlock (const std::vector<std::string>&)
 }
 
 /*
-  - wait: []               -> waits until all ongoing events (talking, moving, etc.) are finished
-  - wait: [FLOAT duration] -> waits for the wanted duration
+  - wait: []                            -> waits until all ongoing events (talking, moving, etc.) are finished
+  - wait: [FLOAT duration]              -> waits for the wanted duration
+  - wait: [ID timer_id, FLOAT duration] -> waits for the wanted duration from the given timer
  */
 bool Logic::function_wait (const std::vector<std::string>& args)
 {
-  check (args.size() <= 1, "function_wait takes 0 or 1 argument");
+  check (args.size() <= 2, "function_wait takes 0 or 1 argument");
   if (args.size() == 1)
   {
     double time = to_double(args[0]);
-    debug << "Schedule wait until " << m_current_time + time << std::endl;
+//    debug << "Schedule wait until " << m_current_time + time << std::endl;
     m_current_action-> schedule (m_current_time + time, C::make_handle<C::Base>("wait"));
   }
+  else if (args.size() == 2)
+  {
+    const std::string& id = args[0];
+    double time = value<C::Double>(id + ":init_value") + to_double(args[1]);
+//    debug << "Schedule wait until " << time << std::endl;
+    m_current_action-> schedule (time, C::make_handle<C::Base>("wait"));
+  }
   return false;
+}
+
+/*
+  - zoom: [FLOAT value] -> change zoom to wanted value (1 = normal zoom)
+ */
+bool Logic::function_zoom (const std::vector<std::string>& args)
+{
+  check (args.size() == 1, "function_zoom takes 1 argument");
+  double zoom = to_double(args[0]);
+  get<C::Double>(CAMERA__ZOOM)->set(zoom);
+  return true;
 }
 
 } // namespace Sosage::System

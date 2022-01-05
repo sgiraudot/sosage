@@ -50,7 +50,7 @@ public:
 
   bool run_loading();
 
-  void place_and_scale_character (const std::string& id, bool looking_right);
+  void place_and_scale_character (const std::string& id);
   void generate_random_idle_animation (const std::string& id, bool looking_right);
   void generate_random_idle_head_animation (const std::string& id, bool looking_right);
   void generate_random_idle_body_animation  (const std::string& id, bool looking_right);

@@ -63,8 +63,6 @@ public:
   void read_locale ();
   void read_hints ();
 
-  void read_cutscene (const std::string& file_name);
-
   bool read_savefile();
   void write_savefile();
 
@@ -89,9 +87,9 @@ private:
   std::pair<Component::Handle, Component::Handle>
   read_object_action (const std::string& id, const std::string& action,
                       const Core::File_IO::Node& input);
-  void read_origin (const std::string& id, const Core::File_IO::Node& input);
   void read_scenery (const std::string& id, const Core::File_IO::Node& input);
   void read_sound (const std::string& id, const Core::File_IO::Node& input);
+  void read_text (const std::string& id, const Core::File_IO::Node& input);
   void read_window (const std::string& id, const Core::File_IO::Node& input);
 
 };

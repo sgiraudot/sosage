@@ -54,8 +54,6 @@ public:
 
 private:
 
-  void run_cutscene();
-
   bool compute_path_from_target (Component::Position_handle target,
                                  std::string id = "");
   bool compute_path_from_direction (const Vector& direction);
@@ -75,6 +73,7 @@ private:
   bool function_add (const std::vector<std::string>& args);
   bool function_camera (const std::vector<std::string>& args);
   bool function_control (const std::vector<std::string>& args);
+  bool function_cutscene (const std::vector<std::string>& args);
   bool function_exit (const std::vector<std::string>& args);
   bool function_fadein (const std::vector<std::string>& args);
   bool function_fadeout (const std::vector<std::string>& args);
@@ -85,6 +84,7 @@ private:
   bool function_look (const std::vector<std::string>& args);
   bool function_loop (const std::vector<std::string>& args);
   bool function_move (const std::vector<std::string>& args);
+  bool function_move60fps (const std::vector<std::string>& args);
   bool function_play (const std::vector<std::string>& args);
   bool function_rescale (const std::vector<std::string>& args);
   bool function_set (const std::vector<std::string>& args);
@@ -92,9 +92,11 @@ private:
   bool function_show (const std::vector<std::string>& args);
   bool function_stop (const std::vector<std::string>& args);
   bool function_talk (const std::vector<std::string>& args);
+  bool function_timer (const std::vector<std::string>& args);
   bool function_trigger (const std::vector<std::string>& args);
   bool function_unlock (const std::vector<std::string>& args);
   bool function_wait (const std::vector<std::string>& args);
+  bool function_zoom (const std::vector<std::string>& args);
 
 };
 

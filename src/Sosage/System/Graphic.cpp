@@ -126,7 +126,7 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
       auto position = get<C::Position>(img->entity() + ":position");
       Point p = position->value();
       double zoom = 1.;
-      if (!position->absolute())
+      if (!position->is_interface())
       {
         p = p - camera;
         zoom = value<C::Double>(CAMERA__ZOOM);

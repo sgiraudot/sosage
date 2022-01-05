@@ -28,7 +28,6 @@
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Cropped.h>
-#include <Sosage/Component/Cutscene.h>
 #include <Sosage/Component/Dialog.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Font.h>
@@ -63,6 +62,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(function_add);
   INIT_DISPATCHER(function_camera);
   INIT_DISPATCHER(function_control);
+  INIT_DISPATCHER(function_cutscene);
   INIT_DISPATCHER(function_exit);
   INIT_DISPATCHER(function_fadein);
   INIT_DISPATCHER(function_fadeout);
@@ -73,6 +73,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(function_look);
   INIT_DISPATCHER(function_loop);
   INIT_DISPATCHER(function_move);
+  INIT_DISPATCHER(function_move60fps);
   INIT_DISPATCHER(function_play);
   INIT_DISPATCHER(function_rescale);
   INIT_DISPATCHER(function_set);
@@ -80,9 +81,11 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(function_show);
   INIT_DISPATCHER(function_stop);
   INIT_DISPATCHER(function_talk);
+  INIT_DISPATCHER(function_timer);
   INIT_DISPATCHER(function_trigger);
   INIT_DISPATCHER(function_unlock);
   INIT_DISPATCHER(function_wait);
+  INIT_DISPATCHER(function_zoom);
 
   set<C::Action>("Logic:action");
 }
@@ -92,17 +95,13 @@ void Logic::run ()
   start_timer();
   m_current_time = value<C::Double> (CLOCK__TIME);
 
-  if (status()->is (CUTSCENE) || status()->was (CUTSCENE))
-  {
-    run_cutscene();
-    stop_timer("Logic");
-    return;
-  }
   if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU))
   {
     stop_timer("Logic");
     return;
   }
+
+  bool skip_dialog = receive("Game:skip_dialog");
 
   std::set<std::string> done;
   for (auto c : components("action"))
@@ -128,7 +127,19 @@ void Logic::run ()
               remove (th.second->id());
             return false;
           }
-          // else
+          else if (skip_dialog)
+          {
+            if (contains(th.second->entity(), "Comment_"))
+            {
+              remove (th.second->id());
+              return false;
+            }
+            else if (th.second->component() == "stop_talking")
+            {
+              set (th.second);
+              return false;
+            }
+          }
           return true;
         });
       }
@@ -266,13 +277,31 @@ void Logic::run ()
     remove ("Character:triggered_action");
   }
 
+  bool skip = false;
+  if (status()->is(CUTSCENE))
+    skip = receive ("Game:skip_cutscene");
+
   for (auto c : components("action"))
     if (auto a = C::cast<C::Action>(c))
       if (c->entity() != "Character")
       {
-        if (!a->on() || !a->ready())
+        if (!a->on())
           continue;
-        debug << "Applying steps of action " << a->id() << std::endl;
+
+        if (skip)
+        {
+          status()->pop();
+          a->stop();
+          const C::Action::Step& s = a->last_step();
+//          debug << m_current_time << ", applying " << s.to_string() << std::endl;
+          check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
+                 s.function() + " is not a valid function");
+          m_dispatcher[s.function()](s.args());
+          continue;
+        }
+        if (!a->ready())
+          continue;
+//        debug << "Applying steps of action " << a->id() << std::endl;
         do
         {
           if (!apply_next_step (a))
@@ -283,101 +312,6 @@ void Logic::run ()
 
   update_debug_info (get<C::Debug>(GAME__DEBUG));
   stop_timer("Logic");
-}
-
-void Logic::run_cutscene()
-{
-  auto cutscene = get<C::Cutscene>("Game:cutscene");
-  bool paused = status()->is (PAUSED, IN_MENU);
-  double current_time
-      = cutscene->current_time (m_current_time, paused);
-  if (current_time < 0)
-    return;
-
-  bool skip = receive ("Game:skip_cutscene");
-  if (skip)
-    current_time = std::numeric_limits<double>::max();
-
-  for (C::Cutscene::Element& el : *cutscene)
-  {
-    if (!el.active)
-      continue;
-
-    double begin_time = el.keyframes.front().time;
-    if (begin_time > current_time)
-      continue;
-
-    if (el.keyframes.size() == 1) // load case
-    {
-      C::Base dummy (el.id);
-      set<C::String>("Game:new_room", dummy.entity());
-      set<C::String>("Game:new_room_origin", dummy.component());
-      status()->pop();
-      continue;
-    }
-    // If cutscene skipped, continue until a load case is reached
-    if (skip)
-      continue;
-
-    double end_time = el.keyframes.back().time;
-    if (end_time < current_time)
-    {
-      el.active = false;
-      if (auto img = request<C::Image>(el.id))
-        img->on() = false;
-      else if (auto music = request<C::Music>(el.id))
-      {
-        remove ("Game:music");
-        emit ("Music:stop");
-      }
-      else if (el.id == "fadein")
-        get<C::Image>("Blackscreen:image")->on() = false;
-      continue;
-    }
-
-    int x, y, z;
-    double zoom;
-    cutscene->get_frame (current_time, el, x, y, z, zoom);
-
-    if (el.id == "fadein" || el.id == "fadeout")
-    {
-      auto img = get<C::Image>("Blackscreen:image");
-      img->on() = true;
-      if (el.id == "fadein")
-        img->set_alpha((unsigned char)(255 * (1. - zoom)));
-      else
-        img->set_alpha((unsigned char)(255 * zoom));
-    }
-    else if (auto img = request<C::Image>(el.id))
-    {
-      if (auto anim = C::cast<C::Animation>(img))
-      {
-        if (!img->on())
-          emit (img->entity() + ":start_animation");
-        if (!anim->loop())
-          el.active = false;
-      }
-
-      img->on() = true;
-      img->z() = z;
-      if (el.id.find("text") != 0)
-        img->set_scale(zoom);
-      set<C::Absolute_position>(img->entity() + ":position", Point(x,y));
-
-    }
-    else if (auto music = request<C::Music>(el.id))
-    {
-      if (!request<C::Variable>("Game:music"))
-      {
-        set<C::Variable>("Game:music", get<C::Music>(el.id));
-        emit ("Music:start");
-      }
-    }
-    else
-    {
-      check (false, "Can't find cutscene element " + el.id);
-    }
-  }
 }
 
 bool Logic::compute_path_from_target (C::Position_handle target,
@@ -494,7 +428,7 @@ bool Logic::apply_next_step (C::Action_handle action)
 {
   m_current_action = action;
   const C::Action::Step& s = action->next_step();
-  debug << m_current_time << ", applying " << s.to_string() << std::endl;
+  //debug << m_current_time << ", applying " << s.to_string() << std::endl;
   check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
          s.function() + " is not a valid function");
   return m_dispatcher[s.function()](s.args());
@@ -502,14 +436,11 @@ bool Logic::apply_next_step (C::Action_handle action)
 
 bool Logic::subfunction_fade (bool fadein, double duration)
 {
-  auto begin = set<C::Double> ("Fade:begin", m_current_time);
-  auto end = set<C::Double> ("Fade:end", m_current_time + duration);
-  auto out = set<C::Boolean> ("Fade:in", fadein);
-  if (request<C::Music>("Game:music"))
+  auto fade = set<C::Tuple<double, double, bool>>("Camera:fade",
+                                                  m_current_time, m_current_time + duration, fadein);
+  if (request<C::Music>("Game:music") && !status()->is(CUTSCENE))
     emit ("Music:fade");
-  m_current_action->schedule (m_current_time + duration, begin);
-  m_current_action->schedule (m_current_time + duration, end);
-  m_current_action->schedule (m_current_time + duration, out);
+  m_current_action->schedule (m_current_time + duration, fade);
   return true;
 }
 
@@ -602,7 +533,7 @@ void Logic::create_dialog (const std::string& character,
   const std::string& color = value<C::String> (character + ":color");
 
   auto img
-    = set<C::Image> ("Comment:image",
+    = set<C::Image> ("Comment_0:image",
                      font,
                      color,
                      text, true);
@@ -613,7 +544,7 @@ void Logic::create_dialog (const std::string& character,
     dialog.push_back (img);
   else
   {
-    remove("Comment:image");
+    remove("Comment_0:image");
     int nb_imgs = 1 + (img->width() / width_max);
 
     // Find space characters where to cut
