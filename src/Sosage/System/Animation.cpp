@@ -84,10 +84,10 @@ void Animation::run()
 
 void Animation::run_gui_frame()
 {
-  if (auto fadein = request<C::Boolean>("Fade:in"))
+  if (auto camera_fade = request<C::Tuple<double, double, bool>>("Camera:fade"))
   {
-    fade (value<C::Double>("Fade:begin"), value<C::Double>("Fade:end"), fadein->value());
-    m_fade_to_remove = fadein->value();
+    fade (camera_fade->get<0>(), camera_fade->get<1>(), camera_fade->get<2>());
+    m_fade_to_remove = camera_fade->get<2>();
   }
   else if (m_fade_to_remove)
   {

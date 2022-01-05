@@ -57,10 +57,9 @@ void Sound::run()
   if (receive("Music:fade"))
   {
     check (music, "No music to fade");
-    auto fadein = request<C::Boolean>("Fade:in");
+    auto fade = request<C::Tuple<double, double, bool>>("Camera:fade");
     double current_time = value<C::Double> (CLOCK__TIME);
-    double end_time = value<C::Double>("Fade:end");
-    m_core.fade(music->core(), end_time - current_time, fadein->value());
+    m_core.fade(music->core(), fade->get<1>() - current_time, fade->get<2>());
   }
 
   if (receive("Music:volume_changed"))

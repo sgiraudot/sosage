@@ -116,10 +116,14 @@ def is_time(key, value):
     if not is_t:
         error(key + " is not a valid time (" + value + ")")
 
+accessed_files = set()
+        
 def file_exists(key, value, args):
     fname = args[0] + "/" + value + "." + args[1]
     if not os.path.exists(root_folder + "/" + fname):
         error(key + " refers to a non-existing file (" + fname + ")")
+    else:
+        accessed_files.add(root_folder + "/" + fname)
 
 def test_id_unicity(ids, new_id, ref=None):
     if new_id in ids:
@@ -439,7 +443,7 @@ for filename in yaml_files:
         test(data, "mouth/dx_right", is_int)
         test(data, "mouth/dx_left", is_int)
         test(data, "mouth/dy", is_int)
-        test(data, "head/skin")
+        test(data, "head/skin", file_exists, ["images/characters", "png"])
         test(data, "head/dx_right", is_int)
         test(data, "head/dx_left", is_int)
         test(data, "head/dy", is_int)
@@ -516,10 +520,10 @@ for filename in yaml_files:
                 sid = s["id"]
                 all_states[current_id].add(sid)
                 if sid == "none":
-                    pass
-                elif sid != "inventory":
+                    continue
+                if sid != "inventory":
                     inventory_only = False
-                elif "skin" in s:
+                if "skin" in s:
                     if sid == "inventory":
                         test(s, "skin", file_exists, ["images/inventory", "png"])
                         inventory_ids.add(current_id)
@@ -582,7 +586,7 @@ for filename in yaml_files:
                     room_ids.add(a["id"])
                     animation_ids.add(a["id"])
                     all_ids, ref_ids = test_id_unicity(all_ids, a["id"], ref_ids)
-                test(a, "skin", file_exists, ["images/animations/", "png"])
+                test(a, "skin", file_exists, ["images/animations", "png"])
                 if test(a, "length"):
                     if isinstance(a["length"], list):
                         test(a, "length/0", is_int)
@@ -781,8 +785,66 @@ for filename in yaml_files:
 
         if "hints" in data:
             pass
-    else: # init file
-        pass
+    elif filename == "init.yaml":
+        test(data, "version")
+        test(data, "locale", is_array)
+        test(data, "name", is_line)
+        test(data, "icon", file_exists, ["images/interface", "png"])
+        test(data, "cursor/0", file_exists, ["images/interface", "png"])
+        test(data, "cursor/1", file_exists, ["images/interface", "png"])
+        test(data, "cursor/2", file_exists, ["images/interface", "png"])
+        test(data, "cursor/3", file_exists, ["images/interface", "png"])
+        test(data, "loading_spin/0", file_exists, ["images/interface", "png"])
+        test(data, "loading_spin/1", is_int)
+        test(data, "debug_font", file_exists, ["fonts", "ttf"])
+        test(data, "interface_font", file_exists, ["fonts", "ttf"])
+        test(data, "interface_light_font", file_exists, ["fonts", "ttf"])
+        test(data, "dialog_font", file_exists, ["fonts", "ttf"])
+        test(data, "inventory_arrows/0", file_exists, ["images/interface", "png"])
+        test(data, "inventory_arrows/1", file_exists, ["images/interface", "png"])
+        test(data, "inventory_chamfer", file_exists, ["images/interface", "png"])
+        test(data, "click_sound", file_exists, ["sounds/effects", "ogg"])
+        test(data, "circle/0", file_exists, ["images/interface", "png"])
+        test(data, "circle/1", file_exists, ["images/interface", "png"])
+        test(data, "circle/2", file_exists, ["images/interface", "png"])
+        test(data, "menu_background", file_exists, ["images/interface", "png"])
+        test(data, "menu_logo", file_exists, ["images/interface", "png"])
+        test(data, "menu_arrows/0", file_exists, ["images/interface", "png"])
+        test(data, "menu_arrows/1", file_exists, ["images/interface", "png"])
+        test(data, "menu_buttons/0", file_exists, ["images/interface", "png"])
+        test(data, "menu_buttons/1", file_exists, ["images/interface", "png"])
+        test(data, "menu_oknotok/0", file_exists, ["images/interface", "png"])
+        test(data, "menu_oknotok/1", file_exists, ["images/interface", "png"])
+        test(data, "load/0", file_exists, ["data/rooms", "yaml"])
+        test(data, "load/1") # TODO: check action
+        if test(data, "text", is_array):
+            for t in data["text"]:
+                test(t, "id")
+                test(t, "value", is_line)
+                if "icon" in t:
+                    test(t, "icon", file_exists, ["images/interface", "png"])
+        
+        for act in ["look", "move", "take", "inventory_button", "inventory", "use",
+                    "combine", "goto"]:
+            test(data, "default/" + act + "/label", is_line)
+            if "effect" in data["default"][act]:
+                for e in data["default"][act]["effect"]:
+                    test(e, "talk/0", is_line)
+            
+
+
+
+
+for root, directories, filenames in os.walk(root_folder):
+    for filename in filenames:
+        fullname = os.path.join(root, filename)
+        basename = os.path.basename(fullname)
+        name, ext = os.path.splitext(basename)
+        if ext == ".graph" or "en_US" in basename or ext == ".yaml":
+            continue
+        if fullname not in accessed_files:
+            refname = '/'.join(fullname.split('/')[-3:]);
+            warning("unused file")
 
 if not errors:
     print("Data is valid")

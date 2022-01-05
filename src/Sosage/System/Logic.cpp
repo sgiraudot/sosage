@@ -436,14 +436,11 @@ bool Logic::apply_next_step (C::Action_handle action)
 
 bool Logic::subfunction_fade (bool fadein, double duration)
 {
-  auto begin = set<C::Double> ("Fade:begin", m_current_time);
-  auto end = set<C::Double> ("Fade:end", m_current_time + duration);
-  auto out = set<C::Boolean> ("Fade:in", fadein);
+  auto fade = set<C::Tuple<double, double, bool>>("Camera:fade",
+                                                  m_current_time, m_current_time + duration, fadein);
   if (request<C::Music>("Game:music") && !status()->is(CUTSCENE))
     emit ("Music:fade");
-  m_current_action->schedule (m_current_time + duration, begin);
-  m_current_action->schedule (m_current_time + duration, end);
-  m_current_action->schedule (m_current_time + duration, out);
+  m_current_action->schedule (m_current_time + duration, fade);
   return true;
 }
 
