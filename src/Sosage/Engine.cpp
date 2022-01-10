@@ -75,6 +75,8 @@ void emscripten_main_loop()
 
 Engine::Engine (int argc, char** argv)
 {
+  SDL_Log("Test Windows\n ");
+
   debug << "Running Sosage " << Sosage::Version::str() << std::endl;
   srand(static_cast<unsigned int>(time(nullptr)));
 
@@ -172,21 +174,8 @@ bool Engine::run (const std::string& folder_name)
 
 bool Engine::run()
 {
-#ifdef SOSAGE_ASSERTIONS_IN_DIALOG
-  try
-  {
-#endif
-    for (System::Handle system : m_systems)
-      system->run();
-#ifdef SOSAGE_ASSERTIONS_IN_DIALOG
-  }
-  catch (std::runtime_error& error)
-  {
-    std::dynamic_pointer_cast<System::Graphic>(m_systems[7])->display_error (error.what());
-    throw error;
-  }
-#endif
-
+  for (System::Handle system : m_systems)
+    system->run();
   return !m_content.receive("Game:exit");
 }
 

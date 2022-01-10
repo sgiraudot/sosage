@@ -1,6 +1,6 @@
 /*
   [include/Sosage/Utils/error.h]
-  Debug checks, errors, warnings, assertions, exceptions, etc.
+  Debug checks, errors, warnings, assertions, etc.
 
   =====================================================================
 

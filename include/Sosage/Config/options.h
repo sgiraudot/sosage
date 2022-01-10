@@ -40,13 +40,6 @@
 #define SOSAGE_SDL_TIME
 #endif
 
-#ifdef SOSAGE_CFG_ASSERTIONS_AS_EXCEPTIONS
-#define SOSAGE_ASSERTIONS_AS_EXCEPTIONS
-#  ifndef SOSAGE_DEBUG
-#  define SOSAGE_ASSERTIONS_IN_DIALOG
-#  endif
-#endif
-
 #ifndef SOSAGE_PREF_PATH
 #define SOSAGE_PREF_PATH "ptilouk"
 #endif

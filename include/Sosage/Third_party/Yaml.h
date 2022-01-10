@@ -37,8 +37,6 @@
 namespace Sosage::Third_party
 {
 
-struct No_yaml_key : public std::exception { };
-
 class Yaml
 {
 public:

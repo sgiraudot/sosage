@@ -1,6 +1,6 @@
 /*
   [src/Sosage/Utils/error.cpp]
-  Debug checks, errors, warnings, assertions, exceptions, etc.
+  Debug checks, errors, warnings, assertions, etc.
 
   =====================================================================
 
@@ -43,7 +43,7 @@ int Debug_buffer::sync()
 #if defined(SOSAGE_ANDROID)
   __android_log_print (ANDROID_LOG_DEBUG, "Sosage", "%s", this->str().c_str());
 #else
-  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "%s", this->str().c_str());
+  SDL_Log("%s", this->str().c_str());
 #endif
   this->str("");
   return 0;
@@ -52,12 +52,8 @@ int Debug_buffer::sync()
 
 void check_impl (const char* file, int line, const std::string& str)
 {
-#if defined(SOSAGE_ASSERTIONS_AS_EXCEPTIONS)
-  throw std::runtime_error(str + " [" + file + ":" + std::to_string(line) + "]");
-#else
   debug << "Error: "<< str << " [" << file << ":" << line << "]" << std::endl;
   exit(EXIT_FAILURE);
-#endif
 }
 
 } // namespace Sosage
