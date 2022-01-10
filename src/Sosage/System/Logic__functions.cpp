@@ -638,8 +638,12 @@ bool Logic::function_talk (const std::vector<std::string>& args)
     img = get<C::Image>(value<C::String>("Player:name") + "_body:image");
 
   int y = position.Y() - value<C::Double>(CAMERA__ZOOM) * img->height() * img->scale() * 1.2;
-
   double size_factor = 0.75 * (value<C::Int>("Dialog:size") / double(Config::MEDIUM));
+
+  int height = 80 * size_factor * dialog.size();
+  y = y - (height / 2);
+  if (y < 100)
+    y = 100;
 
   for (auto img : dialog)
     if (x + size_factor * img->width() / 2 > int(0.95 * Config::world_width))
@@ -647,12 +651,10 @@ bool Logic::function_talk (const std::vector<std::string>& args)
     else if (x - size_factor * img->width() / 2 < int(0.1 * Config::world_width))
       x = int(0.1 * Config::world_width + size_factor * img->width() / 2);
 
-  std::reverse(dialog.begin(), dialog.end());
-
   for (auto img : dialog)
   {
     auto pos = set<C::Absolute_position> (img->entity() + ":position", Point(x,y));
-    y -= 80 * size_factor;
+    y += 80 * size_factor;
 
    m_current_action->schedule (m_current_time + std::max(1., nb_seconds_read), img);
    m_current_action->schedule (m_current_time + std::max(1., nb_seconds_read), pos);
