@@ -356,6 +356,13 @@ void Animation::place_and_scale_character(const std::string& id)
   ahead->z() += 1;
   amouth->rescale (new_z);
   amouth->z() += 2;
+
+  if (auto z = request<C::Int>(id + ":z"))
+  {
+    abody->z() = z->value();
+    ahead->z() = z->value() + 1;
+    amouth->z() = z->value() + 2;
+  }
 }
 
 bool Animation::compute_movement_from_path (C::Path_handle path)
@@ -477,15 +484,17 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
   auto head = get<C::Animation>(id + "_head:image");
   auto mouth = get<C::Animation>(id + "_mouth:image");
 
+  bool character_is_visible = get<C::Animation>(id + "_body:image")->on();
+
   // Reset all
   head->reset();
   head->frames().clear();
-  head->on() = true;
+  head->on() = character_is_visible;
 
   // Reset all
   mouth->reset();
   mouth->frames().clear();
-  mouth->on() = true;
+  mouth->on() = character_is_visible;
 
   int row_index = 0;
   if (!looking_right)
@@ -605,7 +614,7 @@ void Animation::generate_random_mouth_animation (const std::string& id)
   // Reset all
   image->reset();
   image->frames().clear();
-  image->on() = true;
+  image->on() = get<C::Animation>(id + "_body:image")->on();
 
   int row_index = (get<C::Animation>(id + "_head:image")->frames().front().y);
 

@@ -312,9 +312,10 @@ bool Logic::function_loop (const std::vector<std::string>&)
 }
 
 /*
-  - move: [ID character_id, INT x, INT y, BOOL looking_right] -> immediately moves player to the coordinates (x,y), looking right/left
-  - move: [ID target_id, INT x, INT y, INT z]                 -> immediately moves target to the coordinates (x,y,z)
-  - move: [ID target_id, INT x, INT y, INT z, FLOAT duration] -> smoothly moves target to coordinates (x,y,z) with wanted duration
+  - move: [ID character_id, INT x, INT y, BOOL looking_right]        -> immediately moves character to the coordinates (x,y), looking right/left
+  - move: [ID character_id, INT x, INT y, INT z, BOOL looking_right] -> immediately moves character to the coordinates (x,y,z), looking right/left
+  - move: [ID target_id, INT x, INT y, INT z]                        -> immediately moves target to the coordinates (x,y,z)
+  - move: [ID target_id, INT x, INT y, INT z, FLOAT duration]        -> smoothly moves target to coordinates (x,y,z) with wanted duration
  */
 bool Logic::function_move (const std::vector<std::string>& args)
 {
@@ -325,7 +326,16 @@ bool Logic::function_move (const std::vector<std::string>& args)
 
   if (request<C::Group>(target + ":group")) // character
   {
-    bool looking_right = to_bool(args[3]);
+    bool looking_right;
+    if (args.size() == 4)
+      looking_right = to_bool(args[3]);
+    else
+    {
+      int z = to_int(args[3]);
+      looking_right = to_bool(args[4]);
+      set<C::Int>(target + ":z", z);
+    }
+
     get<C::Absolute_position>(target + "_body:position")->set(Point(x, y));
     set<C::Boolean>(target + ":looking_right", looking_right);
   }
@@ -637,7 +647,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   if (!img)
     img = get<C::Image>(value<C::String>("Player:name") + "_body:image");
 
-  int y = position.Y() - value<C::Double>(CAMERA__ZOOM) * img->height() * img->scale() * 1.2;
+  int y = position.Y() - value<C::Double>(CAMERA__ZOOM) * img->height() * img->scale() * 1.5;
   double size_factor = 0.75 * (value<C::Int>("Dialog:size") / double(Config::MEDIUM));
 
   int height = 80 * size_factor * dialog.size();

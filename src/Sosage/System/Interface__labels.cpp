@@ -581,8 +581,8 @@ void Interface::set_action_selector (const std::string& id)
       else
       {
         generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
-        if (value<C::Position>(id + "_take_label_back:position").x()
-            + 0.5 * get<C::Image>(id + "_take_label_back:image")->width()
+        if (value<C::Position>(id + "_look_label_back:position").x()
+            + 0.5 * get<C::Image>(id + "_look_label_back:image")->width()
             > Config::world_width - Config::label_height)
         {
           generate_action (id, "move", UPPER, "", position, DEPLOY);
@@ -731,7 +731,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
       if (pos->value().x() - 0.5 * img->width() < Config::label_margin)
         diff = Config::label_margin - pos->value().x() + 0.5 * img->width();
       else if (pos->value().x() + 0.5 * img->width() > Config::world_width - Config::label_margin)
-        diff = pos->value().x() - 0.5 * img->width() - (Config::world_width - Config::label_margin);
+        diff = (Config::world_width - Config::label_margin) - pos->value().x() - 0.5 * img->width();
 
       if (diff != 0)
       {
