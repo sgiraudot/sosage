@@ -47,6 +47,7 @@ namespace C = Component;
 
 Interface::Interface (Content& content)
   : Base (content)
+  , m_selector_type (NO_SEL)
 {
 
 }
@@ -346,78 +347,25 @@ void Interface::update_action_selector()
 
   if (mode == GAMEPAD)
   {
-    auto target = request<C::String>("Interface:active_object");
-    if (!status()->is(IN_MENU) && target)
-    {
-      // Mouse action selector might be active, deactivate too
-      bool garbage_mouse_selector = false;
-      if (auto p = request<C::Relative_position>(m_action_selector[0] + "_button_back:position"))
-        if (p->absolute_reference() != get<C::Absolute_position>("Inventory:origin"))
-          garbage_mouse_selector = true;
-
-      // Action selector not up to date
-      bool uptodate = (status()->is (IDLE) && m_action_selector[0] == target->value() + "_move")
-                      || (status()->is (IN_INVENTORY) && m_action_selector[0] == target->value() + "_use")
-                      || (status()->is (OBJECT_CHOICE) && m_action_selector[1] == target->value() + "_Ok");
-
-      if (status()->is (IDLE))
-        if (auto right = request<C::Boolean>(target->value() + "_goto:right"))
-          uptodate = m_action_selector[1] == target->value() + "_goto";
-
-      if (receive("Action_selector:force_update"))
-        uptodate = false;
-
-      if (garbage_mouse_selector || !uptodate)
-      {
-        if (m_action_selector[0] != "")
-          reset_action_selector();
-        set_action_selector (target->value());
-      }
-    }
+    if (status()->is(IDLE))
+      set_action_selector (GP_IDLE, value<C::String>("Interface:active_object", ""));
+    else if (status()->is(IN_INVENTORY))
+      set_action_selector (GP_INV_ACTION_SEL, value<C::String>("Interface:active_object", ""));
+    else if (status()->is(OBJECT_CHOICE, IN_WINDOW, IN_CODE))
+      set_action_selector (OKNOTOK);
+    else if (status()->is(IN_MENU))
+      set_action_selector(OKCONTINUE);
     else
-    {
-      bool uptodate = (status()->is (IN_WINDOW, IN_CODE) && m_action_selector[1] == "code_Ok")
-          || (status()->is (IN_MENU) && m_action_selector[1] == "menu_Ok")
-          || (status()->is (IDLE) && m_action_selector[2] == "Default_inventory"
-          && !contains(m_action_selector[1], "_goto"));
-
-      // Action selector not up to date
-      if (!uptodate)
-      {
-        if (m_action_selector[0] != "")
-          reset_action_selector();
-        set_action_selector ("");
-      }
-    }
+      set_action_selector(NO_SEL);
   }
   else
   {
-    if (status()->is (IN_MENU))
-      return;
-
-    if (auto target = request<C::String>("Interface:action_choice_target"))
-    {
-      // Gamepad action selector might be active, deactivate too
-      bool garbage_gamepad_selector = false;
-      if (auto p = request<C::Relative_position>(m_action_selector[0] + "_button_back:position"))
-        if (p->absolute_reference() == get<C::Absolute_position>("Inventory:origin"))
-          garbage_gamepad_selector = true;
-
-      // Action selector not up to date
-      bool uptodate = (status()->is (ACTION_CHOICE) && m_action_selector[0] == target->value() + "_move")
-          || (status()->is (INVENTORY_ACTION_CHOICE) && m_action_selector[0] == target->value() + "_use");
-
-      // Action selector not up to date
-      if (garbage_gamepad_selector || !uptodate)
-      {
-        if (m_action_selector[0] != "")
-          reset_action_selector();
-        set_action_selector(target->value());
-      }
-    }
+    if (status()->is(ACTION_CHOICE))
+      set_action_selector(ACTION_SEL, value<C::String>("Interface:action_choice_target"));
+    else if (status()->is(INVENTORY_ACTION_CHOICE))
+      set_action_selector(INV_ACTION_SEL, value<C::String>("Interface:action_choice_target"));
     else
-      if (m_action_selector[0] != "")
-        reset_action_selector();
+      set_action_selector(NO_SEL);
 
     if (m_action_selector[0] != "")
     {

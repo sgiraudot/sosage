@@ -46,7 +46,12 @@ class Interface : public Base
   std::vector<std::string> m_active_objects;
   std::array<std::string, 4> m_action_selector;
 
+  enum Selector_type { NO_SEL, GP_IDLE, OKNOTOK, OKCONTINUE, ACTION_SEL, INV_ACTION_SEL, GP_INV_ACTION_SEL };
   enum Animation_style { NONE, DEPLOY, FADE, FADE_LABEL_ONLY, ZOOM };
+
+  Selector_type m_selector_type;
+  std::string m_selector_id;
+
 
 public:
 
@@ -81,7 +86,7 @@ private:
   void delete_label (const std::string& id);
   void fade_action_selector (const std::string& id, bool fade_in);
   void highlight_object (const std::string& id, unsigned char highlight);
-  void set_action_selector (const std::string& id);
+  void set_action_selector (const Selector_type& type, const std::string& id = "");
   void reset_action_selector ();
   void generate_action (const std::string& id, const std::string& action,
                         const Button_orientation& orientation, const std::string& button,

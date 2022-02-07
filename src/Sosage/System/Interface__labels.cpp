@@ -428,7 +428,10 @@ void Interface::delete_label (const std::string& id)
 {
   auto group = request<C::Group>(id + ":group");
   if (!group)
+  {
+    debug << "Can' delete " << id << std::endl;
     return;
+  }
   debug << "Delete label " << id << std::endl;
 
   remove(id + ":global_position", true);
@@ -477,129 +480,107 @@ void Interface::highlight_object (const std::string& id, unsigned char highlight
     img->set_highlight (highlight);
 }
 
-void Interface::set_action_selector (const std::string& id)
+void Interface::set_action_selector (const Selector_type& type, const std::string& id)
 {
-  SOSAGE_TIMER_START(Interface__set_action_selector);
-  debug << "Set action selector to " << id << std::endl;
-  const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
-  if (mode == GAMEPAD)
+  // Already up to date, do nothing
+  if (m_selector_type == type && m_selector_id == id)
+    return;
+
+  debug << "Set " << type << " action selector to " << id << std::endl;
+
+  reset_action_selector();
+
+  m_selector_type = type;
+  m_selector_id = id;
+
+  const Gamepad_type& gamepad = value<C::Simple<Gamepad_type>>("Gamepad:type");
+  auto gamepad_pos = get<C::Position>("Gamepad_action_selector:position");
+  if (type == GP_IDLE)
   {
-    std::string take_id = id;
-    std::string look_id = id;
-    std::string move_id = id;
-    std::string inventory_id = (id == "" ? "Default" : id);
-    std::string take_action = "take";
-    std::string look_action = "look";
-    std::string move_action = "move";
-    std::string inventory_action = "inventory";
-    if (auto right = request<C::Boolean>(id + "_goto:right"))
-    {
-      take_id = "";
-      move_id = "";
-      inventory_id = "Default";
-      look_action = "goto";
-    }
-
-    if (status()->is (IN_INVENTORY))
-    {
-      take_action = "combine";
-      move_action = "use";
-      inventory_action = "Cancel";
-      if (get<C::Inventory>("Game:inventory")->size() == 1)
-        take_id = "";
-    }
-    else if (status()->is (OBJECT_CHOICE))
-    {
-      take_id = "";
-      move_id = "";
-      look_action = "Ok";
-      inventory_action = "Cancel";
-    }
-    else if (status()->is (IN_CODE, IN_WINDOW))
-    {
-      look_id = "code";
-      take_id = "";
-      move_id = "";
-      look_action = "Ok";
-      inventory_action = "Cancel";
-    }
-    else if (status()->is (IN_MENU))
-    {
-      look_id = "menu";
-      take_id = "";
-      move_id = "";
-      look_action = "Ok";
-      inventory_action = "Continue";
-    }
-
-    const Gamepad_type& gamepad = value<C::Simple<Gamepad_type>>("Gamepad:type");
-    auto pos = get<C::Position>("Gamepad_action_selector:position");
-    generate_action (take_id, take_action, LEFT_BUTTON, gamepad_label(gamepad, WEST), pos, FADE_LABEL_ONLY);
-    generate_action (look_id, look_action, RIGHT_BUTTON, gamepad_label(gamepad, EAST), pos, FADE_LABEL_ONLY);
-    generate_action (move_id, move_action, UP, gamepad_label(gamepad, NORTH), pos, FADE_LABEL_ONLY);
-    generate_action (inventory_id, inventory_action, DOWN, gamepad_label(gamepad, SOUTH), pos, FADE_LABEL_ONLY);
+    generate_action ("", "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action (id, (id == "" ? "look" : "Action"), RIGHT_BUTTON,
+                     gamepad_label(gamepad, EAST), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("", "move", UP, gamepad_label(gamepad, NORTH), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("Default", "inventory", DOWN, gamepad_label(gamepad, SOUTH), gamepad_pos, FADE_LABEL_ONLY);
   }
-  else
+  else if (type == OKNOTOK)
   {
-    if (status()->is (INVENTORY_ACTION_CHOICE))
+    generate_action ("", "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("oknotok", "Ok", RIGHT_BUTTON, gamepad_label(gamepad, EAST), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("", "move", UP, gamepad_label(gamepad, NORTH), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("oknotok", "Cancel", DOWN, gamepad_label(gamepad, SOUTH), gamepad_pos, FADE_LABEL_ONLY);
+  }
+  else if (type == OKCONTINUE)
+  {
+    generate_action ("", "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("okcontinue", "Ok", RIGHT_BUTTON, gamepad_label(gamepad, EAST), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("", "move", UP, gamepad_label(gamepad, NORTH), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("okcontinue", "Continue", DOWN, gamepad_label(gamepad, SOUTH), gamepad_pos, FADE_LABEL_ONLY);
+  }
+  else if (type == ACTION_SEL)
+  {
+    auto position = set<C::Absolute_position>("Action_selector:position",
+                                              value<C::Position>(CURSOR__POSITION));
+
+
+    generate_action (id, "take", LEFT_BUTTON, "", position, DEPLOY);
+    if (value<C::Position>(id + "_take_label_back:position").x()
+        - 0.5 * get<C::Image>(id + "_take_label_back:image")->width()
+        < Config::label_height)
     {
-      Point object_pos = value<C::Position>(id + ":position");
-      auto position = set<C::Absolute_position>
-                      ("Action_selector:position",
-                       Point (object_pos.x(),
-                              value<C::Position>("Inventory:origin").y() - 0.75 * Config::label_height));
-
-      generate_action (id, "combine", LEFT_BUTTON, "", position, DEPLOY);
-      double diff = value<C::Position>(id + "_combine_label_back:position").x()
-                    - 0.5 * get<C::Image>(id + "_combine_label_back:image")->width()
-                    - (value<C::Position>("Chamfer:position").x() + Config::label_height);
-      if (diff < 0)
-      {
-        position->set(Point (position->value().x() - diff, position->value().y()));
-        generate_action (id, "combine", LEFT_BUTTON, "", position, DEPLOY);
-      }
-
-      generate_action (id, "use", UP, "", position, DEPLOY);
-      generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
+      generate_action (id, "move", UPPER, "", position, DEPLOY);
+      generate_action (id, "take", UP_RIGHT, "", position, DEPLOY);
+      generate_action (id, "look", DOWN_RIGHT, "", position, DEPLOY);
+      generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
     }
     else
     {
-      auto position = set<C::Absolute_position>("Action_selector:position",
-                                                value<C::Position>(CURSOR__POSITION));
-
-
-      generate_action (id, "take", LEFT_BUTTON, "", position, DEPLOY);
-      if (value<C::Position>(id + "_take_label_back:position").x()
-          - 0.5 * get<C::Image>(id + "_take_label_back:image")->width()
-          < Config::label_height)
+      generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
+      if (value<C::Position>(id + "_look_label_back:position").x()
+          + 0.5 * get<C::Image>(id + "_look_label_back:image")->width()
+          > Config::world_width - Config::label_height)
       {
         generate_action (id, "move", UPPER, "", position, DEPLOY);
-        generate_action (id, "take", UP_RIGHT, "", position, DEPLOY);
-        generate_action (id, "look", DOWN_RIGHT, "", position, DEPLOY);
+        generate_action (id, "take", UP_LEFT, "", position, DEPLOY);
+        generate_action (id, "look", DOWN_LEFT, "", position, DEPLOY);
         generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
+
       }
       else
       {
-        generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
-        if (value<C::Position>(id + "_look_label_back:position").x()
-            + 0.5 * get<C::Image>(id + "_look_label_back:image")->width()
-            > Config::world_width - Config::label_height)
-        {
-          generate_action (id, "move", UPPER, "", position, DEPLOY);
-          generate_action (id, "take", UP_LEFT, "", position, DEPLOY);
-          generate_action (id, "look", DOWN_LEFT, "", position, DEPLOY);
-          generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
-
-        }
-        else
-        {
-          generate_action (id, "move", UP, "", position, DEPLOY);
-          generate_action (id, "inventory", DOWN, "", position, DEPLOY);
-        }
+        generate_action (id, "move", UP, "", position, DEPLOY);
+        generate_action (id, "inventory", DOWN, "", position, DEPLOY);
       }
     }
   }
-  SOSAGE_TIMER_STOP(Interface__set_action_selector);
+  else if (type == INV_ACTION_SEL)
+  {
+    Point object_pos = value<C::Position>(id + ":position");
+    auto position = set<C::Absolute_position>
+                    ("Action_selector:position",
+                     Point (object_pos.x(),
+                            value<C::Position>("Inventory:origin").y() - 0.75 * Config::label_height));
+
+    generate_action (id, "combine", LEFT_BUTTON, "", position, DEPLOY);
+    double diff = value<C::Position>(id + "_combine_label_back:position").x()
+                  - 0.5 * get<C::Image>(id + "_combine_label_back:image")->width()
+                  - (value<C::Position>("Chamfer:position").x() + Config::label_height);
+    if (diff < 0)
+    {
+      position->set(Point (position->value().x() - diff, position->value().y()));
+      generate_action (id, "combine", LEFT_BUTTON, "", position, DEPLOY);
+    }
+
+    generate_action (id, "use", UP, "", position, DEPLOY);
+    generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
+  }
+  else if (type == GP_INV_ACTION_SEL)
+  {
+    generate_action (id, "combine", LEFT_BUTTON, gamepad_label(gamepad, WEST), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action (id, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action (id, "use", UP, gamepad_label(gamepad, NORTH), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action (id, "Cancel", DOWN, gamepad_label(gamepad, SOUTH), gamepad_pos, FADE_LABEL_ONLY);
+  }
 }
 
 void Interface::reset_action_selector()
