@@ -49,6 +49,6 @@ inline std::shared_ptr<T> cast (Handle h)
 }
 
 
-}
+} // namespace Sosage::Component
 
 #endif // SOSAGE_COMPONENT_CAST_H

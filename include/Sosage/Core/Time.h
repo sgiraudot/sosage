@@ -59,6 +59,6 @@ public:
   }
 };
 #endif
-}
+} // namespace Sosage::Core
 
 #endif

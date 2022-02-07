@@ -51,7 +51,7 @@ constexpr int settings_menu_in_margin = 20;
 constexpr int settings_menu_value_margin = 65;
 constexpr int settings_menu_larrow_x = settings_menu_margin + 370;
 constexpr int settings_menu_rarrow_x = settings_menu_margin + 420;
-}
+} // namespace Sosage::Config
 
 namespace Sosage::System
 {
@@ -937,4 +937,4 @@ void Interface::update_phone_menu()
   make_oknotok_item ((*phone_menu)[idx], true);
 }
 
-}
+} // namespace Sosage::Config

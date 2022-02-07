@@ -32,7 +32,6 @@
 namespace Sosage::Core
 {
 using Graphic = Third_party::SDL;
-}
+} // namespace Sosage::Core
 
 #endif
-

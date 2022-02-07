@@ -32,7 +32,6 @@
 namespace Sosage::Core
 {
 using File_IO = Third_party::Yaml;
-}
+} // namespace Sosage::Core
 
 #endif
-

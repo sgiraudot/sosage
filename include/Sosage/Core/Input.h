@@ -32,7 +32,7 @@
 namespace Sosage::Core
 {
 using Input = Third_party::SDL_events;
-}
+} // namespace Sosage::Core
+
 
 #endif
-

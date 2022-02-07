@@ -35,7 +35,7 @@
 namespace Sosage::Core
 {
 using Sound = Third_party::SDL_mixer;
-}
+} // namespace Sosage::Core
 
 #else
 
@@ -69,10 +69,9 @@ public:
 };
 
 using Sound = No_sound;
-  
-}
+
+} // namespace Sosage::Core
 
 #endif
 
 #endif
-

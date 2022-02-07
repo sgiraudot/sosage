@@ -44,12 +44,12 @@ public:
   using Resource_handle = std::shared_ptr<Resource>;
   using Data = std::unordered_map<std::string, Resource_handle>;
   using iterator = typename Data::iterator;
-  
+
 private:
 
   Data m_data;
   std::function<void(Resource*)> m_deleter;
-  
+
 public:
 
   Resource_manager(const std::function<void(Resource*)>& deleter
@@ -90,6 +90,6 @@ public:
   }
 };
 
-} // namespace Sosage::Component
+} // namespace Sosage
 
 #endif // SOSAGE_UTILS_RESOURCE_MANAGER_H
