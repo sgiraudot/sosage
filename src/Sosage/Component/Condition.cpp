@@ -45,6 +45,7 @@ Boolean::Boolean (const std::string& id, const bool& value)
 void Boolean::set (const bool& value)
 {
   m_value = value;
+  mark_as_altered();
 }
 
 void Boolean::toggle()

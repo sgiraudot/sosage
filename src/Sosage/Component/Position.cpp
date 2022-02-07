@@ -52,6 +52,7 @@ Point Absolute_position::value () const
 void Absolute_position::set (const Point& p)
 {
   m_pos = p;
+  mark_as_altered();
 }
 
 bool Absolute_position::is_interface() const
@@ -84,6 +85,7 @@ Point Relative_position::value() const
 void Relative_position::set (const Point& p)
 {
   m_diff = Sosage::Vector(m_factor * m_ref->value(), p);
+  mark_as_altered();
 }
 
 void Relative_position::set (const Sosage::Vector& v)

@@ -402,7 +402,7 @@ bool Logic::function_play (const std::vector<std::string>& args)
   check (args.size() == 2 || args.size() == 1, "function_play takes 1 or 2 arguments");
   std::string target = args[0];
 
-  if (request<C::Handle>(target + ":sound"))
+  if (request<C::Base>(target + ":sound"))
   {
     emit (target + ":play_sound");
     return true;
@@ -482,6 +482,29 @@ bool Logic::function_rescale (const std::vector<std::string>& args)
   }
   else
     get<C::Image>(target + ":image")->set_scale(scale);
+  return true;
+}
+
+/*
+  - rescale60fps: [ID target_id, FLOAT scale, FLOAT duration] -> rescales smoothly target to the wanted scale with the wanted duration
+ */
+bool Logic::function_rescale60fps (const std::vector<std::string>& args)
+{
+  check (args.size() == 3, "function_rescale takes 2 or 3 arguments");
+  std::string target = args[0];
+  double scale = to_double(args[1]);
+  double duration = to_double(args[2]);
+  double begin_time = m_current_time;
+  double end_time = begin_time + duration;
+
+  m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+
+  auto img = get<C::Image>(target + ":image");
+
+  auto anim = set<C::Tuple<double, double, double, double>>
+      (target + ":rescale60fps", img->scale(), scale, begin_time, end_time);
+  m_current_action->schedule (end_time,  anim);
+
   return true;
 }
 
@@ -643,11 +666,14 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 
   int x = position.X();
 
+  double y_diff = value<C::Int>(id + ":dialog_height", 770);
   auto img = request<C::Image>(id + "_body:image");
   if (!img)
     img = get<C::Image>(value<C::String>("Player:name") + "_body:image");
 
-  int y = position.Y() - value<C::Double>(CAMERA__ZOOM) * img->height() * img->scale() * 1.5;
+  y_diff *= img->scale() * value<C::Double>(CAMERA__ZOOM);
+
+  int y = position.Y() - y_diff;
   double size_factor = 0.75 * (value<C::Int>("Dialog:size") / double(Config::MEDIUM));
 
   int height = 80 * size_factor * dialog.size();
@@ -754,7 +780,8 @@ bool Logic::function_wait (const std::vector<std::string>& args)
     const std::string& id = args[0];
     double time = value<C::Double>(id + ":init_value") + to_double(args[1]);
 //    debug << "Schedule wait until " << time << std::endl;
-    m_current_action-> schedule (time, C::make_handle<C::Base>("wait"));
+    m_current_action->reset_scheduled();
+    m_current_action->schedule (time, C::make_handle<C::Base>("wait"));
   }
   return false;
 }

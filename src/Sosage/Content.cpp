@@ -40,6 +40,7 @@ Content::Content()
   auto reserved_components
       = { "action",
           "animation",
+          "group",
           "image",
           "label",
           "lookat",
@@ -49,6 +50,7 @@ Content::Content()
           "play_sound",
           "position",
           "rescale",
+          "rescale60fps",
           "set_visible",
           "set_hidden",
           "start_animation",

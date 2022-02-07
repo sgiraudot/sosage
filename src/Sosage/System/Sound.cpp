@@ -47,10 +47,15 @@ void Sound::run()
   start_timer();
   auto music = request<C::Music>("Game:music");
 
+  double volume = value<C::Int>("Music:volume") / 10.;
+  // Low level when playing, higher on cutscenes
+  if (!status()->is(CUTSCENE))
+    volume *= 0.25;
+
   if (receive("Music:start"))
   {
     check (music, "No music to start");
-    m_core.start_music (music->core(), value<C::Int>("Music:volume") / 10.);
+    m_core.start_music (music->core(), volume);
     music->on() = true;
   }
 
@@ -63,7 +68,7 @@ void Sound::run()
   }
 
   if (receive("Music:volume_changed"))
-    m_core.set_volume (value<C::Int>("Music:volume") / 10.);
+    m_core.set_volume (volume);
 
   if (receive("Music:stop"))
     m_core.stop_music();
@@ -77,7 +82,7 @@ void Sound::run()
       if (status()->was (CUTSCENE))
         m_core.pause_music (music->core());
       else
-        m_core.set_volume(0.15 * value<C::Int>("Music:volume") / 10.);
+        m_core.set_volume(0.15 * volume);
       music->on() = false;
     }
     else if (!paused && !music->on())
@@ -85,7 +90,7 @@ void Sound::run()
       if (status()->is (CUTSCENE))
         m_core.resume_music(music->core());
       else
-        m_core.set_volume (value<C::Int>("Music:volume") / 10.);
+        m_core.set_volume (volume);
       music->on() = true;
     }
   }

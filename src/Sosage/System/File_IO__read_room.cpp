@@ -592,6 +592,7 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
       if (state_handle->value() == "")
       {
         state_handle->set(state);
+        state_handle->mark_as_unaltered();
         std::cerr << "Set state " << state << " to " << id << std::endl;
       }
       conditional_handle = set<C::String_conditional>(id + ":image", state_handle);
@@ -870,6 +871,7 @@ void File_IO::read_sound (const std::string& id, const Core::File_IO::Node& node
 
   std::string sound = node["sound"].string("sounds", "effects", "ogg");
   set<C::Sound>(id + ":sound", sound);
+  debug << "SOUND = " << id + ":sound" << std::endl;
 }
 
 void File_IO::read_text (const std::string& id, const Core::File_IO::Node& node)

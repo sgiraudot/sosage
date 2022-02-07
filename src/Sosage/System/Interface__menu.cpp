@@ -657,7 +657,7 @@ void Interface::menu_clicked ()
 
   emit("Click:play_sound");
 
-  if (effect->value() == "Quit")
+  if (effect->value() == "Save_and_quit")
   {
     emit ("Game:save");
     emit ("Game:exit");
@@ -723,6 +723,10 @@ void Interface::menu_clicked ()
     delete_menu(menu);
     status()->pop();
     set<C::Variable>("Character:triggered_action", action);
+  }
+  else
+  {
+    check(false, "Unknown menu effect: " + effect->value());
   }
 }
 

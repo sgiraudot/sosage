@@ -45,6 +45,7 @@
 #include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/conversions.h>
+#include <Sosage/Utils/helpers.h>
 #include <Sosage/Utils/locale.h>
 #include <Sosage/Utils/profiling.h>
 
@@ -225,6 +226,14 @@ bool File_IO::read_savefile()
   set<C::String>("Game:new_room", input["room"].string());
   set<C::String>("Game:new_room_origin", "Saved_game");
 
+  std::string player = input["player"].string();
+  set<C::String>("Player:name", player);
+  if (input.has("follower"))
+  {
+    std::string follower = input["follower"].string();
+    set<C::String>("Follower:name", follower);
+  }
+
   auto visited = get<C::Set<std::string> >("Game:visited_rooms");
   for (std::size_t i = 0; i < input["visited_rooms"].size(); ++ i)
     visited->insert(input["visited_rooms"][i].string());
@@ -239,31 +248,36 @@ bool File_IO::read_savefile()
   action->add ("play", { input["music"].string() });
   action->add ("fadein", { "0.5" });
 
+  for (std::size_t i = 0; i < input["characters"].size(); ++ i)
+  {
+    const Core::File_IO::Node& ichar = input["characters"][i];
+    set<C::Boolean>(ichar["id"].string() + ":looking_right", ichar["value"].boolean());
+  }
+
   for (std::size_t i = 0; i < input["states"].size(); ++ i)
   {
     const Core::File_IO::Node& istate = input["states"][i];
-    set<C::String>(istate["id"].string() + ":state", istate["value"].string());
+    auto state = set<C::String>(istate["id"].string() + ":state", istate["value"].string());
+    state->mark_as_altered();
   }
 
   for (std::size_t i = 0; i < input["positions"].size(); ++ i)
   {
     const Core::File_IO::Node& iposition = input["positions"][i];
     Point point (iposition["value"][0].floating(), iposition["value"][1].floating());
-    set<C::Absolute_position>(iposition["id"].string() + ":position", point);
+    auto pos = set<C::Absolute_position>(iposition["id"].string() + ":position", point, false);
+    pos->mark_as_altered();
   }
 
   for (std::size_t i = 0; i < input["integers"].size(); ++ i)
   {
     const Core::File_IO::Node& iint = input["integers"][i];
-    set<C::Int>(iint["id"].string() + ":value", iint["value"].integer());
+    auto integer = set<C::Int>(iint["id"].string() + ":value", iint["value"].integer());
+    integer->mark_as_altered();
   }
 
-  for (std::size_t i = 0; i < input["visibility"].size(); ++ i)
-  {
-    const Core::File_IO::Node& ivisibility = input["visibility"][i];
-    set<C::Boolean>(ivisibility["id"].string() + ":visible",
-                    ivisibility["value"].boolean());
-  }
+  for (std::size_t i = 0; i < input["hidden"].size(); ++ i)
+    action->add ("hide", { input["hidden"][i].string() });
 
   for (std::size_t i = 0; i < input["active_animations"].size(); ++ i)
   {
@@ -285,6 +299,9 @@ void File_IO::write_savefile()
   Core::File_IO output ("save.yaml", true, true);
 
   output.write("room", value<C::String>("Game:current_room"));
+  output.write("player", value<C::String>("Player:name"));
+  if (auto follower = request<C::String>("Follower:name"))
+    output.write("follower", value<C::String>("Follower:name"));
   output.write("camera", value<C::Absolute_position>(CAMERA__POSITION).x());
   output.write("inventory", get<C::Inventory>("Game:inventory")->data());
   output.write("music", get<C::Music>("Game:music")->entity());
@@ -300,16 +317,23 @@ void File_IO::write_savefile()
     output.write_list_item (room_name);
   output.end_section();
 
+  output.start_section("characters");
+  for (C::Handle c : components("group"))
+    if (!c->is_system())
+      if (auto lr = request<C::Animation>(c->entity() + "_head:image"))
+        output.write_list_item ("id", c->entity(), "value", is_looking_right(c->entity()));
+  output.end_section();
+
   output.start_section("states");
   for (C::Handle c : components("state"))
-    if (!c->is_system())
+    if (!c->is_system() && c->was_altered())
       if (auto s = C::cast<C::String>(c))
         output.write_list_item ("id", c->entity(), "value", s->value());
   output.end_section();
 
   output.start_section("positions");
   for (C::Handle c : components("position"))
-    if (c->entity() != "Cursor" && c->entity() != "Loading_spin")
+    if (!c->is_system() && c->was_altered())
       if (auto pos = C::cast<C::Position>(c))
         output.write_list_item ("id", c->entity(), "value",
                                 { pos->value().x(), pos->value().y() });
@@ -318,16 +342,17 @@ void File_IO::write_savefile()
 
   output.start_section("integers");
   for (C::Handle c : components("value"))
-    if (!c->is_system())
+    if (!c->is_system() && c->was_altered())
       if (auto i = C::cast<C::Int>(c))
         output.write_list_item ("id", c->entity(), "value", i->value());
   output.end_section();
 
-  output.start_section("visibility");
-  for (C::Handle c : components("visible"))
+  output.start_section("hidden");
+  for (C::Handle c : components("group"))
     if (!c->is_system())
-      if (auto b = C::cast<C::Boolean>(c))
-        output.write_list_item ("id", b->entity(), "value", b->value());
+      if (auto lr = request<C::Animation>(c->entity() + "_body:image"))
+        if (!lr->on())
+          output.write_list_item (c->entity());
   output.end_section();
 
   output.start_section("active_animations");

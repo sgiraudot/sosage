@@ -144,6 +144,20 @@ void Animation::run_gui_frame()
 
       get<C::Position>(a->entity() + ":position")->set (current);
     }
+
+  for (auto c : components("rescale60fps"))
+    if (auto a = C::cast<C::Tuple<double, double, double, double>>(c))
+    {
+      double ftime = current_time;
+      double ratio = (ftime - a->get<2>()) / (a->get<3>() - a->get<2>());
+
+      double scale = ratio * a->get<1>() + (1 - ratio) * a->get<0>();
+      if (ratio > 1)
+        scale = a->get<1>();
+
+      get<C::Image>(a->entity() + ":image")->set_scale (scale);
+    }
+
 }
 
 void Animation::run_animation_frame()

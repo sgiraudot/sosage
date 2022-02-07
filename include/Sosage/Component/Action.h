@@ -79,6 +79,7 @@ public:
   std::vector<Step>::const_iterator end() const;
   const std::set<Timed_handle>& scheduled() const;
   void schedule (double time, Handle h);
+  void reset_scheduled ();
   void update_scheduled (const std::function<bool(Timed_handle)>& predicate);
   bool ready() const;
   const Step& next_step();

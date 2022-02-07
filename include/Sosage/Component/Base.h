@@ -38,11 +38,15 @@ class Base
   std::string m_id; // entity:component
   std::string m_entity;
   std::string m_component;
-  
+  bool m_altered;
+
 public:
   Base (const std::string& id);
   virtual ~Base();
   bool is_system() const;
+  void mark_as_altered();
+  void mark_as_unaltered();
+  bool was_altered() const;
   const std::string& id() const;
   const std::string& entity() const;
   std::string character_entity() const;

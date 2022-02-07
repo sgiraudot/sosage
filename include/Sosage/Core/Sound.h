@@ -27,6 +27,8 @@
 #ifndef SOSAGE_CORE_SOUND_H
 #define SOSAGE_CORE_SOUND_H
 
+#include <Sosage/Config/platform.h>
+
 #ifdef SOSAGE_LINKED_WITH_SDL_MIXER
 
 #include <Sosage/Third_party/SDL_mixer.h>
@@ -40,13 +42,33 @@ using Sound = Third_party::SDL_mixer;
 namespace Sosage::Core
 {
 
-class Sound
+class No_sound
 {
 public:
 
-  Sound() { }
-  ~Sound() { }
+  using Sound = int;
+  using Music = int;
+
+  No_sound() { }
+  ~No_sound() { }
+
+  static Music load_music (const std::string& file_name) { return 0; }
+  static Sound load_sound (const std::string& file_name) { return 0; }
+
+  static void delete_music (const Music& music) { }
+  static void delete_sound (const Sound& sound) { }
+
+  void start_music (const Music& music, double percentage) {}
+  void stop_music() {}
+  void fade (const Music& music, double time, bool in) {}
+  void set_volume (double percentage) {}
+  void pause_music (const Music& music) {}
+  void resume_music (const Music& music) {}
+  void play_sound (const Sound& sound, double percentage) {}
+
 };
+
+using Sound = No_sound;
   
 }
 

@@ -27,6 +27,8 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_MIXER_H
 #define SOSAGE_THIRD_PARTY_SDL_MIXER_H
 
+#include <Sosage/Config/platform.h>
+
 #ifdef SOSAGE_LINKED_WITH_SDL_MIXER
 
 #include <SDL_mixer.h>

@@ -55,7 +55,11 @@ public:
     : Base(id), m_value(value) { }
   virtual ~Simple() { }
   virtual const T& value() const { return m_value; }
-  void set (const T& value) { m_value = value; }
+  void set (const T& value)
+  {
+    m_value = value;
+    mark_as_altered();
+  }
 };
 
 template <typename T>

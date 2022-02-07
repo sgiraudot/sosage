@@ -30,7 +30,7 @@
 namespace Sosage::Component
 {
 
-Base::Base(const std::string& id) : m_id (id)
+Base::Base(const std::string& id) : m_id (id), m_altered(false)
 {
   std::size_t pos = m_id.find_first_of(':');
   if (pos == std::string::npos)
@@ -46,6 +46,21 @@ Base::~Base() { }
 bool Base::is_system() const
 {
   return isupper(m_id[0]);
+}
+
+void Base::mark_as_altered()
+{
+  m_altered = true;
+}
+
+void Base::mark_as_unaltered()
+{
+  m_altered = false;
+}
+
+bool Base::was_altered() const
+{
+  return m_altered;
 }
 
 const std::string& Base::id() const

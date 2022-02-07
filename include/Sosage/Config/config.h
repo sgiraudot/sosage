@@ -79,7 +79,7 @@ constexpr double button_click_duration = 0.1;
 constexpr double stick_max = 32767.5;
 constexpr int no_value = std::numeric_limits<int>::max();
 
-constexpr int max_music_volume = 128;
+constexpr int max_music_volume = 100;
 
 constexpr auto possible_actions = { "look", "move", "take", "inventory", "use", "combine", "goto" };
 

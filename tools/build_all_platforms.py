@@ -8,6 +8,7 @@ raw_data_folder = "/home/gee/art/superflu_riteurnz"
 data_folder = "/home/gee/art/superflu_riteurnz/release"
 linuxdeploy = "/home/gee/download/linuxdeploy-x86_64.AppImage"
 windows_sdl_folder = "/home/gee/local/i686-w64-mingw32/include/SDL2"
+mac_sdl_folder = "/home/gee/local/osxcross/macports/pkgs/opt/local/include/SDL2"
 
 sdl2_source_path = "/home/gee/local/sources/SDL2-2.0.12"
 sdl2_image_source_path = "/home/gee/local/sources/SDL2_image-2.0.5"
@@ -16,19 +17,33 @@ sdl2_ttf_source_path = "/home/gee/local/sources/SDL2_ttf-2.0.15"
 libyaml_source_path = "/home/gee/local/sources/libyaml-master"
 lz4_source_path = "/home/gee/local/sources/lz4"
 
-gamename = "superflu-riteurnz"
+gamename = "superfluous-returnz"
 version = "v1.1.0-modern-ui"
 
 data_dir = "TMP_data"
 linux_buildir = "TMP_build_linux"
 appimg_buildir = "TMP_build_appimg"
+android_buildir = "TMP_build_android"
+mac_buildir = "TMP_build_mac"
 windows_buildir = "TMP_build_windows"
 emscripten_buildir = "TMP_build_emscripten"
 output_dir = "distrib-" + version
 appname = gamename + "-" + version
 
-verbose = (len(sys.argv) == 2 and sys.argv[1] == "-v")
-simulate = (len(sys.argv) == 2 and sys.argv[1] == "-s")
+packages_to_do = set()
+verbose = False
+simulate = False
+
+for arg in sys.argv[1:]:
+    if arg == '-v':
+        verbose = True
+    elif arg == '-s':
+        simulate = True
+    else:
+        packages_to_do.add(arg)
+
+def todo(key):
+    return len(packages_to_do) == 0 or key in packages_to_do
 
 def run_cmd(cmd):
     if simulate:
@@ -54,7 +69,16 @@ def chdir(folder):
         print("cd " + folder)
     else:
         os.chdir(folder)
-    
+
+def folder_size(folder):
+    size = 0
+    for path, dirs, files in os.walk(folder):
+        for f in files:
+            fp = os.path.join(path, f)
+            size += os.lstat(fp).st_size
+    print("SIZE = " + str(size))
+    return size // (1024 * 1024)
+
 all_begin = time.perf_counter()
 
 print("### CLEANING")
@@ -83,96 +107,141 @@ run_cmd("rm -rf " + linux_buildir)
 end = time.perf_counter()
 print("  -> done in " + str(int(end - begin)) + "s\n")
 
-print("### BUILDING DATA ZIP")
-begin = time.perf_counter()
-run_cmd("rm -rf " + data_dir)
-run_cmd("mkdir " + data_dir)
-chdir(data_dir)
-copy_data_dir = appname + "-data"
-run_cmd("cp -r " + data_folder + " " + copy_data_dir)
-run_cmd("zip -r ../" + output_dir + "/" + appname + "-data.zip " + copy_data_dir)
-chdir("..")
-run_cmd("rm -rf " + data_dir)
-end = time.perf_counter()
-print("  -> done in " + str(int(end - begin)) + "s\n")
+if todo("Data"):
+    print("### BUILDING DATA ZIP")
+    begin = time.perf_counter()
+    run_cmd("rm -rf " + data_dir)
+    run_cmd("mkdir " + data_dir)
+    chdir(data_dir)
+    copy_data_dir = appname + "-data"
+    run_cmd("cp -r " + data_folder + " " + copy_data_dir)
+    run_cmd("zip -r ../" + output_dir + "/" + appname + "-data.zip " + copy_data_dir)
+    chdir("..")
+    run_cmd("rm -rf " + data_dir)
+    end = time.perf_counter()
+    print("  -> done in " + str(int(end - begin)) + "s\n")
 
-print("### BUILDING LINUX DEB/RPM")
-begin = time.perf_counter()
-run_cmd("rm -rf " + linux_buildir)
-run_cmd("mkdir " + linux_buildir)
-chdir(linux_buildir)
-run_cmd("cmake -DCMAKE_BUILD_TYPE=Release -DSOSAGE_CONFIG_ANDROID:BOOL=True -DSOSAGE_DATA_FOLDER=" + data_folder
-        + " -DSDL2_SOURCE_PATH:PATH=" + sdl2_source_path
-        + " -DSDL2_IMAGE_SOURCE_PATH:PATH=" + sdl2_image_source_path
-        + " -DSDL2_MIXER_SOURCE_PATH:PATH=" + sdl2_mixer_source_path
-        + " -DSDL2_TTF_SOURCE_PATH:PATH=" + sdl2_ttf_source_path
-        + " -DYAML_SOURCE_PATH:PATH=" + libyaml_source_path
-        + " -DLZ4_SOURCE_PATH:PATH=" + lz4_source_path + " ..")
-run_cmd("make -j 6")
-run_cmd("cpack")
-run_cmd("cp *.deb ../" + output_dir + "/" + appname + "-gnunux.deb")
-run_cmd("cp *.rpm ../" + output_dir + "/" + appname + "-gnunux.rpm")
-chdir("..")
-end = time.perf_counter()
-print("  -> done in " + str(int(end - begin)) + "s\n")
+if todo("Linux"):
+    print("### BUILDING LINUX DEB/RPM")
+    begin = time.perf_counter()
+    run_cmd("rm -rf " + linux_buildir)
+    run_cmd("mkdir " + linux_buildir)
+    chdir(linux_buildir)
+    run_cmd("cmake -DCMAKE_BUILD_TYPE=Release -DSOSAGE_DATA_FOLDER=" + data_folder + " ..")
+    run_cmd("make -j 6")
+    run_cmd("cpack")
+    run_cmd("cp *.deb ../" + output_dir + "/" + appname + "-gnunux.deb")
+    run_cmd("cp *.rpm ../" + output_dir + "/" + appname + "-gnunux.rpm")
+    chdir("..")
+    run_cmd("rm -rf " + linux_buildir)
+    end = time.perf_counter()
+    print("  -> done in " + str(int(end - begin)) + "s\n")
 
-print("### BUILDING LINUX APPIMAGE")
-begin = time.perf_counter()
-run_cmd("rm -rf " + appimg_buildir)
-run_cmd("mkdir " + appimg_buildir)
-chdir(appimg_buildir)
-run_cmd("mkdir appimg")
-chdir("appimg")
-run_cmd("cp ../../platform/appimage/create_appimage.sh .")
-run_cmd("bash create_appimage.sh " + linuxdeploy + " " + data_folder)
-run_cmd("cp *.AppImage ../../" + output_dir + "/" + appname + "-gnunux.AppImage")
-chdir("../..")
-run_cmd("rm -rf " + appimg_buildir)
-end = time.perf_counter()
-print("  -> done in " + str(int(end - begin)) + "s\n")
+if todo("Appimage"):
+    print("### BUILDING LINUX APPIMAGE")
+    begin = time.perf_counter()
+    run_cmd("rm -rf " + appimg_buildir)
+    run_cmd("mkdir " + appimg_buildir)
+    chdir(appimg_buildir)
+    run_cmd("mkdir appimg")
+    chdir("appimg")
+    run_cmd("cp ../../platform/appimage/create_appimage.sh .")
+    run_cmd("bash create_appimage.sh " + linuxdeploy + " " + data_folder)
+    run_cmd("cp *.AppImage ../../" + output_dir + "/" + appname + "-gnunux.AppImage")
+    chdir("../..")
+    run_cmd("rm -rf " + appimg_buildir)
+    end = time.perf_counter()
+    print("  -> done in " + str(int(end - begin)) + "s\n")
 
-print("### BUILDING ANDROID")
-begin = time.perf_counter()
-chdir(linux_buildir + "/android")
-run_cmd("./gradlew assembleDebug --parallel --max-workers=6")
-run_cmd("cp app/build/outputs/apk/debug/app-debug.apk ../../" + output_dir + "/" + appname + "-android.apk")
-chdir("../..")
-run_cmd("rm -rf " + linux_buildir)
-end = time.perf_counter()
-print("  -> done in " + str(int(end - begin)) + "s\n")
+if todo("Android"):
+    print("### BUILDING ANDROID")
+    begin = time.perf_counter()
+    run_cmd("rm -rf " + android_buildir)
+    run_cmd("mkdir " + android_buildir)
+    chdir(android_buildir)
+    run_cmd("cmake -DCMAKE_BUILD_TYPE=Release -DSOSAGE_CONFIG_ANDROID:BOOL=True -DSOSAGE_DATA_FOLDER=" + data_folder
+            + " -DSDL2_SOURCE_PATH:PATH=" + sdl2_source_path
+            + " -DSDL2_IMAGE_SOURCE_PATH:PATH=" + sdl2_image_source_path
+            + " -DSDL2_MIXER_SOURCE_PATH:PATH=" + sdl2_mixer_source_path
+            + " -DSDL2_TTF_SOURCE_PATH:PATH=" + sdl2_ttf_source_path
+            + " -DYAML_SOURCE_PATH:PATH=" + libyaml_source_path
+            + " -DLZ4_SOURCE_PATH:PATH=" + lz4_source_path + " ..")
+    chdir(android_buildir + "/android")
+    run_cmd("./gradlew assembleDebug --parallel --max-workers=6")
+    run_cmd("cp app/build/outputs/apk/debug/app-debug.apk ../../" + output_dir + "/" + appname + "-android.apk")
+    chdir("../..")
+    run_cmd("rm -rf " + android_buildir)
+    end = time.perf_counter()
+    print("  -> done in " + str(int(end - begin)) + "s\n")
 
-print("### BUILDING WINDOWS")
-begin = time.perf_counter()
-run_cmd("rm -rf " + windows_buildir)
-run_cmd("mkdir " + windows_buildir)
-chdir(windows_buildir)
-run_cmd("cmake -DCMAKE_BUILD_TYPE=Release -DSOSAGE_DATA_FOLDER=" + data_folder
-        + " -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-mingw32.cmake "
-        + "-DSDL2_INCLUDE_DIR=" + windows_sdl_folder + " ..")
-run_cmd("make -j 6")
-run_cmd("cpack")
-run_cmd("cp *-win32.exe ../" + output_dir + "/" + appname + "-windows.exe")
-chdir("..")
-run_cmd("rm -rf " + windows_buildir)
-end = time.perf_counter()
-print("  -> done in " + str(int(end - begin)) + "s\n")
+if todo("Windows"):
+    print("### BUILDING WINDOWS")
+    begin = time.perf_counter()
+    run_cmd("rm -rf " + windows_buildir)
+    run_cmd("mkdir " + windows_buildir)
+    chdir(windows_buildir)
+    run_cmd("cmake -DCMAKE_BUILD_TYPE=Release -DSOSAGE_DATA_FOLDER=" + data_folder
+            + " -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-mingw32.cmake "
+            + "-DSDL2_INCLUDE_DIR=" + windows_sdl_folder + " ..")
+    run_cmd("make -j 6")
+    run_cmd("cpack")
+    run_cmd("cp *-win32.exe ../" + output_dir + "/" + appname + "-windows.exe")
+    chdir("..")
+    run_cmd("rm -rf " + windows_buildir)
+    end = time.perf_counter()
+    print("  -> done in " + str(int(end - begin)) + "s\n")
 
-print("### BUILDING EMSCRIPTEN")
-begin = time.perf_counter()
-run_cmd("rm -rf " + emscripten_buildir)
-run_cmd("mkdir " + emscripten_buildir)
-chdir(emscripten_buildir)
-run_cmd("emcmake cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSOSAGE_DATA_FOLDER=" + data_folder
-        + " -DYAML_SOURCE_PATH:PATH=" + libyaml_source_path
-        + " -DLZ4_SOURCE_PATH:PATH=" + lz4_source_path + " ..")
-run_cmd("make -j 6")
-run_cmd("mkdir ../" + output_dir + "/" + appname + "-web/")
-run_cmd("cp -r data ../" + output_dir + "/" + appname + "-web/")
-run_cmd("cp *.data *.js *.wasm ../" + output_dir + "/" + appname + "-web/")
-chdir("..")
-run_cmd("rm -rf " + emscripten_buildir)
-end = time.perf_counter()
-print("  -> done in " + str(int(end - begin)) + "s\n")
+if todo("Mac"):
+    print("### BUILDING MAC")
+    begin = time.perf_counter()
+    run_cmd("rm -rf " + mac_buildir)
+    run_cmd("mkdir " + mac_buildir)
+    chdir(mac_buildir)
+    run_cmd("cmake -DCMAKE_BUILD_TYPE=Release -DSOSAGE_DATA_FOLDER=" + data_folder
+            + " -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-osxcross.cmake"
+            + " -DSDL2_INCLUDE_DIR=" + mac_sdl_folder
+            + " -DCMAKE_INSTALL_PREFIX=./install ..")
+    run_cmd("make -j 6")
+    run_cmd("make install")
+    run_cmd("dd if=/dev/zero of=" + gamename + ".dmg bs=1M count=" + str(16 + folder_size('install/' + gamename)) + " status=progress")
+    run_cmd("mkfs.hfsplus -v " + gamename + ".app " + gamename + ".dmg")
+    run_cmd("mkdir mnt")
+    run_cmd("sudo mount -o loop " + gamename + ".dmg mnt")
+    run_cmd("python3 ../tools/fix_mac_lib_paths.py install/" + gamename + "/Contents/Frameworks/*.dylib")
+    run_cmd("python3 ../tools/fix_mac_lib_paths.py install/" + gamename + "/Contents/MacOS/" + gamename)
+    chdir("install")
+    run_cmd("mv " + gamename + " " + gamename + ".app")
+    run_cmd("sudo cp -a -r " + gamename + ".app ../mnt/")
+    chdir("..")
+    run_cmd("sudo cp -a " + raw_data_folder + "/resources/Info.plist mnt/" + gamename + ".app/Contents/")
+    run_cmd("sudo cp -a " + raw_data_folder + "/resources/icon.icns mnt/" + gamename + ".app/Contents/Resources/")
+#    run_cmd("sudo mkdir mnt/.background/")
+#    run_cmd("sudo cp -a " + raw_data_folder + "/resources/background.png mnt/.background/")
+#    run_cmd("sudo cp -a " + raw_data_folder + "/resources/Applications mnt/")
+    run_cmd("sudo umount mnt")
+    run_cmd("cp " + gamename + ".dmg ../" + output_dir + "/" + appname + "-mac.dmg")
+    chdir("..")
+    run_cmd("rm -rf " + mac_buildir)
+    end = time.perf_counter()
+    print("  -> done in " + str(int(end - begin)) + "s\n")
+
+if todo("Browser"):
+    print("### BUILDING EMSCRIPTEN")
+    begin = time.perf_counter()
+    run_cmd("rm -rf " + emscripten_buildir)
+    run_cmd("mkdir " + emscripten_buildir)
+    chdir(emscripten_buildir)
+    run_cmd("emcmake cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSOSAGE_DATA_FOLDER=" + data_folder
+            + " -DYAML_SOURCE_PATH:PATH=" + libyaml_source_path
+            + " -DLZ4_SOURCE_PATH:PATH=" + lz4_source_path + " ..")
+    run_cmd("make -j 6")
+    run_cmd("mkdir ../" + output_dir + "/" + appname + "-web/")
+    run_cmd("cp -r data ../" + output_dir + "/" + appname + "-web/")
+    run_cmd("cp *.data *.js *.wasm ../" + output_dir + "/" + appname + "-web/")
+    chdir("..")
+    run_cmd("rm -rf " + emscripten_buildir)
+    end = time.perf_counter()
+    print("  -> done in " + str(int(end - begin)) + "s\n")
 
 all_end = time.perf_counter()
 print(" ==> all done in " + str(int(all_end - all_begin)) + "s")

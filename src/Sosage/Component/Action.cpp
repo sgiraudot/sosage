@@ -126,9 +126,12 @@ const std::set<Action::Timed_handle>& Action::scheduled() const
 
 void Action::schedule (double time, Handle h)
 {
-  if (h->id() == "wait") // If we wait for a given time, forget the other timed elements
-    m_timed.clear();
   m_timed.insert (std::make_pair (time, h));
+}
+
+void Action::reset_scheduled()
+{
+  m_timed.clear();
 }
 
 void Action::update_scheduled (const std::function<bool(Timed_handle)>& predicate)

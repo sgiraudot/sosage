@@ -75,8 +75,6 @@ void emscripten_main_loop()
 
 Engine::Engine (int argc, char** argv)
 {
-  SDL_Log("Test Windows\n ");
-
   debug << "Running Sosage " << Sosage::Version::str() << std::endl;
   srand(static_cast<unsigned int>(time(nullptr)));
 
@@ -96,7 +94,10 @@ Engine::~Engine()
 bool Engine::run (const std::string& folder_name)
 {
   if (!Asset_manager::init(folder_name))
+  {
+    debug << "Asset manager could not use " << folder_name << std::endl;
     return false;
+  }
 
   // Init main variables
   auto status = m_content.set_fac<Component::Status>(GAME__STATUS, "Game:status");

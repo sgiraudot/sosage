@@ -35,14 +35,14 @@ if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
   set(LZ4_SOURCE_PATH "" CACHE PATH "Source of the LZ4 library")
   file(GLOB_RECURSE YAML_SRC "${YAML_SOURCE_PATH}/src/*.c")
   file(GLOB_RECURSE LZ4_SRC "${LZ4_SOURCE_PATH}/lib/*.c")
-  
+
   if (EXISTS ${SOSAGE_DATA_FOLDER}/data/general.data)
     file(GLOB_RECURSE SOSAGE_COMPRESSED_DATA "${SOSAGE_DATA_FOLDER}/data/*.data")
     file(COPY ${SOSAGE_COMPRESSED_DATA} DESTINATION "${CMAKE_BINARY_DIR}/data/")
   else()
     file(COPY "${SOSAGE_DATA_FOLDER}/data/" DESTINATION "${CMAKE_BINARY_DIR}/data/")
   endif()
-  
+
   add_executable(${SOSAGE_EXE_NAME} ${SOSAGE_SRC} ${YAML_SRC} ${LZ4_SRC})
   target_compile_options(${SOSAGE_EXE_NAME} PUBLIC -DSOSAGE_DATA_FOLDER="data/")
   target_compile_options(${SOSAGE_EXE_NAME} PUBLIC -DSOSAGE_INSTALL_DATA_FOLDER="data/")
@@ -154,7 +154,6 @@ target_link_libraries(${SOSAGE_EXE_NAME} PUBLIC sosage)
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
   target_compile_options(${SOSAGE_EXE_NAME} PUBLIC -DSOSAGE_INSTALL_DATA_FOLDER="../share/${SOSAGE_EXE_NAME}/")
   install(TARGETS ${SOSAGE_EXE_NAME} DESTINATION bin)
-
   if (EXISTS ${SOSAGE_DATA_FOLDER}/data/general.data)
     file(GLOB_RECURSE SOSAGE_COMPRESSED_DATA "${SOSAGE_DATA_FOLDER}/data/*.data")
     install(FILES ${SOSAGE_COMPRESSED_DATA} DESTINATION share/${SOSAGE_EXE_NAME})
@@ -177,34 +176,47 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Windows)
   install(FILES ${SOSAGE_SYSTEM_DLLS} DESTINATION ".")
   install(FILES ${SOSAGE_LOCAL_DLLS} DESTINATION ".")
   set(CPACK_GENERATOR "NSIS")
+
 elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rpath @executable_path/../Frameworks")
+  target_compile_options(${SOSAGE_EXE_NAME} PUBLIC -DSOSAGE_INSTALL_DATA_FOLDER="data/")
+  install(TARGETS ${SOSAGE_EXE_NAME} DESTINATION "${SOSAGE_EXE_NAME}/Contents/MacOS")
+  if (EXISTS ${SOSAGE_DATA_FOLDER}/data/general.data)
+    file(GLOB_RECURSE SOSAGE_COMPRESSED_DATA "${SOSAGE_DATA_FOLDER}/data/*.data")
+    install(FILES ${SOSAGE_COMPRESSED_DATA} DESTINATION "${SOSAGE_EXE_NAME}/Contents/Resources/data")
+  else()
+    install(DIRECTORY ${SOSAGE_DATA_FOLDER}/data/ DESTINATION "${SOSAGE_EXE_NAME}/Contents/Resources/data")
+  endif()
+  file(GLOB_RECURSE SOSAGE_MAC_LIBS "${CMAKE_FIND_ROOT_PATH}/lib/*.dylib")
+  install(FILES ${SOSAGE_MAC_LIBS} DESTINATION "${SOSAGE_EXE_NAME}/Contents/Frameworks/")
+  set(CPACK_GENERATOR "ZIP")
 
 endif()
 
 if (SOSAGE_CONFIG_ANDROID)
-  
+
   if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_ANDROID_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
   elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_ANDROID_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
   endif()
-  
+
   set(SDL2_SOURCE_PATH "" CACHE PATH "Source of the SDL library")
   set(SDL2_IMAGE_SOURCE_PATH "" CACHE PATH "Source of the SDL Image library")
   set(SDL2_MIXER_SOURCE_PATH "" CACHE PATH "Source of the SDL Mixer library")
   set(SDL2_TTF_SOURCE_PATH "" CACHE PATH "Source of the SDL TTF library")
   set(YAML_SOURCE_PATH "" CACHE PATH "Source of the YAML library")
   set(LZ4_SOURCE_PATH "" CACHE PATH "Source of the LZ4 library")
-  
+
   file(COPY "${CMAKE_SOURCE_DIR}/platform/android/" DESTINATION "${CMAKE_BINARY_DIR}/android/")
-  
+
   if (EXISTS ${SOSAGE_DATA_FOLDER}/data/general.data)
     file(GLOB_RECURSE SOSAGE_COMPRESSED_DATA "${SOSAGE_DATA_FOLDER}/data/*.data")
     file(COPY ${SOSAGE_COMPRESSED_DATA} DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/assets/data/")
   else()
     file(COPY "${SOSAGE_DATA_FOLDER}/data/" DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/assets/data/")
   endif()
-  
+
   file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon.png"
     DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxxhdpi/")
   file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon144x144.png"
@@ -215,7 +227,7 @@ if (SOSAGE_CONFIG_ANDROID)
     DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-hdpi/")
   file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon48x48.png"
     DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-mdpi/")
-  
+
   file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxxhdpi/icon.png"
     "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png")
   file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxhdpi/icon144x144.png"
@@ -226,7 +238,7 @@ if (SOSAGE_CONFIG_ANDROID)
     "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-hdpi/ic_launcher.png")
   file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-mdpi//icon48x48.png"
     "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-mdpi/ic_launcher.png")
-  
+
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_build.gradle.in"
     "${CMAKE_BINARY_DIR}/android/app/build.gradle")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_Android.mk.in"
@@ -241,7 +253,7 @@ if (SOSAGE_CONFIG_ANDROID)
     "${CMAKE_BINARY_DIR}/android/app/src/main/AndroidManifest.xml")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_java_net_main.java.in"
     "${CMAKE_BINARY_DIR}/android/app/src/main/java/${SOSAGE_EDITOR_EXT}/${SOSAGE_EDITOR_PATH}/${SOSAGE_ACTIVITY}/${SOSAGE_ACTIVITY}.java")
-  
+
   set(SOSAGE_LOCALE_NAME ${SOSAGE_NAME})
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_res_values_strings.xml.in"
     "${CMAKE_BINARY_DIR}/android/app/src/main/res/values/strings.xml")
