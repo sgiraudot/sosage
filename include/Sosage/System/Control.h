@@ -98,6 +98,8 @@ private:
   void idle_sub_update_active_objects();
   void idle_sub_switch_active_object (bool right);
   void idle_sub_triggered (const std::string& key);
+  void action_choice_gamepad();
+  void action_choice_sub_triggered (const std::string& key);
   void object_choice_gamepad();
   void object_choice_sub_triggered (const std::string& key);
   void inventory_gamepad();

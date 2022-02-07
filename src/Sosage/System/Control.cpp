@@ -60,6 +60,7 @@ Control::Control(Content& content)
   INIT_DISPATCHER (IDLE, GAMEPAD, idle_gamepad);
   INIT_DISPATCHER (ACTION_CHOICE, MOUSE, action_choice_mouse);
   INIT_DISPATCHER (ACTION_CHOICE, TOUCHSCREEN, action_choice_touchscreen);
+  INIT_DISPATCHER (ACTION_CHOICE, GAMEPAD, action_choice_gamepad);
   INIT_DISPATCHER (OBJECT_CHOICE, MOUSE, object_choice_mouse);
   INIT_DISPATCHER (OBJECT_CHOICE, TOUCHSCREEN, object_choice_touchscreen);
   INIT_DISPATCHER (OBJECT_CHOICE, GAMEPAD, object_choice_gamepad);
@@ -170,7 +171,7 @@ void Control::begin_status (const Status& s)
   m_stick_on = false;
   if (m_mode == GAMEPAD)
   {
-    if (s == ACTION_CHOICE || s == INVENTORY_ACTION_CHOICE)
+    if (s == INVENTORY_ACTION_CHOICE)
     {
       status()->pop();
       m_status = status()->value();

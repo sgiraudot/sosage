@@ -92,9 +92,15 @@ void Input::run()
   Input_mode previous_mode = mode->value();
   Gamepad_type previous_type = gamepad->value();
   if (touchscreen_used || m_fake_touchscreen)
+  {
     mode->set (TOUCHSCREEN);
+    gamepad->set (NO_LABEL);
+  }
   else if (mouse_used)
+  {
     mode->set (MOUSE);
+    gamepad->set (NO_LABEL);
+  }
   else if (keyboard_used)
   {
     mode->set (GAMEPAD);
@@ -113,7 +119,8 @@ void Input::run()
   {
     if (ev == Event(KEY_UP, ESCAPE) ||
         ev == Event(KEY_UP, ANDROID_BACK) ||
-        ev == Event(BUTTON_UP, START))
+        ev == Event(BUTTON_UP, START) ||
+        ev == Event(BUTTON_UP, SELECT))
       emit ("Game:escape");
 
     if (ev == Event(WINDOW, EXIT))
@@ -292,17 +299,32 @@ void Input::run()
         }
         else if (ev.type() == BUTTON_UP)
           key_on(ev.value()) = false;
-        /* TODO: add DPAD
-        if (key_on(UP_ARROW)) m_y = -1.;
-        if (key_on(DOWN_ARROW)) m_y = 1.;
-        if (key_on(LEFT_ARROW)) m_x = 1.;
-        if (key_on(RIGHT_ARROW)) m_x = -1.;
-        */
+
         Vector vec (m_x, m_y);
         if (vec.length() > 1.0)
           vec.normalize();
         else
           vec = Vector(0,0);
+
+        if ((ev.value() == UP_ARROW || ev.value() == DOWN_ARROW ||
+             ev.value() == RIGHT_ARROW || ev.value() == LEFT_ARROW))
+        {
+          std::cerr << "DPAD" << std::endl;
+          m_x = 0;
+          m_y = 0;
+
+          // Use DPAD if stick is not used only
+          if (key_on(UP_ARROW)) m_y = -1.;
+          if (key_on(DOWN_ARROW)) m_y = 1.;
+          if (key_on(LEFT_ARROW)) m_x = -1.;
+          if (key_on(RIGHT_ARROW)) m_x = 1.;
+          vec = Vector (m_x, m_y);
+          if (vec.length() > 0.99)
+            vec.normalize();
+          else
+            vec = Vector(0,0);
+        }
+
         get<C::Simple<Vector>>(STICK__DIRECTION)->set(vec);
       }
 

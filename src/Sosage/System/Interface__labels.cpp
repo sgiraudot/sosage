@@ -523,33 +523,54 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
                                               value<C::Position>(CURSOR__POSITION));
 
 
-    generate_action (id, "take", LEFT_BUTTON, "", position, DEPLOY);
-    if (value<C::Position>(id + "_take_label_back:position").x()
-        - 0.5 * get<C::Image>(id + "_take_label_back:image")->width()
-        < Config::label_height)
+    generate_action (id, "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), position, DEPLOY);
+    double overflow = value<C::Position>(id + "_take_label_back:position").x()
+                      - Config::label_height - 0.5 * get<C::Image>(id + "_take_label_back:image")->width();
+    if (overflow < 0)
     {
-      generate_action (id, "move", UPPER, "", position, DEPLOY);
-      generate_action (id, "take", UP_RIGHT, "", position, DEPLOY);
-      generate_action (id, "look", DOWN_RIGHT, "", position, DEPLOY);
-      generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
-    }
-    else
-    {
-      generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
-      if (value<C::Position>(id + "_look_label_back:position").x()
-          + 0.5 * get<C::Image>(id + "_look_label_back:image")->width()
-          > Config::world_width - Config::label_height)
+      if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
       {
-        generate_action (id, "move", UPPER, "", position, DEPLOY);
-        generate_action (id, "take", UP_LEFT, "", position, DEPLOY);
-        generate_action (id, "look", DOWN_LEFT, "", position, DEPLOY);
-        generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
-
+        position->set(Point(position->value().x() - overflow, position->value().y()));
+        generate_action (id, "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), position, DEPLOY);
+        generate_action (id, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), position, DEPLOY);
+        generate_action (id, "move", UP, gamepad_label(gamepad, NORTH), position, DEPLOY);
+        generate_action (id, "inventory", DOWN, gamepad_label(gamepad, SOUTH), position, DEPLOY);
       }
       else
       {
-        generate_action (id, "move", UP, "", position, DEPLOY);
-        generate_action (id, "inventory", DOWN, "", position, DEPLOY);
+        generate_action (id, "move", UPPER, "", position, DEPLOY);
+        generate_action (id, "take", UP_RIGHT, "", position, DEPLOY);
+        generate_action (id, "look", DOWN_RIGHT, "", position, DEPLOY);
+        generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
+      }
+    }
+    else
+    {
+      generate_action (id, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), position, DEPLOY);
+      double overflow = Config::world_width - Config::label_height - 0.5 * get<C::Image>(id + "_look_label_back:image")->width()
+                        - value<C::Position>(id + "_look_label_back:position").x();
+      if (overflow < 0)
+      {
+        if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+        {
+          position->set(Point(position->value().x() + overflow, position->value().y()));
+          generate_action (id, "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), position, DEPLOY);
+          generate_action (id, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), position, DEPLOY);
+          generate_action (id, "move", UP, gamepad_label(gamepad, NORTH), position, DEPLOY);
+          generate_action (id, "inventory", DOWN, gamepad_label(gamepad, SOUTH), position, DEPLOY);
+        }
+        else
+        {
+          generate_action (id, "move", UPPER, "", position, DEPLOY);
+          generate_action (id, "take", UP_LEFT, "", position, DEPLOY);
+          generate_action (id, "look", DOWN_LEFT, "", position, DEPLOY);
+          generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
+        }
+      }
+      else
+      {
+        generate_action (id, "move", UP, gamepad_label(gamepad, NORTH), position, DEPLOY);
+        generate_action (id, "inventory", DOWN, gamepad_label(gamepad, SOUTH), position, DEPLOY);
       }
     }
   }
@@ -576,7 +597,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
   }
   else if (type == GP_INV_ACTION_SEL)
   {
-    generate_action (id, "combine", LEFT_BUTTON, gamepad_label(gamepad, WEST), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ((get<C::Inventory>("Game:inventory")->size() > 1 ? id : ""), "combine",
+                     LEFT_BUTTON, gamepad_label(gamepad, WEST), gamepad_pos, FADE_LABEL_ONLY);
     generate_action (id, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), gamepad_pos, FADE_LABEL_ONLY);
     generate_action (id, "use", UP, gamepad_label(gamepad, NORTH), gamepad_pos, FADE_LABEL_ONLY);
     generate_action (id, "Cancel", DOWN, gamepad_label(gamepad, SOUTH), gamepad_pos, FADE_LABEL_ONLY);

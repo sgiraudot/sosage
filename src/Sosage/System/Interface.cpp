@@ -351,6 +351,8 @@ void Interface::update_action_selector()
       set_action_selector (GP_IDLE, value<C::String>("Interface:active_object", ""));
     else if (status()->is(IN_INVENTORY))
       set_action_selector (GP_INV_ACTION_SEL, value<C::String>("Interface:active_object", ""));
+    else if (status()->is(ACTION_CHOICE))
+      set_action_selector(ACTION_SEL, value<C::String>("Interface:action_choice_target"));
     else if (status()->is(OBJECT_CHOICE, IN_WINDOW, IN_CODE))
       set_action_selector (OKNOTOK);
     else if (status()->is(IN_MENU))

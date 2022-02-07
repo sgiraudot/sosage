@@ -49,13 +49,28 @@ void Control::idle_gamepad()
     remove ("Switch:right");
   }
 
-  std::string received_key = "";
-  for (const std::string& key : {"move", "take", "inventory", "look"})
-    if (receive("Action:" + key))
-      received_key = key;
-
-  if (received_key != "")
-    idle_sub_triggered (received_key);
+  if (receive("Action:inventory"))
+  {
+    status()->push (IN_INVENTORY);
+    emit("Click:play_sound");
+  }
+  else if (receive("Action:look"))
+  {
+    if (auto active_object = request<C::String>("Interface:active_object"))
+    {
+      if (auto right = request<C::Boolean>(active_object->value() + "_goto:right"))
+      {
+        set_action (active_object->value() + "_goto", "Default_goto");
+      }
+      else
+      {
+        set<C::String>("Interface:action_choice_target", active_object->value());
+        status()->push (ACTION_CHOICE);
+        get<C::Position>(CURSOR__POSITION)->set(value<C::Position>(active_object->value() + ":label"));
+      }
+      emit("Click:play_sound");
+    }
+  }
 }
 
 void Control::idle_sub_update_active_objects()
@@ -168,6 +183,43 @@ void Control::idle_sub_triggered (const std::string& key)
     return;
   }
   set_action (active_object->value() + "_" + key, "Default_" + key);
+  emit("Click:play_sound");
+}
+
+void Control::action_choice_gamepad()
+{
+  receive("Stick:moved");
+  if (auto right = request<C::Boolean>("Switch:right"))
+  {
+    status()->pop();
+    remove ("Switch:right");
+  }
+  else
+  {
+    std::string received_key = "";
+    for (const std::string& key : {"move", "take", "inventory", "look"})
+      if (receive("Action:" + key))
+        received_key = key;
+
+    if (received_key != "")
+      action_choice_sub_triggered (received_key);
+  }
+}
+
+void Control::action_choice_sub_triggered (const std::string& key)
+{
+  status()->pop();
+  auto target = get<C::String> ("Interface:action_choice_target");
+
+  if (key == "inventory")
+  {
+    set<C::String>("Interface:target_object", target->value());
+    status()->push (OBJECT_CHOICE);
+    emit("Click:play_sound");
+    return;
+  }
+  set_action (target->value() + "_" + key, "Default_" + key);
+  remove ("Interface:action_choice_target", true);
   emit("Click:play_sound");
 }
 
@@ -304,6 +356,8 @@ void Control::inventory_sub_triggered (const std::string& key)
       status()->push(OBJECT_CHOICE);
       set<C::String>("Interface:source_object", active_object->value());
     }
+    else
+      return;
   }
   else // if (action == "inventory")
   {
@@ -317,6 +371,7 @@ void Control::inventory_sub_triggered (const std::string& key)
 
 void Control::window_gamepad()
 {
+  receive("Stick:moved");
   std::string received_key = "";
   for (const std::string& key : {"move", "take", "inventory", "look"})
     if (receive("Action:" + key))
