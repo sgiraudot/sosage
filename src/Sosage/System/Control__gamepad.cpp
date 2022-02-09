@@ -66,7 +66,8 @@ void Control::idle_gamepad()
       {
         set<C::String>("Interface:action_choice_target", active_object->value());
         status()->push (ACTION_CHOICE);
-        get<C::Position>(CURSOR__POSITION)->set(value<C::Position>(active_object->value() + ":label"));
+        get<C::Position>(CURSOR__POSITION)->set(value<C::Position>(active_object->value() + ":label")
+                                                - value<C::Position>(CAMERA__POSITION));
       }
       emit("Click:play_sound");
     }
@@ -144,46 +145,6 @@ void Control::idle_sub_switch_active_object (bool right)
                           : active_objects->value()[(i + active_objects->value().size() - 1) % active_objects->value().size()]);
       return;
     }
-}
-
-void Control::idle_sub_triggered (const std::string& key)
-{
-  auto active_object = request<C::String>("Interface:active_object");
-
-  if (!active_object)
-  {
-    if (key == "inventory")
-    {
-      status()->push (IN_INVENTORY);
-      emit("Click:play_sound");
-    }
-    return;
-  }
-
-  if (auto right = request<C::Boolean>(active_object->value() + "_goto:right"))
-  {
-    if (key == "look")
-    {
-      set_action (active_object->value() + "_goto", "Default_goto");
-      emit("Click:play_sound");
-    }
-    else if (key == "inventory")
-    {
-      status()->push (IN_INVENTORY);
-      emit("Click:play_sound");
-    }
-    return;
-  }
-
-  if (key == "inventory")
-  {
-    set<C::String>("Interface:target_object", active_object->value());
-    status()->push (OBJECT_CHOICE);
-    emit("Click:play_sound");
-    return;
-  }
-  set_action (active_object->value() + "_" + key, "Default_" + key);
-  emit("Click:play_sound");
 }
 
 void Control::action_choice_gamepad()
@@ -557,7 +518,7 @@ void Control::menu_sub_switch_active_item (bool right)
     C::Menu::Node current = todo.front();
     todo.pop();
 
-    if (current.nb_children() < 2)
+    if (current.has_image())
     {
       std::string entity = current.image()->entity();
 
@@ -565,15 +526,21 @@ void Control::menu_sub_switch_active_item (bool right)
       {
         std::size_t pos = entity.find("_left_arrow");
         if (pos != std::string::npos)
-         nodes.emplace_back(entity.begin(), entity.begin() + pos);
+          nodes.emplace_back(entity.begin(), entity.begin() + pos);
       }
-      if (entity.find("_button") != std::string::npos)
+      if (contains(entity, "_button"))
         nodes.push_back (current.image()->entity());
+
       if (!nodes.empty() && nodes.back() == active_item->value())
         nb_current = nodes.size() - 1;
     }
     for (std::size_t i = 0; i < current.nb_children(); ++ i)
       todo.push (current[i]);
+  }
+
+  for (std::size_t i = 0; i < nodes.size(); ++ i)
+  {
+    debug << i << ". " << nodes[i] << std::endl;
   }
 
   check (nb_current != std::size_t(-1), "Node " + active_item->value() + " not found in menu");

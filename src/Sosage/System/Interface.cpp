@@ -348,7 +348,13 @@ void Interface::update_action_selector()
   if (mode == GAMEPAD)
   {
     if (status()->is(IDLE))
-      set_action_selector (GP_IDLE, value<C::String>("Interface:active_object", ""));
+    {
+      double inactive_time = value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__LATEST_ACTIVE);
+      if (inactive_time > 5)
+        set_action_selector (GP_IDLE, value<C::String>("Interface:active_object", ""));
+      else
+        set_action_selector(NO_SEL);
+    }
     else if (status()->is(IN_INVENTORY))
       set_action_selector (GP_INV_ACTION_SEL, value<C::String>("Interface:active_object", ""));
     else if (status()->is(ACTION_CHOICE))
@@ -397,14 +403,18 @@ void Interface::update_object_switcher()
   bool keyboard_on = false;
   bool gamepad_on = false;
 
-  const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
-  if (mode == GAMEPAD && !status()->is(IN_MENU))
-    if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
-      if (active_objects->value().size() > 1)
-      {
-        keyboard_on = (value<C::Simple<Gamepad_type>>(GAMEPAD__TYPE) == KEYBOARD);
-        gamepad_on = !keyboard_on;
-      }
+  double inactive_time = value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__LATEST_ACTIVE);
+  if (inactive_time >= 5)
+  {
+    const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+    if (mode == GAMEPAD && !status()->is(IN_MENU))
+      if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
+        if (active_objects->value().size() > 1)
+        {
+          keyboard_on = (value<C::Simple<Gamepad_type>>(GAMEPAD__TYPE) == KEYBOARD);
+          gamepad_on = !keyboard_on;
+        }
+  }
 
 #if 0 // Just to test gamepad display using keyboard
   std::swap(keyboard_on, gamepad_on);
@@ -665,20 +675,21 @@ void Interface::update_skip_message()
 
     auto img
         = set<C::Image>("Skip_message:image", interface_font, "FFFFFF",
-                        value<C::String>("Skip_cutscene:text"));
+                        locale_get("Skip_cutscene:text"));
     img->z() += 10;
     img->set_scale(0.5);
     img->set_relative_origin (1, 1);
 
     auto img_back
-        = set<C::Image>("Skip_message_back:image", 0.5 * img->width() + 10, 0.5 * img->height() + 10);
+        = set<C::Image>("Skip_message_back:image", 0.5 * img->width() + 30, 0.5 * img->height() + 30,
+                        0, 0, 0, 128);
     img_back->z() = img->z() - 1;
     img_back->set_relative_origin (1, 1);
 
     int window_width = Config::world_width;
     int window_height = Config::world_height;
-    set<C::Absolute_position>("Skip_message:position", Point (window_width - 5,
-                                                              window_height - 5));
+    set<C::Absolute_position>("Skip_message:position", Point (window_width - 15,
+                                                              window_height - 15));
     set<C::Absolute_position>("Skip_message_back:position", Point (window_width,
                                                                    window_height));
   }

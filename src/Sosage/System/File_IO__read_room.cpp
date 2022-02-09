@@ -600,7 +600,7 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
     else
       conditional_handle = get<C::String_conditional>(id + ":image");
 
-    if (state == "none")
+    if (!istate.has("skin"))
       conditional_handle->add(state, nullptr);
     else
     {
@@ -841,7 +841,7 @@ void File_IO::read_scenery (const std::string& id, const Core::File_IO::Node& no
       else
         conditional_handle = get<C::String_conditional>(id + ":image");
 
-      if (state == "none")
+      if (!istate.has("skin"))
         conditional_handle->add(state, nullptr);
       else
       {
@@ -858,10 +858,16 @@ void File_IO::read_scenery (const std::string& id, const Core::File_IO::Node& no
   {
     std::string skin = node["skin"].string("images", "scenery", "png");
 
-    auto img = set<C::Image>(id + ":image", skin, z);
-    img->set_collision(UNCLICKABLE);
-    img->set_relative_origin(0.5, 1.0);
-    debug << "Scenery " << id << " at position " << img->z() << std::endl;
+    load_locale_dependent_image
+        (id + "image", skin,
+         [&](const std::string& skin) -> C::Image_handle
+    {
+      auto img = set<C::Image>(id + ":image", skin, z);
+      img->set_collision(UNCLICKABLE);
+      img->set_relative_origin(0.5, 1.0);
+      debug << "Scenery " << id << " at position " << img->z() << std::endl;
+      return img;
+    });
   }
 }
 

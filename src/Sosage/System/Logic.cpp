@@ -309,6 +309,16 @@ void Logic::run ()
             break;
         }
         while (a->on());
+
+        // Action might have changed state, let's transfer the scheduled
+        // steps if that happens
+        auto new_a = get<C::Action>(a->id());
+        if (new_a != a && !a->scheduled().empty())
+        {
+          for (const auto& th : a->scheduled())
+            new_a->schedule (th.first, th.second);
+          a->reset_scheduled();
+        }
       }
 
   update_debug_info (get<C::Debug>(GAME__DEBUG));
@@ -540,6 +550,7 @@ void Logic::create_dialog (const std::string& character,
                      text, true);
   img->set_scale(size_factor);
   img->set_relative_origin(0.5, 0.5);
+  img->z() = Config::dialog_depth;
 
   if (img->width() <= width_max)
     dialog.push_back (img);
@@ -588,7 +599,7 @@ void Logic::create_dialog (const std::string& character,
                          color,
                          std::string(text.begin() + std::ptrdiff_t(begin),
                                      text.begin() + std::ptrdiff_t(end)), true);
-      img->z() = Config::inventory_depth;
+      img->z() = Config::dialog_depth;
       img->set_scale(size_factor);
       img->set_relative_origin(0.5, 0.5);
       dialog.push_back (img);

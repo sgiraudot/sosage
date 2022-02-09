@@ -164,6 +164,7 @@ enum Fast_access_component
   CAMERA__ZOOM,
   CURSOR__POSITION,
   CLOCK__TIME,
+  CLOCK__LATEST_ACTIVE,
   GAME__DEBUG,
   GAME__STATUS,
   GAME__LOCALE,

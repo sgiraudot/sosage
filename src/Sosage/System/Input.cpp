@@ -62,7 +62,9 @@ void Input::run()
   {
     if ((ev.type() == KEY_DOWN || ev.type() == KEY_UP)
         && (ev.value() == UP_ARROW || ev.value() == RIGHT_ARROW ||
-            ev.value() == LEFT_ARROW || ev.value() == DOWN_ARROW))
+            ev.value() == LEFT_ARROW || ev.value() == DOWN_ARROW ||
+            ev.value() == TAB || ev.value() == I || ev.value() == J ||
+            ev.value() == K ||ev.value() == L))
       keyboard_used = true;
     else if (ev.type() == MOUSE_DOWN || ev.type() == MOUSE_UP)
       mouse_used = true;
@@ -114,6 +116,12 @@ void Input::run()
 
   if (previous_mode != mode->value() || previous_type != gamepad->value())
     emit("Input_mode:changed");
+
+  if (mode->value() == GAMEPAD)
+  {
+    if (gamepad_used || keyboard_used || value<C::Simple<Vector>>(STICK__DIRECTION) != Vector(0,0))
+      get<C::Double>(CLOCK__LATEST_ACTIVE)->set(value<C::Double>(CLOCK__TIME));
+  }
 
   for (const Event& ev : m_current_events)
   {
@@ -331,8 +339,6 @@ void Input::run()
       if (previous_stick != value<C::Simple<Vector>>(STICK__DIRECTION))
         emit("Stick:moved");
     }
-
-
   }
 
   m_current_events.clear();

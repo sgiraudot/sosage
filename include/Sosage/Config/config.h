@@ -87,9 +87,9 @@ enum Depth
 {
   interface_depth = 1000000,
   inventory_depth,
-  dialog_depth,
   label_depth,
   action_button_depth,
+  dialog_depth,
   overlay_depth,
   menu_front_depth,
   menu_button_depth,
