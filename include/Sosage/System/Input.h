@@ -31,7 +31,15 @@
 #include <Sosage/Core/Input.h>
 #include <Sosage/System/Base.h>
 
-namespace Sosage::System
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr double stick_max = 32767.5;
+} // namespace Config
+
+namespace System
 {
 
 class Input : public Base
@@ -54,6 +62,8 @@ private:
   typename std::vector<bool>::reference key_on(const Event_value& value);
 };
 
-} // namespace Sosage::System
+} // namespace System
+
+} // namespace Sosage
 
 #endif // SOSAGE_SYSTEM_INPUT_H

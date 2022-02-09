@@ -36,7 +36,15 @@
 
 #include <array>
 
-namespace Sosage::Third_party
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr int text_outline = 10;
+} // namespace Config
+
+namespace Third_party
 {
 
 class SDL
@@ -159,6 +167,8 @@ public:
 
 };
 
-} // namespace Sosage::Third_party
+} // namespace Third_party
+
+} // namespace Sosage
 
 #endif // SOSAGE_THIRD_PARTY_SDL_H

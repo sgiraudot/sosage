@@ -37,7 +37,18 @@
 #include <string>
 #include <vector>
 
-namespace Sosage::System
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr int inventory_margin = 20;
+constexpr double inventory_speed = 0.25;
+constexpr int label_height = 50;
+constexpr int label_margin = 20;
+} // namespace Config
+
+namespace System
 {
 
 class Interface : public Base
@@ -111,6 +122,8 @@ private:
 };
 
 
-} // namespace Sosage::System
+} // namespace System
+
+} // namespace Sosage
 
 #endif // SOSAGE_SYSTEM_INTERFACE_H

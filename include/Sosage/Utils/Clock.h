@@ -27,11 +27,16 @@
 #ifndef SOSAGE_UTILS_CLOCK_H
 #define SOSAGE_UTILS_CLOCK_H
 
-
 #include <Sosage/Core/Time.h>
 
 namespace Sosage
 {
+
+namespace Config
+{
+constexpr int gui_fps = 60;
+} // namespace Config
+
 using namespace Core;
 
 class Clock

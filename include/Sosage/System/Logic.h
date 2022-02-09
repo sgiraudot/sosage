@@ -34,7 +34,18 @@
 #include <Sosage/Component/Simple.h>
 #include <Sosage/System/Base.h>
 
-namespace Sosage::System
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr int follow_factor = 1500;
+constexpr double char_spoken_time = 0.05;
+constexpr double min_reading_time = 1.5;
+constexpr double button_click_duration = 0.1;
+} // Config
+
+namespace System
 {
 
 class Logic : public Base
@@ -101,6 +112,8 @@ private:
 
 };
 
-} // namespace Sosage::System
+} // namespace System
+
+} // namespace Sosage
 
 #endif // SOSAGE_SYSTEM_LOGIC_H

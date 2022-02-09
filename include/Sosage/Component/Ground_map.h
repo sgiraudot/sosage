@@ -34,7 +34,15 @@
 
 #include <map>
 
-namespace Sosage::Component
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr double boundary_precision = 2.0;
+} // namespace Config
+
+namespace Component
 {
 
 class Ground_map : public Base
@@ -141,6 +149,8 @@ public:
 
 using Ground_map_handle = std::shared_ptr<Ground_map>;
 
-} // namespace Sosage::Component
+} // namespace Component
+
+} // namespace Sosage
 
 #endif // SOSAGE_COMPONENT_GROUND_MAP_H

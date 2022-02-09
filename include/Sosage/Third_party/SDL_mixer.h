@@ -35,7 +35,15 @@
 
 #include <string>
 
-namespace Sosage::Third_party
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr int max_music_volume = 100;
+} // namespace Config
+
+namespace Third_party
 {
 
 class SDL_mixer
@@ -67,7 +75,9 @@ public:
   void play_sound (const Sound& sound, double percentage);
 };
 
-} // namespace Sosage::Third_party
+} // namespace Third_party
+
+} // namespace Sosage
 
 #endif
 

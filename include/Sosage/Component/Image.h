@@ -33,7 +33,15 @@
 #include <Sosage/Utils/enum.h>
 #include <Sosage/Utils/geometry.h>
 
-namespace Sosage::Component
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr int world_depth = 3240;
+} // namespace Config
+
+namespace Component
 {
 
 class Image : public Base
@@ -82,6 +90,8 @@ public:
 
 using Image_handle = std::shared_ptr<Image>;
 
-} // namespace Sosage::Component
+} // namespace Component
+
+} // namespace Sosage
 
 #endif // SOSAGE_COMPONENT_IMAGE_H

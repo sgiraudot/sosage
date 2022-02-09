@@ -31,7 +31,15 @@
 #include <Sosage/Component/Position.h>
 #include <Sosage/System/Base.h>
 
-namespace Sosage::System
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr double key_repeat_delay = 5.;
+} // namespace Config
+
+namespace System
 {
 
 class Control : public Base
@@ -118,6 +126,8 @@ private:
   Vector stick_direction();
 };
 
-} // namespace Sosage::System
+} // namespace System
+
+} // namespace Sosage
 
 #endif // SOSAGE_SYSTEM_CONTROL_H

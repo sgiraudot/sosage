@@ -33,7 +33,15 @@
 #include <utility>
 #include <unordered_map>
 
-namespace Sosage::Third_party
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr int no_value = std::numeric_limits<int>::max();
+} // namespace Config
+
+namespace Third_party
 {
 
 class SDL_events
@@ -58,6 +66,8 @@ private:
   Event gamepad_event (const Event_type& type, const SDL_Event& ev) const;
 };
 
-} // namespace Sosage::Third_party
+} // namespace Third_party
+
+} // namespace Sosage
 
 #endif // SOSAGE_THIRD_PARTY_SDL_EVENTS_H

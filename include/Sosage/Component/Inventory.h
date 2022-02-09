@@ -31,7 +31,15 @@
 
 #include <vector>
 
-namespace Sosage::Component
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr int displayed_inventory_size = 9;
+} // namespace Config
+
+namespace Component
 {
 
 class Inventory : public Base
@@ -57,6 +65,8 @@ public:
 
 using Inventory_handle = std::shared_ptr<Inventory>;
 
-} // namespace Sosage::Component
+} // namespace Component
+
+} // namespace Sosage
 
 #endif // SOSAGE_COMPONENT_INVENTORY_H

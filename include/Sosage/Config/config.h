@@ -1,6 +1,6 @@
 /*
   [include/Sosage/Config/config.h]
-  Constant configuration values (world size, FPS, etc.).
+  Constant shared configuration values (world size, FPS, etc.).
 
   =====================================================================
 
@@ -27,61 +27,25 @@
 #ifndef SOSAGE_CONFIG_CONFIG_H
 #define SOSAGE_CONFIG_CONFIG_H
 
-#include <Sosage/Config/platform.h>
 #include <memory>
 #include <limits>
 
-namespace Sosage
-{
-
-namespace Config
+namespace Sosage::Config
 {
 
 constexpr int world_width = 1920;
 constexpr int world_height = 1080;
-constexpr int world_depth = 3240;
 
 constexpr int inventory_height = 150;
 constexpr int inventory_active_zone = 50;
-constexpr int inventory_margin = 20;
-constexpr double inventory_speed = 0.25;
 
 constexpr int object_reach_x = 150;
 constexpr int object_reach_y = 65;
 constexpr int object_reach_hysteresis = 20;
-constexpr int follow_factor = 1500;
 
-constexpr int label_height = 50;
-constexpr int label_margin = 20;
-constexpr int label_diff = 5;
-
-constexpr int camera_limit_left = world_width / 4;
-constexpr int camera_limit_right = (3 * world_width) / 4;
 constexpr double camera_speed = 1.0;
 
-constexpr double char_spoken_time = 0.05;
-constexpr double min_reading_time = 1.5;
-
-constexpr double key_repeat_delay = 5.;
-
-constexpr double boundary_precision = 2.0;
-
-constexpr int gui_fps = 60;
 constexpr int animation_fps = 12;
-
-constexpr int character_speed = 34;
-
-constexpr int text_outline = 10;
-constexpr int displayed_inventory_size = 9;
-
-constexpr double button_click_duration = 0.1;
-
-constexpr double stick_max = 32767.5;
-constexpr int no_value = std::numeric_limits<int>::max();
-
-constexpr int max_music_volume = 100;
-
-constexpr auto possible_actions = { "look", "move", "take", "inventory", "use", "combine", "goto" };
 
 enum Depth
 {
@@ -112,8 +76,6 @@ enum Dialog_size
   LARGE = 18,
 };
 
-} // namespace Config
-
-} // namespace Sosage
+} // namespace Sosage::Config
 
 #endif // SOSAGE_CONFIG_CONFIG_H

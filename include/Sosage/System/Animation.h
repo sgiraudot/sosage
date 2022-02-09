@@ -29,10 +29,21 @@
 
 #include <Sosage/Component/Animation.h>
 #include <Sosage/Component/Path.h>
+#include <Sosage/Config/config.h>
 #include <Sosage/Content.h>
 #include <Sosage/System/Base.h>
 
-namespace Sosage::System
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr int camera_limit_left = world_width / 4;
+constexpr int camera_limit_right = (3 * world_width) / 4;
+constexpr int character_speed = 34;
+} // namespace Config
+
+namespace System
 {
 
 class Animation : public Base
@@ -71,6 +82,8 @@ private:
   void update_camera_target();
 };
 
-} // namespace Sosage::System
+} // namespace System
+
+} // namespace Sosage
 
 #endif // SOSAGE_SYSTEM_GRAPHIC_H
