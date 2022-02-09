@@ -539,25 +539,25 @@ void Logic::create_dialog (const std::string& character,
   static const int width_max = int(0.6 * Config::world_width);
 
   double size_factor = 0.75 * (value<C::Int>("Dialog:size") / double(Config::MEDIUM));
-
   auto font = get<C::Font> ("Dialog:font");
   const std::string& color = value<C::String> (character + ":color");
+  int estimated_size = 25 * text.size() * size_factor;
 
-  auto img
-    = set<C::Image> ("Comment_0:image",
-                     font,
-                     color,
-                     text, true);
-  img->set_scale(size_factor);
-  img->set_relative_origin(0.5, 0.5);
-  img->z() = Config::dialog_depth;
-
-  if (img->width() <= width_max)
+  if (estimated_size < width_max)
+  {
+    auto img
+        = set<C::Image> ("Comment_0:image",
+                         font,
+                         color,
+                         text, true);
+    img->set_scale(size_factor);
+    img->set_relative_origin(0.5, 0.5);
+    img->z() = Config::dialog_depth;
     dialog.push_back (img);
+  }
   else
   {
-    remove("Comment_0:image");
-    int nb_imgs = 1 + (img->width() / width_max);
+    int nb_imgs = 1 + (estimated_size / width_max);
 
     // Find space characters where to cut
     std::vector<std::size_t> cuts (std::size_t(nb_imgs  - 1));
