@@ -484,38 +484,92 @@ SDL_Color SDL::color (const std::string& color_str)
 SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str,
                              const std::string& text)
 {
-  SDL_Surface* surf;
-  if (!contains (text, "\n"))
-    surf = TTF_RenderUTF8_Blended(font.first.get(), text.c_str(), color(color_str));
-  else
-    surf = TTF_RenderUTF8_Blended_Wrapped(font.first.get(), text.c_str(), color(color_str), 1920);
+  int width = -1;
+  int height = -1;
 
-  check (surf != nullptr, "Cannot create text \"" + text + "\"");
-  Texture texture = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf);
-  check (texture != Texture(), "Cannot create texture from text \"" + text + "\"");
-  Image out (texture, Bitmap(), surf->w, surf->h, 1);
-  SDL_FreeSurface (surf);
+  std::string id = to_string(std::size_t(font.first.get())) + color_str + text;
+
+  Texture texture = m_textures.make_mapped
+    (id,
+     [&]() -> SDL_Texture*
+     {
+       SDL_Surface* surf;
+       if (!contains (text, "\n"))
+         surf = TTF_RenderUTF8_Blended(font.first.get(), text.c_str(), color(color_str));
+       else
+         surf = TTF_RenderUTF8_Blended_Wrapped(font.first.get(), text.c_str(), color(color_str), 1920);
+
+       width = surf->w;
+       height = surf->h;
+
+       m_image_info.make_mapped (id, [](int w, int h, double td) -> std::tuple<int,int,double>*
+       {
+         return new std::tuple<int,int,double>(w,h,td);
+       }, width, height, 1.);
+
+       check (surf != nullptr, "Cannot create text \"" + text + "\"");
+       SDL_Texture* out = SDL_CreateTextureFromSurface(m_renderer, surf);
+       check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
+       SDL_FreeSurface (surf);
+       return out;
+     });
+
+  if (height == -1)
+  {
+    auto info = m_image_info.get(id);
+    width = std::get<0>(*info);
+    height = std::get<1>(*info);
+  }
+
+  Image out (texture, Bitmap(), width, height);
   return out;
 }
 
 SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& color_str,
                                       const std::string& text)
 {
-  SDL_Surface* surf = TTF_RenderUTF8_Blended (font.first.get(), text.c_str(), color(color_str));
-  check (surf != nullptr, "Cannot create text \"" + text + "\"");
+  int width = -1;
+  int height = -1;
 
-  SDL_Surface* back = TTF_RenderUTF8_Blended (font.second.get(), text.c_str(), black());
-  check (back != nullptr, "Cannot create text \"" + text + "\"");
+  std::string id = to_string(std::size_t(font.first.get())) + color_str + text;
 
-  SDL_Rect rect = {Config::text_outline, Config::text_outline, surf->w, surf->h};
-  SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_BLEND);
-  SDL_BlitSurface (surf, NULL, back, &rect);
+  Texture texture = m_textures.make_mapped
+    (id,
+     [&]() -> SDL_Texture*
+     {
+       SDL_Surface* surf = TTF_RenderUTF8_Blended (font.first.get(), text.c_str(), color(color_str));
+       check (surf != nullptr, "Cannot create text \"" + text + "\"");
 
-  Texture texture = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, back);
-  check (texture != Texture(), "Cannot create texture from text \"" + text + "\"");
-  Image out (texture, Bitmap(), back->w, back->h, 1);
-  SDL_FreeSurface (surf);
-  SDL_FreeSurface (back);
+       SDL_Surface* back = TTF_RenderUTF8_Blended (font.second.get(), text.c_str(), black());
+       check (back != nullptr, "Cannot create text \"" + text + "\"");
+
+       SDL_Rect rect = {Config::text_outline, Config::text_outline, surf->w, surf->h};
+       SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_BLEND);
+       SDL_BlitSurface (surf, NULL, back, &rect);
+
+       width = back->w;
+       height = back->h;
+
+       m_image_info.make_mapped (id, [](int w, int h, double td) -> std::tuple<int,int,double>*
+       {
+         return new std::tuple<int,int,double>(w,h,td);
+       }, width, height, 1.);
+
+       SDL_Texture* out = SDL_CreateTextureFromSurface(m_renderer, back);
+       check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
+       SDL_FreeSurface (surf);
+       SDL_FreeSurface (back);
+       return out;
+     });
+
+  if (height == -1)
+  {
+    auto info = m_image_info.get(id);
+    width = std::get<0>(*info);
+    height = std::get<1>(*info);
+  }
+
+  Image out (texture, Bitmap(), width, height);
   return out;
 }
 
