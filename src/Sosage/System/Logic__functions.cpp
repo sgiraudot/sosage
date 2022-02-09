@@ -626,6 +626,7 @@ bool Logic::function_stop (const std::vector<std::string>& args)
  */
 bool Logic::function_talk (const std::vector<std::string>& args)
 {
+  SOSAGE_TIMER_START(Logic__function_talk);
   check (1 <= args.size() && args.size() <= 3, "function_talk takes 1, 2 or 3 arguments");
   std::string id;
   std::string text;
@@ -704,6 +705,8 @@ bool Logic::function_talk (const std::vector<std::string>& args)
                                     C::make_handle<C::Signal>
                                     (id + ":stop_talking"));
   }
+  SOSAGE_TIMER_STOP(Logic__function_talk);
+
   return true;
 }
 

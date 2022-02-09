@@ -51,7 +51,7 @@ Input::Input (Content& content)
 
 void Input::run()
 {
-  start_timer();
+  SOSAGE_TIMER_START(System_Input__run);
 
   bool keyboard_used = false;
   bool mouse_used = false;
@@ -342,7 +342,7 @@ void Input::run()
   }
 
   m_current_events.clear();
-  stop_timer("Input");
+  SOSAGE_TIMER_STOP(System_Input__run);
 }
 
 typename std::vector<bool>::reference Input::key_on(const Event_value& value)

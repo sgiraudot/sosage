@@ -111,7 +111,11 @@ Component::Handle_set& Content::components (const std::string& s)
 {
   auto iter = m_map_component.find(s);
   if (iter == m_map_component.end())
-      return m_data[0];
+  {
+    SOSAGE_COUNT (Content__components_default);
+    return m_data[0];
+  }
+  SOSAGE_COUNT (Content__components_special);
   return m_data[iter->second];
 }
 

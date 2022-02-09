@@ -69,14 +69,37 @@ void Timer::stop()
 void Timer::display()
 {
 #ifdef SOSAGE_PROFILE_FINELY
+
+#ifdef SOSAGE_PROFILE_TO_FILE
   if (m_id == "CPU_idle")
   {
-    std::ofstream ofile ("cpu_idle.plot");
-    for (const auto& t : m_duration)
-      ofile << t << std::endl;
+    for (auto& t : m_duration)
+      t = 100. * (1. - (t / 16.666666));
+  }
+  std::ofstream ofile (m_id + ".plot");
+  for (const auto& t : m_duration)
+    ofile << t << std::endl;
+  std::size_t smooth = 20;
+  if (m_duration.size() > smooth * 3)
+  {
+    std::ofstream ofile2 (m_id + "_smooth.plot");
+
+    for (std::size_t i = smooth; i < m_duration.size() - smooth; ++ i)
+    {
+      double mean = 0.;
+      std::size_t nb = 0;
+      for (std::size_t j = i-smooth; j < i+smooth; ++ j)
+      {
+        mean += m_duration[j];
+        ++ nb;
+      }
+      ofile2 << mean/nb << std::endl;
+    }
   }
 
-  Time::Duration total = 0;
+#endif
+
+  double total = 0;
   for (const auto& d : m_duration)
     total += d;
   std::sort(m_duration.begin(), m_duration.end());
@@ -104,6 +127,8 @@ double Timer::mean_duration() const
 
 std::string Timer::to_string (double d) const
 {
+  if (m_id == "CPU_idle")
+    return std::to_string(d).substr(0,4) + "%";
   if (d < 900)
     return std::to_string(std::round(d * 100) / 100).substr(0,4) + "ms";
   return std::to_string(std::round((d / 1000.) * 100) / 100).substr(0,4) + "s";

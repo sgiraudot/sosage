@@ -486,6 +486,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
   if (m_selector_type == type && m_selector_id == id)
     return;
 
+  SOSAGE_TIMER_START(Interface__set_action_selector);
+
   debug << "Set " << type << " action selector to " << id << std::endl;
 
   reset_action_selector();
@@ -603,6 +605,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     generate_action (id, "use", UP, gamepad_label(gamepad, NORTH), gamepad_pos, FADE_LABEL_ONLY);
     generate_action (id, "Cancel", DOWN, gamepad_label(gamepad, SOUTH), gamepad_pos, FADE_LABEL_ONLY);
   }
+
+  SOSAGE_TIMER_STOP(Interface__set_action_selector);
 }
 
 void Interface::reset_action_selector()

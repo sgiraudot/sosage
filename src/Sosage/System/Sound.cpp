@@ -44,7 +44,7 @@ Sound::Sound (Content& content)
 
 void Sound::run()
 {
-  start_timer();
+  SOSAGE_TIMER_START(System_Sound__run);
   auto music = request<C::Music>("Game:music");
 
   double volume = value<C::Int>("Music:volume") / 10.;
@@ -122,7 +122,7 @@ void Sound::run()
   for (const std::string& id : to_remove)
     remove (id);
 
-  stop_timer("Sound");
+  SOSAGE_TIMER_STOP(System_Sound__run);
 }
 
 } // namespace Sosage::System

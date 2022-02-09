@@ -46,16 +46,11 @@ void Time::run()
 {
   SOSAGE_TIMER_START(System_Time__run);
   bool frame_under_refresh_time = m_clock.wait(true);
-#ifdef SOSAGE_PROFILE
+  SOSAGE_COUNT(Frames);
   if (!frame_under_refresh_time)
   {
-    for (const std::string& id: { "Animation", "Control", "File_IO", "Graphic",
-         "Input", "Interface", "Logic", "Sound" })
-    {
-      debug << " * " << id << " took " << value<C::Int>(id + ":time") << "ms" << std::endl;
-    }
+    SOSAGE_COUNT(Frames_exceeding_refresh_time);
   }
-#endif
 
   get<C::Double> (CLOCK__TIME)->set(m_clock.time());
   SOSAGE_TIMER_STOP(System_Time__run);

@@ -62,7 +62,7 @@ void Graphic::init()
 
 void Graphic::run()
 {
-  start_timer();
+  SOSAGE_TIMER_START(System_Graphic__run);
   if (auto name = request<C::String>("Game:name"))
   {
     m_core.update_window (locale(name->value()), value<C::String>("Icon:filename"));
@@ -73,7 +73,7 @@ void Graphic::run()
   {
     m_core.clear_managers();
     run_loading();
-    stop_timer("Graphic");
+    SOSAGE_TIMER_STOP(System_Graphic__run);
     return;
   }
 
@@ -86,41 +86,23 @@ void Graphic::run()
   if (receive ("Fake_touchscreen:disable"))
     m_core.toggle_cursor(false);
 
-  std::vector<C::Image_handle> images;
-
   m_core.begin();
-
-  get_images (images);
-  display_images (images);
-  images.clear();
-
-  m_core.end();
-  stop_timer("Graphic");
-}
-
-void Graphic::get_images (std::vector<C::Image_handle>& images)
-{
-  for (const auto& e : components("image"))
-    if (auto img = C::cast<C::Image>(e))
-      images.push_back(img);
-}
-
-void Graphic::display_images (std::vector<C::Image_handle>& images)
-{
-  std::sort (images.begin(), images.end(),
-             [](C::Image_handle a, C::Image_handle b) -> bool
-             {
-               return (a->z() < b->z());
-             });
 
   const Point& camera = value<C::Absolute_position>(CAMERA__POSITION);
 
-  for (const auto& img : images)
-  {
-    if (img->on())
+  using Image_with_info = std::tuple<C::Image_handle, double, double, double, double, double>;
+  static std::vector<Image_with_info> to_display;
+
+  double limit_width = Config::world_width;
+  double limit_height = Config::world_height;
+
+  for (const auto& e : components("image"))
+    if (auto img = C::cast<C::Image>(e))
     {
+      if (!img->on())
+        continue;
       if (status()->is (LOCKED) &&
-           img->entity() == "Cursor")
+          img->entity() == "Cursor")
         continue;
 
       auto position = get<C::Position>(img->entity() + ":position");
@@ -144,46 +126,65 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
       double xmax_target = zoom * (screen_position.x() + img->core().scaling * (xmax - xmin));
       double ymax_target = zoom * (screen_position.y() + img->core().scaling * (ymax - ymin));
 
-      double limit_width = Config::world_width;
-      double limit_height = Config::world_height;
-
       // Skip out of boundaries images
       if ((xmax_target < 0 || xmin_target > limit_width)
           && (ymax_target < 0 || ymin_target > limit_height))
-        continue;
+          continue;
 
-      // Cut if image goes beyond boundaries
-      if (xmin_target < 0)
-      {
-        xmin -= round(xmin_target / (img->core().scaling * zoom));
-        xmin_target = 0;
-      }
-      if (ymin_target < 0)
-      {
-        ymin -= round(ymin_target / (img->core().scaling * zoom));
-        ymin_target = 0;
-      }
-      if (xmax_target > limit_width)
-      {
-        xmax -= round((xmax_target - limit_width) / (img->core().scaling * zoom));
-        xmax_target = limit_width;
-      }
-      if (ymax_target > limit_height)
-      {
-        ymax -= round((ymax_target - limit_height) / (img->core().scaling * zoom));
-        ymax_target = limit_height;
-      }
-
-      int width = xmax - xmin;
-      int height = ymax - ymin;
-
-      double width_target = xmax_target - xmin_target;
-      double height_target = ymax_target - ymin_target;
-
-      m_core.draw (img->core(), xmin, ymin, width, height,
-                   round(xmin_target), round(ymin_target),
-                   round(width_target), round(height_target));
+      to_display.emplace_back (img, xmin_target, ymin_target, xmax_target, ymax_target, zoom);
     }
+
+  std::sort (to_display.begin(), to_display.end(),
+             [](const Image_with_info& a, const Image_with_info& b) -> bool
+             {
+               return (std::get<0>(a)->z() < std::get<0>(b)->z());
+             });
+
+  for (auto& td : to_display)
+  {
+    auto img = std::get<0>(td);
+    int xmin = img->xmin();
+    int ymin = img->ymin();
+    int xmax = img->xmax();
+    int ymax = img->ymax();
+
+    double xmin_target = std::get<1>(td);
+    double ymin_target = std::get<2>(td);
+    double xmax_target = std::get<3>(td);
+    double ymax_target = std::get<4>(td);
+    double zoom = std::get<5>(td);
+
+    // Cut if image goes beyond boundaries
+    if (xmin_target < 0)
+    {
+      xmin -= round(xmin_target / (img->core().scaling * zoom));
+      xmin_target = 0;
+    }
+    if (ymin_target < 0)
+    {
+      ymin -= round(ymin_target / (img->core().scaling * zoom));
+      ymin_target = 0;
+    }
+    if (xmax_target > limit_width)
+    {
+      xmax -= round((xmax_target - limit_width) / (img->core().scaling * zoom));
+      xmax_target = limit_width;
+    }
+    if (ymax_target > limit_height)
+    {
+      ymax -= round((ymax_target - limit_height) / (img->core().scaling * zoom));
+      ymax_target = limit_height;
+    }
+
+    int width = xmax - xmin;
+    int height = ymax - ymin;
+
+    double width_target = xmax_target - xmin_target;
+    double height_target = ymax_target - ymin_target;
+
+    m_core.draw (img->core(), xmin, ymin, width, height,
+                 round(xmin_target), round(ymin_target),
+                 round(width_target), round(height_target));
   }
 
   if (value<C::Boolean>(GAME__DEBUG))
@@ -223,25 +224,31 @@ void Graphic::display_images (std::vector<C::Image_handle>& images)
         }
     }
 
-    for (const auto& img : images)
-      if (img->on())
-      {
-        auto pos = img->entity().find("_label");
-        if (pos == std::string::npos)
-          continue;
-        std::string id (img->id().begin(), img->id().begin() + pos);
+    for (const auto& td: to_display)
+    {
+      auto img = std::get<0>(td);
+      auto pos = img->entity().find("_label");
+      if (pos == std::string::npos)
+        continue;
+      std::string id (img->id().begin(), img->id().begin() + pos);
 
-        if (!request<C::String>(id + ":name"))
-          continue;
+      if (!request<C::String>(id + ":name"))
+        continue;
 
-        auto view = value<C::Position>(id + ":view") - camera;
+      auto view = value<C::Position>(id + ":view") - camera;
 
-        m_core.draw_rectangle (view.X(), view.Y(),
-                               2 * Config::object_reach_x, 2 * Config::object_reach_y,
-                               255, 0, 0, 16);
-      }
+      m_core.draw_rectangle (view.X(), view.Y(),
+                             2 * Config::object_reach_x, 2 * Config::object_reach_y,
+                             255, 0, 0, 16);
+    }
 
   }
+
+  to_display.clear();
+
+  m_core.end();
+
+  SOSAGE_TIMER_STOP(System_Graphic__run);
 }
 
 void Graphic::run_loading()

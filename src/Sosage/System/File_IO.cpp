@@ -79,13 +79,14 @@ File_IO::File_IO (Content& content)
 
 void File_IO::run()
 {
-  start_timer();
+  SOSAGE_TIMER_START(System_File_IO__run);
   if (auto new_room = request<C::String>("Game:new_room"))
   {
     read_room (new_room->value());
     remove ("Game:new_room");
   }
   stop_timer ("File_IO");
+  SOSAGE_TIMER_STOP(System_File_IO__run);
 }
 
 void File_IO::clean_content()

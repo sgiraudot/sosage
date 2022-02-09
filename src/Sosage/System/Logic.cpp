@@ -93,12 +93,12 @@ Logic::Logic (Content& content)
 
 void Logic::run ()
 {
-  start_timer();
+  SOSAGE_TIMER_START(System_Logic__run);
   m_current_time = value<C::Double> (CLOCK__TIME);
 
   if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU))
   {
-    stop_timer("Logic");
+    SOSAGE_TIMER_STOP(System_Logic__run);
     return;
   }
 
@@ -312,8 +312,8 @@ void Logic::run ()
 
         // Action might have changed state, let's transfer the scheduled
         // steps if that happens
-        auto new_a = get<C::Action>(a->id());
-        if (new_a != a && !a->scheduled().empty())
+        auto new_a = request<C::Action>(a->id());
+        if (new_a && new_a != a && !a->scheduled().empty())
         {
           for (const auto& th : a->scheduled())
             new_a->schedule (th.first, th.second);
@@ -322,7 +322,7 @@ void Logic::run ()
       }
 
   update_debug_info (get<C::Debug>(GAME__DEBUG));
-  stop_timer("Logic");
+  SOSAGE_TIMER_STOP(System_Logic__run);
 }
 
 bool Logic::compute_path_from_target (C::Position_handle target,

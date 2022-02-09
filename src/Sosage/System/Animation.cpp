@@ -48,13 +48,13 @@ Animation::Animation (Content& content)
 
 void Animation::run()
 {
-  start_timer();
+  SOSAGE_TIMER_START(System_Animation__run);
   std::size_t new_frame_id = frame_id(value<C::Double>(CLOCK__TIME));
 
   if (status()->is (PAUSED))
   {
     m_frame_id = new_frame_id;
-    stop_timer("Animation");
+    SOSAGE_TIMER_STOP(System_Animation__run);
     return;
   }
 
@@ -63,7 +63,7 @@ void Animation::run()
   if (status()->is (IN_MENU))
   {
     m_frame_id = new_frame_id;
-    stop_timer("Animation");
+    SOSAGE_TIMER_STOP(System_Animation__run);
     return;
   }
 
@@ -72,14 +72,14 @@ void Animation::run()
     // Force update when new room is loaded
     if (request<C::Signal>("Game:in_new_room"))
       run_animation_frame();
-    stop_timer("Animation");
+    SOSAGE_TIMER_STOP(System_Animation__run);
     return;
   }
 
   for (std::size_t i = m_frame_id; i < new_frame_id; ++ i)
     run_animation_frame();
   m_frame_id = new_frame_id;
-  stop_timer("Animation");
+  SOSAGE_TIMER_STOP(System_Animation__run);
 }
 
 void Animation::run_gui_frame()
