@@ -102,6 +102,9 @@ void Logic::run ()
     return;
   }
 
+  if (request<C::Signal>("Game:in_new_room"))
+    status()->pop();
+
   bool skip_dialog = receive("Game:skip_dialog");
 
   std::set<std::string> done;

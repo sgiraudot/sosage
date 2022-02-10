@@ -33,6 +33,7 @@ Status::Status (const std::string& id)
   : Base(id)
 {
   m_value.push(IDLE);
+  m_value.push(LOCKED); // start game locked
 }
 
 void Status::push (const Sosage::Status& v)
