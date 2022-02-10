@@ -62,7 +62,7 @@ public:
   void stop_timer (const char*);
 #endif
 
-  Component::Handle_set& components (const std::string& s);
+  Content::Handles components (const std::string& s);
   template <typename T>
   std::shared_ptr<T> get (const std::string& key) { return m_content.get<T>(key); }
   template <typename T>

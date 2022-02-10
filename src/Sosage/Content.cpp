@@ -85,8 +85,8 @@ void Content::clear (const std::function<bool(Component::Handle)>& filter)
   {
     Component::Handle_set& old_set = hset;
     Component::Handle_set new_set;
-    for (Component::Handle c : old_set)
-      if (!filter(c))
+    for (const auto& c : old_set)
+      if (!filter(c.second))
         new_set.insert(c);
     old_set.swap (new_set);
   }
@@ -107,23 +107,16 @@ Component::Component_map::const_iterator Content::end() const
   return m_data.end();
 }
 
-Component::Handle_set& Content::components (const std::string& s)
+Content::Handles Content::components (const std::string& s)
 {
-  auto iter = m_map_component.find(s);
-  if (iter == m_map_component.end())
-  {
-    SOSAGE_COUNT (Content__components_default);
-    return m_data[0];
-  }
-  SOSAGE_COUNT (Content__components_special);
-  return m_data[iter->second];
+  return Handles(handle_set(s));
 }
+
 
 void Content::remove (const std::string& key, bool optional)
 {
-  auto t = std::make_shared<Component::Base>(key);
-  Component::Handle_set& hset = components(t->component());
-  Component::Handle_set::iterator iter = hset.find(t);
+  Component::Handle_set& hset = handle_set(component(key));
+  Component::Handle_set::iterator iter = hset.find(key);
   if (optional && iter == hset.end())
     return;
   
@@ -141,18 +134,30 @@ bool Content::receive (const std::string& signal)
   count_access(signal);
   count_request();
 
-  auto cmp = std::make_shared<Component::Base>(signal);
-  Component::Handle_set& hset = components(cmp->component());
+  Component::Handle_set& hset = handle_set(component(signal));
 
-  Component::Handle_set::iterator iter
-      = hset.find(std::make_shared<Component::Base>(signal));
+  Component::Handle_set::iterator iter = hset.find(signal);
   if (iter == hset.end())
     return false;
-  if (!Component::cast<Component::Signal>(*iter))
+  if (!Component::cast<Component::Signal>(iter->second))
     return false;
   hset.erase (iter);
   return true;
 }
+
+Component::Handle_set& Content::handle_set (const std::string& s)
+{
+  auto iter = m_map_component.find(s);
+  if (iter == m_map_component.end())
+  {
+    SOSAGE_COUNT (Content__components_default);
+    return m_data[0];
+  }
+  SOSAGE_COUNT (Content__components_special);
+  return m_data[iter->second];
+}
+
+
 
 void Content::count_set_ptr()
 {

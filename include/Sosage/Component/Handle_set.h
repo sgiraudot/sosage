@@ -29,7 +29,7 @@
 
 #include <Sosage/Component/Base.h>
 
-#include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 namespace Sosage::Component
@@ -47,7 +47,7 @@ struct Equal_ids
   { return (a->id() == b->id()); }
 };
 
-using Handle_set = std::unordered_set<Handle, Hash_id, Equal_ids>;
+using Handle_set = std::unordered_map<std::string, Handle>;
 using Component_map = std::vector<Handle_set>;
 
 } // namespace Sosage::Component
