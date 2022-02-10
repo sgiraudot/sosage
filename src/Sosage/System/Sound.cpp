@@ -52,26 +52,33 @@ void Sound::run()
   if (!status()->is(CUTSCENE))
     volume *= 0.25;
 
+  if (receive("Music:stop"))
+  {
+    m_core.stop_music();
+    music->on() = false;
+  }
+
   if (receive("Music:start"))
   {
+    debug << value<C::Double>(CLOCK__TIME) << ": music start" << std::endl;
     check (music, "No music to start");
     m_core.start_music (music->core(), volume);
     music->on() = true;
   }
 
-  if (receive("Music:fade"))
+  if (auto fade = request<C::Tuple<double, double, bool>>("Music:fade"))
   {
     check (music, "No music to fade");
-    auto fade = request<C::Tuple<double, double, bool>>("Camera:fade");
     double current_time = value<C::Double> (CLOCK__TIME);
+    m_core.stop_music();
+    m_core.set_volume (volume);
     m_core.fade(music->core(), fade->get<1>() - current_time, fade->get<2>());
+    music->on() = true;
+    remove("Music:fade");
   }
 
   if (receive("Music:volume_changed"))
     m_core.set_volume (volume);
-
-  if (receive("Music:stop"))
-    m_core.stop_music();
 
   if (music)
   {

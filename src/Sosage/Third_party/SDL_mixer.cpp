@@ -50,7 +50,6 @@ SDL_mixer::Music SDL_mixer::load_music (const std::string& file_name)
 {
   Asset asset = Asset_manager::open(file_name);
   Mix_Music* music = Mix_LoadMUS_RW (asset.base(), 1);
-  Mix_VolumeMusic(64);
   check (music != nullptr, "Cannot load music " + file_name);
   return music;
 }
@@ -65,6 +64,7 @@ SDL_mixer::Sound SDL_mixer::load_sound (const std::string& file_name)
 
 void SDL_mixer::delete_music (const SDL_mixer::Music& music)
 {
+  debug << "Delete music" << std::endl;
   Mix_FreeMusic (music);
 }
 
@@ -75,35 +75,47 @@ void SDL_mixer::delete_sound (const SDL_mixer::Sound& sound)
 
 void SDL_mixer::start_music (const SDL_mixer::Music& music, double percentage)
 {
+  debug << "Start music with volume " << percentage << "% (" << int(percentage * Config::max_music_volume) << ")" << std::endl;
   Mix_VolumeMusic(int(percentage * Config::max_music_volume));
   Mix_PlayMusic (music, -1);
 }
 
 void SDL_mixer::stop_music()
 {
+  debug << "Stop music" << std::endl;
   Mix_HaltMusic();
 }
 
 void SDL_mixer::fade (const SDL_mixer::Music& music, double time, bool in)
 {
   if (in)
+  {
+    debug << "Fade in music " << time << std::endl;
+    Mix_HaltMusic(); // Avoid sound "jump" if music still plays
     Mix_FadeInMusic(music, -1, int(1000 * time));
+  }
   else
+  {
+    debug << "Fade out music" << std::endl;
     Mix_FadeOutMusic(int(1000 * time));
+  }
 }
 
 void SDL_mixer::set_volume (double percentage)
 {
+  debug << "Set volume to " << percentage << "% (" << int(percentage * Config::max_music_volume) << ")" << std::endl;
   Mix_VolumeMusic(int(percentage * Config::max_music_volume));
 }
 
 void SDL_mixer::pause_music (const SDL_mixer::Music&)
 {
+  debug << "Pause music" << std::endl;
   Mix_PauseMusic();
 }
 
 void SDL_mixer::resume_music (const SDL_mixer::Music&)
 {
+  debug << "Resume music" << std::endl;
   Mix_ResumeMusic();
 }
 

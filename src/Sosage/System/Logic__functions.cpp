@@ -395,6 +395,7 @@ bool Logic::function_move60fps (const std::vector<std::string>& args)
   - play: [ID animation_id]                           -> starts animation
   - play: [ID music_id]                               -> starts music
   - play: [ID sound_id]                               -> plays sound
+  - play: [ID music_id, FLOAT duration]               -> fadein music
   - play: [ID character_animation_id, FLOAT duration] -> plays animation of player character for the wanted duration
  */
 bool Logic::function_play (const std::vector<std::string>& args)
@@ -410,7 +411,15 @@ bool Logic::function_play (const std::vector<std::string>& args)
   if (auto music = request<C::Music>(target + ":music"))
   {
     set<C::Variable>("Game:music", music);
-    emit ("Music:start");
+    if (args.size() == 2)
+    {
+      double duration = to_double(args[1]);
+      set<C::Tuple<double, double, bool>>
+          ("Music:fade",
+           m_current_time, m_current_time + duration, true);
+    }
+    else
+      emit ("Music:start");
     return true;
   }
 

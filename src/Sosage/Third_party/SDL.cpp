@@ -531,7 +531,7 @@ SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& 
   int width = -1;
   int height = -1;
 
-  std::string id = to_string(std::size_t(font.first.get())) + color_str + text;
+  std::string id = to_string(std::size_t(font.first.get())) + "outlined" + color_str + text;
 
   Texture texture = m_textures.make_mapped
     (id,

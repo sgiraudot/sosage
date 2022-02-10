@@ -449,8 +449,6 @@ bool Logic::subfunction_fade (bool fadein, double duration)
 {
   auto fade = set<C::Tuple<double, double, bool>>("Camera:fade",
                                                   m_current_time, m_current_time + duration, fadein);
-  if (request<C::Music>("Game:music") && !status()->is(CUTSCENE))
-    emit ("Music:fade");
   m_current_action->schedule (m_current_time + duration, fade);
   return true;
 }
