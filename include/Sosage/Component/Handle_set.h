@@ -35,20 +35,46 @@
 namespace Sosage::Component
 {
 
-struct Hash_id
-{
-  std::size_t operator() (const Handle& h) const
-  { return std::hash<std::string>()(h->id()); }
-};
+using Handle_map = std::unordered_map<std::string, Handle>;
+using Component_map = std::vector<Handle_map>;
 
-struct Equal_ids
+class Handle_set
 {
-  bool operator() (const Handle& a, const Handle& b) const
-  { return (a->id() == b->id()); }
-};
+  Handle_map& m_map;
 
-using Handle_set = std::unordered_map<std::string, Handle>;
-using Component_map = std::vector<Handle_set>;
+public:
+
+  class iterator
+  {
+    using Base = Handle_map::iterator;
+    Base m_base;
+
+  public:
+
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type   = std::ptrdiff_t;
+    using value_type        = Handle;
+    using pointer           = value_type*;
+    using reference         = value_type&;
+
+    iterator (Base base = Base()) : m_base(base) { }
+
+    reference operator*() const { return m_base->second; }
+    pointer operator->() { return &m_base->second; }
+    iterator& operator++() { m_base++; return *this; }
+    iterator operator++(int) { iterator tmp = *this; ++(*this); return tmp; }
+    friend bool operator== (const iterator& a, const iterator& b) { return a.m_base == b.m_base; };
+    friend bool operator!= (const iterator& a, const iterator& b) { return a.m_base != b.m_base; };
+  };
+
+  using const_iterator = iterator;
+
+  Handle_set (Handle_map& map) : m_map (map) { }
+  iterator begin() { return iterator(m_map.begin()); }
+  iterator end() { return iterator(m_map.end()); }
+  const_iterator begin() const { return iterator(m_map.begin()); }
+  const_iterator end() const { return iterator(m_map.end()); }
+};
 
 } // namespace Sosage::Component
 

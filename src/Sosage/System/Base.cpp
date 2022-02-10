@@ -55,7 +55,7 @@ void Base::start_timer () { }
 void Base::stop_timer (const char*) { }
 #endif
 
-Content::Handles Base::components (const std::string& s)
+Component::Handle_set Base::components (const std::string& s)
 {
   return m_content.components(s);
 }

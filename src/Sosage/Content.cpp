@@ -81,14 +81,14 @@ void Content::clear()
 
 void Content::clear (const std::function<bool(Component::Handle)>& filter)
 {
-  for (auto& hset : m_data)
+  for (auto& hmap : m_data)
   {
-    Component::Handle_set& old_set = hset;
-    Component::Handle_set new_set;
-    for (const auto& c : old_set)
+    Component::Handle_map& old_map = hmap;
+    Component::Handle_map new_map;
+    for (const auto& c : old_map)
       if (!filter(c.second))
-        new_set.insert(c);
-    old_set.swap (new_set);
+        new_map.insert(c);
+    old_map.swap (new_map);
   }
 }
 
@@ -107,21 +107,21 @@ Component::Component_map::const_iterator Content::end() const
   return m_data.end();
 }
 
-Content::Handles Content::components (const std::string& s)
+Component::Handle_set Content::components (const std::string& s)
 {
-  return Handles(handle_set(s));
+  return Component::Handle_set(handle_map(s));
 }
 
 
 void Content::remove (const std::string& key, bool optional)
 {
-  Component::Handle_set& hset = handle_set(component(key));
-  Component::Handle_set::iterator iter = hset.find(key);
-  if (optional && iter == hset.end())
+  Component::Handle_map& hmap = handle_map(component(key));
+  Component::Handle_map::iterator iter = hmap.find(key);
+  if (optional && iter == hmap.end())
     return;
   
-  check (iter != hset.end(), "Entity " + key + " doesn't exist");
-  hset.erase(iter);
+  check (iter != hmap.end(), "Entity " + key + " doesn't exist");
+  hmap.erase(iter);
 }
 
 void Content::emit (const std::string& signal)
@@ -134,18 +134,18 @@ bool Content::receive (const std::string& signal)
   count_access(signal);
   count_request();
 
-  Component::Handle_set& hset = handle_set(component(signal));
+  Component::Handle_map& hmap = handle_map(component(signal));
 
-  Component::Handle_set::iterator iter = hset.find(signal);
-  if (iter == hset.end())
+  Component::Handle_map::iterator iter = hmap.find(signal);
+  if (iter == hmap.end())
     return false;
   if (!Component::cast<Component::Signal>(iter->second))
     return false;
-  hset.erase (iter);
+  hmap.erase (iter);
   return true;
 }
 
-Component::Handle_set& Content::handle_set (const std::string& s)
+Component::Handle_map& Content::handle_map (const std::string& s)
 {
   auto iter = m_map_component.find(s);
   if (iter == m_map_component.end())
