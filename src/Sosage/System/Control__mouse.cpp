@@ -617,12 +617,17 @@ bool Control::collides (C::Position_handle cursor, C::Image_handle img)
 std::string Control::first_collision
 (C::Position_handle cursor, const std::function<bool(C::Image_handle)>& filter)
 {
+  SOSAGE_TIMER_START(System_Control__Collision_test);
   C::Image_handle out;
   for (const auto& e : components("image"))
     if (auto img = C::cast<C::Image>(e))
+    {
+      if (out && img->z() < out->z())
+        continue;
       if (filter(img) & collides(cursor, img))
-        if (!out || img->z() > out->z())
           out = img;
+    }
+  SOSAGE_TIMER_STOP(System_Control__Collision_test);
   return out ? out->entity() : "";
 }
 
