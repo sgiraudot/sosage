@@ -62,15 +62,15 @@ bool Logic::function_add (const std::vector<std::string>& args)
   check (args.size() == 2, "function_add takes 2 arguments");
   std::string id = args[0];
 
-  auto integer = request<C::Int>(id + ":value");
+  auto integer = request<C::Int>(id , "value");
   if (integer)
   {
     int diff = to_int(args[1]);
     integer->set (integer->value() + diff);
 
-    auto action = request<C::Action>(id + ":" + std::to_string(integer->value()));
+    auto action = request<C::Action>(id, std::to_string(integer->value()));
     if (!action)
-      action = get<C::Action>(id + ":default");
+      action = get<C::Action>(id , "default");
 
     action->launch();
     while (action->on())
@@ -78,9 +78,9 @@ bool Logic::function_add (const std::vector<std::string>& args)
   }
   else
   {
-    auto list = request<C::Vector<std::string>>(id + ":list");
+    auto list = request<C::Vector<std::string>>(id , "list");
     if (!list)
-      list = set<C::Vector<std::string>>(id + ":list");
+      list = set<C::Vector<std::string>>(id , "list");
     list->push_back (args[1]);
   }
   return true;
@@ -108,16 +108,16 @@ bool Logic::function_camera (const std::vector<std::string>& args)
       double begin_time = m_current_time;
       double end_time = begin_time + duration;
 
-      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy", "event"));
 
       auto anim = set<C::Tuple<Point, Point, double, double>>
-          ("Camera:move60fps", position->value(), Point(xtarget, ytarget),
+          ("Camera", "move60fps", position->value(), Point(xtarget, ytarget),
            begin_time, end_time);
       m_current_action->schedule (end_time, anim);
     }
   }
   else
-    set<C::GUI_position_animation>("Camera:animation", m_current_time, m_current_time + Config::camera_speed,
+    set<C::GUI_position_animation>("Camera", "animation", m_current_time, m_current_time + Config::camera_speed,
                                    position, Point (xtarget, ytarget));
   return true;
 }
@@ -130,15 +130,15 @@ bool Logic::function_control (const std::vector<std::string>& args)
 {
   check (args.size() == 1 or args.size() == 2, "function_load control takes 1 or 2 arguments");
   std::string leader = args[0];
-  set<C::String>("Player:name", leader);
+  set<C::String>("Player", "name", leader);
 
   if (args.size() == 2)
   {
     std::string follower = args[1];
-    set<C::String>("Follower:name", follower);
+    set<C::String>("Follower", "name", follower);
   }
   else
-    remove ("Follower:name", true);
+    remove ("Follower", "name", true);
   return true;
 }
 
@@ -156,7 +156,7 @@ bool Logic::function_cutscene (const std::vector<std::string>&)
  */
 bool Logic::function_exit (const std::vector<std::string>&)
 {
-  emit ("Game:exit");
+  emit ("Game", "exit");
   return true;
 }
 
@@ -190,33 +190,33 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
   check (init_args.size() <= 3, "function_goto takes at most 3 arguments");
   std::string id = "";
   std::vector<std::string> args;
-  if (init_args.size() > 0 && request<C::Image>(init_args[0] + "_head:image"))
+  if (init_args.size() > 0 && request<C::Image>(init_args[0] + "_head", "image"))
   {
     id = init_args[0];
     args = std::vector<std::string>(init_args.begin() + 1, init_args.end());
   }
   else
   {
-    id = value<C::String>("Player:name");
+    id = value<C::String>("Player", "name");
     args = init_args;
   }
 
   if (args.size() == 2)
   {
     if (compute_path_from_target
-        (C::make_handle<C::Absolute_position>("Goto:view", Point (to_int(args[0]), to_int(args[1]))),
+        (C::make_handle<C::Absolute_position>("Goto", "view", Point (to_int(args[0]), to_int(args[1]))),
          id))
-     m_current_action->schedule (0, get<C::Path>(id + ":path"));
+     m_current_action->schedule (0, get<C::Path>(id , "path"));
   }
   else
   {
     std::string target
-        = (args.empty() ? get<C::Action>("Character:action")->target_entity() : args[0]);
+        = (args.empty() ? get<C::Action>("Character", "action")->target_entity() : args[0]);
     debug << "Action_goto " << target << std::endl;
 
-    auto position = request<C::Position>(target + ":view");
+    auto position = request<C::Position>(target , "view");
     if (compute_path_from_target(position, id))
-     m_current_action->schedule (0, get<C::Path>(id + ":path"));
+     m_current_action->schedule (0, get<C::Path>(id , "path"));
   }
 
   return true;
@@ -230,12 +230,12 @@ bool Logic::function_hide (const std::vector<std::string>& args)
 {
   check (args.size() == 1, "function_hide takes 1 argument");
   std::string target = args[0];
-  if (auto question = request<C::String>(target + ":question"))
-    get<C::Set<std::string>>("Hints:list")->erase(target);
-  else if (request<C::Group>(target + ":group"))
-    emit (target + ":set_hidden");
+  if (auto question = request<C::String>(target , "question"))
+    get<C::Set<std::string>>("Hints", "list")->erase(target);
+  else if (request<C::Group>(target , "group"))
+    emit (target , "set_hidden");
   else
-    get<C::Image>(target + ":image")->on() = false;
+    get<C::Image>(target , "image")->on() = false;
   return true;
 }
 
@@ -245,8 +245,8 @@ bool Logic::function_hide (const std::vector<std::string>& args)
 bool Logic::function_load (const std::vector<std::string>& args)
 {
   check (args.size() == 2, "function_load takes 2 arguments");
-  set<C::String>("Game:new_room", args[0]);
-  set<C::String>("Game:new_room_origin", args[1]);
+  set<C::String>("Game", "new_room", args[0]);
+  set<C::String>("Game", "new_room_origin", args[1]);
   status()->push(LOCKED);
   return true;
 }
@@ -273,12 +273,12 @@ bool Logic::function_look (const std::vector<std::string>& args)
   std::string id = "";
   if (args.empty())
   {
-    id = value<C::String>("Player:name");
-    target = get<C::Action>("Character:action")->target_entity();
+    id = value<C::String>("Player", "name");
+    target = get<C::Action>("Character", "action")->target_entity();
   }
   else if (args.size() == 1)
   {
-    id = value<C::String>("Player:name");
+    id = value<C::String>("Player", "name");
     target = args[0];
   }
   else // if (args.size() == 2)
@@ -289,15 +289,15 @@ bool Logic::function_look (const std::vector<std::string>& args)
 
   debug << "Action_look " << id << " " << target << std::endl;
 
-  if (target == "default" || !request<C::Position>(target + ":position"))
-    set<C::Absolute_position>(id + ":lookat",
+  if (target == "default" || !request<C::Position>(target , "position"))
+    set<C::Absolute_position>(id , "lookat",
                               value<C::Position>(CURSOR__POSITION));
   else
   {
-    auto state = request<C::String>(target + ":state");
+    auto state = request<C::String>(target , "state");
     if (!state || state->value() != "inventory")
-      set<C::Absolute_position>(id + ":lookat",
-                                value<C::Position>(target + ":position"));
+      set<C::Absolute_position>(id , "lookat",
+                                value<C::Position>(target , "position"));
   }
   return true;
 }
@@ -325,7 +325,7 @@ bool Logic::function_move (const std::vector<std::string>& args)
   int x = to_int(args[1]);
   int y = to_int(args[2]);
 
-  if (request<C::Group>(target + ":group")) // character
+  if (request<C::Group>(target , "group")) // character
   {
     bool looking_right;
     if (args.size() == 4)
@@ -334,11 +334,11 @@ bool Logic::function_move (const std::vector<std::string>& args)
     {
       int z = to_int(args[3]);
       looking_right = to_bool(args[4]);
-      set<C::Int>(target + ":z", z);
+      set<C::Int>(target , "z", z);
     }
 
-    get<C::Absolute_position>(target + "_body:position")->set(Point(x, y));
-    set<C::Boolean>(target + ":looking_right", looking_right);
+    get<C::Absolute_position>(target + "_body", "position")->set(Point(x, y));
+    set<C::Boolean>(target , "looking_right", looking_right);
   }
   else
   {
@@ -351,18 +351,18 @@ bool Logic::function_move (const std::vector<std::string>& args)
       double begin_time = frame_time(m_current_time);
       double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
 
-      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy", "event"));
 
-      auto pos = get<C::Position>(target + ":position");
+      auto pos = get<C::Position>(target , "position");
 
       auto anim = set<C::Tuple<Point, Point, double, double>>
-          (target + ":move", pos->value(), Point(x,y), begin_time, end_time);
+          (target , "move", pos->value(), Point(x,y), begin_time, end_time);
       m_current_action->schedule (end_time,  anim);
     }
     else
     {
-      get<C::Position>(target + ":position")->set (Point(x, y));
-      get<C::Image>(target + ":image")->z() = z;
+      get<C::Position>(target , "position")->set (Point(x, y));
+      get<C::Image>(target , "image")->z() = z;
     }
   }
   return true;
@@ -382,12 +382,12 @@ bool Logic::function_move60fps (const std::vector<std::string>& args)
   double begin_time = m_current_time;
   double end_time = begin_time + duration;
 
-  m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+  m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy", "event"));
 
-  auto pos = get<C::Position>(target + ":position");
+  auto pos = get<C::Position>(target , "position");
 
   auto anim = set<C::Tuple<Point, Point, double, double>>
-      (target + ":move60fps", pos->value(), Point(x,y), begin_time, end_time);
+      (target , "move60fps", pos->value(), Point(x,y), begin_time, end_time);
   m_current_action->schedule (end_time,  anim);
   return true;
 }
@@ -404,49 +404,49 @@ bool Logic::function_play (const std::vector<std::string>& args)
   check (args.size() == 2 || args.size() == 1, "function_play takes 1 or 2 arguments");
   std::string target = args[0];
 
-  if (request<C::Base>(target + ":sound"))
+  if (request<C::Base>(target , "sound"))
   {
-    emit (target + ":play_sound");
+    emit (target , "play_sound");
     return true;
   }
-  if (auto music = request<C::Music>(target + ":music"))
+  if (auto music = request<C::Music>(target , "music"))
   {
-    set<C::Variable>("Game:music", music);
+    set<C::Variable>("Game", "music", music);
     if (args.size() == 2)
     {
       double duration = to_double(args[1]);
       set<C::Tuple<double, double, bool>>
-          ("Music:fade",
+          ("Music", "fade",
            m_current_time, m_current_time + duration, true);
     }
     else
-      emit ("Music:start");
+      emit ("Music", "start");
     return true;
   }
 
   // else, animation
   if (args.size() == 2) // Target is character
   {
-    const std::string& character = value<C::String>("Player:name");
+    const std::string& character = value<C::String>("Player", "name");
 
     double duration = to_double(args[1]);
-    set<C::String>(character + ":start_animation", target);
+    set<C::String>(character , "start_animation", target);
 
     if (duration > 0)
       m_current_action->schedule (m_current_time + duration,
                                   C::make_handle<C::Signal>
-                                  (character + ":stop_animation"));
+                                  (character , "stop_animation"));
   }
   else
   {
-    auto animation = get<C::Animation>(target + ":image");
-    emit (target + ":start_animation");
+    auto animation = get<C::Animation>(target , "image");
+    emit (target , "start_animation");
 
     if (animation->loop())
     {
       // If animation loop, add a fake state so that it's reloaded
       // on if we exist and reener the room
-      set<C::String>(target + ":state", "Dummy");
+      set<C::String>(target , "state", "Dummy");
     }
     else
     {
@@ -458,7 +458,7 @@ bool Logic::function_play (const std::vector<std::string>& args)
       double latest_frame_time = frame_time(m_current_time);
       double end_time = latest_frame_time + (nb_frames + 0.5) / double(Config::animation_fps);
 
-      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy", "event"));
     }
   }
   return true;
@@ -482,16 +482,16 @@ bool Logic::function_rescale (const std::vector<std::string>& args)
     double begin_time = frame_time(m_current_time);
     double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
 
-    m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+    m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy", "event"));
 
-    auto img = get<C::Image>(target + ":image");
+    auto img = get<C::Image>(target , "image");
 
     auto anim = set<C::Tuple<double, double, double, double>>
-        (target + ":rescale", img->scale(), scale, begin_time, end_time);
+        (target , "rescale", img->scale(), scale, begin_time, end_time);
    m_current_action->schedule (end_time,  anim);
   }
   else
-    get<C::Image>(target + ":image")->set_scale(scale);
+    get<C::Image>(target , "image")->set_scale(scale);
   return true;
 }
 
@@ -507,12 +507,12 @@ bool Logic::function_rescale60fps (const std::vector<std::string>& args)
   double begin_time = m_current_time;
   double end_time = begin_time + duration;
 
-  m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy:event"));
+  m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy", "event"));
 
-  auto img = get<C::Image>(target + ":image");
+  auto img = get<C::Image>(target , "image");
 
   auto anim = set<C::Tuple<double, double, double, double>>
-      (target + ":rescale60fps", img->scale(), scale, begin_time, end_time);
+      (target , "rescale60fps", img->scale(), scale, begin_time, end_time);
   m_current_action->schedule (end_time,  anim);
 
   return true;
@@ -526,7 +526,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
 {
   check (args.size() == 2 || args.size() == 3, "function_set takes 2 or 3 arguments");
   std::string target = args[0];
-  auto current_state = get<C::String>(target + ":state");
+  auto current_state = get<C::String>(target , "state");
   std::string state = args[1];
 
   if (args.size() == 3)
@@ -538,16 +538,16 @@ bool Logic::function_set (const std::vector<std::string>& args)
 
   if (current_state->value() == "inventory")
   {
-    get<C::Inventory>("Game:inventory")->remove(target);
-    //get<C::Absolute_position>(target + ":position")->absolute() = false;
+    get<C::Inventory>("Game", "inventory")->remove(target);
+    //get<C::Absolute_position>(target , "position")->absolute() = false;
   }
 
   current_state->set (state);
   if (state == "inventory")
   {
-    get<C::Inventory>("Game:inventory")->add(target);
+    get<C::Inventory>("Game", "inventory")->add(target);
     auto img
-        = get<C::Image>(target + ":image");
+        = get<C::Image>(target , "image");
     img->set_relative_origin(0.5, 0.5);
     img->z() = Config::inventory_depth;
     img->on() = false;
@@ -556,7 +556,7 @@ bool Logic::function_set (const std::vector<std::string>& args)
   // Changing the state an object might change the labels of its
   // related action, force an update if using gamepad
   if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
-    emit("Action_selector:force_update");
+    emit("Action_selector", "force_update");
 
   return true;
 }
@@ -569,7 +569,7 @@ bool Logic::function_shake (const std::vector<std::string>& args)
   check (args.size() == 2, "function_shake takes 2 arguments");
   double intensity  = to_double(args[0]);
   double duration = to_double(args[1]);
-  auto shake = set<C::Array<double,4>>("Camera:shake", m_current_time, m_current_time + duration,
+  auto shake = set<C::Array<double,4>>("Camera", "shake", m_current_time, m_current_time + duration,
                                        intensity, value<C::Absolute_position>(CAMERA__POSITION).x());
   m_current_action->schedule (m_current_time + duration, shake);
   return true;
@@ -583,23 +583,23 @@ bool Logic::function_show (const std::vector<std::string>& args)
 {
   check (args.size() == 1, "function_show takes 2 arguments");
   std::string target = args[0];
-  if (auto group = request<C::Group>(target + ":group")) // Character
-    emit (target + ":set_visible");
-  else if (auto question = request<C::String>(target + ":question"))
-    get<C::Set<std::string>>("Hints:list")->insert (target);
+  if (auto group = request<C::Group>(target , "group")) // Character
+    emit (target , "set_visible");
+  else if (auto question = request<C::String>(target , "question"))
+    get<C::Set<std::string>>("Hints", "list")->insert (target);
   else
   {
-    auto image = get<C::Image>(target + ":image");
+    auto image = get<C::Image>(target , "image");
     if (image->z() == Config::interface_depth) // window
     {
-      set<C::Variable>("Game:window", image);
-      emit ("Interface:show_window");
+      set<C::Variable>("Game", "window", image);
+      emit ("Interface", "show_window");
 
-      auto code = request<C::Code>(target + ":code");
+      auto code = request<C::Code>(target , "code");
       if (code)
       {
         status()->push (IN_CODE);
-        set<C::Variable>("Game:code", code);
+        set<C::Variable>("Game", "code", code);
       }
       else
         status()->push (IN_WINDOW);
@@ -621,11 +621,11 @@ bool Logic::function_stop (const std::vector<std::string>& args)
   std::string target = args[0];
   if (target == "music")
   {
-    remove("Game:music");
-    emit ("Music:stop");
+    remove("Game", "music");
+    emit ("Music", "stop");
   }
   else
-    emit (target + ":stop_animation");
+    emit (target , "stop_animation");
   return true;
 }
 
@@ -643,7 +643,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 
   if (args.size() == 1)
   {
-    id = value<C::String>("Player:name");
+    id = value<C::String>("Player", "name");
     text = args[0];
   }
   else
@@ -664,7 +664,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   if (args.size() == 3)
     nb_seconds_read = to_double(args[2]);
   else
-    nb_seconds_read = (value<C::Int>("Dialog:speed") / double(Config::MEDIUM_SPEED))
+    nb_seconds_read = (value<C::Int>("Dialog", "speed") / double(Config::MEDIUM_SPEED))
                       * (Config::min_reading_time + nb_char * Config::char_spoken_time);
 
   double nb_seconds_lips_moving = nb_char * Config::char_spoken_time;
@@ -673,19 +673,19 @@ bool Logic::function_talk (const std::vector<std::string>& args)
         << nb_seconds_lips_moving << "s" << std::endl;
 
   Point position = value<C::Double>(CAMERA__ZOOM)
-                   * (value<C::Position>(id + "_body:position") - value<C::Position>(CAMERA__POSITION));
+                   * (value<C::Position>(id + "_body", "position") - value<C::Position>(CAMERA__POSITION));
 
   int x = position.X();
 
-  double y_diff = value<C::Int>(id + ":dialog_height", 770);
-  auto img = request<C::Image>(id + "_body:image");
+  double y_diff = value<C::Int>(id , "dialog_height", 770);
+  auto img = request<C::Image>(id + "_body", "image");
   if (!img)
-    img = get<C::Image>(value<C::String>("Player:name") + "_body:image");
+    img = get<C::Image>(value<C::String>("Player", "name") + "_body", "image");
 
   y_diff *= img->scale() * value<C::Double>(CAMERA__ZOOM);
 
   int y = position.Y() - y_diff;
-  double size_factor = 0.75 * (value<C::Int>("Dialog:size") / double(Config::MEDIUM));
+  double size_factor = 0.75 * (value<C::Int>("Dialog", "size") / double(Config::MEDIUM));
 
   int height = 80 * size_factor * dialog.size();
   y = y - (height / 2);
@@ -700,7 +700,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 
   for (auto img : dialog)
   {
-    auto pos = set<C::Absolute_position> (img->entity() + ":position", Point(x,y));
+    auto pos = set<C::Absolute_position> (img->entity() , "position", Point(x,y));
     y += 80 * size_factor;
 
    m_current_action->schedule (m_current_time + std::max(1., nb_seconds_read), img);
@@ -709,11 +709,11 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 
   if (id != "Hinter")
   {
-    emit (id + ":start_talking");
+    emit (id , "start_talking");
 
    m_current_action->schedule (m_current_time + nb_seconds_lips_moving,
                                     C::make_handle<C::Signal>
-                                    (id + ":stop_talking"));
+                                    (id , "stop_talking"));
   }
   SOSAGE_TIMER_STOP(Logic__function_talk);
 
@@ -726,7 +726,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
 bool Logic::function_timer (const std::vector<std::string>& args)
 {
   check (args.size() == 1, "function_timer takes 1 argument");
-  set<C::Double>(args[0] + ":init_value", m_current_time);
+  set<C::Double>(args[0] , "init_value", m_current_time);
   return true;
 }
 
@@ -741,11 +741,11 @@ bool Logic::function_trigger (const std::vector<std::string>& args)
   check (!args.empty(), "function_trigger takes at least 1 argument");
   std::string id = args[0];
   // Dialog
-  if (request<C::Dialog>(id + ":dialog"))
+  if (request<C::Dialog>(id , "dialog"))
     return subfunction_trigger_dialog (args);
 
   // Action
-  if (auto action = request<C::Action>(id + ":action"))
+  if (auto action = request<C::Action>(id , "action"))
   {
     action->launch();
     return true;
@@ -759,8 +759,8 @@ bool Logic::function_trigger (const std::vector<std::string>& args)
   }
 
   // else Menu
-  set<C::String>("Game:triggered_menu", id);
-  emit("Show:menu");
+  set<C::String>("Game", "triggered_menu", id);
+  emit("Show", "menu");
 
   return true;
 }
@@ -786,15 +786,15 @@ bool Logic::function_wait (const std::vector<std::string>& args)
   {
     double time = to_double(args[0]);
 //    debug << "Schedule wait until " << m_current_time + time << std::endl;
-    m_current_action-> schedule (m_current_time + time, C::make_handle<C::Base>("wait"));
+    m_current_action-> schedule (m_current_time + time, C::make_handle<C::Base>("wait", "wait"));
   }
   else if (args.size() == 2)
   {
     const std::string& id = args[0];
-    double time = value<C::Double>(id + ":init_value") + to_double(args[1]);
+    double time = value<C::Double>(id , "init_value") + to_double(args[1]);
 //    debug << "Schedule wait until " << time << std::endl;
     m_current_action->reset_scheduled();
-    m_current_action->schedule (time, C::make_handle<C::Base>("wait"));
+    m_current_action->schedule (time, C::make_handle<C::Base>("wait", "wait"));
   }
   return false;
 }

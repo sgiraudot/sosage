@@ -29,8 +29,8 @@
 namespace Sosage::Component
 {
 
-Code::Code (const std::string& id)
-  : Base (id), m_hover(std::size_t(-1))
+Code::Code (const std::string& entity, const std::string& component)
+  : Base (entity, component), m_hover(std::size_t(-1))
 { }
 
 void Code::add_button (const std::string& value, int x, int y, int w, int h)

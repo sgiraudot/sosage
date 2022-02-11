@@ -29,10 +29,11 @@
 namespace Sosage::Component
 {
 
-Animation::Animation (const std::string& id, const std::string& file_name, int z,
+Animation::Animation (const std::string& entity, const std::string& component,
+                      const std::string& file_name, int z,
                       int width_subdiv, int height_subdiv, bool loop,
                       const Collision_type& collision, bool with_highlight)
-  : Image(id, file_name, z, collision, with_highlight)
+  : Image(entity, component, file_name, z, collision, with_highlight)
   , m_width_subdiv (width_subdiv)
   , m_height_subdiv (height_subdiv)
   , m_current(0)

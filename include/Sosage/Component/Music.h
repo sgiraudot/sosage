@@ -41,9 +41,8 @@ private:
   
 public:
 
-  Music (const std::string& id, const std::string& file_name);
+  Music (const std::string& entity, const std::string& component, const std::string& file_name);
   virtual ~Music();
-  virtual std::string str() const;
   const Core::Sound::Music& core() const;
   const bool& on() const;
   bool& on();

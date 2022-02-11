@@ -30,8 +30,8 @@
 namespace Sosage::Component
 {
 
-Locale::Locale (const std::string& id)
-  : Base(id)
+Locale::Locale (const std::string& entity, const std::string& component)
+  : Base(entity, component)
 { }
 
 void Locale::add (const std::string& line, const std::string& translation)
@@ -42,7 +42,7 @@ void Locale::add (const std::string& line, const std::string& translation)
 const std::string& Locale::get (const std::string& line)
 {
   auto iter = m_dict.find (line);
-  check (iter != m_dict.end(), "Line " + line + " not found in locale " + this->id());
+  check (iter != m_dict.end(), "Line " + line + " not found in locale " + str());
   return iter->second;
 }
 

@@ -40,9 +40,8 @@ private:
   
 public:
 
-  Sound (const std::string& id, const std::string& file_name);
+  Sound (const std::string& entity, const std::string& component, const std::string& file_name);
   virtual ~Sound();
-  virtual std::string str() const;
   const Core::Sound::Sound& core() const;
 };
 

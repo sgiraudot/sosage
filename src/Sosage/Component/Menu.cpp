@@ -161,8 +161,8 @@ void Menu::Vertex_wrapper::update_setting (const std::string& setting, const std
       (*this)[i].update_setting (setting, value);
 }
 
-Menu::Menu (const std::string& id)
-  : Base(id)
+Menu::Menu (const std::string& entity, const std::string& component)
+  : Base(entity, component)
 {
   m_root = m_tree.add_vertex();
 }

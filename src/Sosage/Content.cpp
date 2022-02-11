@@ -112,31 +112,35 @@ Component::Handle_set Content::components (const std::string& s)
   return Component::Handle_set(handle_map(s));
 }
 
-
-void Content::remove (const std::string& key, bool optional)
+void Content::remove (const std::string& entity, const std::string& component, bool optional)
 {
-  Component::Handle_map& hmap = handle_map(component(key));
-  Component::Handle_map::iterator iter = hmap.find(key);
+  Component::Handle_map& hmap = handle_map(component);
+  Component::Handle_map::iterator iter = hmap.find(Component::Id(entity, component));
   if (optional && iter == hmap.end())
     return;
   
-  check (iter != hmap.end(), "Entity " + key + " doesn't exist");
+  check (iter != hmap.end(), "Id " + entity + ":" + component + " doesn't exist");
   hmap.erase(iter);
 }
 
-void Content::emit (const std::string& signal)
+void Content::remove (Component::Handle handle)
 {
-  set<Component::Signal>(signal);
+  remove (handle->entity(), handle->component());
 }
 
-bool Content::receive (const std::string& signal)
+void Content::emit (const std::string& entity, const std::string& component)
 {
-  count_access(signal);
+  set<Component::Signal>(entity, component);
+}
+
+bool Content::receive (const std::string& entity, const std::string& component)
+{
+  count_access(entity, component);
   count_request();
 
-  Component::Handle_map& hmap = handle_map(component(signal));
+  Component::Handle_map& hmap = handle_map(component);
 
-  Component::Handle_map::iterator iter = hmap.find(signal);
+  Component::Handle_map::iterator iter = hmap.find(Component::Id(entity, component));
   if (iter == hmap.end())
     return false;
   if (!Component::cast<Component::Signal>(iter->second))
@@ -181,9 +185,9 @@ void Content::count_get()
 
 #ifdef SOSAGE_PROFILE
 
-void Content::count_access (const std::string& k)
+void Content::count_access (const std::string& entity, const std::string& component)
 {
-  auto inserted = m_access_count.insert (std::make_pair (k, 1));
+  auto inserted = m_access_count.insert (std::make_pair (entity + ":" + component, 1));
   if (!inserted.second)
     inserted.first->second ++;
 }
@@ -210,7 +214,7 @@ void Content::display_access()
 
 #else
 
-void Content::count_access (const std::string&) { }
+void Content::count_access (const std::string&, const std::string&) { }
 void Content::display_access () { }
 
 #endif

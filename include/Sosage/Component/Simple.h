@@ -51,8 +51,8 @@ protected:
   
 public:
 
-  Simple (const std::string& id, const T& value = T())
-    : Base(id), m_value(value) { }
+  Simple (const std::string& entity, const std::string& component, const T& value = T())
+    : Base(entity, component), m_value(value) { }
   virtual ~Simple() { }
   virtual const T& value() const { return m_value; }
   void set (const T& value)
@@ -81,8 +81,8 @@ class Array : public Simple<std::array<T,S>>
 public:
 
   template <typename ... T2>
-  Array (const std::string& id, T2 ... t)
-    : Base(id, {t...}) { }
+  Array (const std::string& entity, const std::string& component, T2 ... t)
+    : Base(entity, component, {t...}) { }
 
   T& operator[] (const std::size_t& idx)
   { return this->m_value[idx]; }
@@ -100,8 +100,8 @@ class Vector : public Simple<std::vector<T> >
   using Base = Simple<std::vector<T> >;
 public:
 
-  Vector (const std::string& id, const std::vector<T>& value = std::vector<T>())
-    : Base(id, value) { }
+  Vector (const std::string& entity, const std::string& component, const std::vector<T>& value = std::vector<T>())
+    : Base(entity, component, value) { }
 
   void push_back (const T& t) { this->m_value.push_back (t); }
 };
@@ -117,8 +117,8 @@ class Set : public Simple<std::unordered_set<T> >
   using Base = Simple<set_t>;
 public:
 
-  Set(const std::string& id)
-    : Base(id) { }
+  Set(const std::string& entity, const std::string& component)
+    : Base(entity, component) { }
 
   void insert (const T& t) { this->m_value.insert (t); }
   void erase (const T& t) { this->m_value.erase (t); }
@@ -138,8 +138,8 @@ class Pair : public Simple<std::pair<T1,T2>>
 
 public:
 
-  Pair (const std::string& id, const T1& t1, const T2& t2)
-    : Base(id, std::make_pair(t1, t2))
+  Pair (const std::string& entity, const std::string& component, const T1& t1, const T2& t2)
+    : Base(entity, component, std::make_pair(t1, t2))
   { }
 
   T1& first() { return this->m_value.first(); }
@@ -163,8 +163,8 @@ class Tuple : public Simple<std::tuple<T...> >
 
 public:
 
-  Tuple (const std::string& id, T ... t)
-    : Base(id, std::make_tuple(t...))
+  Tuple (const std::string& entity, const std::string& component, T ... t)
+    : Base(entity, component, std::make_tuple(t...))
   { }
 
   template <std::size_t I>

@@ -51,25 +51,25 @@ void Control::idle_mouse()
   }
 
   // Detect collision with clickable objets
-  auto source = request<C::String>("Interface:source_object");
+  auto source = request<C::String>("Interface", "source_object");
 
   std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
   {
-    if (!request<C::String>(img->entity() + ":name"))
+    if (!request<C::String>(img->entity() , "name"))
       return false;
     // Can't combine with a goto
     if (source)
-      if (request<C::Boolean>(img->entity() + "_goto:right"))
+      if (request<C::Boolean>(img->entity() + "_goto", "right"))
         return false;
     return true;
   });
 
   if (collision != "")
-    set<C::String>("Interface:active_object", collision);
+    set<C::String>("Interface", "active_object", collision);
   else
-    remove ("Interface:active_object", true);
+    remove ("Interface", "active_object", true);
 
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
     idle_sub_click (collision);
 }
 
@@ -77,7 +77,7 @@ void Control::idle_touchscreen()
 {
   idle_sub_update_active_objects();
 
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
   {
     auto cursor = get<C::Position>(CURSOR__POSITION);
 
@@ -90,7 +90,7 @@ void Control::idle_touchscreen()
 
     // Detect collision with clickable objets
     std::string collision = "";
-    if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
+    if (auto active_objects = request<C::Vector<std::string>>("Interface", "active_objects"))
         collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
         {
           std::string id = img->entity();
@@ -98,7 +98,7 @@ void Control::idle_touchscreen()
           if (pos != std::string::npos)
             id.resize(pos);
 
-          if (!request<C::String>(id + ":name"))
+          if (!request<C::String>(id , "name"))
             return false;
 
           // Only collide with active objects
@@ -115,37 +115,37 @@ void Control::idle_touchscreen()
 
 void Control::idle_sub_click (const std::string& target)
 {
-  emit ("Click:play_sound");
-  auto source = request<C::String>("Interface:source_object");
+  emit ("Click", "play_sound");
+  auto source = request<C::String>("Interface", "source_object");
   if (target != "")
   {
     // Source exists
     if (source)
     {
       std::string action_id = target + "_inventory_" + source->value();
-      if (auto action = request<C::Action>(action_id + ":action"))
-        set<C::Variable>("Character:triggered_action", action);
+      if (auto action = request<C::Action>(action_id , "action"))
+        set<C::Variable>("Character", "triggered_action", action);
       else
-        set<C::Variable>("Character:triggered_action", get<C::Action>("Default_inventory:action"));
-      remove("Interface:source_object");
+        set<C::Variable>("Character", "triggered_action", get<C::Action>("Default_inventory", "action"));
+      remove("Interface", "source_object");
     }
     // Object is path to another room
-    else if (auto right = request<C::Boolean>(target + "_goto:right"))
+    else if (auto right = request<C::Boolean>(target + "_goto", "right"))
       set_action(target + "_goto", "Default_goto");
     // Default
     else
     {
-      set<C::String>("Interface:action_choice_target", target);
+      set<C::String>("Interface", "action_choice_target", target);
       status()->push (ACTION_CHOICE);
     }
-    remove ("Interface:active_object");
+    remove ("Interface", "active_object");
   }
   else
   {
     if (source)
-      remove("Interface:source_object");
+      remove("Interface", "source_object");
     else
-      emit("Cursor:clicked"); // Logic handles this click
+      emit("Cursor", "clicked"); // Logic handles this click
   }
 }
 
@@ -160,17 +160,17 @@ void Control::action_choice_mouse()
   });
 
   if (collision != "")
-    set<C::String>("Interface:active_button", collision);
+    set<C::String>("Interface", "active_button", collision);
   else
-    remove ("Interface:active_button", true);
+    remove ("Interface", "active_button", true);
 
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
     action_choice_sub_click (collision);
 }
 
 void Control::action_choice_touchscreen()
 {
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
   {
     auto cursor = get<C::Position>(CURSOR__POSITION);
 
@@ -187,8 +187,8 @@ void Control::action_choice_touchscreen()
 void Control::action_choice_sub_click (const std::string& id)
 {
   status()->pop();
-  remove ("Interface:action_choice_target", true);
-  remove ("Interface:active_action", true);
+  remove ("Interface", "action_choice_target", true);
+  remove ("Interface", "active_action", true);
 
   if (id == "")
     return;
@@ -207,14 +207,14 @@ void Control::action_choice_sub_click (const std::string& id)
 
   if (action == "inventory")
   {
-    set<C::String>("Interface:target_object", target);
+    set<C::String>("Interface", "target_object", target);
     status()->push(OBJECT_CHOICE);
   }
   else if (action == "combine")
-    set<C::String>("Interface:source_object", target);
+    set<C::String>("Interface", "source_object", target);
   else
     set_action (object_id, "Default_" + action);
-  emit ("Click:play_sound");
+  emit ("Click", "play_sound");
 }
 
 void Control::object_choice_mouse()
@@ -225,9 +225,9 @@ void Control::object_choice_mouse()
   std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
   {
     std::string id = img->entity();
-    if (!request<C::String>(id + ":name"))
+    if (!request<C::String>(id , "name"))
       return false;
-    auto state = request<C::String>(id + ":state");
+    auto state = request<C::String>(id , "state");
     if (!state)
       return false;
 
@@ -235,17 +235,17 @@ void Control::object_choice_mouse()
   });
 
   if (collision != "")
-    set<C::String>("Interface:active_object", collision);
+    set<C::String>("Interface", "active_object", collision);
   else
-    remove ("Interface:active_object", true);
+    remove ("Interface", "active_object", true);
 
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
   {
     // If cursor above inventory threshold, go back to idle
     if (cursor->value().y() < Config::world_height - Config::inventory_height)
     {
       status()->pop();
-      remove ("Interface:target_object");
+      remove ("Interface", "target_object");
       return;
     }
 
@@ -255,7 +255,7 @@ void Control::object_choice_mouse()
 
 void Control::object_choice_touchscreen()
 {
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
   {
     auto cursor = get<C::Position>(CURSOR__POSITION);
 
@@ -263,9 +263,9 @@ void Control::object_choice_touchscreen()
     std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
     {
       std::string id = img->entity();
-      if (!request<C::String>(id + ":name"))
+      if (!request<C::String>(id , "name"))
         return false;
-      auto state = request<C::String>(id + ":state");
+      auto state = request<C::String>(id , "state");
       if (!state)
         return false;
 
@@ -273,15 +273,15 @@ void Control::object_choice_touchscreen()
     });
 
     if (collision != "")
-      set<C::String>("Interface:active_object", collision);
+      set<C::String>("Interface", "active_object", collision);
     else
-      remove ("Interface:active_object", true);
+      remove ("Interface", "active_object", true);
 
     // If cursor above inventory threshold, go back to idle
     if (cursor->value().y() < Config::world_height - Config::inventory_height)
     {
       status()->pop();
-      remove ("Interface:target_object");
+      remove ("Interface", "target_object");
       return;
     }
     object_choice_sub_click (collision);
@@ -293,13 +293,13 @@ void Control::object_choice_sub_click (const std::string& id)
   if (id == "")
     return;
 
-  auto target = get<C::String>("Interface:target_object");
+  auto target = get<C::String>("Interface", "target_object");
   std::string action_id = target->value() + "_inventory_" + id;
   set_action (action_id, "Default_inventory");
-  remove ("Interface:target_object");
-  remove("Interface:active_object");
+  remove ("Interface", "target_object");
+  remove("Interface", "active_object");
   status()->pop();
-  emit ("Click:play_sound");
+  emit ("Click", "play_sound");
 }
 
 void Control::inventory_mouse()
@@ -317,13 +317,13 @@ void Control::inventory_mouse()
   std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
   {
     std::string id = img->entity();
-    if (!request<C::String>(id + ":name"))
+    if (!request<C::String>(id , "name"))
       return false;
-    auto state = request<C::String>(id + ":state");
+    auto state = request<C::String>(id , "state");
     if (!state)
       return false;
 
-    if (auto source = request<C::String>("Interface:source_object"))
+    if (auto source = request<C::String>("Interface", "source_object"))
       if (source->value() == id)
         return false;
 
@@ -331,17 +331,17 @@ void Control::inventory_mouse()
   });
 
   if (collision != "")
-    set<C::String>("Interface:active_object", collision);
+    set<C::String>("Interface", "active_object", collision);
   else
-    remove ("Interface:active_object", true);
+    remove ("Interface", "active_object", true);
 
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
     inventory_sub_click (collision);
 }
 
 void Control::inventory_touchscreen()
 {
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
   {
     auto cursor = get<C::Position>(CURSOR__POSITION);
 
@@ -356,13 +356,13 @@ void Control::inventory_touchscreen()
     std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
     {
       std::string id = img->entity();
-      if (!request<C::String>(id + ":name"))
+      if (!request<C::String>(id , "name"))
         return false;
-      auto state = request<C::String>(id + ":state");
+      auto state = request<C::String>(id , "state");
       if (!state)
         return false;
 
-      if (auto source = request<C::String>("Interface:source_object"))
+      if (auto source = request<C::String>("Interface", "source_object"))
         if (source->value() == id)
           return false;
 
@@ -370,9 +370,9 @@ void Control::inventory_touchscreen()
     });
 
     if (collision != "")
-      set<C::String>("Interface:active_object", collision);
+      set<C::String>("Interface", "active_object", collision);
     else
-      remove ("Interface:active_object", true);
+      remove ("Interface", "active_object", true);
 
     inventory_sub_click (collision);
   }
@@ -383,37 +383,37 @@ void Control::inventory_sub_click (const std::string& target)
   if (target == "")
     return;
 
-  emit ("Click:play_sound");
-  auto source = request<C::String>("Interface:source_object");
+  emit ("Click", "play_sound");
+  auto source = request<C::String>("Interface", "source_object");
 
   if (source)
   {
     std::string action_id = target + "_inventory_" + source->value();
     set_action (action_id, "Default_inventory");
-    remove("Interface:source_object");
+    remove("Interface", "source_object");
   }
   else // No target, no source, create actions for inventory object
   {
-    set<C::String>("Interface:action_choice_target", target);
+    set<C::String>("Interface", "action_choice_target", target);
     status()->pop();
     status()->push (INVENTORY_ACTION_CHOICE);
   }
-  remove("Interface:active_object");
+  remove("Interface", "active_object");
 }
 
 void Control::window_mouse()
 {
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
   {
-    emit("Interface:hide_window");
+    emit("Interface", "hide_window");
     status()->pop();
   }
 }
 void Control::window_touchscreen()
 {
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
   {
-    emit("Interface:hide_window");
+    emit("Interface", "hide_window");
     status()->pop();
   }
 }
@@ -422,57 +422,57 @@ void Control::code_mouse()
 {
   auto cursor = get<C::Position>(CURSOR__POSITION);
 
-  auto code = get<C::Code>("Game:code");
-  auto window = get<C::Image>("Game:window");
+  auto code = get<C::Code>("Game", "code");
+  auto window = get<C::Image>("Game", "window");
 
   bool collision = collides (cursor, window);
   if (collision)
   {
     auto position
-      = get<C::Position>(window->entity() + ":position");
+      = get<C::Position>(window->entity() , "position");
 
     Point p = cursor->value() - Vector(position->value()) + Vector (0.5  * window->width(),
                                                                     0.5 * window->height());
 
     if (code->hover(p.X(), p.Y()))
-      emit("Code:hover");
+      emit("Code", "hover");
   }
 
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
     code_sub_click(collision);
 }
 
 void Control::code_touchscreen()
 {
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
   {
     auto cursor = get<C::Position>(CURSOR__POSITION);
-    auto window = get<C::Image>("Game:window");
+    auto window = get<C::Image>("Game", "window");
     code_sub_click(collides(cursor, window));
   }
 }
 
 void Control::code_sub_click(bool collision)
 {
-  auto code = get<C::Code>("Game:code");
-  auto window = get<C::Image>("Game:window");
+  auto code = get<C::Code>("Game", "code");
+  auto window = get<C::Image>("Game", "window");
   if (!collision)
   {
-    emit("Interface:hide_window");
+    emit("Interface", "hide_window");
     code->reset();
     status()->pop();
   }
   else
   {
     auto position
-      = get<C::Position>(window->entity() + ":position");
+      = get<C::Position>(window->entity() , "position");
 
     auto cursor = get<C::Position>(CURSOR__POSITION);
 
     Point p = cursor->value() - Vector(position->value()) + Vector (0.5  * window->width(),
                                                                     0.5 * window->height());
     if (code->click(p.X(), p.Y()))
-      emit ("code:button_clicked");
+      emit ("code", "button_clicked");
   }
 }
 
@@ -493,18 +493,18 @@ void Control::dialog_mouse()
                                     std::ptrdiff_t(std::string("Dialog_choice_").size()),
                                     collision.end()));
     std::cerr << "Choice = " << choice << std::endl;
-    set<C::Int>("Interface:active_dialog_item", choice);
+    set<C::Int>("Interface", "active_dialog_item", choice);
   }
   else
-    remove ("Interface:active_dialog_item", true);
+    remove ("Interface", "active_dialog_item", true);
 
-  if (receive("Cursor:clicked") && choice != -1)
+  if (receive("Cursor", "clicked") && choice != -1)
     dialog_sub_click ();
 }
 
 void Control::dialog_touchscreen()
 {
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
   {
     auto cursor = get<C::Position>(CURSOR__POSITION);
 
@@ -520,23 +520,23 @@ void Control::dialog_touchscreen()
       choice = to_int(std::string(collision.begin() +
                                       std::ptrdiff_t(std::string("Dialog_choice_").size()),
                                       collision.end()));
-      set<C::Int>("Interface:active_dialog_item", choice);
+      set<C::Int>("Interface", "active_dialog_item", choice);
       dialog_sub_click ();
     }
     else
-      remove ("Interface:active_dialog_item", true);
+      remove ("Interface", "active_dialog_item", true);
   }
 }
 
 void Control::dialog_sub_click ()
 {
-  set<C::Int>("Dialog:choice", value<C::Int>("Interface:active_dialog_item"));
-  emit("Dialog:clean");
-  remove ("Interface:active_dialog_item", true);
-  remove("Game:current_dialog");
+  set<C::Int>("Dialog", "choice", value<C::Int>("Interface", "active_dialog_item"));
+  emit("Dialog", "clean");
+  remove ("Interface", "active_dialog_item", true);
+  remove("Game", "current_dialog");
 
   status()->pop();
-  emit ("Click:play_sound");
+  emit ("Click", "play_sound");
 }
 
 void Control::menu_mouse()
@@ -550,17 +550,17 @@ void Control::menu_mouse()
   });
 
   if (collision != "")
-    set<C::String>("Interface:active_menu_item", collision);
+    set<C::String>("Interface", "active_menu_item", collision);
   else
-    remove ("Interface:active_menu_item", true);
+    remove ("Interface", "active_menu_item", true);
 
-  if (receive("Cursor:clicked") && collision != "")
-    emit ("Menu:clicked");
+  if (receive("Cursor", "clicked") && collision != "")
+    emit ("Menu", "clicked");
 }
 
 void Control::menu_touchscreen()
 {
-  if (receive("Cursor:clicked"))
+  if (receive("Cursor", "clicked"))
   {
     auto cursor = get<C::Position>(CURSOR__POSITION);
 
@@ -572,8 +572,8 @@ void Control::menu_touchscreen()
 
     if (collision != "")
     {
-      set<C::String>("Interface:active_menu_item", collision);
-      emit ("Menu:clicked");
+      set<C::String>("Interface", "active_menu_item", collision);
+      emit ("Menu", "clicked");
     }
   }
 }
@@ -583,7 +583,7 @@ bool Control::collides (C::Position_handle cursor, C::Image_handle img)
   if (!img->on() || img->collision() == UNCLICKABLE)
     return false;
 
-  auto position = get<C::Position>(img->entity() + ":position");
+  auto position = get<C::Position>(img->entity() , "position");
   Point p = position->value();
 
   if (auto absol = C::cast<C::Absolute_position>(position))

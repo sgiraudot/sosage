@@ -49,7 +49,7 @@ class Inventory : public Base
   
 public:
 
-  Inventory (const std::string& id);
+  Inventory (const std::string& entity, const std::string& component);
   void clear();
   std::vector<std::string>::const_iterator begin() const;
   std::vector<std::string>::const_iterator end() const;

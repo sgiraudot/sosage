@@ -30,22 +30,15 @@
 namespace Sosage::Component
 {
 
-Base::Base(const std::string& id) : m_id (id), m_altered(false)
-{
-  std::size_t pos = m_id.find_first_of(':');
-  if (pos == std::string::npos)
-    return;
-  // This is a duplicate storage, but as we both need to often use id and entity/component,
-  // it's better to lose a bit of memory and avoid always creating strings
-  m_entity = std::string (m_id.begin(), m_id.begin() + pos);
-  m_component = std::string (m_id.begin() + pos + 1, m_id.end());
-}
+Base::Base (const std::string& entity, const std::string& component)
+  : m_id (entity, component), m_altered(false)
+{ }
 
 Base::~Base() { }
 
 bool Base::is_system() const
 {
-  return isupper(m_id[0]);
+  return isupper(entity()[0]);
 }
 
 void Base::mark_as_altered()
@@ -63,14 +56,14 @@ bool Base::was_altered() const
   return m_altered;
 }
 
-const std::string& Base::id() const
+const Id& Base::id() const
 {
   return m_id;
 }
 
 const std::string& Base::entity() const
 {
-  return m_entity;
+  return m_id.first;
 }
 
 // Special handling of entity for characters
@@ -78,9 +71,9 @@ std::string Base::character_entity() const
 {
   for (const std::string& postfix : { "_body", "_head", "_mouth" })
   {
-    std::size_t pos = m_id.find(postfix);
+    std::size_t pos = entity().find(postfix);
     if (pos != std::string::npos)
-      return std::string (m_id.begin(), m_id.begin() + pos);
+      return std::string (entity().begin(), entity().begin() + pos);
   }
   return entity();
 }
@@ -90,22 +83,22 @@ std::string Base::target_entity() const
 {
   for (const std::string& prefix : { "_inventory_" })
   {
-    std::size_t pos = m_id.find(prefix);
+    std::size_t pos = entity().find(prefix);
     if (pos != std::string::npos)
-      return std::string (m_id.begin(), m_id.begin() + pos);
+      return std::string (entity().begin(), entity().begin() + pos);
   }
-  return std::string (m_id.begin(), m_id.begin() + m_id.find_last_of('_'));
+  return std::string (entity().begin(), entity().begin() + entity().find_last_of('_'));
 }
 
 const std::string& Base::component() const
 {
   SOSAGE_COUNT(Component__component);
-  return m_component;
+  return m_id.second;
 }
 
 std::string Base::str() const
 {
-  return m_id;
+  return m_id.first + ":" + m_id.second;
 }
 
 } // namespace Sosage::Component

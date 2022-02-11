@@ -38,41 +38,29 @@ Base::~Base() { }
 
 void Base::init() { }
 
-#ifdef SOSAGE_PROFILE
-
-void Base::start_timer ()
-{
-  m_start = Time::now();
-}
-
-void Base::stop_timer (const std::string& id)
-{
-  set<Component::Int>(id + ":time", Time::now() - m_start);
-}
-
-#else
-void Base::start_timer () { }
-void Base::stop_timer (const char*) { }
-#endif
-
 Component::Handle_set Base::components (const std::string& s)
 {
   return m_content.components(s);
 }
 
-void Base::remove (const std::string& key, bool optional)
+void Base::remove (const std::string& entity, const std::string& component, bool optional)
 {
-  m_content.remove(key, optional);
+  m_content.remove(entity, component, optional);
 }
 
-void Base::emit (const std::string& signal)
+void Base::remove (Component::Handle handle)
 {
-  m_content.emit (signal);
+  m_content.remove(handle);
 }
 
-bool Base::receive (const std::string& signal)
+void Base::emit (const std::string& entity, const std::string& component)
 {
-  return m_content.receive(signal);
+  m_content.emit (entity, component);
+}
+
+bool Base::receive (const std::string& entity, const std::string& component)
+{
+  return m_content.receive(entity, component);
 }
 
 Component::Status_handle Base::status()
@@ -82,15 +70,15 @@ Component::Status_handle Base::status()
 
 const std::string& Base::locale (const std::string& line)
 {
-  if (auto l = request<Component::Locale>("Game:locale"))
+  if (auto l = request<Component::Locale>("Game", "locale"))
     return l->get(line);
   // else
   return line;
 }
 
-const std::string& Base::locale_get (const std::string& id)
+const std::string& Base::locale_get (const std::string& entity, const std::string& component)
 {
-  return locale (value<Component::String>(id));
+  return locale (value<Component::String>(entity, component));
 }
 
 } // namespace Sosage::System

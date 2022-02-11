@@ -161,7 +161,7 @@ void compile_package (const std::string& input_folder, const std::string& output
       abs_map_path += ".graph";
 
 
-      Component::Ground_map map ("", path, 0, 0, []{});
+      Component::Ground_map map ("", "", path, 0, 0, []{});
       map.write(abs_map_path);
 
       std::string map_path = std::string(abs_map_path.begin() + root_size, abs_map_path.end());

@@ -54,44 +54,41 @@ public:
   virtual void init();
   virtual void run() = 0;
 
-#ifdef SOSAGE_PROFILE
-  void start_timer ();
-  void stop_timer (const std::string& id);
-#else
-  void start_timer ();
-  void stop_timer (const char*);
-#endif
-
   Component::Handle_set components (const std::string& s);
   template <typename T>
-  std::shared_ptr<T> get (const std::string& key) { return m_content.get<T>(key); }
+  std::shared_ptr<T> get (const std::string& entity, const std::string& component)
+  { return m_content.get<T>(entity, component); }
   template <typename T>
   std::shared_ptr<T> get (const Fast_access_component& fac) { return m_content.get<T>(fac); }
   template <typename T>
-  std::shared_ptr<T> request (const std::string& key) { return m_content.request<T>(key); }
+  std::shared_ptr<T> request (const std::string& entity, const std::string& component)
+  { return m_content.request<T>(entity, component); }
   template <typename T>
   typename T::const_reference value (const Fast_access_component& fac) { return m_content.value<T>(fac); }
   template <typename T>
-  typename T::const_reference value (const std::string& key) { return m_content.value<T>(key); }
+  typename T::const_reference value (const std::string& entity, const std::string& component)
+  { return m_content.value<T>(entity, component); }
   template <typename T>
-  typename T::value_type value (const std::string& key, const typename T::value_type& default_value)
-  { return m_content.value<T>(key, default_value); }
+  typename T::value_type value (const std::string& entity, const std::string& component,
+                                const typename T::value_type& default_value)
+  { return m_content.value<T>(entity, component, default_value); }
   template <typename T, typename ... Args>
   std::shared_ptr<T> set (Args&& ... args) { return m_content.set<T>(std::forward<Args>(args)...); }
   template <typename T>
   void set (const std::shared_ptr<T>& t) { return m_content.set<T>(t); }
   template <typename T, typename ... Args>
-  std::shared_ptr<T> get_or_set (const std::string& id, Args&& ... args)
-  { return m_content.get_or_set<T>(id, std::forward<Args>(args)...); }
+  std::shared_ptr<T> get_or_set (const std::string& entity, const std::string& component, Args&& ... args)
+  { return m_content.get_or_set<T>(entity, component, std::forward<Args>(args)...); }
   template <typename T, typename ... Args>
   std::shared_ptr<T> set_fac (const Fast_access_component& fac, Args&& ... args)
   { return m_content.set_fac<T>(fac, std::forward<Args>(args)...); }
-  void remove (const std::string& key, bool optional = false);
-  void emit (const std::string& signal);
-  bool receive (const std::string& signal);
+  void remove (const std::string& entity, const std::string& component, bool optional = false);
+  void remove (Component::Handle handle);
+  void emit (const std::string& entity, const std::string& component);
+  bool receive (const std::string& entity, const std::string& component);
   Component::Status_handle status();
   const std::string& locale (const std::string& line);
-  const std::string& locale_get (const std::string& id);
+  const std::string& locale_get (const std::string& entity, const std::string& component);
 };
 
 using Handle = std::shared_ptr<Base>;

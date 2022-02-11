@@ -60,7 +60,8 @@ public:
   Component::Component_map::const_iterator begin() const;
   Component::Component_map::const_iterator end() const;
   Component::Handle_set components (const std::string& s);
-  void remove (const std::string& key, bool optional = false);
+  void remove (const std::string& entity, const std::string& component, bool optional = false);
+  void remove (Component::Handle handle);
 
   template <typename T>
   void set (const std::shared_ptr<T>& t)
@@ -83,21 +84,21 @@ public:
   }
 
   template <typename T, typename ... Args>
-  std::shared_ptr<T> get_or_set (const std::string& id, Args&& ... args)
+  std::shared_ptr<T> get_or_set (const std::string& entity, const std::string& component, Args&& ... args)
   {
     count_set_args();
-    if (auto out = request<T>(id))
+    if (auto out = request<T>(entity, component))
       return out;
-    return set<T> (id, args...);
+    return set<T> (entity, component, args...);
   }
 
   template <typename T>
-  std::shared_ptr<T> request (const std::string& key)
+  std::shared_ptr<T> request (const std::string& entity, const std::string& component)
   {
-    count_access(key);
+    count_access(entity, component);
     count_request();
-    Component::Handle_map& hmap = handle_map(component(key));
-    Component::Handle_map::iterator iter = hmap.find(key);
+    Component::Handle_map& hmap = handle_map(component);
+    Component::Handle_map::iterator iter = hmap.find(Component::Id(entity, component));
     if (iter == hmap.end())
       return std::shared_ptr<T>();
 
@@ -106,26 +107,26 @@ public:
   }
 
   template <typename T>
-  typename T::const_reference value (const std::string& key)
+  typename T::const_reference value (const std::string& entity, const std::string& component)
   {
-    return get<T>(key)->value();
+    return get<T>(entity, component)->value();
   }
 
   template <typename T>
-  typename T::value_type value (const std::string& key,
+  typename T::value_type value (const std::string& entity, const std::string& component,
                                 const typename T::value_type& default_value)
   {
-    if (auto t = request<T>(key))
+    if (auto t = request<T>(entity, component))
       return t->value();
     return default_value;
   }
 
   template <typename T>
-  std::shared_ptr<T> get (const std::string& key)
+  std::shared_ptr<T> get (const std::string& entity, const std::string& component)
   {
     count_get();
-    std::shared_ptr<T> out = request<T>(key);
-    check (out != std::shared_ptr<T>(), "Cannot find " + key);
+    std::shared_ptr<T> out = request<T>(entity, component);
+    check (out != std::shared_ptr<T>(), "Cannot find " + entity + ":" + component);
     return out;
   }
 
@@ -150,16 +151,10 @@ public:
     return Component::cast<T>(m_fast_access_components[std::size_t(fac)])->value();
   }
 
-  void emit (const std::string& signal);
-  bool receive (const std::string& signal);
+  void emit (const std::string& entity, const std::string& component);
+  bool receive (const std::string& signal, const std::string& component);
 
 private:
-
-  std::string component (const std::string& id) const
-  {
-    std::size_t pos = id.find_first_of(':');
-    return std::string (id.begin() + pos + 1, id.end());
-  }
 
   Component::Handle_map& handle_map (const std::string& s);
 
@@ -170,10 +165,10 @@ private:
 
 #ifdef SOSAGE_PROFILE
   std::unordered_map<std::string, std::size_t> m_access_count;
-  void count_access (const std::string& k);
+  void count_access (const std::string& entity, const std::string& component);
   void display_access();
 #else
-  void count_access (const std::string&);
+  void count_access (const std::string&, const std::string&);
   void display_access ();
 #endif
 };

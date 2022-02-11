@@ -30,24 +30,27 @@
 namespace Sosage::Component
 {
 
-Image::Image (const std::string& id, int w, int h, int r, int g, int b, int a)
-  : Base(id), m_origin(0,0), m_z(Config::interface_depth), m_on(true),
+Image::Image (const std::string& entity, const std::string& component,
+              int w, int h, int r, int g, int b, int a)
+  : Base(entity, component), m_origin(0,0), m_z(Config::interface_depth), m_on(true),
     m_collision(BOX)
 {
   m_core = Core::Graphic::create_rectangle (w, h, r, g, b, a);
 }
 
-Image::Image (const std::string& id, const std::string& file_name, int z,
+Image::Image (const std::string& entity, const std::string& component,
+              const std::string& file_name, int z,
               const Collision_type& collision, bool with_highlight)
-  : Base(id), m_origin(0,0), m_z(z), m_on(true),
+  : Base(entity, component), m_origin(0,0), m_z(z), m_on(true),
     m_collision (collision)
 {
   m_core = Core::Graphic::load_image (file_name, (collision == PIXEL_PERFECT), with_highlight);
 }
 
-Image::Image (const std::string& id, Font_handle font, const std::string& color_str,
+Image::Image (const std::string& entity, const std::string& component,
+              Font_handle font, const std::string& color_str,
               const std::string& text, bool outlined)
-  : Base(id), m_origin(0,0), m_z(Config::inventory_depth), m_on(true),
+  : Base(entity, component), m_origin(0,0), m_z(Config::inventory_depth), m_on(true),
     m_collision (BOX)
 {
   if (outlined)
@@ -57,8 +60,8 @@ Image::Image (const std::string& id, Font_handle font, const std::string& color_
 }
 
 // Image that share the same Graphic core
-Image::Image (const std::string& id, std::shared_ptr<Image> copy)
-  : Base(id), m_core (copy->m_core), m_origin(copy->m_origin),
+Image::Image (const std::string& entity, const std::string& component, std::shared_ptr<Image> copy)
+  : Base(entity, component), m_core (copy->m_core), m_origin(copy->m_origin),
     m_z(copy->m_z), m_on(copy->m_on), m_collision(copy->m_collision)
 {
 
@@ -71,7 +74,7 @@ void Image::compose_with (const std::shared_ptr<Image>& other)
 
 std::string Image::str() const
 {
-  return this->id() + " at (" + std::to_string (m_origin.x())
+  return Base::str() + " at (" + std::to_string (m_origin.x())
     + ";" + std::to_string(m_origin.y())
     + ";" + std::to_string(m_z) + "), " + (m_on ? "ON" : "OFF");
 }

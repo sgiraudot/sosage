@@ -35,7 +35,15 @@
 namespace Sosage::Component
 {
 
-using Handle_map = std::unordered_map<std::string, Handle>;
+struct Id_hash
+{
+  std::size_t operator() (const Id& id) const
+  {
+    return std::hash<std::string>()(id.first) ^ std::hash<std::string>()(id.second);
+  }
+};
+
+using Handle_map = std::unordered_map<Id, Handle, Id_hash>;
 using Component_map = std::vector<Handle_map>;
 
 class Handle_set

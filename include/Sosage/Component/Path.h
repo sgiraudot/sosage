@@ -42,8 +42,8 @@ class Path : public Base
 
 public:
 
-  Path (const std::string& id, const Point& coord);
-  Path (const std::string& id, std::vector<Point>& steps);
+  Path (const std::string& entity, const std::string& component, const Point& coord);
+  Path (const std::string& entity, const std::string& component, std::vector<Point>& steps);
   virtual std::string str() const;
   std::size_t size() const;
   const Point& operator[] (const std::size_t& idx) const;

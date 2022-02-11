@@ -45,20 +45,20 @@ Sound::Sound (Content& content)
 void Sound::run()
 {
   SOSAGE_TIMER_START(System_Sound__run);
-  auto music = request<C::Music>("Game:music");
+  auto music = request<C::Music>("Game", "music");
 
-  double volume = value<C::Int>("Music:volume") / 10.;
+  double volume = value<C::Int>("Music", "volume") / 10.;
   // Low level when playing, higher on cutscenes
   if (!status()->is(CUTSCENE))
     volume *= 0.25;
 
-  if (receive("Music:stop"))
+  if (receive("Music", "stop"))
   {
     m_core.stop_music();
     music->on() = false;
   }
 
-  if (receive("Music:start"))
+  if (receive("Music", "start"))
   {
     debug << value<C::Double>(CLOCK__TIME) << ": music start" << std::endl;
     check (music, "No music to start");
@@ -66,7 +66,7 @@ void Sound::run()
     music->on() = true;
   }
 
-  if (auto fade = request<C::Tuple<double, double, bool>>("Music:fade"))
+  if (auto fade = request<C::Tuple<double, double, bool>>("Music", "fade"))
   {
     check (music, "No music to fade");
     double current_time = value<C::Double> (CLOCK__TIME);
@@ -74,10 +74,10 @@ void Sound::run()
     m_core.set_volume (volume);
     m_core.fade(music->core(), fade->get<1>() - current_time, fade->get<2>());
     music->on() = true;
-    remove("Music:fade");
+    remove("Music", "fade");
   }
 
-  if (receive("Music:volume_changed"))
+  if (receive("Music", "volume_changed"))
     m_core.set_volume (volume);
 
   if (music)
@@ -102,32 +102,32 @@ void Sound::run()
     }
   }
 
-  if (receive ("code:play_failure"))
+  if (receive ("code", "play_failure"))
     m_core.play_sound
       (get<C::Sound>
-       (get<C::Code>("Game:code")->entity() +"_failure:sound")->core(),
-       value<C::Int>("Sounds:volume") / 10.);
-  else if (receive ("code:play_success"))
+       (get<C::Code>("Game", "code")->entity() +"_failure", "sound")->core(),
+       value<C::Int>("Sounds", "volume") / 10.);
+  else if (receive ("code", "play_success"))
     m_core.play_sound
       (get<C::Sound>
-       (get<C::Code>("Game:code")->entity() +"_success:sound")->core(),
-       value<C::Int>("Sounds:volume") / 10.);
-  else if (receive ("code:play_click"))
+       (get<C::Code>("Game", "code")->entity() +"_success", "sound")->core(),
+       value<C::Int>("Sounds", "volume") / 10.);
+  else if (receive ("code", "play_click"))
     m_core.play_sound
       (get<C::Sound>
-       (get<C::Code>("Game:code")->entity() +"_button:sound")->core(),
-       value<C::Int>("Sounds:volume") / 10.);
+       (get<C::Code>("Game", "code")->entity() +"_button", "sound")->core(),
+       value<C::Int>("Sounds", "volume") / 10.);
 
-  std::vector<std::string> to_remove;
+  std::vector<C::Handle> to_remove;
   for (C::Handle ev : components("play_sound"))
   {
-    m_core.play_sound (get<C::Sound> (ev->entity() + ":sound")->core(),
-                       value<C::Int>("Sounds:volume") / 10.);
-    to_remove.push_back (ev->id());
+    m_core.play_sound (get<C::Sound> (ev->entity() , "sound")->core(),
+                       value<C::Int>("Sounds", "volume") / 10.);
+    to_remove.push_back (ev);
   }
 
-  for (const std::string& id : to_remove)
-    remove (id);
+  for (C::Handle c : to_remove)
+    remove (c);
 
   SOSAGE_TIMER_STOP(System_Sound__run);
 }

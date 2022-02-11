@@ -56,7 +56,7 @@ class Code : public Base
   
 public:
 
-  Code (const std::string& id);
+  Code (const std::string& entity, const std::string& component);
   void add_button (const std::string& value, int x, int y, int w, int h);
   void add_answer_item (const std::string& value);
   bool hover (int x = -1, int y = -1);

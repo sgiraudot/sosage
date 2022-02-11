@@ -44,7 +44,7 @@ private:
 
 public:
 
-  Group (const std::string& id);
+  Group (const std::string& entity, const std::string& component);
   void add (Handle h);
   void remove (Handle h);
 

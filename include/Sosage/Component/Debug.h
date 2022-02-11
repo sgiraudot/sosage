@@ -43,7 +43,7 @@ private:
   
 public:
 
-  Debug (const std::string& id, Content& content, const Clock& clock);
+  Debug (const std::string& entity, const std::string& component, Content& content, const Clock& clock);
   virtual ~Debug();
   std::string debug_str();
 };

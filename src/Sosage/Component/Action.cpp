@@ -57,8 +57,8 @@ std::string Action::Step::to_string() const
   return out + "]";
 }
 
-Action::Action (const std::string& id)
-  : Base (id), m_next_step(0), m_on(false), m_still_waiting(false)
+Action::Action (const std::string& entity, const std::string& component)
+  : Base (entity, component), m_next_step(0), m_on(false), m_still_waiting(false)
 { }
 
 void Action::clear()
@@ -91,7 +91,7 @@ bool Action::on() const
 
 std::string Action::str() const
 {
-  std::string out = this->id() + ":\n";
+  std::string out = Base::str() + ":\n";
   
   for (const Step& s : m_steps)
   {
@@ -145,7 +145,7 @@ void Action::update_scheduled (const std::function<bool(Timed_handle)>& predicat
   for (const Timed_handle& th : m_timed)
     if (predicate(th))
       new_timed_handle.insert(th);
-    else if (th.second->id() == "wait")
+    else if (th.second->entity() == "wait")
     {
 //      debug << "Stop waiting" << std::endl;
       m_still_waiting = false;
@@ -162,7 +162,7 @@ bool Action::ready() const
 const Action::Step& Action::next_step()
 {
   check (m_next_step < m_steps.size(), "Trying to access step " + to_string(m_next_step)
-         + " of action " + this->id() + " of size " + to_string(m_steps.size()));
+         + " of action " + Base::str() + " of size " + to_string(m_steps.size()));
 
   // For debug porposes, we can skip some parts between "skip" and "include":
   if (m_steps[m_next_step].function() == "function_skip")

@@ -46,7 +46,7 @@ Input::Input (Content& content)
   , m_y(0)
   , m_fake_touchscreen(false)
 {
-  set_fac<C::Simple<Vector>>(STICK__DIRECTION, "Stick:direction", Vector(0, 0));
+  set_fac<C::Simple<Vector>>(STICK__DIRECTION, "Stick", "direction", Vector(0, 0));
 }
 
 void Input::run()
@@ -78,11 +78,11 @@ void Input::run()
     {
       if (m_fake_touchscreen)
       {
-        emit("Fake_touchscreen:disable");
+        emit("Fake_touchscreen", "disable");
         mouse_used = true;
       }
       else
-        emit("Fake_touchscreen:enable");
+        emit("Fake_touchscreen", "enable");
       m_fake_touchscreen = !m_fake_touchscreen;
     }
 
@@ -115,7 +115,7 @@ void Input::run()
   }
 
   if (previous_mode != mode->value() || previous_type != gamepad->value())
-    emit("Input_mode:changed");
+    emit("Input_mode", "changed");
 
   if (mode->value() == GAMEPAD)
   {
@@ -129,10 +129,10 @@ void Input::run()
         ev == Event(KEY_UP, ANDROID_BACK) ||
         ev == Event(BUTTON_UP, START) ||
         ev == Event(BUTTON_UP, SELECT))
-      emit ("Game:escape");
+      emit ("Game", "escape");
 
     if (ev == Event(WINDOW, EXIT))
-      emit ("Game:exit");
+      emit ("Game", "exit");
 
     if (ev == Event(KEY_UP, SPACE))
     {
@@ -153,7 +153,7 @@ void Input::run()
       continue;
 
     if (ev == Event(KEY_UP, D))
-      get<C::Boolean>("Game:debug")->toggle();
+      get<C::Boolean>("Game", "debug")->toggle();
 
 #ifdef SOSAGE_PROFILE
     if (ev == Event(KEY_UP, P))
@@ -186,15 +186,15 @@ void Input::run()
         key_on(ALT) = false;
       else if (ev == Event(KEY_UP, ENTER) && key_on(ALT))
       {
-        get<C::Boolean>("Window:fullscreen")->toggle();
-        emit ("Window:toggle_fullscreen");
+        get<C::Boolean>("Window", "fullscreen")->toggle();
+        emit ("Window", "toggle_fullscreen");
       }
     }
     if (ev == Event(WINDOW, RESIZED))
     {
-      get<C::Int>("Window:width")->set(ev.x());
-      get<C::Int>("Window:height")->set(ev.y());
-      emit ("Window:rescaled");
+      get<C::Int>("Window", "width")->set(ev.x());
+      get<C::Int>("Window", "height")->set(ev.y());
+      emit ("Window", "rescaled");
     }
 
     // If paused, ignore mouse events
@@ -211,15 +211,15 @@ void Input::run()
       {
         get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-        emit ("Cursor:clicked");
-        set<C::Boolean>("Click:left", true);
+        emit ("Cursor", "clicked");
+        set<C::Boolean>("Click", "left", true);
       }
       if (ev == Event(MOUSE_DOWN, RIGHT))
       {
         get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-        emit ("Cursor:clicked");
-        set<C::Boolean>("Click:left", false);
+        emit ("Cursor", "clicked");
+        set<C::Boolean>("Click", "left", false);
       }
     }
     else if (mode->value() == TOUCHSCREEN)
@@ -230,8 +230,8 @@ void Input::run()
         {
           get<C::Position>
               (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-          emit ("Cursor:clicked");
-          set<C::Boolean>("Click:left", true);
+          emit ("Cursor", "clicked");
+          set<C::Boolean>("Click", "left", true);
         }
       }
       else // Real touchscreen
@@ -240,8 +240,8 @@ void Input::run()
         {
           get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-          emit ("Cursor:clicked");
-          set<C::Boolean>("Click:left", true);
+          emit ("Cursor", "clicked");
+          set<C::Boolean>("Click", "left", true);
         }
       }
     }
@@ -255,15 +255,15 @@ void Input::run()
         {
           key_on(ev.value()) = true;
           if (ev.value() == TAB)
-            set<C::Boolean>("Switch:right", true);
+            set<C::Boolean>("Switch", "right", true);
           else if (ev.value() == I)
-            emit("Action:move");
+            emit("Action", "move");
           else if (ev.value() == J)
-            emit("Action:take");
+            emit("Action", "take");
           else if (ev.value() == L)
-            emit("Action:look");
+            emit("Action", "look");
           else if (ev.value() == K)
-            emit("Action:inventory");
+            emit("Action", "inventory");
         }
         else if (ev.type() == KEY_UP)
           key_on(ev.value()) = false;
@@ -293,17 +293,17 @@ void Input::run()
         {
           key_on(ev.value()) = true;
           if (ev.value() == LEFT_SHOULDER)
-            set<C::Boolean>("Switch:right", false);
+            set<C::Boolean>("Switch", "right", false);
           else if (ev.value() == RIGHT_SHOULDER)
-            set<C::Boolean>("Switch:right", true);
+            set<C::Boolean>("Switch", "right", true);
           else if (ev.value() == NORTH)
-            emit("Action:move");
+            emit("Action", "move");
           else if (ev.value() == WEST)
-            emit("Action:take");
+            emit("Action", "take");
           else if (ev.value() == EAST)
-            emit("Action:look");
+            emit("Action", "look");
           else if (ev.value() == SOUTH)
-            emit("Action:inventory");
+            emit("Action", "inventory");
         }
         else if (ev.type() == BUTTON_UP)
           key_on(ev.value()) = false;
@@ -337,7 +337,7 @@ void Input::run()
       }
 
       if (previous_stick != value<C::Simple<Vector>>(STICK__DIRECTION))
-        emit("Stick:moved");
+        emit("Stick", "moved");
     }
   }
 

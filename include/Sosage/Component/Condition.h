@@ -37,7 +37,7 @@ class Condition : public Value<bool>
 {
 public:
 
-  Condition (const std::string& id);
+  Condition (const std::string& entity, const std::string& component);
   virtual bool value() const = 0;
   virtual std::string str() const;
 };
@@ -55,7 +55,7 @@ private:
   bool m_memory;
 public:
 
-  Boolean (const std::string& id, const bool& value);
+  Boolean (const std::string& entity, const std::string& component, const bool& value);
   void set(const bool& value);
   void toggle();
   virtual bool value() const;
@@ -73,8 +73,9 @@ class Value_condition : public Condition
 
 public:
 
-  Value_condition (const std::string& id, Value_handle<T> handle, const T& value)
-    : Condition(id), m_handle (handle), m_value (value)
+  Value_condition (const std::string& entity, const std::string& component,
+                   Value_handle<T> handle, const T& value)
+    : Condition(entity, component), m_handle (handle), m_value (value)
   { }
 
   virtual bool value() const { return m_handle->value() == m_value; }
@@ -91,8 +92,9 @@ class Simple_condition : public Condition
 
 public:
 
-  Simple_condition (const std::string& id, Simple_handle<T> handle, const T& value)
-    : Condition(id), m_handle (handle), m_value (value)
+  Simple_condition (const std::string& entity, const std::string& component,
+                    Simple_handle<T> handle, const T& value)
+    : Condition(entity, component), m_handle (handle), m_value (value)
   { }
 
   virtual bool value() const { return m_handle->value() == m_value; }
@@ -107,7 +109,7 @@ class And : public Condition
   
 public:
 
-  And (const std::string& id,
+  And (const std::string& entity, const std::string& component,
        Condition_handle first, Condition_handle second);
   virtual bool value() const;
 };
@@ -120,7 +122,7 @@ class Or : public Condition
   
 public:
 
-  Or (const std::string& id,
+  Or (const std::string& entity, const std::string& component,
       Condition_handle first, Condition_handle second);
   virtual bool value() const;
 };
@@ -133,7 +135,7 @@ class Not : public Condition
   
 public:
 
-  Not (const std::string& id, Condition_handle value);
+  Not (const std::string& entity, const std::string& component, Condition_handle value);
   virtual bool value() const;
 };
 
@@ -143,12 +145,12 @@ using Not_handle = std::shared_ptr<Not>;
 template <typename T>
 Value_condition_handle<T> make_value_condition (Value_handle<T> handle, const T& value)
 {
-  return make_handle<Value_condition<T> >(handle->entity() + ":value_cond", handle, value);
+  return make_handle<Value_condition<T> >(handle->entity(), "value_cond", handle, value);
 }
 template <typename T>
 Simple_condition_handle<T> make_simple_condition (Simple_handle<T> handle, const T& value)
 {
-  return make_handle<Simple_condition<T> >(handle->entity() + ":simple_cond", handle, value);
+  return make_handle<Simple_condition<T> >(handle->entity(), "simple_cond", handle, value);
 }
 
 And_handle make_and (Condition_handle h0, Condition_handle h1);

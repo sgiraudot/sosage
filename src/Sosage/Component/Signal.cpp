@@ -29,8 +29,8 @@
 namespace Sosage::Component
 {
 
-Signal::Signal (const std::string& id)
-  : Base(id)
+Signal::Signal (const std::string& entity, const std::string& component)
+  : Base(entity, component)
 { }
 
 } // namespace Sosage::Component

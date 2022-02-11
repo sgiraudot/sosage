@@ -65,7 +65,7 @@ private:
 
 public:
 
-  Dialog (const std::string& id, const std::string& end = "");
+  Dialog (const std::string& entity, const std::string& component, const std::string& end = "");
   GVertex add_vertex (const std::string& character = "",
                       const std::string& line = "");
   GEdge add_edge (GVertex source, GVertex target,

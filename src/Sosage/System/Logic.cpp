@@ -88,7 +88,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(function_wait);
   INIT_DISPATCHER(function_zoom);
 
-  set<C::Action>("Logic:action");
+  set<C::Action>("Logic", "action");
 }
 
 void Logic::run ()
@@ -102,10 +102,10 @@ void Logic::run ()
     return;
   }
 
-  if (request<C::Signal>("Game:in_new_room"))
+  if (request<C::Signal>("Game", "in_new_room"))
     status()->pop();
 
-  bool skip_dialog = receive("Game:skip_dialog");
+  bool skip_dialog = receive("Game", "skip_dialog");
 
   std::set<std::string> done;
   for (auto c : components("action"))
@@ -118,7 +118,7 @@ void Logic::run ()
           if (th.first == 0) // special case for Path
           {
             auto saved_path = C::cast<C::Path>(th.second);
-            auto current_path = request<C::Path>(saved_path->id());
+            auto current_path = request<C::Path>(saved_path->entity(), saved_path->component());
             if (saved_path == current_path)
               return true;
             return false;
@@ -127,15 +127,15 @@ void Logic::run ()
           {
             if (C::cast<C::Signal>(th.second))
               set (th.second);
-            else if (th.second->id() != "wait")
-              remove (th.second->id());
+            else if (th.second->entity() != "wait")
+              remove (th.second);
             return false;
           }
           else if (skip_dialog)
           {
             if (contains(th.second->entity(), "Comment_"))
             {
-              remove (th.second->id());
+              remove (th.second);
               return false;
             }
             else if (th.second->component() == "stop_talking")
@@ -148,46 +148,46 @@ void Logic::run ()
         });
       }
 
-  if (receive ("Cursor:clicked"))
+  if (receive ("Cursor", "clicked"))
   {
     compute_path_from_target(get<C::Position>(CURSOR__POSITION));
 
     // Cancel current action
-    if (auto action = request<C::Action>("Character:action"))
+    if (auto action = request<C::Action>("Character", "action"))
     {
-      auto logic_action = get<C::Action>("Logic:action");
+      auto logic_action = get<C::Action>("Logic", "action");
 
       for (const auto& th : action->scheduled())
       {
         if (th.first == 0) // special case for Path
           continue;
-        if (th.second->id().find("Comment_") == 0) // keep dialogs when moving
+        if (th.second->entity().find("Comment_") == 0) // keep dialogs when moving
           logic_action->schedule (th.first, th.second);
         else
         {
           if (C::cast<C::Signal>(th.second))
             set (th.second);
           else
-            remove (th.second->id());
+            remove (th.second);
         }
       }
 
       action->stop();
-      remove("Character:action");
+      remove("Character", "action");
     }
   }
-  if (receive ("Stick:moved"))
+  if (receive ("Stick", "moved"))
   {
     auto direction = get<C::Simple<Vector>>(STICK__DIRECTION);
-    const std::string& id = value<C::String>("Player:name");
+    const std::string& id = value<C::String>("Player", "name");
     if (direction->value() == Vector(0,0))
     {
-      remove(id + ":path", true);
-      emit(id + ":stop_walking");
+      remove(id , "path", true);
+      emit(id , "stop_walking");
     }
     else
     {
-      auto position = get<C::Position>(id + "_body:position");
+      auto position = get<C::Position>(id + "_body", "position");
 
       // Make direction "flatter" (45° becomes 30°, etc.)
       Vector dir = direction->value();
@@ -196,71 +196,71 @@ void Logic::run ()
     }
   }
 
-  if (receive ("code:button_clicked"))
+  if (receive ("code", "button_clicked"))
   {
-    auto code = get<C::Code>("Game:code");
-    auto window = get<C::Image>("Game:window");
+    auto code = get<C::Code>("Game", "code");
+    auto window = get<C::Image>("Game", "window");
     auto cropped
-      = get<C::Cropped>(window->entity() + "_button:image");
+      = get<C::Cropped>(window->entity() + "_button", "image");
 
     cropped->crop (code->xmin(), code->xmax(), code->ymin(), code->ymax());
     set<C::Absolute_position>
-      (window->entity() + "_button:position",
-       value<C::Position>(window->entity() + ":position")
+      (window->entity() + "_button", "position",
+       value<C::Position>(window->entity() , "position")
        + Vector(code->xmin(), code->ymin()));
 
     cropped->on() = true;
 
-    get<C::Action>("Logic:action")->schedule (m_current_time + Config::button_click_duration,
-                                              C::make_handle<C::Signal>("code:stop_flashing"));
+    get<C::Action>("Logic", "action")->schedule (m_current_time + Config::button_click_duration,
+                                              C::make_handle<C::Signal>("code", "stop_flashing"));
 
     if (code->failure())
     {
       code->reset();
-      emit ("code:play_failure");
+      emit ("code", "play_failure");
     }
     else if (code->success())
     {
       code->reset();
-      emit ("code:play_success");
-      get<C::Action>("Logic:action")->schedule (m_current_time + Config::button_click_duration,
-                                                C::make_handle<C::Signal>("code:quit"));
+      emit ("code", "play_success");
+      get<C::Action>("Logic", "action")->schedule (m_current_time + Config::button_click_duration,
+                                                C::make_handle<C::Signal>("code", "quit"));
     }
     else
-      emit ("code:play_click");
+      emit ("code", "play_click");
   }
 
-  if (receive ("code:stop_flashing"))
+  if (receive ("code", "stop_flashing"))
   {
-    auto window = get<C::Image>("Game:window");
+    auto window = get<C::Image>("Game", "window");
     auto cropped
-      = get<C::Cropped>(window->entity() + "_button:image");
+      = get<C::Cropped>(window->entity() + "_button", "image");
     cropped->on() = false;
   }
 
-  if (receive ("code:quit"))
+  if (receive ("code", "quit"))
   {
-    auto code = get<C::Code>("Game:code");
-    emit("Interface:hide_window");
+    auto code = get<C::Code>("Game", "code");
+    emit("Interface", "hide_window");
     code->reset();
-    remove("Code_hover:image", true);
+    remove("Code_hover", "image", true);
     status()->pop();
 
-    get<C::Action>(get<C::Code>("Game:code")->entity() + ":action")->launch();
+    get<C::Action>(get<C::Code>("Game", "code")->entity() , "action")->launch();
   }
 
-  if (auto follower = request<C::String>("Follower:name"))
+  if (auto follower = request<C::String>("Follower", "name"))
     follow (follower->value());
 
-  if (auto new_room_origin = request<C::String>("Game:new_room_origin"))
+  if (auto new_room_origin = request<C::String>("Game", "new_room_origin"))
   {
-    get<C::Action>(new_room_origin->value() + ":action")->launch();
-    remove ("Game:new_room_origin");
+    get<C::Action>(new_room_origin->value() , "action")->launch();
+    remove ("Game", "new_room_origin");
   }
 
-  if (auto triggered_action = request<C::Action>("Character:triggered_action"))
+  if (auto triggered_action = request<C::Action>("Character", "triggered_action"))
   {
-    if (auto action = request<C::Action>("Character:action"))
+    if (auto action = request<C::Action>("Character", "action"))
     {
       debug << "Action " << action->entity() << " interrupted" << std::endl;
       for (const auto& th : action->scheduled())
@@ -269,21 +269,21 @@ void Logic::run ()
         {
           if (C::cast<C::Signal>(th.second))
             set (th.second);
-          else if (th.second->id() != "wait")
-            remove (th.second->id());
+          else if (th.second->entity() != "wait")
+            remove (th.second);
         }
       }
       action->stop();
     }
     triggered_action->launch();
     debug << "Action " << triggered_action->entity() << " launched" << std::endl;
-    set<C::Variable>("Character:action", triggered_action);
-    remove ("Character:triggered_action");
+    set<C::Variable>("Character", "action", triggered_action);
+    remove ("Character", "triggered_action");
   }
 
   bool skip = false;
   if (status()->is(CUTSCENE))
-    skip = receive ("Game:skip_cutscene");
+    skip = receive ("Game", "skip_cutscene");
 
   for (auto c : components("action"))
     if (auto a = C::cast<C::Action>(c))
@@ -315,7 +315,7 @@ void Logic::run ()
 
         // Action might have changed state, let's transfer the scheduled
         // steps if that happens
-        auto new_a = request<C::Action>(a->id());
+        auto new_a = request<C::Action>(a->entity(), a->component());
         if (new_a && new_a != a && !a->scheduled().empty())
         {
           for (const auto& th : a->scheduled())
@@ -331,13 +331,13 @@ void Logic::run ()
 bool Logic::compute_path_from_target (C::Position_handle target,
                                       std::string id)
 {
-  auto ground_map = request<C::Ground_map>("Background:ground_map");
+  auto ground_map = request<C::Ground_map>("Background", "ground_map");
   if (!ground_map)
     return false;
 
   if (id == "")
-    id = value<C::String>("Player:name");
-  auto position = get<C::Position>(id + "_body:position");
+    id = value<C::String>("Player", "name");
+  auto position = get<C::Position>(id + "_body", "position");
 
   Point origin = position->value();
   Point t = target->value();
@@ -355,7 +355,7 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   if (path.empty() || ((path.size() == 1) && (path[0] == origin)))
     return false;
 
-  auto p = set<C::Path>(id + ":path", path);
+  auto p = set<C::Path>(id , "path", path);
   if ((*p)[0] == origin)
     p->current() ++;
   return true;
@@ -363,12 +363,12 @@ bool Logic::compute_path_from_target (C::Position_handle target,
 
 bool Logic::compute_path_from_direction (const Vector& direction)
 {
-  auto ground_map = request<C::Ground_map>("Background:ground_map");
+  auto ground_map = request<C::Ground_map>("Background", "ground_map");
   if (!ground_map)
     return false;
 
-  const std::string& id = value<C::String>("Player:name");
-  auto position = get<C::Position>(id + "_body:position");
+  const std::string& id = value<C::String>("Player", "name");
+  auto position = get<C::Position>(id + "_body", "position");
   Point origin = position->value();
 
   std::vector<Point> path;
@@ -379,7 +379,7 @@ bool Logic::compute_path_from_direction (const Vector& direction)
   if (path.empty() || ((path.size() == 1) && (path[0] == origin)))
     return false;
 
-  auto p = set<C::Path>(id + ":path", path);
+  auto p = set<C::Path>(id , "path", path);
   if ((*p)[0] == origin)
     p->current() ++;
   return true;
@@ -387,17 +387,17 @@ bool Logic::compute_path_from_direction (const Vector& direction)
 
 void Logic::follow (const std::string& follower)
 {
-  const std::string& player = value<C::String>("Player:name");
+  const std::string& player = value<C::String>("Player", "name");
 
-  auto pos_player = get<C::Position>(player + "_body:position");
-  auto pos_follower = get<C::Position>(follower + "_body:position");
+  auto pos_player = get<C::Position>(player + "_body", "position");
+  auto pos_follower = get<C::Position>(follower + "_body", "position");
 
   double dx = std::abs(pos_player->value().x() - pos_follower->value().x());
   double dy = std::abs(pos_player->value().y() - pos_follower->value().y());
 
-  bool is_moving = value<C::Boolean>(follower + ":walking");
+  bool is_moving = value<C::Boolean>(follower , "walking");
 
-  double z = get<C::Image>(player + "_body:image")->z();
+  double z = get<C::Image>(player + "_body", "image")->z();
 
   int reach_x = Config::object_reach_x * z / Config::follow_factor;
   int reach_y = Config::object_reach_y * z / Config::follow_factor;
@@ -413,8 +413,8 @@ void Logic::follow (const std::string& follower)
     compute_path_from_target (pos_player, follower);
   else
   {
-    remove(follower + ":path", true);
-    emit(follower + ":stop_walking");
+    remove(follower , "path", true);
+    emit(follower , "stop_walking");
   }
 }
 
@@ -422,15 +422,15 @@ void Logic::update_debug_info (C::Debug_handle debug_info)
 {
   if (debug_info->value())
   {
-    auto debug_font = get<C::Font> ("Debug:font");
-    auto dbg_img = set<C::Image> ("Debug:image",
+    auto debug_font = get<C::Font> ("Debug", "font");
+    auto dbg_img = set<C::Image> ("Debug", "image",
                                                     debug_font, "FF0000",
                                                     debug_info->debug_str());
-    auto dbg_pos = set<C::Absolute_position>("Debug:position", Point(0,0));
+    auto dbg_pos = set<C::Absolute_position>("Debug", "position", Point(0,0));
   }
   else
   {
-    auto dbg_img = request<C::Image> ("Debug:image");
+    auto dbg_img = request<C::Image> ("Debug", "image");
     if (dbg_img)
       dbg_img->on() = false;
 
@@ -450,7 +450,7 @@ bool Logic::apply_next_step (C::Action_handle action)
 
 bool Logic::subfunction_fade (bool fadein, double duration)
 {
-  auto fade = set<C::Tuple<double, double, bool>>("Camera:fade",
+  auto fade = set<C::Tuple<double, double, bool>>("Camera", "fade",
                                                   m_current_time, m_current_time + duration, fadein);
   m_current_action->schedule (m_current_time + duration, fade);
   return true;
@@ -460,30 +460,30 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
 {
   std::string id = args[0];
   bool is_continue = (args.size() > 1);
-  auto dialog = get<C::Dialog>(id + ":dialog");
+  auto dialog = get<C::Dialog>(id , "dialog");
 
-  auto action = get<C::Action>("Logic:action");
+  auto action = get<C::Action>("Logic", "action");
   action->clear();
 
   if (!is_continue)
   {
     status()->push(LOCKED);
-    if (auto pos = request<C::Int>("Saved_game:dialog_position"))
+    if (auto pos = request<C::Int>("Saved_game", "dialog_position"))
     {
       dialog->init (pos->value());
-      remove ("Saved_game:dialog_position");
+      remove ("Saved_game", "dialog_position");
     }
     else
       dialog->init();
   }
-  else if (auto choice = request<C::Int>("Dialog:choice"))
+  else if (auto choice = request<C::Int>("Dialog", "choice"))
   {
     action->add ("talk",
-    { get<C::Vector<std::string> >("Dialog:choices")
+    { get<C::Vector<std::string> >("Dialog", "choices")
       ->value()[std::size_t(choice->value())] });
     action->add ("wait", {});
     dialog->next(choice->value());
-    remove("Dialog:choice");
+    remove("Dialog", "choice");
   }
   else
   {
@@ -495,7 +495,7 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
     status()->pop();
     if (dialog->line().first != "")
     {
-      set<C::Variable>("Character:triggered_action", get<C::Action>(dialog->line().first + ":action"));
+      set<C::Variable>("Character", "triggered_action", get<C::Action>(dialog->line().first , "action"));
       return false;
     }
   }
@@ -504,7 +504,7 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
     std::string character;
     std::string line;
     std::tie (character, line) = dialog->line();
-    const std::string& player = value<C::String>("Player:name");
+    const std::string& player = value<C::String>("Player", "name");
     if (player != character)
       action->add ("look", { character });
 
@@ -515,20 +515,20 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
   else
   {
     // Keep track in case player saves and reload there
-    set<C::Int>("Game:dialog_position", dialog->current());
+    set<C::Int>("Game", "dialog_position", dialog->current());
 
     status()->push(DIALOG_CHOICE);
-    auto choices = set<C::Vector<std::string> >("Dialog:choices");
+    auto choices = set<C::Vector<std::string> >("Dialog", "choices");
     dialog->get_choices (*choices);
     action->add ("trigger", { id, "continue" });
 
     // Keep track in case player saves and reload there
-    set<C::String>("Game:current_dialog", id);
+    set<C::String>("Game", "current_dialog", id);
   }
 
   if (action->size() != 0)
     //action->launch();
-    set<C::Variable>("Character:triggered_action", action);
+    set<C::Variable>("Character", "triggered_action", action);
 
   return false;
 }
@@ -539,15 +539,15 @@ void Logic::create_dialog (const std::string& character,
 {
   static const int width_max = int(0.6 * Config::world_width);
 
-  double size_factor = 0.75 * (value<C::Int>("Dialog:size") / double(Config::MEDIUM));
-  auto font = get<C::Font> ("Dialog:font");
-  const std::string& color = value<C::String> (character + ":color");
+  double size_factor = 0.75 * (value<C::Int>("Dialog", "size") / double(Config::MEDIUM));
+  auto font = get<C::Font> ("Dialog", "font");
+  const std::string& color = value<C::String> (character , "color");
   int estimated_size = 25 * text.size() * size_factor;
 
   if (estimated_size < width_max)
   {
     auto img
-        = set<C::Image> ("Comment_0:image",
+        = set<C::Image> ("Comment_0", "image",
                          font,
                          color,
                          text, true);
@@ -595,7 +595,7 @@ void Logic::create_dialog (const std::string& character,
       std::size_t begin = (i == 0 ? 0 : cuts[std::size_t(i-1)] + 1);
       std::size_t end = (i == nb_imgs - 1 ? text.size() : cuts[std::size_t(i)]);
       auto img
-        = set<C::Image> ("Comment_" + std::to_string(i) + ":image",
+        = set<C::Image> ("Comment_" + std::to_string(i) , "image",
                          font,
                          color,
                          std::string(text.begin() + std::ptrdiff_t(begin),
@@ -611,38 +611,38 @@ void Logic::create_dialog (const std::string& character,
 
 void Logic::create_hints()
 {
-  auto dialog = set<C::Dialog>("Hints:dialog", "End_hints");
-  set<C::String>("Hinter:color", "FFFFFF");
-  const std::string& player = value<C::String>("Player:name");
-  set<C::Variable>("Hinter_body:position", get<C::Position>(player + "_body:position"));
+  auto dialog = set<C::Dialog>("Hints", "dialog", "End_hints");
+  set<C::String>("Hinter", "color", "FFFFFF");
+  const std::string& player = value<C::String>("Player", "name");
+  set<C::Variable>("Hinter_body", "position", get<C::Position>(player + "_body", "position"));
 
-  auto first = dialog->add_vertex ("Hinter", value<C::String>("Hint_welcome:text"));
+  auto first = dialog->add_vertex ("Hinter", value<C::String>("Hint_welcome", "text"));
   auto choice = dialog->add_vertex();
   dialog->add_edge(dialog->vertex_in(), first);
   dialog->add_edge(first, choice);
 
-  for (const std::string& h : get<C::Set<std::string>>("Hints:list")->value())
+  for (const std::string& h : get<C::Set<std::string>>("Hints", "list")->value())
   {
-    auto va = dialog->add_vertex ("Hinter", value<C::String>(h + ":answer"));
-    dialog->add_edge(choice, va, true, value<C::String>(h + ":question"));
+    auto va = dialog->add_vertex ("Hinter", value<C::String>(h , "answer"));
+    dialog->add_edge(choice, va, true, value<C::String>(h , "question"));
     dialog->add_edge(va, choice);
   }
 
-  auto closing = dialog->add_vertex ("Hinter", value<C::String>("Hint_bye:text"));
-  dialog->add_edge(choice, closing, false, value<C::String>("Hint_end:text"));
+  auto closing = dialog->add_vertex ("Hinter", value<C::String>("Hint_bye", "text"));
+  dialog->add_edge(choice, closing, false, value<C::String>("Hint_end", "text"));
   dialog->add_edge(closing, dialog->vertex_out());
 
-  emit(player + ":stop_walking");
-  remove(player + ":path", true);
-  auto action = set<C::Action>("Hints:action");
-  set<C::Variable>("Character:triggered_action", action);
+  emit(player , "stop_walking");
+  remove(player , "path", true);
+  auto action = set<C::Action>("Hints", "action");
+  set<C::Variable>("Character", "triggered_action", action);
   action->add("play", { "telephone", "-1" });
   action->add("trigger", { "Hints" });
 
-  auto end = set<C::Action>("End_hints:action");
+  auto end = set<C::Action>("End_hints", "action");
   end->add("stop", { player });
 
-  set<C::String>(player + ":start_animation", "telephone");
+  set<C::String>(player , "start_animation", "telephone");
 }
 
 

@@ -30,15 +30,15 @@
 namespace Sosage::Component
 {
 
-Conditional_base::Conditional_base (const std::string& id)
-  : Base(id)
+Conditional_base::Conditional_base (const std::string& entity, const std::string& component)
+  : Base(entity, component)
 { }
 
-Conditional::Conditional (const std::string& id,
+Conditional::Conditional (const std::string& entity, const std::string& component,
                           Condition_handle condition,
                           Handle if_true,
                           Handle if_false)
-  : Conditional_base(id)
+  : Conditional_base(entity, component)
   , m_condition (condition)
   , m_if_true (if_true)
   , m_if_false (if_false)
@@ -55,7 +55,7 @@ std::string Conditional::str() const
 {
   std::string ift = "[" + (m_if_true ? m_if_true->str() : "NULL") + "]";
   std::string iff = "[" + (m_if_false ? m_if_false->str() : "NULL") + "]";
-  return this->id() + " -> " + m_condition->id() + " ? "
+  return Base::str() + " -> " + m_condition->str() + " ? "
     + ift + " : " + iff;
 }
 
@@ -64,9 +64,9 @@ Handle Conditional::get() const
   return (m_condition->value() ? m_if_true : m_if_false);
 }
 
-String_conditional::String_conditional (const std::string& id,
+String_conditional::String_conditional (const std::string& entity, const std::string& component,
                                         String_handle state)
-  : Conditional_base(id)
+  : Conditional_base(entity, component)
   , m_state (state)
 { }
 
@@ -78,8 +78,8 @@ String_conditional::~String_conditional()
 
 std::string String_conditional::str() const
 {
-  return this->id() + " -> " + m_state->id() + " ? "
-    + (get() ? get()->id() : "NULL");
+  return Base::str() + " -> " + m_state->str() + " ? "
+    + (get() ? get()->str() : "NULL");
 }
 
 void String_conditional::add (const std::string& state, Handle h)
@@ -90,7 +90,7 @@ void String_conditional::add (const std::string& state, Handle h)
 void String_conditional::set (const std::string& state, Handle h)
 {
   auto iter = m_handles.find(state);
-  dbg_check(iter != m_handles.end(), "State " + state + " not found in string conditional " + id());
+  dbg_check(iter != m_handles.end(), "State " + state + " not found in string conditional " + str());
   iter->second = h;
 }
 
@@ -104,8 +104,8 @@ Handle String_conditional::get() const
   return iter->second;
 }
 
-Random_conditional::Random_conditional (const std::string& id)
-  : Conditional_base(id)
+Random_conditional::Random_conditional (const std::string& entity, const std::string& component)
+  : Conditional_base(entity, component)
   , m_total(0)
 { }
 
@@ -116,7 +116,7 @@ Random_conditional::~Random_conditional()
 
 std::string Random_conditional::str() const
 {
-  return this->id() + " -> " + get()->id();
+  return Base::str() + " -> " + get()->str();
 }
 
 void Random_conditional::add (double probability, Handle h)

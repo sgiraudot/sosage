@@ -49,12 +49,12 @@ Graphic::Graphic (Content& content)
 
 void Graphic::init()
 {
-  auto iw = get<C::Int>("Window:width");
-  auto ih = get<C::Int>("Window:height");
+  auto iw = get<C::Int>("Window", "width");
+  auto ih = get<C::Int>("Window", "height");
   int w = iw->value();
   int h = ih->value();
   m_core.init (w, h,
-               value<C::Boolean>("Window:fullscreen"));
+               value<C::Boolean>("Window", "fullscreen"));
   iw->set(w);
   ih->set(h);
 
@@ -63,13 +63,13 @@ void Graphic::init()
 void Graphic::run()
 {
   SOSAGE_TIMER_START(System_Graphic__run);
-  if (auto name = request<C::String>("Game:name"))
+  if (auto name = request<C::String>("Game", "name"))
   {
-    m_core.update_window (locale(name->value()), value<C::String>("Icon:filename"));
-    remove ("Game:name");
+    m_core.update_window (locale(name->value()), value<C::String>("Icon", "filename"));
+    remove ("Game", "name");
   }
 
-  if (request<C::String>("Game:new_room"))
+  if (request<C::String>("Game", "new_room"))
   {
     m_core.clear_managers();
     run_loading();
@@ -77,13 +77,13 @@ void Graphic::run()
     return;
   }
 
-  if (receive ("Window:rescaled"))
+  if (receive ("Window", "rescaled"))
     m_core.update_view ();
-  if (receive ("Window:toggle_fullscreen"))
-    m_core.toggle_fullscreen (value<C::Boolean>("Window:fullscreen"));
-  if (receive ("Fake_touchscreen:enable"))
+  if (receive ("Window", "toggle_fullscreen"))
+    m_core.toggle_fullscreen (value<C::Boolean>("Window", "fullscreen"));
+  if (receive ("Fake_touchscreen", "enable"))
     m_core.toggle_cursor(true);
-  if (receive ("Fake_touchscreen:disable"))
+  if (receive ("Fake_touchscreen", "disable"))
     m_core.toggle_cursor(false);
 
   m_core.begin();
@@ -105,7 +105,7 @@ void Graphic::run()
           img->entity() == "Cursor")
         continue;
 
-      auto position = get<C::Position>(img->entity() + ":position");
+      auto position = get<C::Position>(img->entity() , "position");
       Point p = position->value();
       double zoom = 1.;
       if (!position->is_interface())
@@ -189,7 +189,7 @@ void Graphic::run()
 
   if (value<C::Boolean>(GAME__DEBUG))
   {
-    if (auto ground_map = request<C::Ground_map>("Background:ground_map"))
+    if (auto ground_map = request<C::Ground_map>("Background", "ground_map"))
     {
         ground_map->for_each_vertex
         ([&](const Point& point)
@@ -210,7 +210,7 @@ void Graphic::run()
         for (auto c : components("path"))
           if (auto path = C::cast<C::Path>(c))
           {
-            Point current = value<C::Position>(path->entity() + "_body:position") - camera;
+            Point current = value<C::Position>(path->entity() + "_body", "position") - camera;
             m_core.draw_square (current.X(), current.Y(), 10, 0, 255, 0);
 
             for (std::size_t p = path->current(); p < path->size(); ++ p)
@@ -230,12 +230,12 @@ void Graphic::run()
       auto pos = img->entity().find("_label");
       if (pos == std::string::npos)
         continue;
-      std::string id (img->id().begin(), img->id().begin() + pos);
+      std::string id (img->entity().begin(), img->entity().begin() + pos);
 
-      if (!request<C::String>(id + ":name"))
+      if (!request<C::String>(id , "name"))
         continue;
 
-      auto view = value<C::Position>(id + ":view") - camera;
+      auto view = value<C::Position>(id , "view") - camera;
 
       m_core.draw_rectangle (view.X(), view.Y(),
                              2 * Config::object_reach_x, 2 * Config::object_reach_y,

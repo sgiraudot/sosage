@@ -100,14 +100,14 @@ bool Engine::run (const std::string& folder_name)
   }
 
   // Init main variables
-  auto status = m_content.set_fac<Component::Status>(GAME__STATUS, "Game:status");
-  m_content.set_fac<Component::Absolute_position>(CAMERA__POSITION, "Camera:position", Point(0,0));
-  m_content.set_fac<Component::Double>(CAMERA__ZOOM, "Camera:zoom", 1.);
-  m_content.set<Component::Inventory>("Game:inventory");
-  m_content.set<Component::Set<std::string> > ("Game:visited_rooms");
+  auto status = m_content.set_fac<Component::Status>(GAME__STATUS, "Game", "status");
+  m_content.set_fac<Component::Absolute_position>(CAMERA__POSITION, "Camera", "position", Point(0,0));
+  m_content.set_fac<Component::Double>(CAMERA__ZOOM, "Camera", "zoom", 1.);
+  m_content.set<Component::Inventory>("Game", "inventory");
+  m_content.set<Component::Set<std::string> > ("Game", "visited_rooms");
 
   m_content.set<Component::And>
-      ("Unlocked:condition",
+      ("Unlocked", "condition",
        Component::make_not
         (Component::make_value_condition<Sosage::Status> (status, PAUSED)),
         Component::make_not
@@ -134,11 +134,11 @@ bool Engine::run (const std::string& folder_name)
   file_io->read_config();
 
   graphic->init(); // init graphics
-  m_content.emit ("Window:rescaled");
+  m_content.emit ("Window", "rescaled");
   graphic->run(); // Run graphic once to update view
 
   m_content.set<Component::Simple<std::function<void()> > >
-      ("Game:loading_callback",
+      ("Game", "loading_callback",
        [&]()
        {
 #ifndef SOSAGE_EMSCRIPTEN
@@ -163,7 +163,7 @@ bool Engine::run (const std::string& folder_name)
 #endif
 
   file_io->write_config();
-  if (m_content.receive("Game:save"))
+  if (m_content.receive("Game", "save"))
     file_io->write_savefile();
 
   m_systems.clear();
@@ -177,7 +177,7 @@ bool Engine::run()
 {
   for (System::Handle system : m_systems)
     system->run();
-  return !m_content.receive("Game:exit");
+  return !m_content.receive("Game", "exit");
 }
 
 void Engine::handle_cmdline_args (int argc, char** argv)
@@ -190,7 +190,7 @@ void Engine::handle_cmdline_args (int argc, char** argv)
       ++ i;
       if (i == argc)
         break;
-      m_content.set<Component::String>("Cmdline:locale", argv[i]);
+      m_content.set<Component::String>("Cmdline", "locale", argv[i]);
     }
   }
 }

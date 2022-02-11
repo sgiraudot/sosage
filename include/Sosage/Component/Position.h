@@ -42,7 +42,7 @@ public:
   using const_reference = Point;
   using value_type = Point;
 
-  Position (const std::string& id);
+  Position (const std::string& entity, const std::string& component);
 
   virtual void set (const Point& p) = 0;
   virtual Point value() const = 0;
@@ -58,7 +58,8 @@ class Absolute_position : public Position
 
 public:
 
-  Absolute_position (const std::string& id, const Point& coord, bool is_interface = true);
+  Absolute_position (const std::string& entity, const std::string& component,
+                     const Point& coord, bool is_interface = true);
   virtual std::string str() const;
   virtual Point value () const;
   virtual void set (const Point& p);
@@ -77,7 +78,7 @@ class Relative_position : public Position
 
 public:
 
-  Relative_position (const std::string& id, Position_handle ref,
+  Relative_position (const std::string& entity, const std::string& component, Position_handle ref,
                      const Sosage::Vector& diff = Sosage::Vector(0,0),
                      double factor = 1.);
   Absolute_position_handle absolute_reference();
@@ -96,7 +97,7 @@ class Functional_position : public Position
 
 public:
 
-  Functional_position (const std::string& id, const Function& function,
+  Functional_position (const std::string& entity, const std::string& component, const Function& function,
                        const std::string& arg,
                        bool is_interface = false);
 

@@ -78,7 +78,8 @@ private:
 
   void create_locale_dependent_text (const std::string& id, Component::Font_handle font,
                                      const std::string& color, const std::string& text);
-  void load_locale_dependent_image (const std::string& id, const std::string& filename,
+  void load_locale_dependent_image (const std::string& entity, const std::string& component,
+                                    const std::string& filename,
                                     const std::function<Component::Image_handle(std::string)>& func);
 
   // Implemented in File_IO__read_room.cpp:

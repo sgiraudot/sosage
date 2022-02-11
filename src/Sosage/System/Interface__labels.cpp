@@ -52,17 +52,17 @@ void Interface::create_object_label (const std::string& id)
   // Special case for inventory
   if (status()->is (IN_INVENTORY, OBJECT_CHOICE))
   {
-    auto position = get<C::Position>(id + ":position");
-    auto pos = set<C::Relative_position>(id + "_label:global_position", position,
+    auto position = get<C::Position>(id , "position");
+    auto pos = set<C::Relative_position>(id + "_label", "global_position", position,
                                          Vector(0, -Config::inventory_height / 2 - 2 * Config::inventory_margin));
 
-    const std::string& name = value<C::String>(id + ":name");
+    const std::string& name = value<C::String>(id , "name");
     create_label (false, id + "_label", locale(name), false, false, UNCLICKABLE);
     update_label(id + "_label", false, false, pos);
 
-    double diff = value<C::Position>(id + "_label_back:position").x()
-                  - 0.5 * get<C::Image>(id + "_label_back:image")->width()
-                  - (value<C::Position>("Chamfer:position").x() + Config::label_height);
+    double diff = value<C::Position>(id + "_label_back", "position").x()
+                  - 0.5 * get<C::Image>(id + "_label_back", "image")->width()
+                  - (value<C::Position>("Chamfer", "position").x() + Config::label_height);
     if (diff < 0)
       position->set(Point (position->value().x() - diff, position->value().y()));
 
@@ -75,27 +75,27 @@ void Interface::create_object_label (const std::string& id)
   if (mode == MOUSE)
   {
     bool force_right = false;
-    if (!request<C::String>("Interface:source_object"))
-      force_right = value<C::Boolean>(id + "_goto:right", false);
+    if (!request<C::String>("Interface", "source_object"))
+      force_right = value<C::Boolean>(id + "_goto", "right", false);
 
     bool open_left = true;
     bool open_right = false;
     bool arrow = false;
 
-    if (auto right = request<C::Boolean>(id + "_goto:right"))
+    if (auto right = request<C::Boolean>(id + "_goto", "right"))
     {
       open_left = !right->value();
       open_right = right->value();
       arrow = true;
     }
 
-    const std::string& name = value<C::String>(id + ":name");
+    const std::string& name = value<C::String>(id , "name");
     create_label (false, id + "_label", locale(name), open_left, open_right, UNCLICKABLE, 1.0, arrow);
 
     auto cursor = get<C::Position>(CURSOR__POSITION);
     update_label(id + "_label", open_left, open_right, cursor, 1.0, arrow);
-    if (force_right || value<C::Position>(id + "_label_back:position").x()
-        + get<C::Image>(id + "_label_back:image")->width() / 2
+    if (force_right || value<C::Position>(id + "_label_back", "position").x()
+        + get<C::Image>(id + "_label_back", "image")->width() / 2
         > Config::world_width - Config::label_height)
     {
       open_left = false;
@@ -109,7 +109,7 @@ void Interface::create_object_label (const std::string& id)
     bool open_left = false;
     bool open_right = false;
 
-    if (auto right = request<C::Boolean>(id + "_goto:right"))
+    if (auto right = request<C::Boolean>(id + "_goto", "right"))
     {
       open_left = !right->value();
       open_right = right->value();
@@ -118,14 +118,14 @@ void Interface::create_object_label (const std::string& id)
     bool is_active = (mode == TOUCHSCREEN) || (m_active_object == id);
     double scale = (is_active ? 1.0 : 0.75);
 
-    const std::string& name = value<C::String>(id + ":name");
+    const std::string& name = value<C::String>(id , "name");
     create_label (false, id + "_label", locale(name), open_left, open_right,
                   (mode == TOUCHSCREEN) ? BOX : UNCLICKABLE, scale, true);
 
     auto pos = set<C::Relative_position>
-               (id + "_label:global_position",
+               (id + "_label", "global_position",
                 get<C::Position>(CAMERA__POSITION),
-                value<C::Position>(id + ":label"), -1.);
+                value<C::Position>(id , "label"), -1.);
 
     update_label(id + "_label", open_left, open_right, pos, scale, true);
   }
@@ -140,7 +140,7 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
   SOSAGE_TIMER_START(Interface__create_label);
   const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
-  auto group = set<C::Group>(id + ":group");
+  auto group = set<C::Group>(id , "group");
   int depth = (is_button ? Config::action_button_depth : Config::label_depth);
   if (mode == GAMEPAD)
     depth = (is_button ? Config::menu_text_depth : Config::menu_front_depth);
@@ -151,7 +151,7 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
   if (name != "")
   {
     name[0] = toupper(name[0]);
-    label = set<C::Image>(id + ":image", get<C::Font>("Interface:font"), "FFFFFF", name);
+    label = set<C::Image>(id , "image", get<C::Font>("Interface", "font"), "FFFFFF", name);
     group->add(label);
 
     label->set_relative_origin(0.5, 0.5);
@@ -164,29 +164,29 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
   if (open_left)
   {
     if (arrow && mode != MOUSE)
-      left = C::make_handle<C::Image>(id + "_left_circle:image", get<C::Image>("Goto_left:image"));
+      left = C::make_handle<C::Image>(id + "_left_circle", "image", get<C::Image>("Goto_left", "image"));
   }
   else
   {
-    left = C::make_handle<C::Image>(id + "_left_circle:image", get<C::Image>("Left_circle:image"));
+    left = C::make_handle<C::Image>(id + "_left_circle", "image", get<C::Image>("Left_circle", "image"));
     left->set_alpha(alpha);
   }
 
   if (open_right)
   {
     if (arrow && mode != MOUSE)
-      right = C::make_handle<C::Image>(id + "_right_circle:image", get<C::Image>("Goto_right:image"));
+      right = C::make_handle<C::Image>(id + "_right_circle", "image", get<C::Image>("Goto_right", "image"));
   }
   else
   {
-    right = C::make_handle<C::Image>(id + "_right_circle:image", get<C::Image>("Right_circle:image"));
+    right = C::make_handle<C::Image>(id + "_right_circle", "image", get<C::Image>("Right_circle", "image"));
     right->set_alpha(alpha);
   }
 
   if (label)
   {
     int margin = Config::label_margin;
-    if (request<C::String>("Interface:source_object"))
+    if (request<C::String>("Interface", "source_object"))
       margin *= 2;
     else if (open_left && open_right)
       margin *= 3;
@@ -206,7 +206,7 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
 
     if (width != 0)
     {
-      back = C::make_handle<C::Image>(id + "_back:image", width, Config::label_height);
+      back = C::make_handle<C::Image>(id + "_back", "image", width, Config::label_height);
 
       back->set_relative_origin(0.5, 0.5);
       back->set_scale(scale);
@@ -234,7 +234,7 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
   back->z() = depth - 1;
   back->set_collision(collision);
 
-  back = set<C::Image>(id + "_back:image", back);
+  back = set<C::Image>(id + "_back", "image", back);
   group->add(back);
 
   SOSAGE_TIMER_STOP(Interface__create_label);
@@ -255,17 +255,17 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
     {
       double from = 0.5 * 0.75, to = 0.5;
       double from_back = 0.75, to_back = 1.0;
-      if (get<C::Image>(id + ":image")->scale() != 0.5)
+      if (get<C::Image>(id , "image")->scale() != 0.5)
       {
         std::swap(from, to);
         std::swap(from_back, to_back);
       }
 
-      unsigned char alpha_back = get<C::Image>(id + "_back:image")->alpha();
-      set<C::GUI_image_animation>(id + ":animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(id + ":image"), from, to, 255, 255);
-      set<C::GUI_image_animation>(id + "_back:animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(id + "_back:image"), from_back, to_back,
+      unsigned char alpha_back = get<C::Image>(id + "_back", "image")->alpha();
+      set<C::GUI_image_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id , "image"), from, to, 255, 255);
+      set<C::GUI_image_animation>(id + "_back", "animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id + "_back", "image"), from_back, to_back,
                                   alpha_back, alpha_back);
 
       // If label not centered, position must change a bit
@@ -273,65 +273,65 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
       if (pos != std::string::npos)
       {
         std::string object_id (id.begin(), id.begin() + pos);
-        if (auto right = request<C::Boolean>(object_id + "_goto:right"))
+        if (auto right = request<C::Boolean>(object_id + "_goto", "right"))
         {
-          double gap = get<C::Image>(id + "_back:image")->width() / 2.;
+          double gap = get<C::Image>(id + "_back", "image")->width() / 2.;
           if (!right->value())
             gap = -gap;
           double gap_from = from_back * gap;
           double gap_to = to_back * gap;
 
-          auto pos = get<C::Relative_position>(id + "_back:position");
+          auto pos = get<C::Relative_position>(id + "_back", "position");
           auto pos_to = pos->value();
           auto pos_from = pos_to - Vector(gap_from, 0) + Vector(gap_to, 0);
           pos->set(pos_from);
-          set<C::GUI_position_animation>(id + "_back_pos:animation", current_time, current_time + Config::inventory_speed,
+          set<C::GUI_position_animation>(id + "_back_pos", "animation", current_time, current_time + Config::inventory_speed,
                                          pos, pos_to);
 
-          double label_gap = get<C::Image>(id + ":image")->width() / 2.;
+          double label_gap = get<C::Image>(id , "image")->width() / 2.;
           if (!right->value())
             label_gap = -label_gap;
 
           double label_from = 2*gap_from - from * Config::label_margin - round (from * label_gap);
           double label_to = 2*gap_to - to * Config::label_margin - round (to * label_gap);
 
-          auto lpos = get<C::Relative_position>(id + ":position");
+          auto lpos = get<C::Relative_position>(id , "position");
           auto lpos_to = lpos->value();
           auto lpos_from = lpos_to - Vector(label_from, 0) + Vector(label_to, 0);
           lpos->set(lpos_from);
-          set<C::GUI_position_animation>(id + "_pos:animation", current_time, current_time + Config::inventory_speed,
+          set<C::GUI_position_animation>(id + "_pos", "animation", current_time, current_time + Config::inventory_speed,
                                          lpos, lpos_to);
         }
       }
     }
     else
     {
-      auto img = get<C::Image>(id + "_back:image");
-      set<C::GUI_image_animation>(id + "_back:animation", current_time, current_time + Config::inventory_speed,
+      auto img = get<C::Image>(id + "_back", "image");
+      set<C::GUI_image_animation>(id + "_back", "animation", current_time, current_time + Config::inventory_speed,
                                   img, img->scale(), img->scale(), 0, img->alpha());
 
       if (style == DEPLOY)
-        set<C::GUI_image_animation>(id + ":animation", current_time, current_time + Config::inventory_speed,
-                                    get<C::Image>(id + ":image"), 0.05, 0.5 * img->scale(), 0, 255);
+        set<C::GUI_image_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
+                                    get<C::Image>(id , "image"), 0.05, 0.5 * img->scale(), 0, 255);
       else if (style == FADE || style == FADE_LABEL_ONLY)
-        set<C::GUI_image_animation>(id + ":animation", current_time, current_time + Config::inventory_speed,
-                                    get<C::Image>(id + ":image"), 0.5 * img->scale(), 0.5 * img->scale(), 0, 255);
+        set<C::GUI_image_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
+                                    get<C::Image>(id , "image"), 0.5 * img->scale(), 0.5 * img->scale(), 0, 255);
     }
   }
   else
   {
-    unsigned char alpha = get<C::Image>(id + "_back:image")->alpha();
+    unsigned char alpha = get<C::Image>(id + "_back", "image")->alpha();
     if (style == DEPLOY)
     {
-      set<C::GUI_position_animation>(id + ":animation", current_time, current_time + Config::inventory_speed,
-                                     get<C::Position>(id + ":global_position"), position);
-      set<C::GUI_image_animation>(id + "_back:animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(id + "_back:image"), 0.357, 1, alpha, alpha);
+      set<C::GUI_position_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
+                                     get<C::Position>(id , "global_position"), position);
+      set<C::GUI_image_animation>(id + "_back", "animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id + "_back", "image"), 0.357, 1, alpha, alpha);
     }
     else if (style == FADE)
     {
-      set<C::GUI_image_animation>(id + "_back:animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(id + "_back:image"), 1, 1, 0, alpha);
+      set<C::GUI_image_animation>(id + "_back", "animation", current_time, current_time + Config::inventory_speed,
+                                  get<C::Image>(id + "_back", "image"), 1, 1, 0, alpha);
     }
   }
 }
@@ -340,17 +340,17 @@ void Interface::update_label (const std::string& id,
                               bool open_left, bool open_right, C::Position_handle pos,
                               double scale, bool arrow)
 {
-  auto label = request<C::Image>(id + ":image");
-  auto back = get<C::Image>(id + "_back:image");
+  auto label = request<C::Image>(id , "image");
+  auto back = get<C::Image>(id + "_back", "image");
   int back_width = round (scale * back->width());
 
   // If animation was happening, finalize it before updating so that scale is final
   for (const std::string& section : { "", "_back" })
-    if (auto anim = request<C::GUI_animation>(id + section + ":animation"))
+    if (auto anim = request<C::GUI_animation>(id + section , "animation"))
     {
-      debug << "Finalize " << anim->id() << std::endl;
+      debug << "Finalize " << anim->str() << std::endl;
       anim->finalize();
-      remove(anim->id());
+      remove(anim);
     }
 
   if (label)
@@ -359,26 +359,26 @@ void Interface::update_label (const std::string& id,
 
   if(open_left == open_right) // symmetric label
   {
-    set<C::Relative_position>(id + ":position", pos);
-    set<C::Relative_position>(id + "_back:position", pos);
+    set<C::Relative_position>(id , "position", pos);
+    set<C::Relative_position>(id + "_back", "position", pos);
   }
   else if (open_left)
   {
     if (label)
     {
       double label_pos = back_width - scale * Config::label_margin - round (label->scale() * label->width()) * 0.5;
-      set<C::Relative_position>(id + ":position", pos, Vector(label_pos, 0));
+      set<C::Relative_position>(id , "position", pos, Vector(label_pos, 0));
     }
-    set<C::Relative_position>(id + "_back:position", pos, Vector(back_width / 2, 0));
+    set<C::Relative_position>(id + "_back", "position", pos, Vector(back_width / 2, 0));
   }
   else if (open_right)
   {
     if (label)
     {
       double label_pos = - back_width + scale * Config::label_margin + round (label->scale() * label->width()) * 0.5;
-      set<C::Relative_position>(id + ":position", pos, Vector(label_pos, 0));
+      set<C::Relative_position>(id , "position", pos, Vector(label_pos, 0));
     }
-    set<C::Relative_position>(id + "_back:position", pos, Vector(-back_width / 2, 0));
+    set<C::Relative_position>(id + "_back", "position", pos, Vector(-back_width / 2, 0));
   }
 }
 
@@ -393,12 +393,12 @@ void Interface::update_label_position (const std::string& id, double scale)
   if (mode == MOUSE)
   {
     bool force_right = false;
-    if (!request<C::String>("Interface:source_object"))
-      force_right = value<C::Boolean>(id + "_goto:right", false);
+    if (!request<C::String>("Interface", "source_object"))
+      force_right = value<C::Boolean>(id + "_goto", "right", false);
 
     auto cursor = get<C::Position>(CURSOR__POSITION);
     update_label(id + "_label", true, false, cursor, scale);
-    if (force_right || value<C::Position>(id + "_label_back:position").x() >
+    if (force_right || value<C::Position>(id + "_label_back", "position").x() >
         Config::world_width - Config::label_height)
       update_label(id + "_label", false, true, cursor, scale);
   }
@@ -408,7 +408,7 @@ void Interface::update_label_position (const std::string& id, double scale)
     bool open_right = false;
     bool arrow = false;
 
-    if (auto right = request<C::Boolean>(id + "_goto:right"))
+    if (auto right = request<C::Boolean>(id + "_goto", "right"))
     {
       open_left = !right->value();
       open_right = right->value();
@@ -416,9 +416,9 @@ void Interface::update_label_position (const std::string& id, double scale)
     }
 
     auto pos = set<C::Relative_position>
-               (id + "_label:global_position",
+               (id + "_label", "global_position",
                 get<C::Position>(CAMERA__POSITION),
-                value<C::Position>(id + ":label"), -1.);
+                value<C::Position>(id , "label"), -1.);
 
     update_label(id + "_label", open_left, open_right, pos, scale, arrow);
   }
@@ -426,7 +426,7 @@ void Interface::update_label_position (const std::string& id, double scale)
 
 void Interface::delete_label (const std::string& id)
 {
-  auto group = request<C::Group>(id + ":group");
+  auto group = request<C::Group>(id , "group");
   if (!group)
   {
     debug << "Can' delete " << id << std::endl;
@@ -434,37 +434,37 @@ void Interface::delete_label (const std::string& id)
   }
   debug << "Delete label " << id << std::endl;
 
-  remove(id + ":global_position", true);
+  remove(id , "global_position", true);
   double current_time = value<C::Double>(CLOCK__TIME);
   group->apply<C::Image>([&](auto img_old)
   {
     // To avoid later referencing a fading-out image, copy it with another ID and animate the copy
-    auto img = set<C::Image>(img_old->entity() + "_old:image", img_old);
-    set<C::Variable>(img_old->entity() + "_old:position", get<C::Position>(img_old->entity() + ":position"));
-    remove(img_old->id());
-    remove(img_old->entity() + ":position");
-    set<C::GUI_image_animation>(img->entity() + ":animation", current_time, current_time + Config::inventory_speed,
+    auto img = set<C::Image>(img_old->entity() + "_old", "image", img_old);
+    set<C::Variable>(img_old->entity() + "_old", "position", get<C::Position>(img_old->entity() , "position"));
+    remove(img_old->entity() , "position");
+    remove(img_old);
+    set<C::GUI_image_animation>(img->entity() , "animation", current_time, current_time + Config::inventory_speed,
                                 img, img->scale(), img->scale(), img->alpha(), 0, true);
   });
-  remove(group->id());
+  remove(group);
 }
 
 void Interface::fade_action_selector (const std::string& id, bool fade_in)
 {
   // Exit if animation already happening
-  if (request<C::GUI_image_animation>(id + "_left:animation"))
+  if (request<C::GUI_image_animation>(id + "_left", "animation"))
     return;
   double current_time = value<C::Double>(CLOCK__TIME);
-  auto group = get<C::Group>(id + ":group");
+  auto group = get<C::Group>(id , "group");
   group->apply<C::Image>([&](auto img)
   {
     unsigned char alpha_off = 0;
     unsigned char alpha_on = 255;
-    if (contains(img->id(), "_label") && !contains(img->id(), "_label:"))
+    if (contains(img->entity(), "_label") && !contains(img->entity(), "_label:"))
       alpha_on = 100;
 
     img->on() = true;
-    set<C::GUI_image_animation>(img->entity() + ":animation", current_time, current_time + Config::inventory_speed,
+    set<C::GUI_image_animation>(img->entity() , "animation", current_time, current_time + Config::inventory_speed,
                                 img, img->scale(), img->scale(),
                                 (fade_in ? alpha_off : alpha_on),
                                 (fade_in ? alpha_on : alpha_off),
@@ -476,7 +476,7 @@ void Interface::highlight_object (const std::string& id, unsigned char highlight
 {
   debug << "Highlight " << id << " by " << highlight << std::endl;
   // Image might have been destroyed here
-  if (auto img = request<C::Image>(id + ":image"))
+  if (auto img = request<C::Image>(id , "image"))
     img->set_highlight (highlight);
 }
 
@@ -495,8 +495,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
   m_selector_type = type;
   m_selector_id = id;
 
-  const Gamepad_type& gamepad = value<C::Simple<Gamepad_type>>("Gamepad:type");
-  auto gamepad_pos = get<C::Position>("Gamepad_action_selector:position");
+  const Gamepad_type& gamepad = value<C::Simple<Gamepad_type>>("Gamepad", "type");
+  auto gamepad_pos = get<C::Position>("Gamepad_action_selector", "position");
   if (type == GP_IDLE)
   {
     generate_action ("", "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), gamepad_pos, FADE_LABEL_ONLY);
@@ -521,13 +521,13 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
   }
   else if (type == ACTION_SEL)
   {
-    auto position = set<C::Absolute_position>("Action_selector:position",
+    auto position = set<C::Absolute_position>("Action_selector", "position",
                                               value<C::Position>(CURSOR__POSITION));
 
 
     generate_action (id, "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), position, DEPLOY);
-    double overflow = value<C::Position>(id + "_take_label_back:position").x()
-                      - Config::label_height - 0.5 * get<C::Image>(id + "_take_label_back:image")->width();
+    double overflow = value<C::Position>(id + "_take_label_back", "position").x()
+                      - Config::label_height - 0.5 * get<C::Image>(id + "_take_label_back", "image")->width();
     if (overflow < 0)
     {
       if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
@@ -549,8 +549,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     else
     {
       generate_action (id, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), position, DEPLOY);
-      double overflow = Config::world_width - Config::label_height - 0.5 * get<C::Image>(id + "_look_label_back:image")->width()
-                        - value<C::Position>(id + "_look_label_back:position").x();
+      double overflow = Config::world_width - Config::label_height - 0.5 * get<C::Image>(id + "_look_label_back", "image")->width()
+                        - value<C::Position>(id + "_look_label_back", "position").x();
       if (overflow < 0)
       {
         if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
@@ -578,16 +578,16 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
   }
   else if (type == INV_ACTION_SEL)
   {
-    Point object_pos = value<C::Position>(id + ":position");
+    Point object_pos = value<C::Position>(id , "position");
     auto position = set<C::Absolute_position>
-                    ("Action_selector:position",
+                    ("Action_selector", "position",
                      Point (object_pos.x(),
-                            value<C::Position>("Inventory:origin").y() - 0.75 * Config::label_height));
+                            value<C::Position>("Inventory", "origin").y() - 0.75 * Config::label_height));
 
     generate_action (id, "combine", LEFT_BUTTON, "", position, DEPLOY);
-    double diff = value<C::Position>(id + "_combine_label_back:position").x()
-                  - 0.5 * get<C::Image>(id + "_combine_label_back:image")->width()
-                  - (value<C::Position>("Chamfer:position").x() + Config::label_height);
+    double diff = value<C::Position>(id + "_combine_label_back", "position").x()
+                  - 0.5 * get<C::Image>(id + "_combine_label_back", "image")->width()
+                  - (value<C::Position>("Chamfer", "position").x() + Config::label_height);
     if (diff < 0)
     {
       position->set(Point (position->value().x() - diff, position->value().y()));
@@ -599,7 +599,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
   }
   else if (type == GP_INV_ACTION_SEL)
   {
-    generate_action ((get<C::Inventory>("Game:inventory")->size() > 1 ? id : ""), "combine",
+    generate_action ((get<C::Inventory>("Game", "inventory")->size() > 1 ? id : ""), "combine",
                      LEFT_BUTTON, gamepad_label(gamepad, WEST), gamepad_pos, FADE_LABEL_ONLY);
     generate_action (id, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), gamepad_pos, FADE_LABEL_ONLY);
     generate_action (id, "use", UP, gamepad_label(gamepad, NORTH), gamepad_pos, FADE_LABEL_ONLY);
@@ -624,13 +624,13 @@ void Interface::generate_action (const std::string& id, const std::string& actio
                                  const Button_orientation& orientation, const std::string& button,
                                  C::Position_handle position, const Animation_style& style)
 {
-  auto label = request<C::String>(id + "_" + action + ":label");
+  auto label = request<C::String>(id + "_" + action , "label");
   if (isupper(action[0]))
-    label = get<C::String>(action + ":text");
+    label = get<C::String>(action , "text");
   if (!label)
-    label = get<C::String>("Default_" + action + ":label");
+    label = get<C::String>("Default_" + action , "label");
   if (id == "Default" && action == "inventory")
-    label = get<C::String>("Inventory:label");
+    label = get<C::String>("Inventory", "label");
 
   bool open_left = false, open_right = false;
   Vector label_position;
@@ -727,14 +727,14 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     std::string label_id = id + "_" + action + "_label";
     create_label (false, label_id, locale(label->value()), open_left, open_right, BOX);
     update_label (label_id, open_left, open_right,
-                  set<C::Relative_position>(label_id + ":global_position", position, label_position));
+                  set<C::Relative_position>(label_id , "global_position", position, label_position));
 
     // UPPER and DOWNER configs might need to be moved to be on screen
     if (orientation == UPPER || orientation == DOWNER)
     {
       int diff = 0;
-      auto pos = get<C::Position>(label_id + "_back:position");
-      auto img =  get<C::Image>(label_id + "_back:image");
+      auto pos = get<C::Position>(label_id + "_back", "position");
+      auto img =  get<C::Image>(label_id + "_back", "image");
       if (pos->value().x() - 0.5 * img->width() < Config::label_margin)
         diff = Config::label_margin - pos->value().x() + 0.5 * img->width();
       else if (pos->value().x() + 0.5 * img->width() > Config::world_width - Config::label_margin)
@@ -742,7 +742,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
 
       if (diff != 0)
       {
-        auto pos = get<C::Position>(label_id + ":global_position");
+        auto pos = get<C::Position>(label_id , "global_position");
         pos->set (Point (pos->value().x() + diff, pos->value().y()));
       }
     }
@@ -757,17 +757,17 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     button_id = "Default_" + action + "_button";
     create_label (true, button_id, button, false, false, BOX);
     update_label (button_id, false, false,
-                  set<C::Relative_position>(button_id + ":global_position", position, start_position));
-    if (auto img = request<C::Image>("Default_" + action + "_button:image"))
+                  set<C::Relative_position>(button_id , "global_position", position, start_position));
+    if (auto img = request<C::Image>("Default_" + action + "_button", "image"))
       img->on() = false;
-    get<C::Image>("Default_" + action + "_button_back:image")->set_alpha(128);
+    get<C::Image>("Default_" + action + "_button_back", "image")->set_alpha(128);
   }
   else
   {
     button_id = id + "_" + action + "_button";
     create_label (true, button_id, button, false, false, BOX);
     update_label (button_id, false, false,
-                  set<C::Relative_position>(button_id + ":global_position", position, start_position));
+                  set<C::Relative_position>(button_id , "global_position", position, start_position));
   }
 
   animate_label (button_id, style, true, position->value() + button_position);

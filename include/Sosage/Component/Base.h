@@ -33,21 +33,21 @@
 namespace Sosage::Component
 {
 
+using Id = std::pair<std::string, std::string>;
+
 class Base
 {
-  std::string m_id; // entity:component
-  std::string m_entity;
-  std::string m_component;
+  Id m_id;
   bool m_altered;
 
 public:
-  Base (const std::string& id);
+  Base (const std::string& entity, const std::string& component);
   virtual ~Base();
   bool is_system() const;
   void mark_as_altered();
   void mark_as_unaltered();
   bool was_altered() const;
-  const std::string& id() const;
+  const Id& id() const;
   const std::string& entity() const;
   std::string character_entity() const;
   std::string target_entity() const;
@@ -61,7 +61,8 @@ template <typename T>
 class Value : public Base
 {
 public:
-  Value(const std::string& id) : Base(id) { }
+  Value(const std::string& entity, const std::string& component)
+    : Base(entity, component) { }
   virtual T value() const = 0;
 };
 

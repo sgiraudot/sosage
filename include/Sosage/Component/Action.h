@@ -67,7 +67,7 @@ private:
 
 public:
 
-  Action (const std::string& id);
+  Action (const std::string& entity, const std::string& component);
   void clear();
   void add (const std::string& function, const std::vector<std::string>& args);
   void launch();

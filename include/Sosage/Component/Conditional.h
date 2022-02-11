@@ -39,7 +39,7 @@ namespace Sosage::Component
 class Conditional_base : public Base
 {
 public:
-  Conditional_base (const std::string& id);
+  Conditional_base (const std::string& entity, const std::string& component);
   virtual Handle get() const = 0;
 };
 
@@ -53,7 +53,7 @@ class Conditional : public Conditional_base
   
 public:
 
-  Conditional (const std::string& id,
+  Conditional (const std::string& entity, const std::string& component,
                Condition_handle condition,
                Handle if_true,
                Handle if_false = Handle());
@@ -71,7 +71,7 @@ class String_conditional : public Conditional_base
   
 public:
 
-  String_conditional (const std::string& id,
+  String_conditional (const std::string& entity, const std::string& component,
                       String_handle state);
   virtual ~String_conditional();
   virtual std::string str() const;
@@ -90,7 +90,7 @@ class Random_conditional : public Conditional_base
   
 public:
 
-  Random_conditional (const std::string& id);
+  Random_conditional (const std::string& entity, const std::string& component);
   virtual ~Random_conditional();
   virtual std::string str() const;
   void add (double probability, Handle h);

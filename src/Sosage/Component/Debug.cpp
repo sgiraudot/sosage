@@ -35,8 +35,8 @@
 namespace Sosage::Component
 {
 
-Debug::Debug (const std::string& id, Content& content, const Clock& clock)
-  : Boolean(id, false), m_content (content), m_clock (clock)
+Debug::Debug (const std::string& entity, const std::string& component, Content& content, const Clock& clock)
+  : Boolean(entity, component, false), m_content (content), m_clock (clock)
 { }
 
 Debug::~Debug()
@@ -51,9 +51,9 @@ std::string Debug::debug_str()
 
   out += std::to_string(m_content.size()) + " components in memory\n";
 
-  const std::string& player = m_content.get<Component::String>("Player:name")->value();
-  auto img = m_content.get<Component::Image>(player + "_body:image");
-  auto pos = m_content.get<Component::Position>(player + "_body:position");
+  const std::string& player = m_content.get<Component::String>("Player", "name")->value();
+  auto img = m_content.get<Component::Image>(player + "_body", "image");
+  auto pos = m_content.get<Component::Position>(player + "_body", "position");
 
   out += "Player position = [" + std::to_string(pos->value().x())
          + ", " + std::to_string(pos->value().y()) + ", " + std::to_string(img->z()) + "]\n";

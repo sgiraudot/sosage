@@ -28,9 +28,9 @@
 #define SOSAGE_UTILS_HELPERS_H
 
 #define is_looking_right(x) \
-  (get<C::Animation>(x + "_head:image")->frames().front().y == 0)
+  (get<C::Animation>(x + "_head", "image")->frames().front().y == 0)
 
 #define is_walking_right(x) \
-  (get<C::Animation>(x + "_body:image")->frames().front().y != 2)
+  (get<C::Animation>(x + "_body", "image")->frames().front().y != 2)
 
 #endif // SOSAGE_UTILS_HELPERS_H

@@ -30,8 +30,8 @@ namespace Sosage::Component
 {
 
 
-Dialog::Dialog (const std::string& id, const std::string& end)
-  : Base(id)
+Dialog::Dialog (const std::string& entity, const std::string& component, const std::string& end)
+  : Base(entity, component)
 {
   m_vin = m_graph.add_vertex({"", "IN"});
   m_vout = m_graph.add_vertex({end,"OUT"});

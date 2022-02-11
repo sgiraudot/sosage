@@ -30,8 +30,8 @@
 namespace Sosage::Component
 {
 
-Cropped::Cropped (const std::string& id, const std::string& file_name, int z)
-  : Image(id, file_name, z)
+Cropped::Cropped (const std::string& entity, const std::string& component, const std::string& file_name, int z)
+  : Image(entity, component, file_name, z)
   , m_xmin (0)
   , m_xmax (Core::Graphic::width(core()))
   , m_ymin (0)

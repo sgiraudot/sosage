@@ -29,19 +29,19 @@
 namespace Sosage::Component
 {
 
-Path::Path (const std::string& id, const Point& point)
-  : Base(id), m_steps (1, point), m_current(0)
+Path::Path (const std::string& entity, const std::string& component, const Point& point)
+  : Base(entity, component), m_steps (1, point), m_current(0)
 { }
 
-Path::Path (const std::string& id, std::vector<Point>& steps)
-  : Base(id), m_current(0)
+Path::Path (const std::string& entity, const std::string& component, std::vector<Point>& steps)
+  : Base(entity, component), m_current(0)
 {
   m_steps.swap(steps);
 }
 
 std::string Path::str() const
 {
-  std::string out = this->id();
+  std::string out = Base::str();
   for (const Point& p : m_steps)
     out += " (" + std::to_string(p.x()) + ";" + std::to_string(p.y()) + ")";
   return out;

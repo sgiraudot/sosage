@@ -29,8 +29,8 @@
 namespace Sosage::Component
 {
 
-Status::Status (const std::string& id)
-  : Base(id)
+Status::Status (const std::string& entity, const std::string& component)
+  : Base(entity, component)
 {
   m_value.push(IDLE);
   m_value.push(LOCKED); // start game locked

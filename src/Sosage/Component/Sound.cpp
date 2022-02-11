@@ -29,8 +29,8 @@
 namespace Sosage::Component
 {
 
-Sound::Sound (const std::string& id, const std::string& file_name)
-  : Base(id)
+Sound::Sound (const std::string& entity, const std::string& component, const std::string& file_name)
+  : Base(entity, component)
 {
   m_core = Core::Sound::load_sound (file_name);
 }
@@ -38,11 +38,6 @@ Sound::Sound (const std::string& id, const std::string& file_name)
 Sound::~Sound()
 {
   Core::Sound::delete_sound(m_core);
-}
-
-std::string Sound::str() const
-{
-  return this->id();
 }
 
 const Core::Sound::Sound& Sound::core() const

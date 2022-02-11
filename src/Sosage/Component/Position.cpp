@@ -30,17 +30,18 @@
 namespace Sosage::Component
 {
 
-Position::Position (const std::string& id)
-  : Base(id)
+Position::Position (const std::string& entity, const std::string& component)
+  : Base(entity, component)
 { }
 
-Absolute_position::Absolute_position (const std::string& id, const Point& point, bool is_interface)
-  : Position(id), m_pos (point), m_is_interface (is_interface)
+Absolute_position::Absolute_position (const std::string& entity, const std::string& component,
+                                      const Point& point, bool is_interface)
+  : Position(entity, component), m_pos (point), m_is_interface (is_interface)
 { }
 
 std::string Absolute_position::str() const
 {
-  return this->id() + " (" + std::to_string (m_pos.x())
+  return Base::str() + " (" + std::to_string (m_pos.x())
     + ";" + std::to_string(m_pos.y()) + ")";
 }
 
@@ -65,9 +66,10 @@ bool& Absolute_position::is_interface()
   return m_is_interface;
 }
 
-Relative_position::Relative_position (const std::string& id, Position_handle ref,
+Relative_position::Relative_position (const std::string& entity, const std::string& component,
+                                      Position_handle ref,
                                       const Sosage::Vector& diff, double factor)
-  : Position(id), m_ref(ref), m_diff(diff), m_factor(factor)
+  : Position(entity, component), m_ref(ref), m_diff(diff), m_factor(factor)
 { }
   
 Absolute_position_handle Relative_position::absolute_reference()
@@ -98,9 +100,10 @@ bool Relative_position::is_interface() const
   return m_ref->is_interface();
 }
 
-Functional_position::Functional_position (const std::string& id, const Function& function,
+Functional_position::Functional_position (const std::string& entity, const std::string& component,
+                                          const Function& function,
                                           const std::string& arg, bool is_interface)
-  : Position(id), m_function(function), m_arg(arg), m_is_interface(is_interface)
+  : Position(entity, component), m_function(function), m_arg(arg), m_is_interface(is_interface)
 { }
 
 Point Functional_position::value() const

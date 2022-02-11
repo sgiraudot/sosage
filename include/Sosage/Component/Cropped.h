@@ -43,7 +43,7 @@ public:
 
 public:
 
-  Cropped (const std::string& id, const std::string& file_name, int z);
+  Cropped (const std::string& entity, const std::string& component, const std::string& file_name, int z);
   void crop (int xmin, int xmax, int ymin, int ymax);
   virtual int xmin() const;
   virtual int xmax() const;

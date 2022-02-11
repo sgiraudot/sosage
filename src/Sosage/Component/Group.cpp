@@ -29,8 +29,8 @@
 namespace Sosage::Component
 {
 
-Group::Group (const std::string& id)
-  : Base(id)
+Group::Group (const std::string& entity, const std::string& component)
+  : Base(entity, component)
 { }
 
 void Group::add (Handle h)

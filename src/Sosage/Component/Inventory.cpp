@@ -32,8 +32,8 @@
 namespace Sosage::Component
 {
 
-Inventory::Inventory (const std::string& id)
-  : Base (id), m_position(0)
+Inventory::Inventory (const std::string& entity, const std::string& component)
+  : Base (entity, component), m_position(0)
 { }
 
 void Inventory::clear()

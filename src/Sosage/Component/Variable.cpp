@@ -29,8 +29,8 @@
 namespace Sosage::Component
 {
 
-Variable::Variable (const std::string& id, Handle target)
-  : Conditional_base(id), m_target(target)
+Variable::Variable (const std::string& entity, const std::string& component, Handle target)
+  : Conditional_base(entity, component), m_target(target)
 { }
 
 void Variable::set (Handle target)

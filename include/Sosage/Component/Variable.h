@@ -38,7 +38,7 @@ class Variable : public Conditional_base
 
 public:
 
-  Variable (const std::string& id, Handle target);
+  Variable (const std::string& entity, const std::string& component, Handle target);
   void set (Handle target);
   virtual Handle get() const;
 };

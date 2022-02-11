@@ -110,56 +110,56 @@ void Control::update_exit()
 {
   if (status()->is (LOCKED))
   {
-    if (receive("Game:escape"))
+    if (receive("Game", "escape"))
     {
-      if (request<C::Image>("Comment_0:image"))
-        emit("Game:skip_dialog");
+      if (request<C::Image>("Comment_0", "image"))
+        emit("Game", "skip_dialog");
     }
     return;
   }
-  if (receive("Show:menu"))
+  if (receive("Show", "menu"))
   {
-    set<C::String>("Menu:create", value<C::String>("Game:triggered_menu"));
+    set<C::String>("Menu", "create", value<C::String>("Game", "triggered_menu"));
     status()->push (IN_MENU);
   }
 
   if (status()->is (CUTSCENE))
   {
     double time = value<C::Double>(CLOCK__TIME);
-    bool exit_message_exists = bool(request<C::Image>("Skip_message:image"));
+    bool exit_message_exists = bool(request<C::Image>("Skip_message", "image"));
 
-    if (receive("Game:escape"))
+    if (receive("Game", "escape"))
     {
       if (exit_message_exists)
       {
-        emit("Game:skip_cutscene");
-        emit("Skip_message:remove");
+        emit("Game", "skip_cutscene");
+        emit("Skip_message", "remove");
       }
       else
-        emit("Skip_message:create");
+        emit("Skip_message", "create");
       m_latest_exit = time;
     }
     if (exit_message_exists && time - m_latest_exit >= Config::key_repeat_delay)
-      emit("Skip_message:remove");
+      emit("Skip_message", "remove");
   }
   else // status != CUTSCENE
   {
-    if (receive("Game:escape"))
+    if (receive("Game", "escape"))
     {
       if (status()->is (IN_MENU))
       {
-        const std::string& menu = value<C::String>("Game:current_menu");
+        const std::string& menu = value<C::String>("Game", "current_menu");
         if (menu == "End")
-          emit("Game:exit");
+          emit("Game", "exit");
         else
         {
-          set<C::String>("Menu:delete", menu);
+          set<C::String>("Menu", "delete", menu);
           status()->pop();
         }
       }
       else
       {
-        set<C::String>("Menu:create", "Exit");
+        set<C::String>("Menu", "create", "Exit");
         status()->push (IN_MENU);
       }
     }
@@ -178,23 +178,23 @@ void Control::begin_status (const Status& s)
     }
     else if (s == IN_INVENTORY || s == OBJECT_CHOICE)
     {
-      auto inventory = get<C::Inventory>("Game:inventory");
-      if (auto source = request<C::String>("Interface:source_object"))
+      auto inventory = get<C::Inventory>("Game", "inventory");
+      if (auto source = request<C::String>("Interface", "source_object"))
       {
         for (std::size_t i = 0; i < inventory->size(); ++ i)
           if (inventory->get(i) == source->value())
           {
             if (i == inventory->size() - 1)
-              set<C::String>("Interface:active_object", inventory->get(i-1));
+              set<C::String>("Interface", "active_object", inventory->get(i-1));
             else
-              set<C::String>("Interface:active_object", inventory->get(i+1));
+              set<C::String>("Interface", "active_object", inventory->get(i+1));
             break;
           }
       }
       else
       {
         std::size_t idx = 0;
-        if (auto previous = request<C::String>("Interface:previous_active_inventory_object"))
+        if (auto previous = request<C::String>("Interface", "previous_active_inventory_object"))
         {
           for (std::size_t i = 0; i < inventory->size(); ++ i)
             if (inventory->get(i) == previous->value())
@@ -202,18 +202,18 @@ void Control::begin_status (const Status& s)
               idx = i;
               break;
             }
-          remove ("Interface:previous_active_inventory_object");
+          remove ("Interface", "previous_active_inventory_object");
         }
-        set<C::String>("Interface:active_object", inventory->get(idx));
+        set<C::String>("Interface", "active_object", inventory->get(idx));
       }
     }
     else if (s == IN_CODE)
     {
-      get<C::Code>("Game:code")->hover();
-      emit("Code:hover");
+      get<C::Code>("Game", "code")->hover();
+      emit("Code", "hover");
     }
     else if (s == DIALOG_CHOICE)
-      set<C::Int>("Interface:active_dialog_item", 0);
+      set<C::Int>("Interface", "active_dialog_item", 0);
   }
 }
 
@@ -222,20 +222,20 @@ void Control::end_status (const Status& s)
   if (s == IDLE)
   {
     if (m_mode == GAMEPAD)
-      if (auto active = request<C::String>("Interface:active_object"))
-        set<C::String>("Interface:previous_active_object", active->value());
-    remove ("Interface:active_object", true);
-    remove ("Interface:active_objects", true);
+      if (auto active = request<C::String>("Interface", "active_object"))
+        set<C::String>("Interface", "previous_active_object", active->value());
+    remove ("Interface", "active_object", true);
+    remove ("Interface", "active_objects", true);
   }
 }
 
 void Control::set_action (const std::string& id, const std::string& default_id)
 {
   debug << "Set action to " << id << " (fallback to " << default_id << ")" << std::endl;
-  if (auto action = request<C::Action>(id + ":action"))
-    set<C::Variable>("Character:triggered_action", action);
+  if (auto action = request<C::Action>(id , "action"))
+    set<C::Variable>("Character", "triggered_action", action);
   else
-    set<C::Variable>("Character:triggered_action", get<C::Action>(default_id + ":action"));
+    set<C::Variable>("Character", "triggered_action", get<C::Action>(default_id , "action"));
 }
 
 } // namespace Sosage::System

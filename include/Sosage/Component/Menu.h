@@ -82,7 +82,7 @@ public:
 
   using Node = Vertex_wrapper;
 
-  Menu (const std::string& id);
+  Menu (const std::string& entity, const std::string& component);
   Node operator[] (const std::size_t idx);
   void split (Split_direction direction, std::size_t nb_children);
   std::size_t nb_children() const;

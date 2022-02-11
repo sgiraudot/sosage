@@ -70,7 +70,7 @@ void Interface::run()
 void Interface::init()
 {
   // Init black screen
-  auto blackscreen = set<C::Image>("Blackscreen:image",
+  auto blackscreen = set<C::Image>("Blackscreen", "image",
                                    Config::world_width,
                                    Config::world_height,
                                    0, 0, 0, 255);
@@ -78,90 +78,90 @@ void Interface::init()
   blackscreen->z() = Config::overlay_depth;
   blackscreen->set_collision(UNCLICKABLE);
 
-  set<C::Absolute_position>("Blackscreen:position", Point(0,0));
+  set<C::Absolute_position>("Blackscreen", "position", Point(0,0));
 
   // Init inventory
   auto inventory_origin = set<C::Absolute_position>
-                          ("Inventory:origin",
+                          ("Inventory", "origin",
                            Point(0, Config::world_height + Config::inventory_active_zone));
 
-  auto inventory_label = set<C::Image>("Inventory_label:image", get<C::Font>("Interface:font"),
-                                       "FFFFFF", locale_get("Inventory:label"));
+  auto inventory_label = set<C::Image>("Inventory_label", "image", get<C::Font>("Interface", "font"),
+                                       "FFFFFF", locale_get("Inventory", "label"));
   inventory_label->set_collision(UNCLICKABLE);
   inventory_label->z() = Config::inventory_depth;
   inventory_label->set_scale(0.5);
   inventory_label->set_relative_origin (0.5, 0.5);
 
-  auto inventory_label_background = set<C::Image>("Inventory_label_background:image",
+  auto inventory_label_background = set<C::Image>("Inventory_label_background", "image",
                                                   Config::label_margin + inventory_label->width() / 2,
                                                   Config::label_height);
   inventory_label_background->set_collision(BOX);
   inventory_label_background->z() = Config::interface_depth;
   int label_width = inventory_label_background->width();
   int label_height = inventory_label_background->height();
-  set<C::Relative_position>("Inventory_label_background:position", inventory_origin, Vector(0, -label_height));
-  set<C::Relative_position>("Chamfer:position", inventory_origin, Vector(label_width, -label_height));
-  get<C::Image>("Chamfer:image")->set_collision(BOX);
-  set<C::Relative_position>("Inventory_label:position", inventory_origin, Vector(label_width / 2, - 0.5 * label_height));
+  set<C::Relative_position>("Inventory_label_background", "position", inventory_origin, Vector(0, -label_height));
+  set<C::Relative_position>("Chamfer", "position", inventory_origin, Vector(label_width, -label_height));
+  get<C::Image>("Chamfer", "image")->set_collision(BOX);
+  set<C::Relative_position>("Inventory_label", "position", inventory_origin, Vector(label_width / 2, - 0.5 * label_height));
 
-  auto inventory_background = set<C::Image>("Inventory_background:image", Config::world_width, Config::inventory_height);
+  auto inventory_background = set<C::Image>("Inventory_background", "image", Config::world_width, Config::inventory_height);
   inventory_background->z() = Config::interface_depth;
   inventory_background->set_collision(UNCLICKABLE);
-  set<C::Relative_position>("Inventory_background:position", inventory_origin);
+  set<C::Relative_position>("Inventory_background", "position", inventory_origin);
 
-  set<C::Relative_position>("Left_arrow:position", inventory_origin, Vector(Config::inventory_margin, Config::inventory_height / 2));
-  set<C::Relative_position>("Right_arrow:position", inventory_origin, Vector(Config::world_width - Config::inventory_margin, Config::inventory_height / 2));
+  set<C::Relative_position>("Left_arrow", "position", inventory_origin, Vector(Config::inventory_margin, Config::inventory_height / 2));
+  set<C::Relative_position>("Right_arrow", "position", inventory_origin, Vector(Config::world_width - Config::inventory_margin, Config::inventory_height / 2));
 
   // Init object switchers
   create_label (true, "Keyboard_switcher_left", "Tab", false, false, UNCLICKABLE);
-  auto kb_left_pos = set<C::Absolute_position>("Keyboard_switcher_left:global_position", Point(0,0));
+  auto kb_left_pos = set<C::Absolute_position>("Keyboard_switcher_left", "global_position", Point(0,0));
   update_label ("Keyboard_switcher_left", false, false, kb_left_pos);
-  kb_left_pos->set (Point (Config::label_height - value<C::Position>("Keyboard_switcher_left_back:position").x(),
+  kb_left_pos->set (Point (Config::label_height - value<C::Position>("Keyboard_switcher_left_back", "position").x(),
                         Config::world_height - Config::label_height));
 
   create_label (true, "Gamepad_switcher_left", "L", false, false, UNCLICKABLE);
-  auto left_pos = set<C::Absolute_position>("Gamepad_switcher_left:global_position", Point(0,0));
+  auto left_pos = set<C::Absolute_position>("Gamepad_switcher_left", "global_position", Point(0,0));
   update_label ("Gamepad_switcher_left", false, false, left_pos);
-  left_pos->set (Point (Config::label_height - value<C::Position>("Gamepad_switcher_left_back:position").x(),
+  left_pos->set (Point (Config::label_height - value<C::Position>("Gamepad_switcher_left_back", "position").x(),
                         Config::world_height - Config::label_height));
 
-  create_label (false, "Keyboard_switcher_label", locale_get("Switch_target:text"), true, false, UNCLICKABLE);
-  auto kb_img = get<C::Image>("Keyboard_switcher_label_back:image");
-  auto kb_pos = set<C::Absolute_position>("Keyboard_switcher_label:global_position", Point(0,0));
+  create_label (false, "Keyboard_switcher_label", locale_get("Switch_target", "text"), true, false, UNCLICKABLE);
+  auto kb_img = get<C::Image>("Keyboard_switcher_label_back", "image");
+  auto kb_pos = set<C::Absolute_position>("Keyboard_switcher_label", "global_position", Point(0,0));
   update_label ("Keyboard_switcher_label", true, false, kb_pos);
-  kb_pos->set (Point (value<C::Position>("Keyboard_switcher_left_back:position").x() + kb_img->width() / 2,
+  kb_pos->set (Point (value<C::Position>("Keyboard_switcher_left_back", "position").x() + kb_img->width() / 2,
                       kb_left_pos->value().y()));
-  get<C::Relative_position>("Keyboard_switcher_label:position")->set(Vector(Config::label_margin,0));
-  get<C::Relative_position>("Keyboard_switcher_label_back:position")->set(Vector(0,0));
+  get<C::Relative_position>("Keyboard_switcher_label", "position")->set(Vector(Config::label_margin,0));
+  get<C::Relative_position>("Keyboard_switcher_label_back", "position")->set(Vector(0,0));
 
-  create_label (false, "Gamepad_switcher_label", locale_get("Switch_target:text"), true, true, UNCLICKABLE);
-  auto img = get<C::Image>("Gamepad_switcher_label_back:image");
-  auto pos = set<C::Absolute_position>("Gamepad_switcher_label:global_position", Point(0,0));
+  create_label (false, "Gamepad_switcher_label", locale_get("Switch_target", "text"), true, true, UNCLICKABLE);
+  auto img = get<C::Image>("Gamepad_switcher_label_back", "image");
+  auto pos = set<C::Absolute_position>("Gamepad_switcher_label", "global_position", Point(0,0));
   update_label ("Gamepad_switcher_label", true, true, pos);
-  pos->set (Point (value<C::Position>("Gamepad_switcher_left_back:position").x() + img->width() / 2,
+  pos->set (Point (value<C::Position>("Gamepad_switcher_left_back", "position").x() + img->width() / 2,
                    left_pos->value().y()));
 
   create_label (true, "Gamepad_switcher_right", "R", false, false, UNCLICKABLE);
-  auto right_pos = set<C::Absolute_position>("Gamepad_switcher_right:global_position", Point(0,0));
+  auto right_pos = set<C::Absolute_position>("Gamepad_switcher_right", "global_position", Point(0,0));
   update_label ("Gamepad_switcher_right", false, false, right_pos);
   right_pos->set (Point (pos->value().x() + img->width() / 2, left_pos->value().y()));
 
-  auto kb_switcher = set<C::Group>("Keyboard_switcher:group");
-  kb_switcher->add (get<C::Group>("Keyboard_switcher_left:group"));
-  kb_switcher->add (get<C::Group>("Keyboard_switcher_label:group"));
+  auto kb_switcher = set<C::Group>("Keyboard_switcher", "group");
+  kb_switcher->add (get<C::Group>("Keyboard_switcher_left", "group"));
+  kb_switcher->add (get<C::Group>("Keyboard_switcher_label", "group"));
   kb_switcher->apply<C::Image> ([&](auto img) { img->set_alpha(0); });
 
-  auto gamepad_switcher = set<C::Group>("Gamepad_switcher:group");
-  gamepad_switcher->add (get<C::Group>("Gamepad_switcher_left:group"));
-  gamepad_switcher->add (get<C::Group>("Gamepad_switcher_label:group"));
-  gamepad_switcher->add (get<C::Group>("Gamepad_switcher_right:group"));
+  auto gamepad_switcher = set<C::Group>("Gamepad_switcher", "group");
+  gamepad_switcher->add (get<C::Group>("Gamepad_switcher_left", "group"));
+  gamepad_switcher->add (get<C::Group>("Gamepad_switcher_label", "group"));
+  gamepad_switcher->add (get<C::Group>("Gamepad_switcher_right", "group"));
   gamepad_switcher->apply<C::Image> ([&](auto img) { img->set_alpha(0); });
 
   // Init gamepad action selector position
-  set<C::Relative_position>("Gamepad_action_selector:position",
+  set<C::Relative_position>("Gamepad_action_selector", "position",
                             inventory_origin, Vector (Config::world_width - 250, -Config::inventory_active_zone - 130));
 
-  set<C::Variable>("Selected_object:position", get<C::Position>(CURSOR__POSITION));
+  set<C::Variable>("Selected_object", "position", get<C::Position>(CURSOR__POSITION));
 
   init_menus();
 }
@@ -169,7 +169,7 @@ void Interface::init()
 void Interface::update_active_objects()
 {
   // Clear if input mode changed
-  if (receive("Input_mode:changed") || status()->is (IN_MENU))
+  if (receive("Input_mode", "changed") || status()->is (IN_MENU))
   {
     if (!m_active_objects.empty())
     {
@@ -190,11 +190,11 @@ void Interface::update_active_objects()
     return;
   }
 
-  if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
+  if (auto active_objects = request<C::Vector<std::string>>("Interface", "active_objects"))
   {
     if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
     {
-      auto active_object = get<C::String>("Interface:active_object");
+      auto active_object = get<C::String>("Interface", "active_object");
 
       // No change
       if (active_objects->value() == m_active_objects
@@ -296,7 +296,7 @@ void Interface::update_active_objects()
     m_active_objects.clear();
     m_active_object = "";
   }
-  else if (auto active = request<C::String>("Interface:active_object"))
+  else if (auto active = request<C::String>("Interface", "active_object"))
   {
     if (status()->is (INVENTORY_ACTION_CHOICE))
     {
@@ -351,14 +351,14 @@ void Interface::update_action_selector()
     {
       double inactive_time = value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__LATEST_ACTIVE);
       if (inactive_time > 5)
-        set_action_selector (GP_IDLE, value<C::String>("Interface:active_object", ""));
+        set_action_selector (GP_IDLE, value<C::String>("Interface", "active_object", ""));
       else
         set_action_selector(NO_SEL);
     }
     else if (status()->is(IN_INVENTORY))
-      set_action_selector (GP_INV_ACTION_SEL, value<C::String>("Interface:active_object", ""));
+      set_action_selector (GP_INV_ACTION_SEL, value<C::String>("Interface", "active_object", ""));
     else if (status()->is(ACTION_CHOICE))
-      set_action_selector(ACTION_SEL, value<C::String>("Interface:action_choice_target"));
+      set_action_selector(ACTION_SEL, value<C::String>("Interface", "action_choice_target"));
     else if (status()->is(OBJECT_CHOICE, IN_WINDOW, IN_CODE))
       set_action_selector (OKNOTOK);
     else if (status()->is(IN_MENU))
@@ -369,16 +369,16 @@ void Interface::update_action_selector()
   else
   {
     if (status()->is(ACTION_CHOICE))
-      set_action_selector(ACTION_SEL, value<C::String>("Interface:action_choice_target"));
+      set_action_selector(ACTION_SEL, value<C::String>("Interface", "action_choice_target"));
     else if (status()->is(INVENTORY_ACTION_CHOICE))
-      set_action_selector(INV_ACTION_SEL, value<C::String>("Interface:action_choice_target"));
+      set_action_selector(INV_ACTION_SEL, value<C::String>("Interface", "action_choice_target"));
     else
       set_action_selector(NO_SEL);
 
     if (m_action_selector[0] != "")
     {
       std::string active_button = "";
-      if (auto a = request<C::String>("Interface:active_button"))
+      if (auto a = request<C::String>("Interface", "active_button"))
       {
         active_button = a->value();
         std::size_t pos = active_button.find("_button_");
@@ -392,7 +392,7 @@ void Interface::update_action_selector()
         if (id == "")
           continue;
         unsigned char highlight = (id == active_button ? 255 : 0);
-        get<C::Image>(id + "_button_back:image")->set_highlight(highlight);
+        get<C::Image>(id + "_button_back", "image")->set_highlight(highlight);
       }
     }
   }
@@ -408,7 +408,7 @@ void Interface::update_object_switcher()
   {
     const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
     if (mode == GAMEPAD && !status()->is(IN_MENU))
-      if (auto active_objects = request<C::Vector<std::string>>("Interface:active_objects"))
+      if (auto active_objects = request<C::Vector<std::string>>("Interface", "active_objects"))
         if (active_objects->value().size() > 1)
         {
           keyboard_on = (value<C::Simple<Gamepad_type>>(GAMEPAD__TYPE) == KEYBOARD);
@@ -420,13 +420,13 @@ void Interface::update_object_switcher()
   std::swap(keyboard_on, gamepad_on);
 #endif
 
-  if (keyboard_on && get<C::Image>("Keyboard_switcher_left:image")->alpha() != 255)
+  if (keyboard_on && get<C::Image>("Keyboard_switcher_left", "image")->alpha() != 255)
     fade_action_selector ("Keyboard_switcher", true);
-  else if (gamepad_on && get<C::Image>("Gamepad_switcher_left:image")->alpha() != 255)
+  else if (gamepad_on && get<C::Image>("Gamepad_switcher_left", "image")->alpha() != 255)
     fade_action_selector ("Gamepad_switcher", true);
-  else if (!keyboard_on && get<C::Image>("Keyboard_switcher_left:image")->alpha() != 0)
+  else if (!keyboard_on && get<C::Image>("Keyboard_switcher_left", "image")->alpha() != 0)
     fade_action_selector ("Keyboard_switcher", false);
-  else if (!gamepad_on && get<C::Image>("Gamepad_switcher_left:image")->alpha() != 0)
+  else if (!gamepad_on && get<C::Image>("Gamepad_switcher_left", "image")->alpha() != 0)
     fade_action_selector ("Gamepad_switcher", false);
 }
 
@@ -437,7 +437,7 @@ void Interface::update_inventory()
 
   Input_mode mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
-  auto inventory_origin = get<C::Absolute_position>("Inventory:origin");
+  auto inventory_origin = get<C::Absolute_position>("Inventory", "origin");
 
   double target = 0;
   double as_target = 0;
@@ -459,33 +459,33 @@ void Interface::update_inventory()
 
   if (target != inventory_origin->value().y())
   {
-    if (auto anim = request<C::GUI_position_animation>("Inventory:animation"))
+    if (auto anim = request<C::GUI_position_animation>("Inventory", "animation"))
       anim->update(Point(0, target));
     else
     {
       double current_time = value<C::Double>(CLOCK__TIME);
-      auto position = get<C::Position>("Inventory:origin");
-      set<C::GUI_position_animation> ("Inventory:animation", current_time, current_time + Config::inventory_speed,
+      auto position = get<C::Position>("Inventory", "origin");
+      set<C::GUI_position_animation> ("Inventory", "animation", current_time, current_time + Config::inventory_speed,
                                       position, Point(0, target));
 
-      auto as_pos = get<C::Position>("Gamepad_action_selector:position");
-      set<C::GUI_position_animation> ("Gamepad_action_selector:animation", current_time, current_time + Config::inventory_speed,
+      auto as_pos = get<C::Position>("Gamepad_action_selector", "position");
+      set<C::GUI_position_animation> ("Gamepad_action_selector", "animation", current_time, current_time + Config::inventory_speed,
                                       as_pos, Point(Config::world_width - 240, as_target));
     }
   }
 
-  auto inventory = get<C::Inventory>("Game:inventory");
+  auto inventory = get<C::Inventory>("Game", "inventory");
 
   constexpr int inventory_margin = 100;
   constexpr int inventory_width = Config::world_width - inventory_margin * 2;
 
-  std::string active_object = value<C::String>("Interface:active_object", "");
-  std::string source_object = value<C::String>("Interface:source_object", "");
+  std::string active_object = value<C::String>("Interface", "active_object", "");
+  std::string source_object = value<C::String>("Interface", "source_object", "");
 
   std::size_t position = inventory->position();
   for (std::size_t i = 0; i < inventory->size(); ++ i)
   {
-    auto img = get<C::Image>(inventory->get(i) + ":image");
+    auto img = get<C::Image>(inventory->get(i) , "image");
     double factor = 0.7;
     unsigned char alpha = 255;
     unsigned char highlight = 0;
@@ -514,14 +514,14 @@ void Interface::update_inventory()
       int x = inventory_margin + int(relative_pos * inventory_width);
       int y = Config::inventory_height / 2;
 
-      set<C::Relative_position>(inventory->get(i) + ":position", inventory_origin, Vector(x,y));
+      set<C::Relative_position>(inventory->get(i) , "position", inventory_origin, Vector(x,y));
     }
     else
       img->on() = false;
   }
 
-  get<C::Image>("Left_arrow:image")->on() = (inventory->position() > 0);
-  get<C::Image>("Right_arrow:image")->on() = (inventory->size() - inventory->position()
+  get<C::Image>("Left_arrow", "image")->on() = (inventory->position() > 0);
+  get<C::Image>("Right_arrow", "image")->on() = (inventory->size() - inventory->position()
                                               > Config::displayed_inventory_size);
 }
 
@@ -529,80 +529,80 @@ void Interface::update_code_hover()
 {
   double current_time = value<C::Double>(CLOCK__TIME);
 
-  if (receive("Interface:show_window"))
+  if (receive("Interface", "show_window"))
   {
-    auto window = get<C::Image>("Game:window");
+    auto window = get<C::Image>("Game", "window");
     window->on() = true;
-    set<C::GUI_image_animation>(window->entity() + ":animation",
+    set<C::GUI_image_animation>(window->entity() , "animation",
                                 current_time, current_time + Config::inventory_speed,
                                 window, 0, 1, 0, 255);
   }
-  if (receive("Interface:hide_window"))
+  if (receive("Interface", "hide_window"))
   {
-    auto window = get<C::Image>("Game:window");
-    set<C::GUI_image_animation>(window->entity() + ":animation",
+    auto window = get<C::Image>("Game", "window");
+    set<C::GUI_image_animation>(window->entity() , "animation",
                                 current_time, current_time + Config::inventory_speed,
                                 window, 1, 0, 255, 0);
   }
 
-  if (receive("Code:hover"))
+  if (receive("Code", "hover"))
   {
     // Possible improvment: avoid creating image at each frame
-    const std::string& player = value<C::String>("Player:name");
-    auto code = get<C::Code>("Game:code");
-    auto window = get<C::Image>("Game:window");
+    const std::string& player = value<C::String>("Player", "name");
+    auto code = get<C::Code>("Game", "code");
+    auto window = get<C::Image>("Game", "window");
     auto position
-        = get<C::Position>(window->entity() + ":position");
+        = get<C::Position>(window->entity() , "position");
 
-    const std::string& color_str = value<C::String>(player + ":color");
+    const std::string& color_str = value<C::String>(player , "color");
     RGB_color color = color_from_string (color_str);
-    auto img = set<C::Image>("Code_hover:image", code->xmax() - code->xmin(), code->ymax() - code->ymin(),
+    auto img = set<C::Image>("Code_hover", "image", code->xmax() - code->xmin(), code->ymax() - code->ymin(),
                              color[0], color[1], color[2], 128);
     img->set_collision(UNCLICKABLE);
     img->z() = Config::inventory_depth;
     set<C::Absolute_position>
-        ("Code_hover:position", Point(code->xmin(), code->ymin())
+        ("Code_hover", "position", Point(code->xmin(), code->ymin())
          + Vector(position->value())
          - Vector (0.5  * window->width(),
                    0.5 * window->height()));
   }
   else if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == MOUSE)
   {
-    remove("Code_hover:image", true);
+    remove("Code_hover", "image", true);
   }
 }
 
 void Interface::update_dialog_choices()
 {
-  if (receive("Dialog:clean"))
+  if (receive("Dialog", "clean"))
   {
     const std::vector<std::string>& choices
-        = value<C::Vector<std::string> >("Dialog:choices");
+        = value<C::Vector<std::string> >("Dialog", "choices");
 
     // Clean up
     for (int c = int(choices.size()) - 1; c >= 0; -- c)
     {
       std::string entity = "Dialog_choice_" + std::to_string(c);
-      remove(entity + "_off:image");
-      remove(entity + "_off:position");
-      remove(entity + "_on:image");
-      remove(entity + "_on:position");
+      remove(entity + "_off", "image");
+      remove(entity + "_off", "position");
+      remove(entity + "_on", "image");
+      remove(entity + "_on", "position");
     }
-    remove("Dialog_choice_background:image");
-    remove("Dialog_choice_background:position");
+    remove("Dialog_choice_background", "image");
+    remove("Dialog_choice_background", "position");
   }
 
   if (!status()->is(DIALOG_CHOICE) && !status()->was(DIALOG_CHOICE))
     return;
 
   const std::vector<std::string>& choices
-      = value<C::Vector<std::string> >("Dialog:choices");
+      = value<C::Vector<std::string> >("Dialog", "choices");
 
   // Generate images if not done yet
-  if (!request<C::Image>("Dialog_choice_background:image"))
+  if (!request<C::Image>("Dialog_choice_background", "image"))
   {
-    auto interface_font = get<C::Font> ("Dialog:font");
-    const std::string& player = value<C::String>("Player:name");
+    auto interface_font = get<C::Font> ("Dialog", "font");
+    const std::string& player = value<C::String>("Player", "name");
 
     int bottom = Config::world_height;
     int y = bottom - 10;
@@ -611,15 +611,15 @@ void Interface::update_dialog_choices()
     {
       std::string entity = "Dialog_choice_" + std::to_string(c);
       auto img_off
-        = set<C::Image>(entity + "_off:image", interface_font, "FFFFFF",
+        = set<C::Image>(entity + "_off", "image", interface_font, "FFFFFF",
                         locale(choices[std::size_t(c)]));
       img_off->z() = Config::dialog_depth;
       img_off->set_scale(0.75);
       img_off->set_relative_origin(0., 1.);
 
       auto img_on
-        = set<C::Image>(entity + "_on:image", interface_font,
-                        value<C::String>(player + ":color"),
+        = set<C::Image>(entity + "_on", "image", interface_font,
+                        value<C::String>(player , "color"),
                         locale(choices[std::size_t(c)]));
       img_on->z() = Config::dialog_depth;
       img_on->set_scale(0.75);
@@ -628,18 +628,18 @@ void Interface::update_dialog_choices()
 
     }
 
-    auto background = set<C::Image> ("Dialog_choice_background:image",
+    auto background = set<C::Image> ("Dialog_choice_background", "image",
                                      Config::world_width, bottom - y + 20, 0, 0, 0, 192);
     background->set_relative_origin(0., 1.);
-    set<C::Absolute_position>("Dialog_choice_background:position", Point(0,bottom));
+    set<C::Absolute_position>("Dialog_choice_background", "position", Point(0,bottom));
   }
 
   for (int c = int(choices.size()) - 1; c >= 0; -- c)
   {
     std::string entity = "Dialog_choice_" + std::to_string(c);
-    get<C::Image>(entity + "_off:image")->on() = status()->is(DIALOG_CHOICE);
-    get<C::Image>(entity + "_on:image")->on() = status()->is(DIALOG_CHOICE);
-    get<C::Image> ("Dialog_choice_background:image")->on() = status()->is(DIALOG_CHOICE);
+    get<C::Image>(entity + "_off", "image")->on() = status()->is(DIALOG_CHOICE);
+    get<C::Image>(entity + "_on", "image")->on() = status()->is(DIALOG_CHOICE);
+    get<C::Image> ("Dialog_choice_background", "image")->on() = status()->is(DIALOG_CHOICE);
   }
 
   if (status()->was(DIALOG_CHOICE))
@@ -648,17 +648,17 @@ void Interface::update_dialog_choices()
   int bottom = Config::world_height;
   int y = bottom - 10;
 
-  int choice = value<C::Int>("Interface:active_dialog_item", -1);
+  int choice = value<C::Int>("Interface", "active_dialog_item", -1);
 
   for (int c = int(choices.size()) - 1; c >= 0; -- c)
   {
     std::string entity = "Dialog_choice_" + std::to_string(c);
-    auto img_off = get<C::Image>(entity + "_off:image");
-    auto img_on = get<C::Image>(entity + "_on:image");
+    auto img_off = get<C::Image>(entity + "_off", "image");
+    auto img_on = get<C::Image>(entity + "_on", "image");
 
     Point p (10, y);
-    set<C::Absolute_position>(entity + "_off:position", p);
-    set<C::Absolute_position>(entity + "_on:position", p);
+    set<C::Absolute_position>(entity + "_off", "position", p);
+    set<C::Absolute_position>(entity + "_on", "position", p);
     y -= img_off->height() * 0.75;
 
     bool on = (c == choice);
@@ -669,37 +669,37 @@ void Interface::update_dialog_choices()
 
 void Interface::update_skip_message()
 {
-  if (receive ("Skip_message:create"))
+  if (receive ("Skip_message", "create"))
   {
-    auto interface_font = get<C::Font> ("Interface:font");
+    auto interface_font = get<C::Font> ("Interface", "font");
 
     auto img
-        = set<C::Image>("Skip_message:image", interface_font, "FFFFFF",
-                        locale_get("Skip_cutscene:text"));
+        = set<C::Image>("Skip_message", "image", interface_font, "FFFFFF",
+                        locale_get("Skip_cutscene", "text"));
     img->z() += 10;
     img->set_scale(0.5);
     img->set_relative_origin (1, 1);
 
     auto img_back
-        = set<C::Image>("Skip_message_back:image", 0.5 * img->width() + 30, 0.5 * img->height() + 30,
+        = set<C::Image>("Skip_message_back", "image", 0.5 * img->width() + 30, 0.5 * img->height() + 30,
                         0, 0, 0, 128);
     img_back->z() = img->z() - 1;
     img_back->set_relative_origin (1, 1);
 
     int window_width = Config::world_width;
     int window_height = Config::world_height;
-    set<C::Absolute_position>("Skip_message:position", Point (window_width - 15,
+    set<C::Absolute_position>("Skip_message", "position", Point (window_width - 15,
                                                               window_height - 15));
-    set<C::Absolute_position>("Skip_message_back:position", Point (window_width,
+    set<C::Absolute_position>("Skip_message_back", "position", Point (window_width,
                                                                    window_height));
   }
 
-  if (receive ("Skip_message:remove"))
+  if (receive ("Skip_message", "remove"))
   {
-    remove("Skip_message:image");
-    remove("Skip_message:position");
-    remove("Skip_message_back:image");
-    remove("Skip_message_back:position");
+    remove("Skip_message", "image");
+    remove("Skip_message", "position");
+    remove("Skip_message_back", "image");
+    remove("Skip_message_back", "position");
   }
 }
 
@@ -709,33 +709,33 @@ void Interface::update_cursor()
 
   if (mode == MOUSE)
   {
-    auto state = get<C::String>("Cursor:state");
+    auto state = get<C::String>("Cursor", "state");
     if (status()->is(IN_MENU))
       state->set("default");
-    else if (auto source = request<C::String>("Interface:source_object"))
+    else if (auto source = request<C::String>("Interface", "source_object"))
     {
       if (state->value() != "selected")
       {
         state->set("selected");
-        auto cursor_img = C::make_handle<C::Image>("Selected_object:image",
-                                                   get<C::Image>(source->value() + ":image"));
+        auto cursor_img = C::make_handle<C::Image>("Selected_object", "image",
+                                                   get<C::Image>(source->value() , "image"));
         cursor_img->set_alpha(255);
         cursor_img->set_scale(0.28);
         cursor_img->set_collision(UNCLICKABLE);
         cursor_img->z() = Config::cursor_depth+1;
 
-        auto cursor_cond = set<C::String_conditional>("Selected_object:image", state);
+        auto cursor_cond = set<C::String_conditional>("Selected_object", "image", state);
         cursor_cond->add("selected", cursor_img);
       }
     }
     else
     {
       if (state->value() == "selected")
-        remove("Selected_object:image");
+        remove("Selected_object", "image");
 
       if (!status()->is(INVENTORY_ACTION_CHOICE) && m_active_object != "")
       {
-        if (auto right = request<C::Boolean>(m_active_object + "_goto:right"))
+        if (auto right = request<C::Boolean>(m_active_object + "_goto", "right"))
         {
           if (right->value())
             state->set("goto_right");

@@ -30,8 +30,8 @@
 namespace Sosage::Component
 {
 
-Font::Font (const std::string& id, const std::string& file_name, int size)
-  : Base(id)
+Font::Font (const std::string& entity, const std::string& component, const std::string& file_name, int size)
+  : Base(entity, component)
 {
   m_core = Core::Graphic::load_font (file_name, size);
 }

@@ -44,7 +44,7 @@ private:
   
 public:
 
-  Status (const std::string& id);
+  Status (const std::string& entity, const std::string& component);
   void push (const Sosage::Status& v);
   void pop();
   virtual Sosage::Status value() const;

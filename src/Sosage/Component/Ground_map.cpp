@@ -76,11 +76,11 @@ Ground_map::GVertex Ground_map::add_vertex (std::map<Point, Ground_map::GVertex>
   return it.first->second;
 }
 
-Ground_map::Ground_map (const std::string& id,
+Ground_map::Ground_map (const std::string& entity, const std::string& component,
                         const std::string& file_name,
                         int front_z, int back_z,
                         const std::function<void()>& callback)
-  : Base(id), m_front_z (front_z), m_back_z (back_z)
+  : Base(entity, component), m_front_z (front_z), m_back_z (back_z)
 {
   SOSAGE_TIMER_START(Ground_map__Ground_map);
   

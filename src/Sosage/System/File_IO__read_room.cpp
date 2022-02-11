@@ -60,21 +60,21 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   bool looking_right = input["looking_right"].boolean();
 
   std::string name = input["name"].string();
-  set<C::String> (id + ":name", name);
+  set<C::String> (id , "name", name);
 
   std::string color = input["color"].string();
-  set<C::String> (id + ":color", color);
+  set<C::String> (id , "color", color);
 
-  bool visible = value<C::Boolean>(id + ":visible", true);
-  remove(id + ":visible", true);
+  bool visible = value<C::Boolean>(id , "visible", true);
+  remove(id , "visible", true);
 
-  auto walking = set<C::Boolean>(id + ":walking", false);
+  auto walking = set<C::Boolean>(id , "walking", false);
 
-  auto group = set<C::Group>(id + ":group");
+  auto group = set<C::Group>(id , "group");
 
   std::string mouth = input["mouth"]["skin"].string("images", "characters", "png");
   auto amouth
-    = set<C::Animation>(id + "_mouth:image", mouth,
+    = set<C::Animation>(id + "_mouth", "image", mouth,
                         0, 11, 2, true);
   amouth->set_relative_origin(0.5, 1.0);
   amouth->on() = visible;
@@ -84,12 +84,12 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   for (std::size_t i = 0; i < input["head"]["positions"].size(); ++ i)
     hpositions.push_back (input["head"]["positions"][i].string());
 
-  set<C::Vector<std::string> >(id + "_head:values", hpositions);
+  set<C::Vector<std::string> >(id + "_head", "values", hpositions);
 
   std::string head = input["head"]["skin"].string("images", "characters", "png");
   int head_size = int(hpositions.size());
   auto ahead
-    = set<C::Animation>(id + "_head:image", head,
+    = set<C::Animation>(id + "_head", "image", head,
                         0, head_size, 2, true);
   ahead->set_relative_origin(0.5, 1.0);
   ahead->on() = visible;
@@ -100,7 +100,7 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   if (input.has("walk"))
   {
     std::string walk = input["walk"]["skin"].string("images", "characters", "png");
-    awalk = C::make_handle<C::Animation>(id + "_body:image", walk,
+    awalk = C::make_handle<C::Animation>(id + "_body", "image", walk,
                                          0, 8, 4, true);
     awalk->set_relative_origin(0.5, 0.95);
     awalk->on() = visible;
@@ -111,67 +111,69 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   for (std::size_t i = 0; i < input["idle"]["positions"].size(); ++ i)
     positions.push_back (input["idle"]["positions"][i].string());
 
-  set<C::Vector<std::string> >(id + "_idle:values", positions);
+  set<C::Vector<std::string> >(id + "_idle", "values", positions);
 
-  auto aidle = C::make_handle<C::Animation>(id + "_body:image", idle,
+  auto aidle = C::make_handle<C::Animation>(id + "_body", "image", idle,
                                             0, positions.size(), 2, true);
   aidle->set_relative_origin(0.5, 0.95);
   aidle->on() = visible;
 
-  auto abody = set<C::Conditional>(id + "_body:image", walking, awalk, aidle);
+  auto abody = set<C::Conditional>(id + "_body", "image", walking, awalk, aidle);
   group->add(abody);
 
   int hdx_right = input["head"]["dx_right"].integer();
   int hdx_left = input["head"]["dx_left"].integer();
   int hdy = input["head"]["dy"].integer();
-  set<C::Simple<Vector>>(id + "_head:gap_right", Vector(hdx_right, hdy));
-  set<C::Simple<Vector>>(id + "_head:gap_left", Vector(hdx_left, hdy));
+  set<C::Simple<Vector>>(id + "_head", "gap_right", Vector(hdx_right, hdy));
+  set<C::Simple<Vector>>(id + "_head", "gap_left", Vector(hdx_left, hdy));
 
   int mdx_right = input["mouth"]["dx_right"].integer();
   int mdx_left = input["mouth"]["dx_left"].integer();
   int mdy = input["mouth"]["dy"].integer();
-  set<C::Simple<Vector>>(id + "_mouth:gap_right", Vector(mdx_right, mdy));
-  set<C::Simple<Vector>>(id + "_mouth:gap_left", Vector(mdx_left, mdy));
+  set<C::Simple<Vector>>(id + "_mouth", "gap_right", Vector(mdx_right, mdy));
+  set<C::Simple<Vector>>(id + "_mouth", "gap_left", Vector(mdx_left, mdy));
 
   // Init position objects if they don't already exist
-  auto pbody = request<C::Absolute_position>(id + "_body:position");
+  auto pbody = request<C::Absolute_position>(id + "_body", "position");
   if (!pbody)
   {
-    pbody = set<C::Absolute_position>(id + "_body:position", Point(x, y), false);
+    pbody = set<C::Absolute_position>(id + "_body", "position", Point(x, y), false);
   }
 
   auto phead = set<C::Functional_position>
-               (id + "_head:position",
+               (id + "_head", "position",
                 [&](const std::string& id) -> Point
                 {
-                  auto abody = get<C::Image>(id + "_body:image");
-                  auto pbody = get<C::Position>(id + "_body:position");
+                  auto abody = get<C::Image>(id + "_body", "image");
+                  auto pbody = get<C::Position>(id + "_body", "position");
                   return (pbody->value() - abody->core().scaling
-                          * value<C::Simple<Vector>>(id + (is_looking_right(id) ? "_head:gap_right" : "_head:gap_left")));
+                          * value<C::Simple<Vector>>(id + "_head",
+                                                     (is_looking_right(id) ? "gap_right" : "gap_left")));
                 }, id);
 
   set<C::Functional_position>
-      (id + "_mouth:position",
+      (id + "_mouth", "position",
        [&](const std::string& id) -> Point
        {
-         auto ahead = get<C::Animation>(id + "_head:image");
-         auto phead = get<C::Position>(id + "_head:position");
+         auto ahead = get<C::Animation>(id + "_head", "image");
+         auto phead = get<C::Position>(id + "_head", "position");
          return (phead->value() - ahead->core().scaling
-                 * value<C::Simple<Vector>>(id + (is_looking_right(id) ? "_mouth:gap_right" : "_mouth:gap_left")));
+                 * value<C::Simple<Vector>>(id + "_mouth",
+                                            (is_looking_right(id) ? "gap_right" : "gap_left")));
        }, id);
 
-  set<C::Variable>(id + ":position", pbody);
+  set<C::Variable>(id , "position", pbody);
 
-  auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game:new_characters");
+  auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game", "new_characters");
   if (!new_char)
-    new_char = set<C::Vector<std::pair<std::string, bool> > >("Game:new_characters");
+    new_char = set<C::Vector<std::pair<std::string, bool> > >("Game", "new_characters");
 
   new_char->push_back (std::make_pair (id, looking_right));
 }
 
 void File_IO::read_room (const std::string& file_name)
 {
-  auto callback = get<C::Simple<std::function<void()> > >("Game:loading_callback");
+  auto callback = get<C::Simple<std::function<void()> > >("Game", "loading_callback");
   callback->value()();
 
   clean_content();
@@ -187,14 +189,14 @@ void File_IO::read_room (const std::string& file_name)
 
   std::string name = input["name"].string(); // unused so far
 
-  set<C::String>("Game:current_room", file_name);
-  get<C::Set<std::string> >("Game:visited_rooms")->insert (file_name);
+  set<C::String>("Game", "current_room", file_name);
+  get<C::Set<std::string> >("Game", "visited_rooms")->insert (file_name);
 
   if (input.has("background"))
   {
     std::string background = input["background"].string("images", "backgrounds", "png");
     auto background_img
-        = set<C::Image>("Background:image", background, 0, BOX);
+        = set<C::Image>("Background", "image", background, 0, BOX);
     m_latest_room_entities.insert ("Background");
   }
   if (input.has("ground_map"))
@@ -202,13 +204,13 @@ void File_IO::read_room (const std::string& file_name)
     std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
     int front_z = input["front_z"].integer();
     int back_z = input["back_z"].integer();
-    set<C::Ground_map>("Background:ground_map", ground_map,
+    set<C::Ground_map>("Background", "ground_map", ground_map,
                        front_z, back_z, callback->value());
   }
 
   callback->value()();
 
-  set<C::Absolute_position>("Background:position", Point(0, 0), false);
+  set<C::Absolute_position>("Background", "position", Point(0, 0), false);
 
   callback->value()();
 
@@ -231,8 +233,8 @@ void File_IO::read_room (const std::string& file_name)
 
     if (node.has("states"))
       // Add state if does not exist (it might for inventory objects for example)
-      if (!request<C::String>(id + ":state"))
-        set<C::String>(id + ":state");
+      if (!request<C::String>(id , "state"))
+        set<C::String>(id , "state");
   }
 #endif
 
@@ -260,17 +262,17 @@ void File_IO::read_room (const std::string& file_name)
 
   // Special handling for inventory after reloading save (may need to
   // search in other rooms for the object)
-  auto inventory = get<C::Inventory>("Game:inventory");
+  auto inventory = get<C::Inventory>("Game", "inventory");
   for (std::size_t i = 0; i < inventory->size(); ++ i)
-    if (!request<C::String>(inventory->get(i) + ":name"))
+    if (!request<C::String>(inventory->get(i) , "name"))
     {
       // TODO: read_object (inventory->get(i));
       callback->value();
     }
 
-  emit ("Game:in_new_room");
-  emit ("Game:loading_done");
-  emit ("Window:rescaled");
+  emit ("Game", "in_new_room");
+  emit ("Game", "loading_done");
+  emit ("Window", "rescaled");
 
 #ifdef SOSAGE_DEBUG
   // Display layers of images for easy room creation
@@ -293,7 +295,7 @@ void File_IO::read_room (const std::string& file_name)
       current_depth = img->z();
       std::cerr << "# Depth " << current_depth << ":" << std::endl;
     }
-    std::cerr << "  * " << img->id() << std::endl;
+    std::cerr << "  * " << img->str() << std::endl;
   }
   std::cerr << "[LAYERS END]" << std::endl;
 #endif
@@ -321,8 +323,8 @@ void File_IO::read_animation (const std::string& id, const Core::File_IO::Node& 
     height = node["length"][1].integer();
   }
 
-  auto pos = set<C::Absolute_position>(id + ":position", Point(x,y), false);
-  auto img = set<C::Animation>(id + ":image", skin, z,
+  auto pos = set<C::Absolute_position>(id , "position", Point(x,y), false);
+  auto img = set<C::Animation>(id , "image", skin, z,
                                width, height, node["loop"].boolean());
 
   int duration = (node.has("duration") ? node["duration"].integer() : 1);
@@ -364,15 +366,15 @@ void File_IO::read_code (const std::string& id, const Core::File_IO::Node& input
   m_latest_room_entities.insert(id);
 
   std::string button_sound = input["button_sound"].string("sounds", "effects", "ogg");
-  set<C::Sound>(id + "_button:sound", button_sound);
+  set<C::Sound>(id + "_button", "sound", button_sound);
   std::string success_sound = input["success_sound"].string("sounds", "effects", "ogg");
-  set<C::Sound>(id + "_success:sound", success_sound);
+  set<C::Sound>(id + "_success", "sound", success_sound);
   std::string failure_sound = input["failure_sound"].string("sounds", "effects", "ogg");
-  set<C::Sound>(id + "_failure:sound", failure_sound);
+  set<C::Sound>(id + "_failure", "sound", failure_sound);
 
-  auto code = set<C::Code>(id + ":code");
+  auto code = set<C::Code>(id , "code");
 
-  auto state_handle = get_or_set<C::String>(id + ":state");
+  auto state_handle = get_or_set<C::String>(id , "state");
   C::String_conditional_handle conditional_handle_off;
   C::String_conditional_handle conditional_handle_on;
 
@@ -388,36 +390,36 @@ void File_IO::read_code (const std::string& id, const Core::File_IO::Node& input
       if (state_handle->value() == "")
         state_handle->set(state);
       conditional_handle_off
-        = set<C::String_conditional>(id + ":image", state_handle);
+        = set<C::String_conditional>(id , "image", state_handle);
       conditional_handle_on
-        = set<C::String_conditional>(id + "_button:image", state_handle);
+        = set<C::String_conditional>(id + "_button", "image", state_handle);
     }
     else
     {
-      conditional_handle_off = get<C::String_conditional>(id + ":image");
-      conditional_handle_on = get<C::String_conditional>(id + "_button:image");
+      conditional_handle_off = get<C::String_conditional>(id , "image");
+      conditional_handle_on = get<C::String_conditional>(id + "_button", "image");
     }
 
     std::string skin_off = istate["skin"][0].string("images", "windows", "png");
     auto img_off
-      = C::make_handle<C::Image>(id + ":conditional_image", skin_off,
+      = C::make_handle<C::Image>(id , "conditional_image", skin_off,
                                  Config::interface_depth, BOX);
     img_off->set_relative_origin(0.5, 0.5);
     img_off->on() = false;
 
-    set<C::Absolute_position>(id + ":position",
+    set<C::Absolute_position>(id , "position",
                                        Point(Config::world_width / 2,
                                              Config::world_height / 2));
 
     std::string skin_on = istate["skin"][1].string("images", "windows", "png");
     auto img_on
-      = C::make_handle<C::Cropped>(id + "_button:conditional_image",
+      = C::make_handle<C::Cropped>(id + "_button", "conditional_image",
                                    skin_on,
                                    Config::inventory_depth);
     img_on->set_relative_origin(0.5, 0.5);
     img_on->on() = false;
 
-    set<C::Absolute_position>(id + "_button:position",
+    set<C::Absolute_position>(id + "_button", "position",
                                        Point(Config::world_width / 2,
                                              Config::world_height / 2));
 
@@ -442,7 +444,7 @@ void File_IO::read_code (const std::string& id, const Core::File_IO::Node& input
   for (std::size_t j = 0; j < input["answer"].size(); ++ j)
     code->add_answer_item (input["answer"][j].string());
 
-  auto action = set<C::Action> (id + ":action");
+  auto action = set<C::Action> (id , "action");
   for (std::size_t j = 0; j < input["on_success"].size(); ++ j)
   {
     std::string function = input["on_success"][j].nstring();
@@ -454,7 +456,7 @@ void File_IO::read_dialog (const std::string& id, const Core::File_IO::Node& inp
 {
   m_latest_room_entities.insert(id);
 
-  auto dialog = set<C::Dialog>(id + ":dialog",
+  auto dialog = set<C::Dialog>(id , "dialog",
                                input.has("end") ? input["end"].string() : "");
 
   // First, instantiate all vertices and regular edges
@@ -526,9 +528,9 @@ void File_IO::read_integer (const std::string& id, const Core::File_IO::Node& no
   m_latest_room_entities.insert(id);
 
   int value = node["value"].integer();
-  auto integer = request<C::Int>(id + ":value");
+  auto integer = request<C::Int>(id , "value");
   if (!integer)
-    integer = set<C::Int>(id + ":value", value);
+    integer = set<C::Int>(id , "value", value);
 
   for (std::size_t i = 0; i < node["triggers"].size(); ++ i)
   {
@@ -536,7 +538,7 @@ void File_IO::read_integer (const std::string& id, const Core::File_IO::Node& no
 
     std::string value = itrigger["value"].string();
 
-    auto action = set<C::Action>(id + ":" + value);
+    auto action = set<C::Action>(id, value);
 
     for (std::size_t k = 0; k < itrigger["effect"].size(); ++ k)
     {
@@ -551,7 +553,7 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
   m_latest_room_entities.insert(id);
 
   // First, check if object already exists in inventory (if so, skip)
-  auto state_handle = get_or_set<C::String>(id + ":state");
+  auto state_handle = get_or_set<C::String>(id , "state");
 
   std::string name = input["name"].string();
   int x = input["coordinates"][0].integer();
@@ -559,12 +561,12 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
   int z = input["coordinates"][2].integer();
   bool box_collision = input["box_collision"].boolean();
 
-  set<C::String>(id + ":name", name);
+  set<C::String>(id , "name", name);
 
   // Position might already exists if room was already loaded
-  auto pos = request<C::Absolute_position>(id + ":position");
+  auto pos = request<C::Absolute_position>(id , "position");
   if (!pos)
-    pos = set<C::Absolute_position>(id + ":position", Point(x,y), false);
+    pos = set<C::Absolute_position>(id , "position", Point(x,y), false);
   else
     pos->is_interface() = false;
 
@@ -572,12 +574,12 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
   {
     int lx = input["label"][0].integer();
     int ly = input["label"][1].integer();
-    set<C::Absolute_position>(id + ":label", Point(lx,ly), false);
+    set<C::Absolute_position>(id , "label", Point(lx,ly), false);
   }
 
   int vx = input["view"][0].integer();
   int vy = input["view"][1].integer();
-  set<C::Absolute_position>(id + ":view", Point(vx,vy), false);
+  set<C::Absolute_position>(id , "view", Point(vx,vy), false);
 
   C::String_conditional_handle conditional_handle;
   for (std::size_t j = 0; j < input["states"].size(); ++ j)
@@ -595,10 +597,10 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
         state_handle->mark_as_unaltered();
         std::cerr << "Set state " << state << " to " << id << std::endl;
       }
-      conditional_handle = set<C::String_conditional>(id + ":image", state_handle);
+      conditional_handle = set<C::String_conditional>(id , "image", state_handle);
     }
     else
-      conditional_handle = get<C::String_conditional>(id + ":image");
+      conditional_handle = get<C::String_conditional>(id , "image");
 
     if (!istate.has("skin"))
       conditional_handle->add(state, nullptr);
@@ -618,7 +620,7 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
       {
         int nb_frames = istate["frames"].integer();
         int duration = istate["duration"].integer();
-        auto anim = C::make_handle<C::Animation>(id + ":conditional_image",
+        auto anim = C::make_handle<C::Animation>(id , "conditional_image",
                                                  skin, z,
                                                  nb_frames, 1, true,
                                                  (box_collision ? BOX : PIXEL_PERFECT),
@@ -632,12 +634,12 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
         {
           int width = istate["size"][0].integer();
           int height = istate["size"][1].integer();
-          img = C::make_handle<C::Image>(id + ":conditional_image",
+          img = C::make_handle<C::Image>(id , "conditional_image",
                                          width, height, 0, 0, 0, 0);
           img->z() = z;
         }
         else
-          img = C::make_handle<C::Image>(id + ":conditional_image", skin, z,
+          img = C::make_handle<C::Image>(id , "conditional_image", skin, z,
                                          (box_collision ? BOX : PIXEL_PERFECT),
                                          true);
       }
@@ -680,12 +682,12 @@ void File_IO::read_action (const std::string& id, const Core::File_IO::Node& nod
   m_latest_room_entities.insert(id);
 
   if (node.has("label"))
-    set<C::String>(id + ":label", node["label"].string());
+    set<C::String>(id , "label", node["label"].string());
 
   if (node.has("states"))
   {
-    auto state_handle = get_or_set<C::String>(id + ":state");
-    auto conditional_handle = set<C::String_conditional>(id + ":action", state_handle);
+    auto state_handle = get_or_set<C::String>(id , "state");
+    auto conditional_handle = set<C::String_conditional>(id , "action", state_handle);
 
     for (std::size_t i = 0; i < node["states"].size(); ++ i)
     {
@@ -695,7 +697,7 @@ void File_IO::read_action (const std::string& id, const Core::File_IO::Node& nod
       if (i == 0 && state_handle->value() == "")
         state_handle->set(state);
 
-      auto action = C::make_handle<C::Action>(id + ":action");
+      auto action = C::make_handle<C::Action>(id , "action");
 
       for (std::size_t k = 0; k < istate["effect"].size(); ++ k)
       {
@@ -707,7 +709,7 @@ void File_IO::read_action (const std::string& id, const Core::File_IO::Node& nod
   }
   else
   {
-    auto action = set<C::Action>(id + ":action");
+    auto action = set<C::Action>(id , "action");
 
     for (std::size_t k = 0; k < node["effect"].size(); ++ k)
     {
@@ -723,7 +725,7 @@ void File_IO::read_music(const std::string& id, const Core::File_IO::Node& node)
 
   if (node.has("states"))
   {
-    auto state_handle = set<C::String>(id + ":state");
+    auto state_handle = set<C::String>(id , "state");
     C::String_conditional_handle conditional_handle;
     for (std::size_t j = 0; j < node["states"].size(); ++ j)
     {
@@ -736,19 +738,19 @@ void File_IO::read_music(const std::string& id, const Core::File_IO::Node& node)
       {
         if (state_handle->value() == "")
           state_handle->set(state);
-        conditional_handle = set<C::String_conditional>(id + ":music", state_handle);
+        conditional_handle = set<C::String_conditional>(id , "music", state_handle);
       }
       else
-        conditional_handle = get<C::String_conditional>(id + ":music");
+        conditional_handle = get<C::String_conditional>(id , "music");
 
       std::string music = istate["sound"].string("sounds", "musics", "ogg");
-      conditional_handle->add(state, C::make_handle<C::Music>(id + ":music", music));
+      conditional_handle->add(state, C::make_handle<C::Music>(id , "music", music));
     }
   }
   else
   {
     std::string music = node["sound"].string("sounds", "musics", "ogg");
-    set<C::Music>(id + ":music", music);
+    set<C::Music>(id , "music", music);
   }
 }
 
@@ -758,9 +760,9 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
 {
   if (node.size() != 0)
   {
-    auto state_handle = get<C::String>(id + ":state");
-    auto label = set<C::String_conditional>(id + "_" + action + ":label", state_handle);
-    auto act = set<C::String_conditional>(id + "_" + action + ":action", state_handle);
+    auto state_handle = get<C::String>(id , "state");
+    auto label = set<C::String_conditional>(id + "_" + action , "label", state_handle);
+    auto act = set<C::String_conditional>(id + "_" + action , "action", state_handle);
 
     for (std::size_t i = 0; i < node.size(); ++ i)
     {
@@ -780,14 +782,14 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
     full_action = action + "_" + node["object"].string();
 
   if (node.has("label"))
-    out.first = C::make_handle<C::String>(id + "_" + action + ":label", node["label"].string());
+    out.first = C::make_handle<C::String>(id + "_" + action , "label", node["label"].string());
 
   if (node.has("right"))
-    set<C::Boolean>(id + "_" + action + ":right", node["right"].boolean());
+    set<C::Boolean>(id + "_" + action , "right", node["right"].boolean());
 
   if (node.has("effect"))
   {
-    auto act = C::make_handle<C::Action>(id + "_" + full_action + ":action");
+    auto act = C::make_handle<C::Action>(id + "_" + full_action , "action");
     for (std::size_t i = 0; i < node["effect"].size(); ++ i)
     {
       std::string function = node["effect"][i].nstring();
@@ -798,9 +800,9 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
 
   if (node.has("state"))
   {
-    auto state_handle = get<C::String>(id + ":state");
-    auto label = get_or_set<C::String_conditional>(id + "_" + action + ":label", state_handle);
-    auto act = get_or_set<C::String_conditional>(id + "_" + full_action + ":action", state_handle);
+    auto state_handle = get<C::String>(id , "state");
+    auto label = get_or_set<C::String_conditional>(id + "_" + action , "label", state_handle);
+    auto act = get_or_set<C::String_conditional>(id + "_" + full_action , "action", state_handle);
     std::string state = node["state"].string();
 
     label->add (state, out.first);
@@ -820,13 +822,13 @@ void File_IO::read_scenery (const std::string& id, const Core::File_IO::Node& no
   int y = node["coordinates"][1].integer();
   int z = node["coordinates"][2].integer();
 
-  auto pos = set<C::Absolute_position>(id + ":position", Point(x,y), false);
+  auto pos = set<C::Absolute_position>(id , "position", Point(x,y), false);
 
   if (node.has("states"))
   {
     C::String_conditional_handle conditional_handle;
 
-    auto state_handle = get_or_set<C::String>(id + ":state");
+    auto state_handle = get_or_set<C::String>(id , "state");
     for (std::size_t i = 0; i < node["states"].size(); ++ i)
     {
       const Core::File_IO::Node& istate = node["states"][i];
@@ -836,17 +838,17 @@ void File_IO::read_scenery (const std::string& id, const Core::File_IO::Node& no
       {
         if (state_handle->value() == "")
           state_handle->set(state);
-        conditional_handle = set<C::String_conditional>(id + ":image", state_handle);
+        conditional_handle = set<C::String_conditional>(id , "image", state_handle);
       }
       else
-        conditional_handle = get<C::String_conditional>(id + ":image");
+        conditional_handle = get<C::String_conditional>(id , "image");
 
       if (!istate.has("skin"))
         conditional_handle->add(state, nullptr);
       else
       {
         std::string skin = istate["skin"].string("images", "scenery", "png");
-        auto img = C::make_handle<C::Image>(id + ":conditional_image",
+        auto img = C::make_handle<C::Image>(id , "conditional_image",
                                             skin, z);
         img->set_collision(UNCLICKABLE);
         img->set_relative_origin(0.5, 1.0);
@@ -859,10 +861,10 @@ void File_IO::read_scenery (const std::string& id, const Core::File_IO::Node& no
     std::string skin = node["skin"].string("images", "scenery", "png");
 
     load_locale_dependent_image
-        (id + "image", skin,
+        (id, "image", skin,
          [&](const std::string& skin) -> C::Image_handle
     {
-      auto img = set<C::Image>(id + ":image", skin, z);
+      auto img = set<C::Image>(id, "image", skin, z);
       img->set_collision(UNCLICKABLE);
       img->set_relative_origin(0.5, 1.0);
       debug << "Scenery " << id << " at position " << img->z() << std::endl;
@@ -876,15 +878,15 @@ void File_IO::read_sound (const std::string& id, const Core::File_IO::Node& node
   m_latest_room_entities.insert(id);
 
   std::string sound = node["sound"].string("sounds", "effects", "ogg");
-  set<C::Sound>(id + ":sound", sound);
-  debug << "SOUND = " << id + ":sound" << std::endl;
+  set<C::Sound>(id , "sound", sound);
+  debug << "SOUND = " << id  << ":sound" << std::endl;
 }
 
 void File_IO::read_text (const std::string& id, const Core::File_IO::Node& node)
 {
  m_latest_room_entities.insert(id);
 
- auto dialog_font = get<C::Font> ("Dialog:font");
+ auto dialog_font = get<C::Font> ("Dialog", "font");
  std::string default_color = "000000";
 
  check (node.has("text"), "Node should either have music, image or text");
@@ -892,7 +894,7 @@ void File_IO::read_text (const std::string& id, const Core::File_IO::Node& node)
  std::string color = (node.has("color") ? node["color"].string() : default_color);
  int x = node["coordinates"][0].integer();
  int y = node["coordinates"][1].integer();
- set<C::Absolute_position>(id + ":position", Point(x,y));
+ set<C::Absolute_position>(id , "position", Point(x,y));
  create_locale_dependent_text (id, dialog_font, color, text);
 }
 
@@ -903,16 +905,16 @@ void File_IO::read_window (const std::string& id, const Core::File_IO::Node& nod
   std::string skin = node["skin"].string("images", "windows", "png");
 
   load_locale_dependent_image
-      (id + ":image", skin,
+      (id , "image", skin,
        [&](const std::string& skin) -> C::Image_handle
   {
-    auto img = C::make_handle<C::Image>(id + ":image", skin,
+    auto img = C::make_handle<C::Image>(id , "image", skin,
                                         Config::interface_depth);
     img->set_relative_origin(0.5, 0.5);
     img->on() = false;
     return img;
   });
-  set<C::Absolute_position>(id + ":position",
+  set<C::Absolute_position>(id , "position",
                             Point(Config::world_width / 2,
                                   Config::world_height / 2));
 }

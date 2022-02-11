@@ -37,9 +37,9 @@ namespace C = Component;
 Time::Time (Content& content)
   : Base (content)
 {
-  set_fac<C::Debug>(GAME__DEBUG, "Game:debug", m_content, m_clock);
-  set_fac<C::Double> (CLOCK__TIME, "Clock:time", 0.);
-  set_fac<C::Double> (CLOCK__LATEST_ACTIVE, "Clock:latest_active", 0.);
+  set_fac<C::Debug>(GAME__DEBUG, "Game", "debug", m_content, m_clock);
+  set_fac<C::Double> (CLOCK__TIME, "Clock", "time", 0.);
+  set_fac<C::Double> (CLOCK__LATEST_ACTIVE, "Clock", "latest_active", 0.);
 }
 
 void Time::run()

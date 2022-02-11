@@ -42,14 +42,14 @@ class GUI_animation : public Base
 
 public:
 
-  GUI_animation (const std::string& id, double start_time, double end_time,
-                 bool remove_after);
+  GUI_animation (const std::string& entity, const std::string& component,
+                 double start_time, double end_time, bool remove_after);
   bool update (double current_time);
   bool remove_after() const;
   virtual void cancel () = 0;
   virtual void finalize () = 0;
   virtual void update_impl (double current_time) = 0;
-  virtual const std::string& object_id() = 0;
+  virtual const Id& object_id() = 0;
 
 protected:
 
@@ -66,13 +66,14 @@ class GUI_position_animation : public GUI_animation
 
 public:
 
-  GUI_position_animation (const std::string& id, double start_time, double end_time,
+  GUI_position_animation (const std::string& entity, const std::string& component,
+                          double start_time, double end_time,
                           Position_handle position, Point target, bool remove_after = false);
   void update (const Point& point);
   virtual void cancel();
   virtual void finalize();
   virtual void update_impl (double current_time);
-  virtual const std::string& object_id();
+  virtual const Id& object_id();
 };
 
 using GUI_position_animation_handle = std::shared_ptr<GUI_position_animation>;
@@ -87,14 +88,15 @@ class GUI_image_animation : public GUI_animation
 
 public:
 
-  GUI_image_animation (const std::string& id, double start_time, double end_time,
+  GUI_image_animation (const std::string& entity, const std::string& component,
+                       double start_time, double end_time,
                        Image_handle image, double start_scale, double end_scale,
                        unsigned char start_alpha, unsigned char end_alpha,
                        bool remove_after = false);
   virtual void cancel();
   virtual void finalize();
   virtual void update_impl (double current_time);
-  virtual const std::string& object_id();
+  virtual const Id& object_id();
 };
 
 using GUI_image_animation_handle = std::shared_ptr<GUI_image_animation>;

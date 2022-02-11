@@ -41,7 +41,7 @@ class Locale : public Base
 
 public:
 
-  Locale (const std::string& id);
+  Locale (const std::string& entity, const std::string& component);
   void add (const std::string& line, const std::string& translation);
   const std::string& get (const std::string& line);
 };
