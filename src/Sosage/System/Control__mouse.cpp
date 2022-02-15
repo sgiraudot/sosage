@@ -156,6 +156,8 @@ void Control::action_choice_mouse()
   // Detect collision with labels/buttons
   std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
   {
+    if (contains(img->entity(), "Inventory"))
+      return false;
     return (contains(img->entity(), "_label") || contains(img->entity(), "_button"));
   });
 
@@ -596,10 +598,10 @@ bool Control::collides (C::Position_handle cursor, C::Image_handle img)
   int xmax = xmin + int(img->core().scaling * (img->xmax() - img->xmin()));
   int ymax = ymin + int(img->core().scaling * (img->ymax() - img->ymin()));
 
-  if (cursor->value().x() < xmin ||
-      cursor->value().x() >= xmax ||
-      cursor->value().y() < ymin ||
-      cursor->value().y() >= ymax)
+  if (cursor->value().X() < xmin ||
+      cursor->value().X() >= xmax ||
+      cursor->value().Y() < ymin ||
+      cursor->value().Y() >= ymax)
     return false;
 
   if (img->collision() == PIXEL_PERFECT)

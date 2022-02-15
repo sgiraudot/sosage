@@ -59,6 +59,8 @@ public:
 
   void clear() { m_data.clear(); }
 
+  std::size_t size() const { return m_data.size(); }
+
   Resource_handle get (const std::string& key)
   {
     iterator out = m_data.find(key);
@@ -86,6 +88,7 @@ public:
     std::tie (iter, inserted) = m_data.insert (std::make_pair (key, Resource_handle()));
     if (inserted)
       iter->second = make_single(std::forward<F>(f), std::forward<Args>(args)...);
+
     return iter->second;
   }
 };

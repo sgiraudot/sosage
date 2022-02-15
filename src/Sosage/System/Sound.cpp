@@ -55,7 +55,8 @@ void Sound::run()
   if (receive("Music", "stop"))
   {
     m_core.stop_music();
-    music->on() = false;
+    if (music)
+      music->on() = false;
   }
 
   if (receive("Music", "start"))

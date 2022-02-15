@@ -46,6 +46,7 @@ Content::Content()
           "lookat",
           "move",
           "move60fps",
+          "name",
           "path",
           "play_sound",
           "position",
@@ -112,20 +113,21 @@ Component::Handle_set Content::components (const std::string& s)
   return Component::Handle_set(handle_map(s));
 }
 
-void Content::remove (const std::string& entity, const std::string& component, bool optional)
+bool Content::remove (const std::string& entity, const std::string& component, bool optional)
 {
   Component::Handle_map& hmap = handle_map(component);
   Component::Handle_map::iterator iter = hmap.find(Component::Id(entity, component));
   if (optional && iter == hmap.end())
-    return;
+    return false;
   
   check (iter != hmap.end(), "Id " + entity + ":" + component + " doesn't exist");
   hmap.erase(iter);
+  return true;
 }
 
-void Content::remove (Component::Handle handle)
+bool Content::remove (Component::Handle handle, bool optional)
 {
-  remove (handle->entity(), handle->component());
+  return remove (handle->entity(), handle->component(), optional);
 }
 
 void Content::emit (const std::string& entity, const std::string& component)

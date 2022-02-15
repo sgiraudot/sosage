@@ -85,6 +85,7 @@ public:
   int X() const;
   int Y() const;
   Box box() const;
+  static Point invalid();
 
   friend std::string to_string(const Point& p)
   {

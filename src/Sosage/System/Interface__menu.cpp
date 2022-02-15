@@ -413,7 +413,7 @@ void Interface::make_settings_item (Component::Menu::Node node, const std::strin
     {
       auto available = value<C::Vector<std::string>>("Game", "available_locales");
       for (const std::string& a : available)
-        possible_values.push_back (value<C::String>(a , "description"));
+        possible_values.push_back (value<C::String>("Locale_" + a , "description"));
     }
     else if (id == "Fullscreen")
       possible_values = { "Yes", "No" };
@@ -574,7 +574,7 @@ void Interface::create_menu (const std::string& id)
   if (id == "Settings")
   {
     menu->update_setting ("Language",
-                          value<C::String>(value<C::String>(GAME__CURRENT_LOCAL) , "description"));
+                          value<C::String>("Locale_" + value<C::String>(GAME__CURRENT_LOCAL) , "description"));
 
     menu->update_setting ("Fullscreen",
                           value<C::Boolean>("Window", "fullscreen") ? "Yes" : "No");
@@ -659,8 +659,10 @@ void Interface::menu_clicked ()
 
   if (effect->value() == "Save_and_quit")
   {
+#ifndef SOSAGE_TEST_INPUT // Avoid quitting when testing input
     emit ("Game", "save");
     emit ("Game", "exit");
+#endif
   }
   else if (effect->value() == "New_game")
   {
@@ -669,27 +671,31 @@ void Interface::menu_clicked ()
       create_menu ("Wanna_restart");
     else
     {
+#ifndef SOSAGE_TEST_INPUT // Avoid restarting when testing input
       set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
-      if (auto orig = request<C::String>("Game", "init_new_room_origin"))
-        set<C::Variable>("Game", "new_room_origin", orig);
+      set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
       emit ("Game", "reset");
       remove("Game", "music");
       emit ("Music", "stop");
       status()->pop();
+      status()->push(LOCKED);
+#endif
     }
   }
   else if (effect->value() == "Ok")
   {
     if (menu == "Wanna_restart")
     {
+#ifndef SOSAGE_TEST_INPUT // Avoid restarting when testing input
       set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
-      if (auto orig = request<C::String>("Game", "init_new_room_origin"))
-        set<C::Variable>("Game", "new_room_origin", orig);
+      set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
       emit ("Game", "reset");
       remove("Game", "music");
       emit ("Music", "stop");
       delete_menu("Wanna_restart");
       status()->pop();
+      status()->push(LOCKED);
+#endif
     }
     else if (menu == "Credits" || menu == "Settings" || menu == "Phone" || menu == "Gps")
     {
@@ -737,7 +743,7 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
   {
     auto available = value<C::Vector<std::string>>("Game", "available_locales");
     for (const std::string& a : available)
-      if (value<C::String>(a , "description") == v)
+      if (value<C::String>("Locale_" + a , "description") == v)
       {
         get<C::String>(GAME__CURRENT_LOCAL)->set(a);
         break;
@@ -763,8 +769,10 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
   }
   else if (setting == "Fullscreen")
   {
+#ifndef SOSAGE_TEST_INPUT // Avoid switching fullscreen when testing input
     get<C::Boolean>("Window", "fullscreen")->set(v == "Yes");
     emit ("Window", "toggle_fullscreen");
+#endif
   }
   else if (setting == "Text_size")
   {
@@ -784,6 +792,7 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
     else
       set<C::Int>("Dialog", "speed")->set(Config::FAST);
   }
+#ifndef SOSAGE_TEST_INPUT // Avoid changing volume when testing input
   else if (setting == "Music_volume")
   {
     set<C::Int>("Music", "volume")->set(to_int(v) / 10);
@@ -791,6 +800,7 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
   }
   else if (setting == "Sound_volume")
     set<C::Int>("Sounds", "volume")->set(to_int(v) / 10);
+#endif
 }
 
 void Interface::update_phone_menu()

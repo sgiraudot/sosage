@@ -645,7 +645,10 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
       }
 
       if (state == "inventory")
+      {
         img->set_relative_origin(0.5, 0.5);
+        img->z() = Config::inventory_depth;
+      }
       else
         img->set_relative_origin(0.5, 1.0);
       img->set_collision(box_collision ? BOX : PIXEL_PERFECT);

@@ -49,7 +49,10 @@ std::string Debug::debug_str()
   out += "CPU = " + std::to_string(m_clock.cpu()) + "%\n";
   out += m_content.get<Component::Status>(GAME__STATUS)->str() + "\n\n";
 
-  out += std::to_string(m_content.size()) + " components in memory\n";
+  std::size_t nb_comp = 0;
+  for (const auto& cmp : m_content)
+    nb_comp += cmp.size();
+  out += std::to_string(nb_comp) + " components in memory\n";
 
   const std::string& player = m_content.get<Component::String>("Player", "name")->value();
   auto img = m_content.get<Component::Image>(player + "_body", "image");

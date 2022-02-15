@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/Config/options.h]
-  Compile-time options passed by CMake.
+  [include/Sosage/System/Test_input.h]
+  Automatic input generation for testing purposes.
 
   =====================================================================
 
@@ -24,33 +24,37 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_CONFIG_OPTIONS_H
-#define SOSAGE_CONFIG_OPTIONS_H
+#include <Sosage/Config/options.h>
 
-#if !defined(NDEBUG) || defined(SOSAGE_CFG_DISPLAY_DEBUG_INFO)
-#define SOSAGE_DEBUG
-#endif
+#ifdef SOSAGE_TEST_INPUT
 
-#ifdef SOSAGE_CFG_PROFILE
-#define SOSAGE_PROFILE
-#define SOSAGE_PROFILE_FINELY
-#define SOSAGE_PROFILE_TO_FILE
-#endif
+#ifndef SOSAGE_SYSTEM_TEST_INPUT_H
+#define SOSAGE_SYSTEM_TEST_INPUT_H
 
-#ifdef SOSAGE_CFG_TEST_INPUT
-#define SOSAGE_TEST_INPUT
-#endif
+#include <Sosage/Core/Input.h>
+#include <Sosage/System/Base.h>
+#include <Sosage/Utils/geometry.h>
 
-#ifdef SOSAGE_CFG_USE_SDL_TIME
-#define SOSAGE_SDL_TIME
-#endif
+namespace Sosage::System
+{
 
-#ifndef SOSAGE_PREF_PATH
-#define SOSAGE_PREF_PATH "ptilouk"
-#endif
+class Test_input : public Base
+{
+  Core::Input m_core;
 
-#ifndef SOSAGE_PREF_SUBPATH
-#define SOSAGE_PREF_SUBPATH "sosage"
-#endif
+public:
 
-#endif // SOSAGE_CONFIG_OPTIONS_H
+  Test_input (Content& content);
+
+  virtual void run();
+
+private:
+
+  Point cursor_target (const std::string& id);
+};
+
+} // namespace Sosage::System
+
+#endif // SOSAGE_SYSTEM_TEST_INPUT_H
+
+#endif // SOSAGE_TEST_INPUT

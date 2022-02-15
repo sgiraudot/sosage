@@ -1,5 +1,5 @@
 /*
-  [include/Sosage/System/Graphic.h]
+  [include/Sosage/System/Input.h]
   Reads and interprets user input (keyboard, mouse, touchscreen).
 
   =====================================================================

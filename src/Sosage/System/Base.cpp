@@ -43,14 +43,14 @@ Component::Handle_set Base::components (const std::string& s)
   return m_content.components(s);
 }
 
-void Base::remove (const std::string& entity, const std::string& component, bool optional)
+bool Base::remove (const std::string& entity, const std::string& component, bool optional)
 {
-  m_content.remove(entity, component, optional);
+  return m_content.remove(entity, component, optional);
 }
 
-void Base::remove (Component::Handle handle)
+bool Base::remove (Component::Handle handle, bool optional)
 {
-  m_content.remove(handle);
+  return m_content.remove(handle, optional);
 }
 
 void Base::emit (const std::string& entity, const std::string& component)

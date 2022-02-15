@@ -484,6 +484,22 @@ SDL_Color SDL::color (const std::string& color_str)
 SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str,
                              const std::string& text)
 {
+  // Debug info constantly changes, so saving each version leads to a
+  // memory explosion. This fix is a bit hacky...
+  if (contains(text, "[Debug info]"))
+  {
+    std::cerr << "CREATE DEBUG INFO" << std::endl;
+    SDL_Surface* surf;
+    surf = TTF_RenderUTF8_Blended_Wrapped(font.first.get(), text.c_str(), color(color_str), 1920);
+    int width = surf->w;
+    int height = surf->h;
+    check (surf != nullptr, "Cannot create text \"" + text + "\"");
+    Texture out = m_textures.make_single(SDL_CreateTextureFromSurface, m_renderer, surf);
+    check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
+    SDL_FreeSurface (surf);
+    return Image (out, Bitmap(), width, height);
+  }
+
   int width = -1;
   int height = -1;
 

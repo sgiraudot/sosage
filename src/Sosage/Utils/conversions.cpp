@@ -82,4 +82,9 @@ int random_int (int min, int max)
   return min + (rand() % (max - min));
 }
 
+bool random_chance (double chance)
+{
+  return (rand() / double(RAND_MAX)) < chance;
+}
+
 } // namespace Sosage

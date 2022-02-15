@@ -72,6 +72,8 @@ bool contains (const std::string& str, const std::string& sub);
 
 int random_int (int min, int max);
 
+bool random_chance(double chance);
+
 } // namespace Sosage
 
 #endif // SOSAGE_UTILS_CONVERSIONS_H

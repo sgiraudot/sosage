@@ -77,6 +77,12 @@ Box Point::box() const
   return {m_x, m_y, m_x, m_y};
 }
 
+Point Point::invalid()
+{
+  return Point (std::numeric_limits<double>::quiet_NaN(),
+                std::numeric_limits<double>::quiet_NaN());
+}
+
 Vector::Vector (double x, double y)
   : Point (x, y)
 { }

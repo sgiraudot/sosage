@@ -1,5 +1,5 @@
 /*
-  [src/Sosage/System/Graphic.cpp]
+  [src/Sosage/System/Input.cpp]
   Reads and interprets user input (keyboard, mouse, touchscreen).
 
   =====================================================================

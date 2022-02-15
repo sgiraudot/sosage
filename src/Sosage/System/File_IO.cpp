@@ -128,6 +128,8 @@ void File_IO::clean_content()
            return false;
        }
 
+       return !c->is_system();
+
        // else, remove component if belonged to the latest room
        return contains (m_latest_room_entities, c->entity());
      });
@@ -600,7 +602,7 @@ void File_IO::read_locale()
       map.emplace_back (id, locale);
       locales->add (id, locale);
     }
-    set<C::String>(id , "description", description);
+    set<C::String>("Locale_" + id , "description", description);
   }
 
   Core::File_IO::Node lines = input["lines"];
@@ -666,8 +668,8 @@ void File_IO::read_hints()
   {
     const Core::File_IO::Node& hint = input["hints"][i];
     std::string id = hint["id"].string();
-    set<C::String>(id , "question", hint["question"].string());
-    set<C::String>(id , "answer", hint["answer"].string());
+    set<C::String>("Hint_" + id , "question", hint["question"].string());
+    set<C::String>("Hint_" + id , "answer", hint["answer"].string());
   }
 
   set<C::Set<std::string>>("Hints", "list");

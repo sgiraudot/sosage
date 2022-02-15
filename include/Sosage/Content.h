@@ -60,8 +60,8 @@ public:
   Component::Component_map::const_iterator begin() const;
   Component::Component_map::const_iterator end() const;
   Component::Handle_set components (const std::string& s);
-  void remove (const std::string& entity, const std::string& component, bool optional = false);
-  void remove (Component::Handle handle);
+  bool remove (const std::string& entity, const std::string& component, bool optional = false);
+  bool remove (Component::Handle handle, bool optional = false);
 
   template <typename T>
   void set (const std::shared_ptr<T>& t)

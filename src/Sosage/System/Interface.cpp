@@ -420,14 +420,40 @@ void Interface::update_object_switcher()
   std::swap(keyboard_on, gamepad_on);
 #endif
 
-  if (keyboard_on && get<C::Image>("Keyboard_switcher_left", "image")->alpha() != 255)
-    fade_action_selector ("Keyboard_switcher", true);
-  else if (gamepad_on && get<C::Image>("Gamepad_switcher_left", "image")->alpha() != 255)
-    fade_action_selector ("Gamepad_switcher", true);
-  else if (!keyboard_on && get<C::Image>("Keyboard_switcher_left", "image")->alpha() != 0)
-    fade_action_selector ("Keyboard_switcher", false);
-  else if (!gamepad_on && get<C::Image>("Gamepad_switcher_left", "image")->alpha() != 0)
-    fade_action_selector ("Gamepad_switcher", false);
+  if (keyboard_on)
+  {
+    auto img = get<C::Image>("Keyboard_switcher_left", "image");
+    if (img->alpha() != 255)
+    {
+      img->on() = true;
+      fade_action_selector ("Keyboard_switcher", true);
+    }
+  }
+  else if (gamepad_on)
+  {
+    auto img = get<C::Image>("Gamepad_switcher_left", "image");
+    if (img->alpha() != 255)
+    {
+      img->on() = true;
+      fade_action_selector ("Gamepad_switcher", true);
+    }
+  }
+  else if (!keyboard_on)
+  {
+    auto img = get<C::Image>("Keyboard_switcher_left", "image");
+    if (img->alpha() != 0)
+      fade_action_selector ("Keyboard_switcher", false);
+    else
+      img->on() = false;
+  }
+  else if (!gamepad_on)
+  {
+    auto img = get<C::Image>("Gamepad_switcher_left", "image");
+    if (img->alpha() != 0)
+      fade_action_selector ("Gamepad_switcher", false);
+    else
+      img->on() = false;
+  }
 }
 
 void Interface::update_inventory()

@@ -96,7 +96,8 @@ void Logic::run ()
   SOSAGE_TIMER_START(System_Logic__run);
   m_current_time = value<C::Double> (CLOCK__TIME);
 
-  if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU))
+  if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU)
+      || request<C::Signal>("Game", "reset"))
   {
     SOSAGE_TIMER_STOP(System_Logic__run);
     return;
@@ -128,14 +129,16 @@ void Logic::run ()
             if (C::cast<C::Signal>(th.second))
               set (th.second);
             else if (th.second->entity() != "wait")
-              remove (th.second);
+              // comments might already have been removed
+              remove (th.second, true);
             return false;
           }
           else if (skip_dialog)
           {
             if (contains(th.second->entity(), "Comment_"))
             {
-              remove (th.second);
+              // comments might already have been removed
+              remove (th.second, true);
               return false;
             }
             else if (th.second->component() == "stop_talking")
@@ -230,6 +233,15 @@ void Logic::run ()
       emit ("code", "play_click");
   }
 
+  if (receive ("code", "cheat")) // For testing purposes...
+  {
+    auto code = get<C::Code>("Game", "code");
+    code->reset();
+    emit ("code", "play_success");
+    get<C::Action>("Logic", "action")->schedule (m_current_time + Config::button_click_duration,
+                                              C::make_handle<C::Signal>("code", "quit"));
+  }
+
   if (receive ("code", "stop_flashing"))
   {
     auto window = get<C::Image>("Game", "window");
@@ -270,7 +282,8 @@ void Logic::run ()
           if (C::cast<C::Signal>(th.second))
             set (th.second);
           else if (th.second->entity() != "wait")
-            remove (th.second);
+            // comments might already have been removed
+            remove (th.second->entity(), th.second->component(), true);
         }
       }
       action->stop();
@@ -424,7 +437,7 @@ void Logic::update_debug_info (C::Debug_handle debug_info)
   {
     auto debug_font = get<C::Font> ("Debug", "font");
     auto dbg_img = set<C::Image> ("Debug", "image",
-                                                    debug_font, "FF0000",
+                                                    debug_font, "FFFFFF",
                                                     debug_info->debug_str());
     auto dbg_pos = set<C::Absolute_position>("Debug", "position", Point(0,0));
   }
@@ -442,7 +455,7 @@ bool Logic::apply_next_step (C::Action_handle action)
 {
   m_current_action = action;
   const C::Action::Step& s = action->next_step();
-  //debug << m_current_time << ", applying " << s.to_string() << std::endl;
+  debug << m_current_time << ", applying " << s.to_string() << std::endl;
   check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
          s.function() + " is not a valid function");
   return m_dispatcher[s.function()](s.args());
@@ -537,6 +550,11 @@ void Logic::create_dialog (const std::string& character,
                            const std::string& text,
                            std::vector<C::Image_handle>& dialog)
 {
+  // Clean up existing dialog that might still exist
+  int idx = 0;
+  while (remove("Comment_" + to_string(idx), "image", true))
+    ++ idx;
+
   static const int width_max = int(0.6 * Config::world_width);
 
   double size_factor = 0.75 * (value<C::Int>("Dialog", "size") / double(Config::MEDIUM));

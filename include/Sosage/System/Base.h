@@ -82,8 +82,8 @@ public:
   template <typename T, typename ... Args>
   std::shared_ptr<T> set_fac (const Fast_access_component& fac, Args&& ... args)
   { return m_content.set_fac<T>(fac, std::forward<Args>(args)...); }
-  void remove (const std::string& entity, const std::string& component, bool optional = false);
-  void remove (Component::Handle handle);
+  bool remove (const std::string& entity, const std::string& component, bool optional = false);
+  bool remove (Component::Handle handle, bool optional = false);
   void emit (const std::string& entity, const std::string& component);
   bool receive (const std::string& entity, const std::string& component);
   Component::Status_handle status();

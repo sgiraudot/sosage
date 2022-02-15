@@ -230,8 +230,8 @@ bool Logic::function_hide (const std::vector<std::string>& args)
 {
   check (args.size() == 1, "function_hide takes 1 argument");
   std::string target = args[0];
-  if (auto question = request<C::String>(target , "question"))
-    get<C::Set<std::string>>("Hints", "list")->erase(target);
+  if (auto question = request<C::String>("Hint_" + target , "question"))
+    get<C::Set<std::string>>("Hints", "list")->erase("Hint_" + target);
   else if (request<C::Group>(target , "group"))
     emit (target , "set_hidden");
   else
@@ -585,8 +585,8 @@ bool Logic::function_show (const std::vector<std::string>& args)
   std::string target = args[0];
   if (auto group = request<C::Group>(target , "group")) // Character
     emit (target , "set_visible");
-  else if (auto question = request<C::String>(target , "question"))
-    get<C::Set<std::string>>("Hints", "list")->insert (target);
+  else if (auto question = request<C::String>("Hint_" + target , "question"))
+    get<C::Set<std::string>>("Hints", "list")->insert ("Hint_" + target);
   else
   {
     auto image = get<C::Image>(target , "image");

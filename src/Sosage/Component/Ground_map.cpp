@@ -304,15 +304,22 @@ void Ground_map::find_path (Point origin,
   GEdge etarget = Graph::null_edge();
   std::set<std::pair<GVertex, GVertex>, Compare_ordered_pair> to_add;
 
+  debug_gm << "Finding path from " << origin << " to " << target << std::endl;
   {
     Neighbor_query query = closest_simplex(origin);
     if (!is_ground_point(origin) || query.dist < snapping_dist)
     {
       origin = query.point;
       if (query.edge == Graph::null_edge())
+      {
         vorigin = query.vertex;
+        debug_gm << "Snap origin to closest vertex " << query.point << std::endl;
+      }
       else
+      {
         eorigin = query.edge;
+        debug_gm << "Snap origin to closest edge " << query.point << std::endl;
+      }
     }
   }
   {
@@ -321,15 +328,22 @@ void Ground_map::find_path (Point origin,
     {
       target = query.point;
       if (query.edge == Graph::null_edge())
+      {
         vtarget = query.vertex;
+        debug_gm << "Snap target to closest vertex " << query.point << std::endl;
+      }
       else
+      {
         etarget = query.edge;
+        debug_gm << "Snap target to closest edge " << query.point << std::endl;
+      }
     }
   }
 
   if (eorigin != Graph::null_edge() && eorigin == etarget) // moving along the same line
   {
     out.push_back (target);
+    debug_gm << "Moving along line" << std::endl;
     return;
   }
 
@@ -344,7 +358,7 @@ void Ground_map::find_path (Point origin,
   }
   else if (vorigin == Graph::null_vertex())
     vorigin = m_latest_graph.add_vertex({origin});
-    
+
   if (etarget != Graph::null_edge())
   {
     vtarget = m_latest_graph.add_vertex({target});
@@ -371,6 +385,8 @@ void Ground_map::find_path (Point origin,
                  || m_latest_graph.edge_has_vertex(e, vtarget));
        }))
   {
+    debug_gm << "No border intersected, going straight" << std::endl;
+
     // Additional check if we join 2 borders through a hole
     Point mid = midpoint (origin, target);
     if (is_ground_point(mid))
@@ -566,7 +582,14 @@ void Ground_map::find_path (Point origin, Sosage::Vector direction, std::vector<
 
 double Ground_map::z_at_point (const Point& p) const
 {
-  std::array<unsigned char, 3> c = Core::Graphic::get_color (m_image, p.X(), p.Y());
+  int x = p.X();
+  int y = p.Y();
+  if (x >= m_image->w) x = m_image->w - 1;
+  if (x < 0) x = 0;
+  if (y >= m_image->h) y = m_image->h - 1;
+  if (y < 0) y = 0;
+
+  std::array<unsigned char, 3> c = Core::Graphic::get_color (m_image, x, y);
 
   unsigned char red = 0;
   if (c[0] == c[1] && c[0] == c[2])
@@ -592,7 +615,13 @@ double Ground_map::z_at_point (const Point& p) const
 
 bool Ground_map::is_ground_point (const Point& p) const
 {
-  std::array<unsigned char, 3> c = Core::Graphic::get_color (m_image, p.X(), p.Y());
+  debug_gm << "Is " << p << " a ground point?" << std::endl;
+  int x = p.X();
+  int y = p.Y();
+  // Out of bound points can't be ground
+  if (x >= m_image->w || y >= m_image->h || x < 0 || y < 0)
+    return false;
+  std::array<unsigned char, 3> c = Core::Graphic::get_color (m_image, x, y);
   return (c[0] == c[1] && c[0] == c[2]);
 }
 
