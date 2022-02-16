@@ -488,7 +488,6 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
   // memory explosion. This fix is a bit hacky...
   if (contains(text, "[Debug info]"))
   {
-    std::cerr << "CREATE DEBUG INFO" << std::endl;
     SDL_Surface* surf;
     surf = TTF_RenderUTF8_Blended_Wrapped(font.first.get(), text.c_str(), color(color_str), 1920);
     int width = surf->w;

@@ -423,8 +423,8 @@ void Control::menu_gamepad()
 {
   if (auto right = request<C::Boolean>("Switch", "right"))
   {
+    menu_sub_triggered(right->value() ? RIGHT : LEFT);
     remove ("Switch", "right");
-    menu_sub_triggered(right ? RIGHT : LEFT);
   }
 
   Event_value stick = stick_left_right_up_down();
@@ -536,11 +536,6 @@ void Control::menu_sub_switch_active_item (bool right)
     }
     for (std::size_t i = 0; i < current.nb_children(); ++ i)
       todo.push (current[i]);
-  }
-
-  for (std::size_t i = 0; i < nodes.size(); ++ i)
-  {
-    debug << i << ". " << nodes[i] << std::endl;
   }
 
   check (nb_current != std::size_t(-1), "Node " + active_item->value() + " not found in menu");

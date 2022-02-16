@@ -31,9 +31,12 @@
 
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Image.h>
+#include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/System/Test_input.h>
 #include <Sosage/Utils/conversions.h>
+
+#define BIND(x) std::bind(&Test_input::x, this)
 
 namespace Sosage::System
 {
@@ -42,6 +45,7 @@ namespace C = Component;
 
 Test_input::Test_input (Content& content)
   : Base (content)
+  , m_mode (new_mode())
 {
   set_fac<C::Simple<Vector>>(STICK__DIRECTION, "Stick", "direction", Vector(0, 0));
   get<C::Boolean>("Game", "debug")->set(true);
@@ -56,6 +60,17 @@ void Test_input::run()
       emit ("Game", "exit");
   }
 
+  if (status()->is(IDLE, CUTSCENE) && ready("Test_change_mode", 10))
+  {
+    debug << "[TEST INPUT] Change mode" << std::endl;
+    m_mode = new_mode();
+  }
+
+  m_mode();
+}
+
+void Test_input::run_mouse()
+{
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
   if (mode->value() != MOUSE)
@@ -65,12 +80,11 @@ void Test_input::run()
     emit("Input_mode", "changed");
   }
 
-  double inactive_time = value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__LATEST_ACTIVE);
-  if (inactive_time < 0.05)
+  if (!ready("Test_mouse_click", 0.05))
     return;
 
   get<C::Double>(CLOCK__LATEST_ACTIVE)->set (value<C::Double>(CLOCK__TIME));
-  debug << "[TEST INPUT] " << status()->str() << std::endl;
+  debug << "[TEST MOUSE] " << status()->str() << std::endl;
 
   if (auto action = request<C::Action>("Character", "action"))
   {
@@ -80,7 +94,7 @@ void Test_input::run()
       auto let_finish = get_or_set<C::Boolean>("Action", "finish", random_chance(0.5));
       if (let_finish->value() == true && !status()->is(IN_MENU))
       {
-        debug << "[TEST INPUT] Waiting for action to finish" << std::endl;
+        debug << "[TEST MOUSE] Waiting for action to finish" << std::endl;
         return;
       }
     }
@@ -94,7 +108,7 @@ void Test_input::run()
   if (!status()->is(LOCKED) && (random_chance(0.1)))
   {
     Point target (random_int(0, Config::world_width), random_int(0, Config::world_height));
-    debug << "[TEST INPUT] Random click at " << target << std::endl;
+    debug << "[TEST MOUSE] Random click at " << target << std::endl;
     get<C::Position> (CURSOR__POSITION)->set(target);
     emit ("Cursor", "clicked");
     set<C::Boolean>("Click", "left", true);
@@ -104,7 +118,7 @@ void Test_input::run()
   // Escape in 1% of cases
   if (random_chance(0.01))
   {
-    debug << "[TEST INPUT] Escape" << std::endl;
+    debug << "[TEST MOUSE] Escape" << std::endl;
     emit ("Game", "escape");
     return;
   }
@@ -185,7 +199,15 @@ void Test_input::run()
   }
   else if (status()->is(IN_CODE))
   {
-    emit("code", "cheat"); // We could maybe test keys also
+    if (get<C::Action>("Logic", "action")->scheduled().empty())
+    {
+      debug << "[TEST MOUSE] Cheat code" << std::endl;
+      emit("code", "cheat"); // We could maybe test keys also
+    }
+    else
+    {
+      debug << "[TEST MOUSE] Waiting end of code" << std::endl;
+    }
   }
   else if (status()->is(IN_MENU))
   {
@@ -203,7 +225,7 @@ void Test_input::run()
   else if (status()->is(LOCKED, CUTSCENE))
   {
     // Skip dialogs if possible
-    debug << "[TEST INPUT] Escape" << std::endl;
+    debug << "[TEST MOUSE] Escape" << std::endl;
     emit("Game", "escape");
     return;
   }
@@ -229,7 +251,7 @@ void Test_input::run()
       if (target == Point::invalid())
         continue;
 
-      debug << "[TEST INPUT] Click on " << id << " at " << target << std::endl;
+      debug << "[TEST MOUSE] Click on " << id << " at " << target << std::endl;
       get<C::Position> (CURSOR__POSITION)->set(target);
       emit ("Cursor", "clicked");
       set<C::Boolean>("Click", "left", true);
@@ -238,8 +260,431 @@ void Test_input::run()
 
     ids.clear();
   }
+}
 
 
+void Test_input::run_mouse_chaos()
+{
+  auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
+  if (mode->value() != MOUSE)
+  {
+    mode->set (MOUSE);
+    gamepad->set (NO_LABEL);
+    emit("Input_mode", "changed");
+  }
+
+  if (!ready("Test_mouse_click", 0.05))
+    return;
+
+  get<C::Double>(CLOCK__LATEST_ACTIVE)->set (value<C::Double>(CLOCK__TIME));
+  debug << "[TEST MOUSE CHAOS] " << status()->str() << std::endl;
+
+
+  if (status()->is(LOCKED))
+  {
+    debug << "[TEST MOUSE CHAOS] Escape" << std::endl;
+    emit ("Game", "escape");
+  }
+  else
+  {
+    Point target (random_int(0, Config::world_width), random_int(0, Config::world_height));
+    debug << "[TEST MOUSE CHAOS] Random click at " << target << std::endl;
+    get<C::Position> (CURSOR__POSITION)->set(target);
+    emit ("Cursor", "clicked");
+    set<C::Boolean>("Click", "left", true);
+  }
+}
+
+void Test_input::run_touchscreen()
+{
+  auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
+  if (mode->value() != TOUCHSCREEN)
+  {
+    mode->set (TOUCHSCREEN);
+    gamepad->set (NO_LABEL);
+    emit("Input_mode", "changed");
+  }
+
+  if (!ready("Test_mouse_click", 0.05))
+    return;
+
+  get<C::Double>(CLOCK__LATEST_ACTIVE)->set (value<C::Double>(CLOCK__TIME));
+  debug << "[TEST TOUCH] " << status()->str() << std::endl;
+
+  if (auto action = request<C::Action>("Character", "action"))
+  {
+    if (action->on())
+    {
+      // 50% of times, let the action finish before clicking again
+      auto let_finish = get_or_set<C::Boolean>("Action", "finish", random_chance(0.5));
+      if (let_finish->value() == true && !status()->is(IN_MENU))
+      {
+        debug << "[TEST TOUCH] Waiting for action to finish" << std::endl;
+        return;
+      }
+    }
+    else
+      remove ("Action", "finish", true);
+  }
+  else
+    remove ("Action", "finish", true);
+
+  if (auto path = request<C::Path>(value<C::String>("Player", "name"), "path"))
+  {
+    // 20% of times, let the path finish before clicking again
+    auto let_finish = get_or_set<C::Boolean>("Path", "finish", random_chance(0.2));
+    if (let_finish->value() == true && !status()->is(IN_MENU))
+    {
+      debug << "[TEST TOUCH] Waiting for pathto finish" << std::endl;
+      return;
+    }
+    else
+      remove ("Path", "finish", true);
+  }
+  else
+    remove ("Path", "finish", true);
+
+  // Generate random click in 10% of cases
+  if (!status()->is(LOCKED) && (random_chance(0.1)))
+  {
+    Point target (random_int(0, Config::world_width), random_int(0, Config::world_height));
+    debug << "[TEST TOUCH] Random click at " << target << std::endl;
+    get<C::Position> (CURSOR__POSITION)->set(target);
+    emit ("Cursor", "clicked");
+    set<C::Boolean>("Click", "left", true);
+    return;
+  }
+
+  // Escape in 1% of cases
+  if (random_chance(0.01))
+  {
+    debug << "[TEST TOUCH] Escape" << std::endl;
+    emit ("Game", "escape");
+    return;
+  }
+
+  static std::vector<std::string> ids;
+  if (status()->is(IDLE))
+  {
+    auto active_objects = request<C::Vector<std::string>>("Interface", "active_objects");
+    if (active_objects && random_chance(0.5))
+    {
+      for (C::Handle c : components("image"))
+        if (auto img = C::cast<C::Image>(c))
+        {
+          if (!img->on())
+            continue;
+          std::string id = img->entity();
+          std::size_t pos = id.find("_label");
+          if (pos != std::string::npos)
+            id.resize(pos);
+          if (!request<C::String>(id , "name"))
+            continue;
+          if (!contains(active_objects->value(), id))
+            continue;
+          ids.emplace_back (c->entity());
+        }
+    }
+    else
+    {
+      Point target (random_int(0, Config::world_width), random_int(0, Config::world_height));
+      debug << "[TEST TOUCH] Random click at " << target << std::endl;
+      get<C::Position> (CURSOR__POSITION)->set(target);
+      emit ("Cursor", "clicked");
+      set<C::Boolean>("Click", "left", true);
+      return;
+    }
+  }
+  else if (status()->is(IN_INVENTORY))
+  {
+    for (C::Handle c : components("name"))
+    {
+      auto img = request<C::Image>(c->entity(), "image");
+      if (!img || !img->on())
+        continue;
+      if (!img->on())
+        continue;
+
+      std::string id = c->entity();
+
+      auto state = request<C::String>(id , "state");
+      if (!state)
+        continue;
+      if (auto source = request<C::String>("Interface", "source_object"))
+        if (source->value() == id)
+          continue;
+
+      if (state->value() != "inventory")
+        continue;
+
+      ids.emplace_back (id);
+    }
+  }
+  else if (status()->is(ACTION_CHOICE, INVENTORY_ACTION_CHOICE))
+  {
+    for (C::Handle c : components("image"))
+      if (auto img = C::cast<C::Image>(c))
+      {
+        if (!img->on())
+          continue;
+        if (!contains(img->entity(), "_label") && !contains(img->entity(), "_button"))
+          continue;
+        ids.emplace_back (c->entity());
+      }
+  }
+  else if (status()->is(OBJECT_CHOICE))
+  {
+    for (C::Handle c : components("name"))
+    {
+      auto img = request<C::Image>(c->entity(), "image");
+      if (!img || !img->on())
+        continue;
+      if (!img->on())
+        continue;
+
+      std::string id = c->entity();
+
+      auto state = request<C::String>(id , "state");
+      if (!state)
+        continue;
+
+      if (state->value() != "inventory")
+        continue;
+      ids.emplace_back (id);
+    }
+  }
+  else if (status()->is(IN_WINDOW))
+  {
+    ids.emplace_back("Background");
+  }
+  else if (status()->is(IN_CODE))
+  {
+    if (get<C::Action>("Logic", "action")->scheduled().empty())
+    {
+      debug << "[TEST TOUCH] Cheat code" << std::endl;
+      emit("code", "cheat"); // We could maybe test keys also
+    }
+    else
+    {
+      debug << "[TEST TOUCH] Waiting end of code" << std::endl;
+    }
+  }
+  else if (status()->is(IN_MENU))
+  {
+    for (C::Handle c : components("image"))
+      if (auto img = C::cast<C::Image>(c))
+      {
+        if (!img->on())
+          continue;
+        if (!contains(img->entity(), "_button") && !contains(img->entity(), "_arrow"))
+          continue;
+
+        ids.emplace_back (c->entity());
+      }
+  }
+  else if (status()->is(LOCKED, CUTSCENE))
+  {
+    // Skip dialogs if possible
+    debug << "[TEST TOUCH] Escape" << std::endl;
+    emit("Game", "escape");
+    return;
+  }
+  else if (status()->is(DIALOG_CHOICE))
+  {
+    for (C::Handle c : components("image"))
+      if (auto img = C::cast<C::Image>(c))
+      {
+        if (!img->on())
+          continue;
+        if (!contains(img->entity(), "Dialog_choice_") && !contains(img->entity(), "background"))
+          continue;
+        ids.emplace_back (c->entity());
+      }
+  }
+
+  if (!ids.empty())
+  {
+    std::random_shuffle (ids.begin(), ids.end());
+    for (const std::string& id : ids)
+    {
+      Point target = cursor_target (id);
+      if (target == Point::invalid())
+        continue;
+
+      debug << "[TEST TOUCH] Click on " << id << " at " << target << std::endl;
+      get<C::Position> (CURSOR__POSITION)->set(target);
+      emit ("Cursor", "clicked");
+      set<C::Boolean>("Click", "left", true);
+      break;
+    }
+
+    ids.clear();
+  }
+}
+
+void Test_input::run_gamepad()
+{
+  auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
+  if (mode->value() != GAMEPAD)
+  {
+    mode->set (GAMEPAD);
+    gamepad->set (JAPAN);
+    emit("Input_mode", "changed");
+  }
+
+  if (!ready("Test_mouse_click", 0.05))
+    return;
+  debug << "[TEST GAMEPAD] " << status()->str() << std::endl;
+
+  get<C::Double>(CLOCK__LATEST_ACTIVE)->set(value<C::Double>(CLOCK__TIME));
+
+  // Escape in 1% of cases
+  if (random_chance(0.01))
+  {
+    debug << "[TEST GAMEPAD] Escape" << std::endl;
+    emit ("Game", "escape");
+    return;
+  }
+
+  if (ready("Test_stick_dir", 3.))
+  {
+    Vector vec (random_double(-1, 1.), random_double(-1., 1));
+    vec.normalize();
+    get<C::Simple<Vector>>(STICK__DIRECTION)->set(vec);
+    debug << "[TEST GAMEPAD] Move stick to " << vec << std::endl;
+  }
+
+  bool right = random_chance(0.5);
+  std::string key = random_choice({"move", "take", "look", "inventory"});
+
+  if (status()->is(IDLE))
+  {
+    if (random_chance(0.25))
+    {
+      auto active_objects = request<C::Vector<std::string>>("Interface", "active_objects");
+      if (active_objects)
+      {
+        if (random_chance(0.75))
+        {
+          debug << "[TEST GAMEPAD] Switch " << (right ? "right" : "left") << std::endl;
+          set<C::Boolean>("Switch", "right", random_chance(0.5));
+        }
+        else
+        {
+          debug << "[TEST GAMEPAD] Key " << key << std::endl;
+          emit("Action", key);
+        }
+      }
+      else if (random_chance(0.1))
+      {
+        debug << "[TEST GAMEPAD] Key inventory" << std::endl;
+        emit("Action", "inventory");
+      }
+    }
+    emit("Stick", "moved");
+  }
+  else if (status()->is(IN_INVENTORY, IN_MENU, DIALOG_CHOICE))
+  {
+    if (random_chance(0.75))
+    {
+      debug << "[TEST GAMEPAD] Switch " << (right ? "right" : "left") << std::endl;
+      set<C::Boolean>("Switch", "right", random_chance(0.5));
+    }
+    else
+    {
+      debug << "[TEST GAMEPAD] Key " << key << std::endl;
+      emit("Action", key);
+    }
+  }
+  else if (status()->is(ACTION_CHOICE, INVENTORY_ACTION_CHOICE, OBJECT_CHOICE))
+  {
+    if (random_chance(0.25))
+    {
+      debug << "[TEST GAMEPAD] Switch " << (right ? "right" : "left") << std::endl;
+      set<C::Boolean>("Switch", "right", random_chance(0.5));
+    }
+    else
+    {
+      debug << "[TEST GAMEPAD] Key " << key << std::endl;
+      emit("Action", key);
+    }
+  }
+  else if (status()->is(IN_WINDOW))
+  {
+    debug << "[TEST GAMEPAD] Key " << key << std::endl;
+    emit("Action", key);
+  }
+  else if (status()->is(IN_CODE))
+  {
+    if (get<C::Action>("Logic", "action")->scheduled().empty())
+    {
+      debug << "[TEST GAMEPAD] Cheat code" << std::endl;
+      emit("code", "cheat"); // We could maybe test keys also
+    }
+    else
+    {
+      debug << "[TEST GAMEPAD] Waiting end of code" << std::endl;
+    }
+  }
+  else if (status()->is(LOCKED, CUTSCENE))
+  {
+    // Skip dialogs if possible
+    debug << "[TEST GAMEPAD] Escape" << std::endl;
+    emit("Game", "escape");
+  }
+}
+
+void Test_input::run_gamepad_chaos()
+{
+  auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
+  if (mode->value() != GAMEPAD)
+  {
+    mode->set (GAMEPAD);
+    gamepad->set (JAPAN);
+    emit("Input_mode", "changed");
+  }
+
+  if (!ready("Test_mouse_click", 0.05))
+    return;
+  debug << "[TEST GAMEPAD] " << status()->str() << std::endl;
+
+  get<C::Double>(CLOCK__LATEST_ACTIVE)->set(value<C::Double>(CLOCK__TIME));
+
+  if (status()->is(LOCKED))
+  {
+    debug << "[TEST GAMEPAD CHAOS] Escape" << std::endl;
+    emit ("Game", "escape");
+  }
+  else
+  {
+    Vector vec (random_double(-1, 1.), random_double(-1., 1));
+    vec.normalize();
+    if (random_chance(0.25))
+      vec = Vector (0., 0.);
+    debug << "[TEST GAMEPAD CHAOS] Move stick to " << vec << std::endl;
+    get<C::Simple<Vector>>(STICK__DIRECTION)->set(vec);
+
+    random_do ({ [&] { debug << "[TEST GAMEPAD CHAOS] Switch right" << std::endl;
+                       set<C::Boolean>("Switch", "right", true); },
+                 [&] { debug << "[TEST GAMEPAD CHAOS] Switch left" << std::endl;
+                        set<C::Boolean>("Switch", "right", false); },
+                 [&] { debug << "[TEST GAMEPAD CHAOS] Escape" << std::endl;
+                       emit ("Game", "escape"); },
+                 [&] { debug << "[TEST GAMEPAD CHAOS] Key move" << std::endl;
+                       emit ("Action", "move"); },
+                 [&] { debug << "[TEST GAMEPAD CHAOS] Key take" << std::endl;
+                       emit ("Action", "take"); },
+                 [&] { debug << "[TEST GAMEPAD CHAOS] Key look" << std::endl;
+                       emit ("Action", "look"); },
+                 [&] { debug << "[TEST GAMEPAD CHAOS] Key inventory" << std::endl;
+                       emit ("Action", "inventory"); },
+                 [&] { debug << "[TEST GAMEPAD CHAOS] Stick moved" << std::endl;
+                       emit ("Stick", "moved"); } });
+  }
 }
 
 Point Test_input::cursor_target (const std::string& id)
@@ -278,6 +723,27 @@ Point Test_input::cursor_target (const std::string& id)
 
   return Point(0.5 * (xmin_target + xmax_target),
                0.5 * (ymin_target + ymax_target));
+}
+
+std::function<void(void)> Test_input::new_mode()
+{
+  return random_choice ({ BIND(run_mouse),
+                          BIND(run_mouse_chaos),
+                          BIND(run_touchscreen),
+                          BIND(run_gamepad),
+                          BIND(run_gamepad_chaos) });
+}
+
+bool Test_input::ready (const std::string& key, double time)
+{
+  double now = value<C::Double>(CLOCK__TIME);
+  auto then = get_or_set<C::Double>(key, "time", now);
+  double ellapsed = now - then->value();
+  if (ellapsed < time)
+    return false;
+
+  then->set(now);
+  return true;
 }
 
 } // namespace Sosage::System

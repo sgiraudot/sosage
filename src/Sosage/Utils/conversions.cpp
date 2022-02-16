@@ -77,14 +77,38 @@ bool contains (const std::string& str, const std::string& sub)
   return str.find(sub) != std::string::npos;
 }
 
+bool startswith (const std::string& str, const std::string& sub)
+{
+  if (str.size() < sub.size())
+    return false;
+  return (str.compare (0, sub.size(), sub) == 0);
+}
+
+bool endswith (const std::string& str, const std::string& sub)
+{
+  if (str.size() < sub.size())
+    return false;
+  return (str.compare (str.size() - sub.size(), sub.size(), sub) == 0);
+}
+
 int random_int (int min, int max)
 {
   return min + (rand() % (max - min));
 }
 
+double random_double (double min, double max)
+{
+  return min + (max - min) * (rand() / double(RAND_MAX));
+}
+
 bool random_chance (double chance)
 {
   return (rand() / double(RAND_MAX)) < chance;
+}
+
+void random_do (const std::initializer_list<std::function<void(void)>>& list)
+{
+  random_choice(list)();
 }
 
 } // namespace Sosage

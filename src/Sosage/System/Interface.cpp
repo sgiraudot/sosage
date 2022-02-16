@@ -486,7 +486,11 @@ void Interface::update_inventory()
   if (target != inventory_origin->value().y())
   {
     if (auto anim = request<C::GUI_position_animation>("Inventory", "animation"))
+    {
       anim->update(Point(0, target));
+      if (auto as_anim = request<C::GUI_position_animation>("Gamepad_action_selector", "animation"))
+        as_anim->update(Point(Config::world_width - 240, as_target));
+    }
     else
     {
       double current_time = value<C::Double>(CLOCK__TIME);

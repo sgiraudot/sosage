@@ -69,10 +69,28 @@ bool contains (const std::vector<T>& vec, const T& t)
 
 bool contains (const std::string& str, const char* sub);
 bool contains (const std::string& str, const std::string& sub);
+bool startswith (const std::string& str, const std::string& sub);
+bool endswith (const std::string& str, const std::string& sub);
 
 int random_int (int min, int max);
-
+double random_double (double min = 0., double max = 1.);
 bool random_chance(double chance);
+
+template <typename T>
+T random_choice (const std::initializer_list<T>& list)
+{
+  double accu = 0.;
+  double rnd = rand() / double(RAND_MAX);
+  for (const auto& p : list)
+  {
+    accu += 1. / double(list.size());
+    if (accu > rnd)
+      return p;
+  }
+  return *(list.end() - 1);
+}
+
+void random_do (const std::initializer_list<std::function<void(void)>>& list);
 
 } // namespace Sosage
 

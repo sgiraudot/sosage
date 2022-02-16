@@ -235,6 +235,7 @@ void Logic::run ()
 
   if (receive ("code", "cheat")) // For testing purposes...
   {
+    std::cerr << "CHEAT CODE RECEIVED" << std::endl;
     auto code = get<C::Code>("Game", "code");
     code->reset();
     emit ("code", "play_success");

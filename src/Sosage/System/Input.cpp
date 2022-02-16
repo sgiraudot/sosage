@@ -91,31 +91,36 @@ void Input::run()
 
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
-  Input_mode previous_mode = mode->value();
-  Gamepad_type previous_type = gamepad->value();
-  if (touchscreen_used || m_fake_touchscreen)
-  {
-    mode->set (TOUCHSCREEN);
-    gamepad->set (NO_LABEL);
-  }
-  else if (mouse_used)
-  {
-    mode->set (MOUSE);
-    gamepad->set (NO_LABEL);
-  }
-  else if (keyboard_used)
-  {
-    mode->set (GAMEPAD);
-    gamepad->set (KEYBOARD);
-  }
-  else if (gamepad_used)
-  {
-    mode->set (GAMEPAD);
-    gamepad->set (m_core.gamepad_type());
-  }
 
-  if (previous_mode != mode->value() || previous_type != gamepad->value())
-    emit("Input_mode", "changed");
+  // Only allow mode change when idle or cutscene
+  if (status()->is(IDLE, CUTSCENE))
+  {
+    Input_mode previous_mode = mode->value();
+    Gamepad_type previous_type = gamepad->value();
+    if (touchscreen_used || m_fake_touchscreen)
+    {
+      mode->set (TOUCHSCREEN);
+      gamepad->set (NO_LABEL);
+    }
+    else if (mouse_used)
+    {
+      mode->set (MOUSE);
+      gamepad->set (NO_LABEL);
+    }
+    else if (keyboard_used)
+    {
+      mode->set (GAMEPAD);
+      gamepad->set (KEYBOARD);
+    }
+    else if (gamepad_used)
+    {
+      mode->set (GAMEPAD);
+      gamepad->set (m_core.gamepad_type());
+    }
+
+    if (previous_mode != mode->value() || previous_type != gamepad->value())
+      emit("Input_mode", "changed");
+  }
 
   if (mode->value() == GAMEPAD)
   {

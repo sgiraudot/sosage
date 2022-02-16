@@ -41,6 +41,7 @@ namespace Sosage::System
 class Test_input : public Base
 {
   Core::Input m_core;
+  std::function<void(void)> m_mode;
 
 public:
 
@@ -50,7 +51,16 @@ public:
 
 private:
 
+  void run_mouse();
+  void run_mouse_chaos();
+  void run_touchscreen();
+  void run_gamepad();
+  void run_gamepad_chaos();
+
   Point cursor_target (const std::string& id);
+
+  std::function<void(void)> new_mode();
+  bool ready (const std::string& key, double time);
 };
 
 } // namespace Sosage::System

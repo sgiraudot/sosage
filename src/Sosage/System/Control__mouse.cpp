@@ -109,6 +109,8 @@ void Control::idle_touchscreen()
     if (pos != std::string::npos)
       collision.resize(pos);
 
+    if (collision != "")
+      set<C::String>("Interface", "active_object", collision);
     idle_sub_click (collision);
   }
 }
@@ -179,6 +181,8 @@ void Control::action_choice_touchscreen()
     // Detect collision with labels/buttons
     std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
     {
+      if (contains(img->entity(), "Inventory"))
+        return false;
       return (contains(img->entity(), "_label") || contains(img->entity(), "_button"));
     });
 
@@ -193,6 +197,10 @@ void Control::action_choice_sub_click (const std::string& id)
   remove ("Interface", "active_action", true);
 
   if (id == "")
+    return;
+
+  // Avoid clicking on outdated labels fading away
+  if (endswith(id, "_old"))
     return;
 
   std::size_t pos = id.find("_button_");

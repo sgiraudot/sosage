@@ -48,7 +48,7 @@ void Status::pop ()
 
 Sosage::Status Status::value() const
 {
-  return m_value.top();
+ return m_value.top();
 }
 
 Sosage::Status Status::next_value() const
