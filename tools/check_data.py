@@ -117,7 +117,7 @@ def is_time(key, value):
         error(key + " is not a valid time (" + value + ")")
 
 accessed_files = set()
-        
+
 def file_exists(key, value, args):
     fname = args[0] + "/" + value + "." + args[1]
     if not os.path.exists(root_folder + "/" + fname):
@@ -193,7 +193,7 @@ def test_step(key, action, args):
         else:
             error(key + " uses function control with " + str(len(args)) + " arguments")
 
-    elif action in {"cutscene", "exit", "lock", "loop", "unlock" }:
+    elif action in {"cutscene", "exit", "lock", "loop", "unlock", "skip", "include" }:
         if len(args) != 0:
             error(key + " uses function exit with arguments " + str(args))
 
@@ -255,10 +255,13 @@ def test_step(key, action, args):
                 if id not in object_ids and id not in scenery_ids:
                     error(key + " uses function move on non-existing (or non-reachable) id " + id)
         elif len(args) == 5:
-            check_signature(key, action, args, ["string", "int", "int", "int", "float"])
             id = args[0]
-            if id not in object_ids and id not in scenery_ids and id not in animation_ids:
-                error(key + " uses function move on non-existing (or non-reachable) id " + id)
+            if id in character_ids:
+                check_signature(key, action, args, ["string", "int", "int", "int", "bool"])
+            else:
+                check_signature(key, action, args, ["string", "int", "int", "int", "float"])
+                if id not in object_ids and id not in scenery_ids and id not in animation_ids:
+                    error(key + " uses function move on non-existing (or non-reachable) id " + id)
         else:
             error(key + " uses function move with unhandled #arg = " + str(len(args)))
 
@@ -291,6 +294,12 @@ def test_step(key, action, args):
             id = args[0]
             if id not in room_ids:
                 error(key + " uses function rescale on non-existing (or non-reachable) id " + id)
+
+    elif action == "rescale60fps":
+        check_signature(key, action, args, ["string", "float", "float"])
+        id = args[0]
+        if id not in room_ids:
+            error(key + " uses function rescale60fps on non-existing (or non-reachable) id " + id)
 
     elif action == "set":
         if len(args) == 2:
@@ -346,7 +355,7 @@ def test_step(key, action, args):
 
     elif action == "timer":
         check_signature(key, action, args, ["string"])
-        
+
     elif action == "trigger":
         if check_signature(key, action, args, ["string"]):
             id = args[0]
@@ -369,7 +378,7 @@ def test_step(key, action, args):
 
     else:
         error(key + " uses unknown function " + action)
-            
+
 def test_action(key, value):
     for v in value:
         action = next(iter(v))
@@ -382,6 +391,7 @@ def test_action(key, value):
 
 data_folder = root_folder + "/data/"
 yaml_files = []
+skip_list = { "ba_fochougny.yaml" }
 
 for root, directories, filenames in os.walk(data_folder):
     for filename in filenames:
@@ -391,6 +401,9 @@ for root, directories, filenames in os.walk(data_folder):
         if ext != ".yaml":
             if "locale.yaml" not in fullname:
                 print("Warning: non yaml file found: " + fullname)
+            continue
+
+        if basename in skip_list:
             continue
         relname = fullname.split("data/")[-1]
         yaml_files.append(relname)
@@ -519,17 +532,17 @@ for filename in yaml_files:
                     continue
                 sid = s["id"]
                 all_states[current_id].add(sid)
-                if sid == "none":
-                    continue
-                if sid != "inventory":
-                    inventory_only = False
                 if "skin" in s:
+                    if sid != "inventory":
+                        inventory_only = False
                     if sid == "inventory":
                         test(s, "skin", file_exists, ["images/inventory", "png"])
                         inventory_ids.add(current_id)
                     else:
                         test(s, "skin", file_exists, ["images/objects", "png"])
-                else:
+                elif "size" in s:
+                    if sid != "inventory":
+                        inventory_only = False
                     test(s, "size/0", is_int)
                     test(s, "size/1", is_int)
                 if "frames" in s:
@@ -679,7 +692,7 @@ for filename in yaml_files:
                         for st in s["states"]:
                             if test(st, "id"):
                                 all_states[s["id"]].add(st["id"])
-                                if st["id"] != "none":
+                                if "skin" in st:
                                     test(st, "skin", file_exists, ["images/scenery", "png"])
                     else:
                         test(s, "skin", file_exists, ["images/scenery", "png"])
@@ -823,14 +836,14 @@ for filename in yaml_files:
                 test(t, "value", is_line)
                 if "icon" in t:
                     test(t, "icon", file_exists, ["images/interface", "png"])
-        
+
         for act in ["look", "move", "take", "inventory_button", "inventory", "use",
                     "combine", "goto"]:
             test(data, "default/" + act + "/label", is_line)
             if "effect" in data["default"][act]:
                 for e in data["default"][act]["effect"]:
                     test(e, "talk/0", is_line)
-            
+
 
 
 
