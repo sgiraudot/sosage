@@ -75,6 +75,9 @@ void Control::idle_mouse()
 
 void Control::idle_touchscreen()
 {
+  if (request<C::Signal>("Cursor", "clicked"))
+    remove ("Player", "not_moved_yet", true);
+
   idle_sub_update_active_objects();
 
   if (receive("Cursor", "clicked"))

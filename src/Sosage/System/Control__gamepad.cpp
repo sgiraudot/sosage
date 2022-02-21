@@ -41,6 +41,11 @@ namespace C = Component;
 
 void Control::idle_gamepad()
 {
+  if (receive("Game", "just_launched"))
+    set<C::Double> ("First_idle", "time", value<C::Double>(CLOCK__TIME));
+
+  if (request<C::Signal>("Stick", "moved"))
+    remove ("Player", "not_moved_yet", true);
   idle_sub_update_active_objects();
 
   if (auto right = request<C::Boolean>("Switch", "right"))
@@ -559,6 +564,8 @@ void Control::menu_sub_switch_active_item (bool right)
 
 std::vector<std::string> Control::detect_active_objects()
 {
+  if (request<C::Signal>("Player", "not_moved_yet"))
+    return std::vector<std::string>();
   const std::string& id = value<C::String>("Player", "name", "");
   if (id == "")
     return std::vector<std::string>();

@@ -94,7 +94,7 @@ void Interface::init_menus()
   auto credits_menu = set<C::Menu>("Credits", "menu");
   credits_menu->split(VERTICALLY, 3);
   make_text_menu_title((*credits_menu)[0], "Credits");
-  make_text_menu_text((*credits_menu)[1], "Credits_text");
+  make_text_menu_text((*credits_menu)[1], "Credits_text", true);
   make_oknotok_item ((*credits_menu)[2], true);
 
   auto phone_menu = set<C::Menu>("Phone", "menu");
@@ -312,7 +312,7 @@ void Interface::make_text_menu_title (Component::Menu::Node node, const std::str
   node.init(img, pos);
 }
 
-void Interface::make_text_menu_text (Component::Menu::Node node, const std::string& id)
+void Interface::make_text_menu_text (Component::Menu::Node node, const std::string& id, bool credits)
 {
   auto reference = get<C::Position>("Menu", "reference");
   auto font = get<C::Font>("Interface", "light_font");
@@ -334,9 +334,9 @@ void Interface::make_text_menu_text (Component::Menu::Node node, const std::stri
   }
   while (pos != std::string::npos);
 
-  double scale = 0.5;
+  double scale = (credits ? 0.4 : 0.5);
   node.split(VERTICALLY, lines.size());
-  int y = Config::exit_menu_start;
+  int y = (credits ? Config::settings_menu_start : Config::exit_menu_start);
 
   for (std::size_t i = 0; i < lines.size(); ++ i)
   {
@@ -349,9 +349,9 @@ void Interface::make_text_menu_text (Component::Menu::Node node, const std::stri
     img->set_collision(UNCLICKABLE);
     auto pos = set<C::Relative_position>(text->entity() + "_" + std::to_string(i)
                                          , "position", reference,
-                                         Point(Config::menu_small_margin, y));
+                                         Point(Config::menu_small_margin * 2. * scale, y));
     node[i].init(img, pos);
-    y += Config::menu_small_margin;
+    y += Config::menu_small_margin * 2. * scale;
   }
 }
 
@@ -504,6 +504,7 @@ void Interface::update_menu()
     return;
 
   bool gamepad = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD;
+  bool touchscreen = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == TOUCHSCREEN;
 
   const std::string& id = value<C::String>("Game", "current_menu");
   auto menu = get<C::Menu>(id , "menu");
@@ -554,6 +555,10 @@ void Interface::update_menu()
       bool active = (entity == active_item);
       if (settings && setting_item != "")
         active = active || contains(entity, setting_item);
+
+      // Do not highlight items when using touchscreen
+      if (touchscreen)
+        active = false;
 
       current.image()->on() = true;
       if (contains(entity, "_button"))

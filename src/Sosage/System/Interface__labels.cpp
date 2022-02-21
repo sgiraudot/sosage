@@ -119,6 +119,8 @@ void Interface::create_object_label (const std::string& id)
     const std::string& name = value<C::String>(id , "name");
     create_label (false, id + "_label", locale(name), open_left, open_right,
                   (mode == TOUCHSCREEN) ? BOX : UNCLICKABLE, scale, true);
+    if (!is_active)
+      get<C::Image>(id + "_label", "image")->set_alpha(192);
 
     auto pos = set<C::Relative_position>
                (id + "_label", "global_position",
@@ -253,15 +255,17 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
     {
       double from = 0.5 * 0.75, to = 0.5;
       double from_back = 0.75, to_back = 1.0;
+      unsigned char alpha_label_from = 192, alpha_label_to = 255;
       if (get<C::Image>(id , "image")->scale() != 0.5)
       {
         std::swap(from, to);
         std::swap(from_back, to_back);
+        std::swap(alpha_label_from, alpha_label_to);
       }
 
       unsigned char alpha_back = get<C::Image>(id + "_back", "image")->alpha();
       set<C::GUI_image_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(id , "image"), from, to, 255, 255);
+                                  get<C::Image>(id , "image"), from, to, alpha_label_from, alpha_label_to);
       set<C::GUI_image_animation>(id + "_back", "animation", current_time, current_time + Config::inventory_speed,
                                   get<C::Image>(id + "_back", "image"), from_back, to_back,
                                   alpha_back, alpha_back);
@@ -312,8 +316,11 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
         set<C::GUI_image_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
                                     get<C::Image>(id , "image"), 0.05, 0.5 * img->scale(), 0, 255);
       else if (style == FADE || style == FADE_LABEL_ONLY)
+      {
+        unsigned char alpha = get<C::Image>(id, "image")->alpha();
         set<C::GUI_image_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
-                                    get<C::Image>(id , "image"), 0.5 * img->scale(), 0.5 * img->scale(), 0, 255);
+                                    get<C::Image>(id , "image"), 0.5 * img->scale(), 0.5 * img->scale(), 0, alpha);
+      }
     }
   }
   else
@@ -456,7 +463,8 @@ void Interface::fade_action_selector (const std::string& id, bool fade_in)
   {
     unsigned char alpha_off = 0;
     unsigned char alpha_on = 255;
-    if (contains(img->entity(), "_label") && !contains(img->entity(), "_label:"))
+    debug << img->entity() << std::endl;
+    if (contains(img->entity(), "_label") && !endswith(img->entity(), "_label"))
       alpha_on = 100;
 
     img->on() = true;
@@ -470,7 +478,7 @@ void Interface::fade_action_selector (const std::string& id, bool fade_in)
 
 void Interface::highlight_object (const std::string& id, unsigned char highlight)
 {
-  debug << "Highlight " << id << " by " << highlight << std::endl;
+  debug << "Highlight " << id << " by " << int(highlight) << std::endl;
   // Image might have been destroyed here
   if (auto img = request<C::Image>(id , "image"))
     img->set_highlight (highlight);

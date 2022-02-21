@@ -272,6 +272,7 @@ void File_IO::read_room (const std::string& file_name)
 
   emit ("Game", "in_new_room");
   emit ("Game", "loading_done");
+  emit ("Player", "not_moved_yet");
   emit ("Window", "rescaled");
 
 #ifdef SOSAGE_DEBUG

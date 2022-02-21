@@ -80,8 +80,8 @@ void Interface::init()
 
   set<C::Absolute_position>("Blackscreen", "position", Point(0,0));
 
-  // Init inventory
-  auto inventory_origin = set<C::Absolute_position>
+  // Init inventory (keep existing value if it's a re-init after language change)
+  auto inventory_origin = get_or_set<C::Absolute_position>
                           ("Inventory", "origin",
                            Point(0, Config::world_height + Config::inventory_active_zone));
 
@@ -350,6 +350,15 @@ void Interface::update_action_selector()
     if (status()->is(IDLE))
     {
       double inactive_time = value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__LATEST_ACTIVE);
+      if (auto first_idle = request<C::Double>("First_idle", "time"))
+      {
+        // Keep selector alive for the 30 first seconds of game
+        if (value<C::Double>(CLOCK__TIME) - first_idle->value() < 30)
+          inactive_time = 100;
+        else
+          remove (first_idle);
+      }
+
       if (inactive_time > 5)
         set_action_selector (GP_IDLE, value<C::String>("Interface", "active_object", ""));
       else
@@ -404,6 +413,15 @@ void Interface::update_object_switcher()
   bool gamepad_on = false;
 
   double inactive_time = value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__LATEST_ACTIVE);
+  if (auto first_idle = request<C::Double>("First_idle", "time"))
+  {
+    // Keep switcher alive for the 30 first seconds of game
+    if (value<C::Double>(CLOCK__TIME) - first_idle->value() < 30)
+      inactive_time = 100;
+    else
+      remove (first_idle);
+  }
+
   if (inactive_time >= 5)
   {
     const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);

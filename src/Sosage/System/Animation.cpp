@@ -585,7 +585,7 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
     = value<C::Vector<std::string> >(id + "_idle", "values");
 
   // Simple case: no animation
-  if (positions.size() == 1)
+  if (positions[0] != "transition")
   {
     image->frames().push_back ({0, row_index, 1000});
     return;

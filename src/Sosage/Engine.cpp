@@ -109,6 +109,7 @@ bool Engine::run (const std::string& folder_name)
   m_content.set_fac<Component::Double>(CAMERA__ZOOM, "Camera", "zoom", 1.);
   m_content.set<Component::Inventory>("Game", "inventory");
   m_content.set<Component::Set<std::string> > ("Game", "visited_rooms");
+  m_content.emit("Game", "just_launched");
 
   m_content.set<Component::And>
       ("Unlocked", "condition",
