@@ -554,7 +554,7 @@ void File_IO::read_init ()
                           ("Default_" + id, std::to_string(j));
         rnd_action->add ("look", {});
         rnd_action->add (function, iaction[function].string_array());
-        action->add (1.0, rnd_action);
+        action->add (rnd_action);
       }
     }
   }

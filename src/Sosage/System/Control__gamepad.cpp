@@ -578,9 +578,11 @@ std::vector<std::string> Control::detect_active_objects()
       double dx = std::abs(position->value().x() - pos->value().x());
       double dy = std::abs(position->value().y() - pos->value().y());
 
+      double reach_factor = value<C::Double>(label->entity(), "reach_factor", 1.);
+
       // Object out of reach
-      if (dx > Config::object_reach_x + Config::object_reach_hysteresis ||
-          dy > Config::object_reach_y + Config::object_reach_hysteresis)
+      if (dx > reach_factor * Config::object_reach_x + Config::object_reach_hysteresis ||
+          dy > reach_factor * Config::object_reach_y + Config::object_reach_hysteresis)
         continue;
 
       // Inactive object
@@ -592,7 +594,7 @@ std::vector<std::string> Control::detect_active_objects()
         continue;
 
       // Object in reach
-      if (dx <= Config::object_reach_x && dy <= Config::object_reach_y)
+      if (dx <= reach_factor * Config::object_reach_x && dy <= reach_factor * Config::object_reach_y)
         out.emplace_back (label->entity());
 
       // Object in hysteresis range

@@ -236,9 +236,10 @@ void Graphic::run()
         continue;
 
       auto view = value<C::Position>(id , "view") - camera;
+      double reach_factor = value<C::Double>(id, "reach_factor", 1.);
 
       m_core.draw_rectangle (view.X(), view.Y(),
-                             2 * Config::object_reach_x, 2 * Config::object_reach_y,
+                             2 * reach_factor * Config::object_reach_x, 2 * reach_factor * Config::object_reach_y,
                              255, 0, 0, 16);
     }
 

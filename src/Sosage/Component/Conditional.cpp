@@ -25,6 +25,7 @@
 */
 
 #include <Sosage/Component/Conditional.h>
+#include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/error.h>
 
 namespace Sosage::Component
@@ -106,7 +107,6 @@ Handle String_conditional::get() const
 
 Random_conditional::Random_conditional (const std::string& entity, const std::string& component)
   : Conditional_base(entity, component)
-  , m_total(0)
 { }
 
 Random_conditional::~Random_conditional()
@@ -119,25 +119,14 @@ std::string Random_conditional::str() const
   return Base::str() + " -> " + get()->str();
 }
 
-void Random_conditional::add (double probability, Handle h)
+void Random_conditional::add (Handle h)
 {
-  m_handles.push_back (std::make_pair (probability, h));
-  m_total += probability;
+  m_handles.emplace_back(h);
 }
   
 Handle Random_conditional::get() const
 {
-  double random = m_total * (rand() / double(RAND_MAX));
-  double accu = 0;
-
-  std::size_t idx = 0;
-  while (random >= accu && idx < m_handles.size())
-  {
-    accu += m_handles[idx].first;
-    ++ idx;
-  }
-
-  return m_handles[idx-1].second;
+  return random_choice(m_handles);
 }
 
 

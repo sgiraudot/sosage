@@ -92,7 +92,7 @@ private:
                       bool button = false, const Point& position = Point());
   void update_label (const std::string& id,
                      bool open_left, bool open_right, Component::Position_handle pos,
-                     double scale = 1.0, bool arrow = false);
+                     double scale = 1.0);
   void update_label_position (const std::string& id, double scale = 1.0);
   void delete_label (const std::string& id);
   void fade_action_selector (const std::string& id, bool fade_in);

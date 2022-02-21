@@ -77,7 +77,7 @@ double random_double (double min = 0., double max = 1.);
 bool random_chance(double chance);
 
 template <typename T>
-T random_choice (const std::initializer_list<T>& list)
+typename T::value_type random_choice (const T& list)
 {
   double accu = 0.;
   double rnd = rand() / double(RAND_MAX);
@@ -88,6 +88,12 @@ T random_choice (const std::initializer_list<T>& list)
       return p;
   }
   return *(list.end() - 1);
+}
+
+template <typename T>
+T random_choice (const std::initializer_list<T>& list)
+{
+  return random_choice (list);
 }
 
 void random_do (const std::initializer_list<std::function<void(void)>>& list);

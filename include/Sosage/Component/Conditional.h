@@ -84,16 +84,14 @@ using String_conditional_handle = std::shared_ptr<String_conditional>;
 
 class Random_conditional : public Conditional_base
 {
-  String_handle m_state;
-  std::vector<std::pair<double, Handle> > m_handles;
-  double m_total;
+  std::vector<Handle> m_handles;
   
 public:
 
   Random_conditional (const std::string& entity, const std::string& component);
   virtual ~Random_conditional();
   virtual std::string str() const;
-  void add (double probability, Handle h);
+  void add (Handle h);
   virtual Handle get() const;
 };
 

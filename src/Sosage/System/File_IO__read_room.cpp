@@ -581,6 +581,9 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
   int vy = input["view"][1].integer();
   set<C::Absolute_position>(id , "view", Point(vx,vy), false);
 
+  if (input.has("reach_factor"))
+    set<C::Double>(id, "reach_factor", input["reach_factor"].floating());
+
   C::String_conditional_handle conditional_handle;
   for (std::size_t j = 0; j < input["states"].size(); ++ j)
   {
