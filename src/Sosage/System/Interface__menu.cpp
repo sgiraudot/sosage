@@ -109,10 +109,7 @@ void Interface::init_menus()
   make_text_menu_text((*gps_menu)[1], "No_gps_text");
   make_oknotok_item ((*gps_menu)[2], true);
 
-  auto end_menu = set<C::Menu>("End", "menu");
-  end_menu->split(VERTICALLY, 2);
-  make_text_menu_text((*end_menu)[0], "End_text");
-  make_oknotok_item ((*end_menu)[1], true);
+  set<C::Menu>("Message", "menu");
 
   auto settings_menu = set<C::Menu>("Settings", "menu");
   if constexpr (Config::emscripten || Config::android)
@@ -603,6 +600,13 @@ void Interface::create_menu (const std::string& id)
     menu->update_setting ("Music_volume", std::to_string(10 * value<C::Int>("Music", "volume")));
     menu->update_setting ("Sound_volume", std::to_string(10 * value<C::Int>("Sounds", "volume")));
   }
+  else if (id == "Message")
+  {
+    menu = set<C::Menu>("Message", "menu");
+    menu->split(VERTICALLY, 2);
+    make_text_menu_text((*menu)[0], "Message");
+    make_oknotok_item ((*menu)[1], true);
+  }
   else if (id == "Phone")
     update_phone_menu();
 
@@ -712,8 +716,11 @@ void Interface::menu_clicked ()
       delete_menu(menu);
       status()->pop();
     }
-    else if (menu == "End")
-      emit ("Game", "exit");
+    else if (menu == "Message")
+    {
+      delete_menu(menu);
+      status()->pop();
+    }
   }
   else if (effect->value() == "Credits" || effect->value() == "Settings"
            || effect->value() == "Phone" || effect->value() == "Gps")
@@ -755,7 +762,7 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
       }
 
     // Delete all menus
-    for (const std::string& id : { "Exit", "Wanna_restart", "Settings", "Credits", "Phone", "Gps", "End" })
+    for (const std::string& id : { "Exit", "Wanna_restart", "Settings", "Credits", "Phone", "Gps" })
     {
       auto menu = get<C::Menu>(id , "menu");
       menu->apply([&](C::Image_handle img)

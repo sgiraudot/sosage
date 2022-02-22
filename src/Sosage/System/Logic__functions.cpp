@@ -313,6 +313,18 @@ bool Logic::function_loop (const std::vector<std::string>&)
 }
 
 /*
+  - message: [ID text_id] -> display a message to the player
+ */
+bool Logic::function_message (const std::vector<std::string>& args)
+{
+  check (args.size() == 1, "function_message takes 1 argument");
+  set<C::Variable>("Message", "text", get<C::String>(args[0], "text"));
+  set<C::String>("Game", "triggered_menu", "Message");
+  emit("Show", "menu");
+  return false;
+}
+
+/*
   - move: [ID character_id, INT x, INT y, BOOL looking_right]        -> immediately moves character to the coordinates (x,y), looking right/left
   - move: [ID character_id, INT x, INT y, INT z, BOOL looking_right] -> immediately moves character to the coordinates (x,y,z), looking right/left
   - move: [ID target_id, INT x, INT y, INT z]                        -> immediately moves target to the coordinates (x,y,z)

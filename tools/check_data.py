@@ -245,6 +245,12 @@ def test_step(key, action, args):
         else:
             error(key + " uses function look with unhandled #arg = " + str(len(args)))
 
+    elif action == "message":
+        check_signature(key, action, args, ["string"])
+        id = args[0]
+        if id not in text_ids:
+            error(key + " uses function message on non-existing (or non-reachable) id " + id)
+
     elif action == "move":
         if len(args) == 4:
             id = args[0]
@@ -720,9 +726,10 @@ for filename in yaml_files:
                     text_ids.add(t["id"])
                     all_ids, ref_ids = test_id_unicity(all_ids, t["id"], ref_ids)
                 test(t, "text", is_line)
-                test(t, "coordinates/0", is_int)
-                test(t, "coordinates/1", is_int)
-                test(t, "coordinates/2", is_int)
+                if "coordinates" in t:
+                    test(t, "coordinates/0", is_int)
+                    test(t, "coordinates/1", is_int)
+                    test(t, "coordinates/2", is_int)
 
         if "codes" in data:
             for c in data["codes"]:

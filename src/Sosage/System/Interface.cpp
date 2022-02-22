@@ -55,7 +55,6 @@ Interface::Interface (Content& content)
 void Interface::run()
 {
   SOSAGE_TIMER_START(System_Interface__run);
-  update_menu();
   update_active_objects();
   update_action_selector();
   update_object_switcher();
@@ -64,6 +63,7 @@ void Interface::run()
   update_dialog_choices();
   update_skip_message();
   update_cursor();
+  update_menu();
   SOSAGE_TIMER_STOP(System_Interface__run);
 }
 

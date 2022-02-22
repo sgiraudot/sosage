@@ -94,6 +94,7 @@ private:
   bool function_lock (const std::vector<std::string>& args);
   bool function_look (const std::vector<std::string>& args);
   bool function_loop (const std::vector<std::string>& args);
+  bool function_message (const std::vector<std::string>& args);
   bool function_move (const std::vector<std::string>& args);
   bool function_move60fps (const std::vector<std::string>& args);
   bool function_play (const std::vector<std::string>& args);
