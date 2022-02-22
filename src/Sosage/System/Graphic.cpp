@@ -189,7 +189,7 @@ void Graphic::run()
 
   if (value<C::Boolean>(GAME__DEBUG))
   {
-    if (auto ground_map = request<C::Ground_map>("Background", "ground_map"))
+    if (auto ground_map = request<C::Ground_map>("background", "ground_map"))
     {
         ground_map->for_each_vertex
         ([&](const Point& point)

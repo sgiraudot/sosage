@@ -196,47 +196,20 @@ void File_IO::read_room (const std::string& file_name)
   {
     std::string background = input["background"].string("images", "backgrounds", "png");
     auto background_img
-        = set<C::Image>("Background", "image", background, 0, BOX);
-    m_latest_room_entities.insert ("Background");
+        = set<C::Image>("background", "image", background, 0, BOX);
   }
   if (input.has("ground_map"))
   {
     std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
     int front_z = input["front_z"].integer();
     int back_z = input["back_z"].integer();
-    set<C::Ground_map>("Background", "ground_map", ground_map,
+    set<C::Ground_map>("background", "ground_map", ground_map,
                        front_z, back_z, callback->value());
   }
 
   callback->value()();
 
-  set<C::Absolute_position>("Background", "position", Point(0, 0), false);
-
-  callback->value()();
-
-  // First instantiate all states
-  // TODO
-#if 0
-  for (std::size_t i = 0; i < input["content"].size(); ++ i)
-  {
-    const Core::File_IO::Node& node = input["content"][i];
-    std::string id = node["id"].string();
-    m_latest_room_entities.insert (id);
-    if(node["type"].string() == "character")
-    {
-      m_latest_room_entities.insert (id + "_body");
-      m_latest_room_entities.insert (id + "_head");
-      m_latest_room_entities.insert (id + "_mouth");
-      m_latest_room_entities.insert (id + "_idle");
-      m_latest_room_entities.insert (id + "_walking");
-    }
-
-    if (node.has("states"))
-      // Add state if does not exist (it might for inventory objects for example)
-      if (!request<C::String>(id , "state"))
-        set<C::String>(id , "state");
-  }
-#endif
+  set<C::Absolute_position>("background", "position", Point(0, 0), false);
 
   callback->value()();
 
@@ -306,7 +279,6 @@ void File_IO::read_room (const std::string& file_name)
 
 void File_IO::read_animation (const std::string& id, const Core::File_IO::Node& node)
 {
-  m_latest_room_entities.insert(id);
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
   int z = node["coordinates"][2].integer();
@@ -364,8 +336,6 @@ void File_IO::read_animation (const std::string& id, const Core::File_IO::Node& 
 
 void File_IO::read_code (const std::string& id, const Core::File_IO::Node& input)
 {
-  m_latest_room_entities.insert(id);
-
   std::string button_sound = input["button_sound"].string("sounds", "effects", "ogg");
   set<C::Sound>(id + "_button", "sound", button_sound);
   std::string success_sound = input["success_sound"].string("sounds", "effects", "ogg");
@@ -455,8 +425,6 @@ void File_IO::read_code (const std::string& id, const Core::File_IO::Node& input
 
 void File_IO::read_dialog (const std::string& id, const Core::File_IO::Node& input)
 {
-  m_latest_room_entities.insert(id);
-
   auto dialog = set<C::Dialog>(id , "dialog",
                                input.has("end") ? input["end"].string() : "");
 
@@ -526,8 +494,6 @@ void File_IO::read_dialog (const std::string& id, const Core::File_IO::Node& inp
 
 void File_IO::read_integer (const std::string& id, const Core::File_IO::Node& node)
 {
-  m_latest_room_entities.insert(id);
-
   int value = node["value"].integer();
   auto integer = request<C::Int>(id , "value");
   if (!integer)
@@ -551,8 +517,6 @@ void File_IO::read_integer (const std::string& id, const Core::File_IO::Node& no
 
 void File_IO::read_object (const std::string& id, const Core::File_IO::Node& input)
 {
-  m_latest_room_entities.insert(id);
-
   // First, check if object already exists in inventory (if so, skip)
   auto state_handle = get_or_set<C::String>(id , "state");
 
@@ -686,8 +650,6 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
 
 void File_IO::read_action (const std::string& id, const Core::File_IO::Node& node)
 {
-  m_latest_room_entities.insert(id);
-
   if (node.has("label"))
     set<C::String>(id , "label", node["label"].string());
 
@@ -728,8 +690,6 @@ void File_IO::read_action (const std::string& id, const Core::File_IO::Node& nod
 
 void File_IO::read_music(const std::string& id, const Core::File_IO::Node& node)
 {
-  m_latest_room_entities.insert(id);
-
   if (node.has("states"))
   {
     auto state_handle = set<C::String>(id , "state");
@@ -823,8 +783,6 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
 
 void File_IO::read_scenery (const std::string& id, const Core::File_IO::Node& node)
 {
-  m_latest_room_entities.insert(id);
-
   int x = node["coordinates"][0].integer();
   int y = node["coordinates"][1].integer();
   int z = node["coordinates"][2].integer();
@@ -882,8 +840,6 @@ void File_IO::read_scenery (const std::string& id, const Core::File_IO::Node& no
 
 void File_IO::read_sound (const std::string& id, const Core::File_IO::Node& node)
 {
-  m_latest_room_entities.insert(id);
-
   std::string sound = node["sound"].string("sounds", "effects", "ogg");
   set<C::Sound>(id , "sound", sound);
   debug << "SOUND = " << id  << ":sound" << std::endl;
@@ -891,8 +847,6 @@ void File_IO::read_sound (const std::string& id, const Core::File_IO::Node& node
 
 void File_IO::read_text (const std::string& id, const Core::File_IO::Node& node)
 {
- m_latest_room_entities.insert(id);
-
  std::string text = node["text"].string();
  if (node.has("position"))
  {
@@ -910,8 +864,6 @@ void File_IO::read_text (const std::string& id, const Core::File_IO::Node& node)
 
 void File_IO::read_window (const std::string& id, const Core::File_IO::Node& node)
 {
-  m_latest_room_entities.insert(id);
-
   std::string skin = node["skin"].string("images", "windows", "png");
 
   load_locale_dependent_image

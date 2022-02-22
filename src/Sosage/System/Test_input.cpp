@@ -195,7 +195,7 @@ void Test_input::run_mouse()
   }
   else if (status()->is(IN_WINDOW))
   {
-    ids.emplace_back("Background");
+    ids.emplace_back("background");
   }
   else if (status()->is(IN_CODE))
   {
@@ -457,7 +457,7 @@ void Test_input::run_touchscreen()
   }
   else if (status()->is(IN_WINDOW))
   {
-    ids.emplace_back("Background");
+    ids.emplace_back("background");
   }
   else if (status()->is(IN_CODE))
   {

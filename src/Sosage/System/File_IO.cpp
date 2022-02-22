@@ -128,10 +128,8 @@ void File_IO::clean_content()
            return false;
        }
 
+       // Keep system components
        return !c->is_system();
-
-       // else, remove component if belonged to the latest room
-       return contains (m_latest_room_entities, c->entity());
      });
 }
 

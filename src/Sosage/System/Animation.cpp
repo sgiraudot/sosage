@@ -361,7 +361,7 @@ void Animation::place_and_scale_character(const std::string& id)
   auto pbody = get<C::Position>(id + "_body", "position");
 
   double new_z = Config::world_depth;
-  if (auto ground_map = request<C::Ground_map>("Background", "ground_map"))
+  if (auto ground_map = request<C::Ground_map>("background", "ground_map"))
     new_z = ground_map->z_at_point (pbody->value());
 
   abody->rescale (new_z);
@@ -390,12 +390,11 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
   auto pbody = get<C::Position>(id + "_body", "position");
   auto phead = get<C::Position>(id + "_head", "position");
   auto pmouth = get<C::Position>(id + "_mouth", "position");
-  auto ground_map = get<C::Ground_map>("Background", "ground_map");
 
   Point pos = pbody->value();
 
   double to_walk = Config::character_speed;
-  if (auto ground_map = request<C::Ground_map>("Background", "ground_map"))
+  if (auto ground_map = request<C::Ground_map>("background", "ground_map"))
     to_walk *= ground_map->z_at_point (pos) / Config::world_depth;
 
   Vector direction (pos, (*path)[path->current()]);
@@ -697,7 +696,7 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
 
 void Animation::update_camera_target ()
 {
-  auto background = request<C::Image>("Background", "image");
+  auto background = request<C::Image>("background", "image");
   if (!background)
     return;
   const std::string& id = value<C::String>("Player", "name");

@@ -54,8 +54,6 @@ private:
   using Function = std::function<void(const std::string&, const Core::File_IO::Node&)>;
   std::unordered_map<std::string, Function> m_dispatcher;
 
-  std::unordered_set<std::string> m_latest_room_entities;
-
 public:
 
   File_IO (Content& content);

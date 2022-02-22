@@ -346,7 +346,7 @@ void Logic::run ()
 bool Logic::compute_path_from_target (C::Position_handle target,
                                       std::string id)
 {
-  auto ground_map = request<C::Ground_map>("Background", "ground_map");
+  auto ground_map = request<C::Ground_map>("background", "ground_map");
   if (!ground_map)
     return false;
 
@@ -378,7 +378,7 @@ bool Logic::compute_path_from_target (C::Position_handle target,
 
 bool Logic::compute_path_from_direction (const Vector& direction)
 {
-  auto ground_map = request<C::Ground_map>("Background", "ground_map");
+  auto ground_map = request<C::Ground_map>("background", "ground_map");
   if (!ground_map)
     return false;
 
