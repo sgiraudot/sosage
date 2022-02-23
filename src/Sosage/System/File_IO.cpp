@@ -237,10 +237,6 @@ bool File_IO::read_savefile()
     set<C::String>("Follower", "name", follower);
   }
 
-  auto visited = get<C::Set<std::string> >("Game", "visited_rooms");
-  for (std::size_t i = 0; i < input["visited_rooms"].size(); ++ i)
-    visited->insert(input["visited_rooms"][i].string());
-
   auto inventory = get<C::Inventory>("Game", "inventory");
   for (std::size_t i = 0; i < input["inventory"].size(); ++ i)
     inventory->add(input["inventory"][i].string());
@@ -328,11 +324,6 @@ void File_IO::write_savefile()
     output.write("dialog", dialog->value());
     output.write("dialog_position", value<C::Int>("Game", "dialog_position"));
   }
-
-  output.start_section("visited_rooms");
-  for (const std::string& room_name : *get<C::Set<std::string> >("Game", "visited_rooms"))
-    output.write_list_item (room_name);
-  output.end_section();
 
   output.start_section("characters");
   for (C::Handle c : components("group"))

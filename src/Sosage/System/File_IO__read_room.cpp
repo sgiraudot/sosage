@@ -190,7 +190,6 @@ void File_IO::read_room (const std::string& file_name)
   std::string name = input["name"].string(); // unused so far
 
   set<C::String>("Game", "current_room", file_name);
-  get<C::Set<std::string> >("Game", "visited_rooms")->insert (file_name);
 
   if (input.has("background"))
   {
@@ -213,6 +212,7 @@ void File_IO::read_room (const std::string& file_name)
 
   callback->value()();
 
+  std::unordered_set<std::string> objects_read;
   for (const auto& d : m_dispatcher)
   {
     const std::string& section = d.first;
@@ -239,7 +239,9 @@ void File_IO::read_room (const std::string& file_name)
   for (std::size_t i = 0; i < inventory->size(); ++ i)
     if (!request<C::String>(inventory->get(i) , "name"))
     {
-      // TODO: read_object (inventory->get(i));
+      Core::File_IO subfile ("data/objects/" + inventory->get(i) + ".yaml");
+      subfile.parse();
+      read_object (inventory->get(i), subfile.root());
       callback->value();
     }
 
@@ -517,7 +519,6 @@ void File_IO::read_integer (const std::string& id, const Core::File_IO::Node& no
 
 void File_IO::read_object (const std::string& id, const Core::File_IO::Node& input)
 {
-  // First, check if object already exists in inventory (if so, skip)
   auto state_handle = get_or_set<C::String>(id , "state");
 
   std::string name = input["name"].string();
