@@ -221,7 +221,10 @@ bool File_IO::read_savefile()
 {
   Core::File_IO input ("save.yaml", true);
   if (!input.parse())
+  {
+    debug << "Can't parse save file" << std::endl;
     return false;
+  }
 
   set<C::String>("Game", "new_room", input["room"].string());
   set<C::String>("Game", "new_room_origin", "Saved_game");
@@ -248,10 +251,11 @@ bool File_IO::read_savefile()
   action->add ("play", { input["music"].string() });
   action->add ("fadein", { "0.5" });
 
+  std::unordered_map<std::string, std::string> looking_right;
   for (std::size_t i = 0; i < input["characters"].size(); ++ i)
   {
     const Core::File_IO::Node& ichar = input["characters"][i];
-    set<C::Boolean>(ichar["id"].string() , "looking_right", ichar["value"].boolean());
+    looking_right.insert (std::make_pair(ichar["id"].string(), ichar["value"].string()));
   }
 
   for (std::size_t i = 0; i < input["states"].size(); ++ i)
@@ -264,9 +268,22 @@ bool File_IO::read_savefile()
   for (std::size_t i = 0; i < input["positions"].size(); ++ i)
   {
     const Core::File_IO::Node& iposition = input["positions"][i];
+    std::string id = iposition["id"].string();
     Point point (iposition["value"][0].floating(), iposition["value"][1].floating());
-    auto pos = set<C::Absolute_position>(iposition["id"].string() , "position", point, false);
+    auto pos = set<C::Absolute_position>(id, "position", point, false);
     pos->mark_as_altered();
+
+    if (endswith(id, "_body"))
+    {
+      id.resize (id.size() - 5);
+      auto iter = looking_right.find (id);
+      if (iter != looking_right.end())
+      {
+        debug << "FOUND " << id << std::endl;
+        action->add ("move", { id, iposition["value"][0].string(),
+                               iposition["value"][1].string(), iter->second });
+      }
+    }
   }
 
   for (std::size_t i = 0; i < input["integers"].size(); ++ i)

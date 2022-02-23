@@ -45,7 +45,10 @@ void Control::idle_gamepad()
     set<C::Double> ("First_idle", "time", value<C::Double>(CLOCK__TIME));
 
   if (request<C::Signal>("Stick", "moved"))
+  {
     remove ("Player", "not_moved_yet", true);
+    emit ("Cancel", "action");
+  }
   idle_sub_update_active_objects();
 
   if (auto right = request<C::Boolean>("Switch", "right"))
@@ -58,6 +61,7 @@ void Control::idle_gamepad()
   {
     status()->push (IN_INVENTORY);
     emit("Click", "play_sound");
+    emit ("Cancel", "action");
   }
   else if (receive("Action", "look"))
   {

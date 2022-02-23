@@ -447,7 +447,7 @@ void Interface::update_object_switcher()
       fade_action_selector ("Keyboard_switcher", true);
     }
   }
-  else if (gamepad_on)
+  if (gamepad_on)
   {
     auto img = get<C::Image>("Gamepad_switcher_left", "image");
     if (img->alpha() != 255)
@@ -456,7 +456,7 @@ void Interface::update_object_switcher()
       fade_action_selector ("Gamepad_switcher", true);
     }
   }
-  else if (!keyboard_on)
+  if (!keyboard_on)
   {
     auto img = get<C::Image>("Keyboard_switcher_left", "image");
     if (img->alpha() != 0)
@@ -464,7 +464,7 @@ void Interface::update_object_switcher()
     else
       img->on() = false;
   }
-  else if (!gamepad_on)
+  if (!gamepad_on)
   {
     auto img = get<C::Image>("Gamepad_switcher_left", "image");
     if (img->alpha() != 0)

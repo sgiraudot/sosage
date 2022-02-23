@@ -848,7 +848,7 @@ void File_IO::read_sound (const std::string& id, const Core::File_IO::Node& node
 void File_IO::read_text (const std::string& id, const Core::File_IO::Node& node)
 {
  std::string text = node["text"].string();
- if (node.has("position"))
+ if (node.has("coordinates"))
  {
    auto dialog_font = get<C::Font> ("Dialog", "font");
    std::string default_color = "000000";

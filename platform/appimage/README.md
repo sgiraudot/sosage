@@ -6,3 +6,5 @@ Pour générer un fichier AppImage portable pour les systèmes GNU/Linux:
 2. Lancer `create_appimage.sh` avec comme arguments
   - Votre fichier Linux Deploy
   - Le dossier de données de jeu
+  - Le nom de l'exécutable produit
+  

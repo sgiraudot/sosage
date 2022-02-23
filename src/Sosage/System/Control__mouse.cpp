@@ -121,6 +121,7 @@ void Control::idle_touchscreen()
 void Control::idle_sub_click (const std::string& target)
 {
   emit ("Click", "play_sound");
+  emit ("Cancel", "action");
   auto source = request<C::String>("Interface", "source_object");
   if (target != "")
   {
@@ -397,6 +398,7 @@ void Control::inventory_sub_click (const std::string& target)
     return;
 
   emit ("Click", "play_sound");
+  emit ("Cancel", "action");
   auto source = request<C::String>("Interface", "source_object");
 
   if (source)

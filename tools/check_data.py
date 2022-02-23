@@ -14,6 +14,10 @@ if len(sys.argv) > 2 and sys.argv[2] == '-v':
     verbose = True
 exit_at_first_error = True
 
+clean_unused = False
+if len(sys.argv) > 2 and sys.argv[2] == '-c':
+    clean_unused = True
+    
 errors = []
 def error(string):
     if exit_at_first_error:
@@ -854,7 +858,7 @@ for filename in yaml_files:
 
 
 
-
+to_clean = []
 for root, directories, filenames in os.walk(root_folder):
     for filename in filenames:
         fullname = os.path.join(root, filename)
@@ -863,6 +867,7 @@ for root, directories, filenames in os.walk(root_folder):
         if ext == ".graph" or "en_US" in basename or ext == ".yaml":
             continue
         if fullname not in accessed_files:
+            to_clean.append(fullname)
             refname = '/'.join(fullname.split('/')[-3:]);
             warning("unused file")
 
@@ -875,3 +880,8 @@ else:
             print("Error: [" + e[1] + "] " + e[2])
         else:
             print("Warning: [" + e[1] + "] " + e[2])
+
+if clean_unused:
+    for file in to_clean:
+        print('rm ' + file)
+        out = subprocess.run('rm ' + file, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, check=True)

@@ -152,10 +152,8 @@ void Logic::run ()
         });
       }
 
-  if (receive ("Cursor", "clicked"))
+  if (receive ("Cancel", "action"))
   {
-    compute_path_from_target(get<C::Position>(CURSOR__POSITION));
-
     // Cancel current action
     if (auto action = request<C::Action>("Character", "action"))
     {
@@ -178,8 +176,16 @@ void Logic::run ()
 
       action->stop();
       remove("Character", "action");
+      const std::string& id = value<C::String>("Player", "name");
+      remove(id , "path", true);
+      emit(id, "stop_walking");
     }
   }
+
+  if (receive ("Cursor", "clicked"))
+    compute_path_from_target(get<C::Position>(CURSOR__POSITION));
+
+
   if (receive ("Stick", "moved"))
   {
     auto direction = get<C::Simple<Vector>>(STICK__DIRECTION);

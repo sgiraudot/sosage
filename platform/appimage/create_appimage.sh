@@ -1,13 +1,14 @@
 #!/bin/sh
 
-if [ $# -ne 2 ];
+if [ $# -ne 3 ];
 then
-    echo Usage = $0 [your_linuxdeploy_file.AppImage] [where_the_game_data_is]
+    echo Usage = $0 [your_linuxdeploy_file.AppImage] [where_the_game_data_is] [exe_name]
     exit
 fi
 
 LinuxDeploy=$1
 GameData=`realpath $2`
+exe_name=$3
 
 echo [BUILDING APPIMAGE USING $LinuxDeploy]
 
@@ -30,6 +31,6 @@ cd ..
 
 echo [Building AppImage]
 
-$LinuxDeploy --appdir install_dir -e install_dir/usr/bin/superfluous-returnz --output appimage
+$LinuxDeploy --appdir install_dir -e install_dir/usr/bin/$exe_name --output appimage
 
 echo [All done]

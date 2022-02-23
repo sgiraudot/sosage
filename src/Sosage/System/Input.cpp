@@ -202,8 +202,8 @@ void Input::run()
       emit ("Window", "rescaled");
     }
 
-    // If paused, ignore mouse events
-    if (status()->is (LOCKED))
+    // If locked/cutscene, ignore mouse events
+    if (status()->is (LOCKED, CUTSCENE))
       continue;
 
     if (mode->value() == MOUSE)

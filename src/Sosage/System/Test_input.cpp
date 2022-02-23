@@ -281,7 +281,7 @@ void Test_input::run_mouse_chaos()
   debug << "[TEST MOUSE CHAOS] " << status()->str() << std::endl;
 
 
-  if (status()->is(LOCKED))
+  if (status()->is(LOCKED, CUTSCENE))
   {
     debug << "[TEST MOUSE CHAOS] Escape" << std::endl;
     emit ("Game", "escape");
@@ -654,7 +654,7 @@ void Test_input::run_gamepad_chaos()
 
   get<C::Double>(CLOCK__LATEST_ACTIVE)->set(value<C::Double>(CLOCK__TIME));
 
-  if (status()->is(LOCKED))
+  if (status()->is(LOCKED, CUTSCENE))
   {
     debug << "[TEST GAMEPAD CHAOS] Escape" << std::endl;
     emit ("Game", "escape");
@@ -727,6 +727,7 @@ Point Test_input::cursor_target (const std::string& id)
 
 std::function<void(void)> Test_input::new_mode()
 {
+  //return BIND(run_mouse_chaos);
   return random_choice ({ BIND(run_mouse),
                           BIND(run_mouse_chaos),
                           BIND(run_touchscreen),

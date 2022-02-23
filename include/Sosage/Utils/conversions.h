@@ -93,7 +93,7 @@ typename T::value_type random_choice (const T& list)
 template <typename T>
 T random_choice (const std::initializer_list<T>& list)
 {
-  return random_choice (list);
+  return random_choice<std::initializer_list<T>> (list);
 }
 
 void random_do (const std::initializer_list<std::function<void(void)>>& list);

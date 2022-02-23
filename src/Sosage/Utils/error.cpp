@@ -52,7 +52,7 @@ int Debug_buffer::sync()
 
 void check_impl (const char* file, int line, const std::string& str)
 {
-#ifdef SOSAGE_DEBUG
+#if defined(SOSAGE_DEBUG) && !defined(SOSAGE_ANDROID)
   throw std::runtime_error(str + " [" + file + ":" + std::to_string(line) + "]" );
 #else
   debug << "Error: "<< str << " [" << file << ":" << line << "]" << std::endl;
