@@ -37,7 +37,13 @@ Position::Position (const std::string& entity, const std::string& component)
 Absolute_position::Absolute_position (const std::string& entity, const std::string& component,
                                       const Point& point, bool is_interface)
   : Position(entity, component), m_pos (point), m_is_interface (is_interface)
-{ }
+{
+  if (entity == "couloir" && component == "position")
+  {
+    check (point.X() == 187 && point.Y() == 840,
+           "couloir moved to " + str());
+  }
+}
 
 std::string Absolute_position::str() const
 {
@@ -52,6 +58,11 @@ Point Absolute_position::value () const
 
 void Absolute_position::set (const Point& p)
 {
+  if (this->entity() == "couloir" && this->component() == "position")
+  {
+    check (p.X() == 187 && p.Y() == 840,
+           "couloir moved to " + str());
+  }
   m_pos = p;
   mark_as_altered();
 }

@@ -779,7 +779,7 @@ void Interface::update_cursor()
     else
     {
       if (state->value() == "selected")
-        remove("Selected_object", "image");
+        remove("Selected_object", "image", true);
 
       if (!status()->is(INVENTORY_ACTION_CHOICE) && m_active_object != "")
       {
@@ -797,6 +797,8 @@ void Interface::update_cursor()
         state->set("default");
     }
   }
+  else
+    remove("Selected_object", "image", true);
 }
 
 } // namespace Sosage::System

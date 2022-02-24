@@ -113,7 +113,7 @@ public:
   static Info_manager m_image_info;
   static Bitmap_manager m_masks;
   static Font_manager m_fonts;
-  SDL_Surface* m_icon;
+  Surface m_icon;
 
 public:
 

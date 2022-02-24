@@ -457,7 +457,7 @@ bool Logic::function_play (const std::vector<std::string>& args)
     if (animation->loop())
     {
       // If animation loop, add a fake state so that it's reloaded
-      // on if we exist and reener the room
+      // on if we exit and reenter the room
       set<C::String>(target , "state", "Dummy");
     }
     else

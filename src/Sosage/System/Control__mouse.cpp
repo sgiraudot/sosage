@@ -46,6 +46,8 @@ void Control::idle_mouse()
   // If cursor below inventory threshold, go to inventory
   if (cursor->value().y() > Config::world_height - Config::inventory_active_zone)
   {
+    if (receive("Cursor", "clicked"))
+      emit ("Cancel", "action");
     status()->push (IN_INVENTORY);
     return;
   }
@@ -207,6 +209,7 @@ void Control::action_choice_sub_click (const std::string& id)
   if (endswith(id, "_old"))
     return;
 
+  debug << "Click on " << id << std::endl;
   std::size_t pos = id.find("_button_");
   if (pos == std::string::npos)
     pos = id.find("_label");
@@ -215,7 +218,12 @@ void Control::action_choice_sub_click (const std::string& id)
   std::string object_id (id.begin(), id.begin() + pos);
 
   pos = object_id.find_last_of('_');
-  check(pos != std::string::npos, "Ill-formed action entity " + object_id);
+
+  // Click on dying non-action label is very unlikely but can
+  // happen, so just in case, check and exit
+  if (pos == std::string::npos)
+    return;
+
   std::string target (object_id.begin(), object_id.begin() + pos);
   std::string action (object_id.begin() + pos + 1, object_id.end());
 
@@ -226,8 +234,10 @@ void Control::action_choice_sub_click (const std::string& id)
   }
   else if (action == "combine")
     set<C::String>("Interface", "source_object", target);
-  else
+  else if (contains(Config::possible_actions, action.c_str()))
     set_action (object_id, "Default_" + action);
+  else
+    return; // Click on outdated label
   emit ("Click", "play_sound");
 }
 

@@ -51,7 +51,6 @@ std::size_t Control::Hash_status_mode_pair::operator() (const Status_input_pair&
 
 Control::Control(Content& content)
   : Base (content)
-  , m_status(LOCKED)
   , m_latest_exit (0)
   , m_stick_on (false)
 {
@@ -104,6 +103,12 @@ void Control::run()
   if (iter != m_dispatcher.end())
     (iter->second)();
   SOSAGE_TIMER_STOP(System_Control__run);
+}
+
+void Control::init()
+{
+  m_mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+  m_status = status()->value();
 }
 
 void Control::update_exit()

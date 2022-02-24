@@ -180,6 +180,7 @@ void File_IO::read_config()
 
   set_fac<C::String>(GAME__CURRENT_LOCAL, "Game", "current_locale", locale);
   set<C::Boolean>("Window", "fullscreen", fullscreen);
+  debug << "INPUT MODE = " << input_mode << std::endl;
   set_fac<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE, "Interface", "input_mode", Input_mode(input_mode));
   set_fac<C::Simple<Gamepad_type>>(GAMEPAD__TYPE, "Gamepad", "type", Gamepad_type(gamepad_type));
 
@@ -344,7 +345,7 @@ void File_IO::write_savefile()
     if (!c->is_system() && c->was_altered())
       if (auto pos = C::cast<C::Position>(c))
         output.write_list_item ("id", c->entity(), "value",
-                                { pos->value().x(), pos->value().y() });
+                                { pos->value().X(), pos->value().Y() });
 
   output.end_section();
 
@@ -386,6 +387,7 @@ void File_IO::read_init ()
 
   std::string game_name = input["name"].string();
   set<C::String>("Game", "name", game_name);
+  emit("Game", "name_changed");
 
   std::string icon = input["icon"].string("images", "interface", "png");
   set<C::String>("Icon", "filename", icon);

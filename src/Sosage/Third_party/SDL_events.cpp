@@ -120,7 +120,7 @@ Gamepad_type SDL_events::gamepad_type() const
 
 Event SDL_events::mouse_event (const Event_type& type, const SDL_Event& ev) const
 {
-  Event_value value;
+  Event_value value = NONE;
   if (ev.button.button == SDL_BUTTON_LEFT)
     value = LEFT;
   else if (ev.button.button == SDL_BUTTON_RIGHT)

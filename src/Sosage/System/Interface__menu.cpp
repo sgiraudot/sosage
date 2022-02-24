@@ -778,6 +778,9 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
     // Reinit interface
     init();
     create_menu ("Settings");
+
+    // Update Game name
+    emit("Game", "name_changed");
   }
   else if (setting == "Fullscreen")
   {

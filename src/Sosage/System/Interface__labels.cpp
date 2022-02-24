@@ -48,6 +48,7 @@ namespace C = Component;
 
 void Interface::create_object_label (const std::string& id)
 {
+  debug << status()->str() << std::endl;
   debug << "Create object_label " << id << std::endl;
   // Special case for inventory
   if (status()->is (IN_INVENTORY, OBJECT_CHOICE))
@@ -64,7 +65,7 @@ void Interface::create_object_label (const std::string& id)
                   - 0.5 * get<C::Image>(id + "_label_back", "image")->width()
                   - (value<C::Position>("Chamfer", "position").x() + Config::label_height);
     if (diff < 0)
-      position->set(Point (position->value().x() - diff, position->value().y()));
+      pos->set(Point (pos->value().x() - diff, pos->value().y()));
 
     animate_label (id + "_label", FADE);
     return;

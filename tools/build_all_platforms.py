@@ -75,6 +75,7 @@ all_begin = time.perf_counter()
 
 print("### CLEANING")
 begin = time.perf_counter()
+run_cmd("rm -rf " + output_dir)
 run_cmd("mkdir " + output_dir)
 run_cmd("mkdir " + steam_dir)
 end = time.perf_counter()

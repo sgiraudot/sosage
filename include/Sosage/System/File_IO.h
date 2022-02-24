@@ -36,15 +36,7 @@
 
 #include <unordered_set>
 
-namespace Sosage
-{
-
-namespace Config
-{
-constexpr auto possible_actions = { "look", "move", "take", "inventory", "use", "combine", "goto" };
-} // namespace Config
-
-namespace System
+namespace Sosage::System
 {
 
 class File_IO : public Base
@@ -101,8 +93,6 @@ private:
 
 };
 
-} // namespace System
-
-} // namespace Sosage
+} // namespace Sosage::System
 
 #endif // SOSAGE_SYSTEM_FILE_IO_H

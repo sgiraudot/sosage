@@ -65,6 +65,8 @@ public:
 
   virtual void run();
 
+  virtual void init();
+
 private:
 
   void update_exit();

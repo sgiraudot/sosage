@@ -612,7 +612,7 @@ SDL::Surface SDL::load_surface (const std::string& file_name)
     int format_int;
     std::tie (width, height, format_int) = Asset_manager::image_info (file_name);
 
-    surf = Surface(SDL_CreateRGBSurfaceWithFormat (0, width, height, 32, format_int));
+    surf = Surface(SDL_CreateRGBSurfaceWithFormat (0, width, height, 32, format_int), SDL_FreeSurface);
     SDL_LockSurface (surf.get());
     Asset_manager::open (file_name, surf->pixels);
     SDL_UnlockSurface (surf.get());
@@ -739,7 +739,6 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
 SDL::~SDL ()
 {
   clear_managers();
-  SDL_FreeSurface (m_icon);
   TTF_Quit ();
   IMG_Quit ();
   SDL_DestroyRenderer (m_renderer);
@@ -757,8 +756,8 @@ void SDL::clear_managers()
 void SDL::update_window (const std::string& name, const std::string& icon_filename)
 {
   SDL_SetWindowTitle (m_window, name.c_str());
-  m_icon = IMG_Load(icon_filename.c_str());
-  SDL_SetWindowIcon (m_window, m_icon);
+  m_icon = load_surface(icon_filename);
+  SDL_SetWindowIcon (m_window, m_icon.get());
 }
 
 void SDL::update_view()

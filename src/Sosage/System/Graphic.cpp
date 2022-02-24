@@ -57,17 +57,13 @@ void Graphic::init()
                value<C::Boolean>("Window", "fullscreen"));
   iw->set(w);
   ih->set(h);
-
 }
 
 void Graphic::run()
 {
   SOSAGE_TIMER_START(System_Graphic__run);
-  if (auto name = request<C::String>("Game", "name"))
-  {
-    m_core.update_window (locale(name->value()), value<C::String>("Icon", "filename"));
-    remove ("Game", "name");
-  }
+  if (receive("Game", "name_changed"))
+    m_core.update_window (locale_get("Game", "name"), value<C::String>("Icon", "filename"));
 
   if (request<C::String>("Game", "new_room"))
   {
@@ -185,6 +181,18 @@ void Graphic::run()
     m_core.draw (img->core(), xmin, ymin, width, height,
                  round(xmin_target), round(ymin_target),
                  round(width_target), round(height_target));
+  }
+
+  if (auto pos = request<C::Position>("couloir", "position"))
+  {
+    check (pos->value().X() == 187 && pos->value().Y() == 840,
+           "couloir moved to " + pos->str());
+  }
+  if (auto pos = request<C::Position>("porte", "position"))
+  {
+    check ((pos->value().X() == 321 && pos->value().Y() == 849)
+           || (pos->value().X() == 192 && pos->value().Y() == 949),
+           "porte moved to " + pos->str());
   }
 
   if (value<C::Boolean>(GAME__DEBUG))
