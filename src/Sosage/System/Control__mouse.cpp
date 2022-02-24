@@ -234,10 +234,13 @@ void Control::action_choice_sub_click (const std::string& id)
   }
   else if (action == "combine")
     set<C::String>("Interface", "source_object", target);
-  else if (contains(Config::possible_actions, action.c_str()))
+  else if (contains(Config::possible_actions, action))
     set_action (object_id, "Default_" + action);
   else
+  {
+    debug << "Action not found " << action << std::endl;
     return; // Click on outdated label
+  }
   emit ("Click", "play_sound");
 }
 

@@ -67,6 +67,14 @@ std::string to_string (const bool& t)
   return (t ? "true" : "false");
 }
 
+bool contains (const std::initializer_list<const char*>& list, const std::string& str)
+{
+  for (const char* s : list)
+    if (std::string(s) == str)
+      return true;
+  return false;
+}
+
 bool contains (const std::string& str, const char* sub)
 {
   return str.find(sub) != std::string::npos;

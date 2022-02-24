@@ -28,12 +28,14 @@
 #define SOSAGE_UTILS_BINARY_IO_H
 
 #include <iostream>
+#include <memory>
 #include <vector>
 
 namespace Sosage
 {
 
 using Buffer = std::vector<char>;
+using Buffer_ptr = std::shared_ptr<Buffer>;
 
 template <typename T>
 void binary_write (std::ostream& os, const T& t)

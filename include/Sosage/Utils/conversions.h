@@ -67,12 +67,7 @@ bool contains (const std::vector<T>& vec, const T& t)
   return std::find (vec.begin(), vec.end(), t) != vec.end();
 }
 
-template <typename T>
-bool contains (const std::initializer_list<T>& list, const T& t)
-{
-  return std::find (list.begin(), list.end(), t) != list.end();
-}
-
+bool contains (const std::initializer_list<const char*>& list, const std::string& str);
 bool contains (const std::string& str, const char* sub);
 bool contains (const std::string& str, const std::string& sub);
 bool startswith (const std::string& str, const std::string& sub);

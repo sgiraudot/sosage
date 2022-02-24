@@ -431,8 +431,8 @@ SDL::Font SDL::load_font (const std::string& file_name, int size)
   Font_base out = m_fonts.make_mapped (file_name, TTF_OpenFontRW, asset.base(), 1, size);
   check (out != Font_base(), "Cannot load font " + file_name);
 
-  asset = Asset_manager::open(file_name);
-  Font_base out2 = m_fonts.make_mapped (file_name + ".outlined", TTF_OpenFontRW, asset.base(), 1, size);
+  Asset asset2 = Asset_manager::open(file_name);
+  Font_base out2 = m_fonts.make_mapped (file_name + ".outlined", TTF_OpenFontRW, asset2.base(), 1, size);
   check (out2 != Font_base(), "Cannot load font " + file_name);
   TTF_SetFontOutline(out2.get(), Config::text_outline);
 

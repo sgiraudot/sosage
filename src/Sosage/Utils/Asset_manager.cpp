@@ -218,7 +218,7 @@ Asset Asset_manager::open (const std::string& filename, bool file_is_package)
     if (asset.compressed_size == 0) // uncompressed file
       return Asset (buffers[asset.buffer_id].data() + asset.position, asset.size);
     // else
-    Buffer* buffer = new Buffer(asset.size);
+    Buffer* buffer = new Buffer(asset.size); // TODO: fix leak
     lz4_decompress_buffer (buffers[asset.buffer_id].data() + asset.position, asset.compressed_size,
         buffer->data(), asset.size);
     return Asset (buffer);
