@@ -27,6 +27,7 @@
 #ifndef SOSAGE_THIRD_PARTY_SDL_H
 #define SOSAGE_THIRD_PARTY_SDL_H
 
+#include <Sosage/Utils/binary_io.h>
 #include <Sosage/Utils/Bitmap_2.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/Resource_manager.h>
@@ -63,16 +64,18 @@ public:
   static constexpr Uint32 amask = 0xff000000;
 #endif
 
+  using Font_base = std::tuple<TTF_Font*, TTF_Font*, Buffer*>;
+
   using Texture_manager = Resource_manager<SDL_Texture>;
   using Info_manager = Resource_manager<std::tuple<int, int, double>>;
   using Bitmap_manager = Resource_manager<Bitmap_2>;
-  using Font_manager = Resource_manager<TTF_Font>;
+  using Font_manager = Resource_manager<Font_base>;
 
   using Surface = std::shared_ptr<SDL_Surface>;
   using Texture = typename Texture_manager::Resource_handle;
   using Image_info = typename Info_manager::Resource_handle;
   using Bitmap = typename Bitmap_manager::Resource_handle;
-  using Font_base = typename Font_manager::Resource_handle;
+  using Font = typename Font_manager::Resource_handle;
 
   struct Image
   {
@@ -103,8 +106,6 @@ public:
     void set (std::size_t x, std::size_t y, const RGBA_color& color) const;
     void release();
   };
-
-  using Font = std::pair<Font_base, Font_base>;
 
   static SDL_Window* m_window;
   static SDL_Renderer* m_renderer;

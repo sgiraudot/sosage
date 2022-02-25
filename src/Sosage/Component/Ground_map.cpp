@@ -288,6 +288,7 @@ void Ground_map::read (const std::string& filename)
     GEdge edge = m_graph.add_edge (s, t);
     m_graph[edge].border = b;
   }
+  asset.close();
 }
 
 void Ground_map::find_path (Point origin,

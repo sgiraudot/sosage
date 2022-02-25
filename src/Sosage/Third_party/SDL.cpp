@@ -45,7 +45,14 @@ SDL_RendererInfo SDL::m_info;
 SDL::Texture_manager SDL::m_textures (SDL_DestroyTexture);
 SDL::Info_manager SDL::m_image_info;
 SDL::Bitmap_manager SDL::m_masks;
-SDL::Font_manager SDL::m_fonts (TTF_CloseFont);
+SDL::Font_manager SDL::m_fonts
+([](Font_base* font)
+{
+  TTF_CloseFont(std::get<0>(*font));
+  TTF_CloseFont(std::get<1>(*font));
+  delete std::get<2>(*font);
+  delete font;
+});
 
 SDL::Image::Image (Texture texture, Bitmap mask, int width, int height,
                    double scaling, unsigned char alpha)
@@ -428,15 +435,19 @@ SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
 SDL::Font SDL::load_font (const std::string& file_name, int size)
 {
   Asset asset = Asset_manager::open(file_name);
-  Font_base out = m_fonts.make_mapped (file_name, TTF_OpenFontRW, asset.base(), 1, size);
-  check (out != Font_base(), "Cannot load font " + file_name);
-
-  Asset asset2 = Asset_manager::open(file_name);
-  Font_base out2 = m_fonts.make_mapped (file_name + ".outlined", TTF_OpenFontRW, asset2.base(), 1, size);
-  check (out2 != Font_base(), "Cannot load font " + file_name);
-  TTF_SetFontOutline(out2.get(), Config::text_outline);
-
-  return std::make_pair(out, out2);
+  Font out = m_fonts.make_mapped
+    (file_name,
+     [&]() -> Font_base*
+     {
+       TTF_Font* font = TTF_OpenFontRW(asset.base(), 0, size);
+       check (font != nullptr, "Cannot load font " + file_name);
+       asset.seek(0);
+       TTF_Font* outlined = TTF_OpenFontRW(asset.base(), 1, size);
+       check (outlined != nullptr, "Cannot load outlined font " + file_name);
+       TTF_SetFontOutline (outlined, Config::text_outline);
+       return new Font_base (font, outlined, asset.buffer());
+     });
+  return out;
 }
 
 Bitmap_2* SDL::create_mask (SDL_Surface* surf)
@@ -489,7 +500,7 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
   if (contains(text, "[Debug info]"))
   {
     SDL_Surface* surf;
-    surf = TTF_RenderUTF8_Blended_Wrapped(font.first.get(), text.c_str(), color(color_str), 1920);
+    surf = TTF_RenderUTF8_Blended_Wrapped(std::get<0>(*font), text.c_str(), color(color_str), 1920);
     int width = surf->w;
     int height = surf->h;
     check (surf != nullptr, "Cannot create text \"" + text + "\"");
@@ -502,7 +513,7 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
   int width = -1;
   int height = -1;
 
-  std::string id = to_string(std::size_t(font.first.get())) + color_str + text;
+  std::string id = to_string(std::size_t(std::get<0>(*font))) + color_str + text;
 
   Texture texture = m_textures.make_mapped
     (id,
@@ -510,9 +521,9 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
      {
        SDL_Surface* surf;
        if (!contains (text, "\n"))
-         surf = TTF_RenderUTF8_Blended(font.first.get(), text.c_str(), color(color_str));
+         surf = TTF_RenderUTF8_Blended(std::get<0>(*font), text.c_str(), color(color_str));
        else
-         surf = TTF_RenderUTF8_Blended_Wrapped(font.first.get(), text.c_str(), color(color_str), 1920);
+         surf = TTF_RenderUTF8_Blended_Wrapped(std::get<0>(*font), text.c_str(), color(color_str), 1920);
 
        width = surf->w;
        height = surf->h;
@@ -546,16 +557,16 @@ SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& 
   int width = -1;
   int height = -1;
 
-  std::string id = to_string(std::size_t(font.first.get())) + "outlined" + color_str + text;
+  std::string id = to_string(std::size_t(std::get<0>(*font))) + "outlined" + color_str + text;
 
   Texture texture = m_textures.make_mapped
     (id,
      [&]() -> SDL_Texture*
      {
-       SDL_Surface* surf = TTF_RenderUTF8_Blended (font.first.get(), text.c_str(), color(color_str));
+       SDL_Surface* surf = TTF_RenderUTF8_Blended (std::get<0>(*font), text.c_str(), color(color_str));
        check (surf != nullptr, "Cannot create text \"" + text + "\"");
 
-       SDL_Surface* back = TTF_RenderUTF8_Blended (font.second.get(), text.c_str(), black());
+       SDL_Surface* back = TTF_RenderUTF8_Blended (std::get<1>(*font), text.c_str(), black());
        check (back != nullptr, "Cannot create text \"" + text + "\"");
 
        SDL_Rect rect = {Config::text_outline, Config::text_outline, surf->w, surf->h};

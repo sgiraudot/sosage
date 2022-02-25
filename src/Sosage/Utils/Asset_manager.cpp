@@ -72,6 +72,11 @@ SDL_RWops* Asset::base()
   return m_base.buffer;
 }
 
+Buffer* Asset::buffer()
+{
+  return m_buffer;
+}
+
 std::size_t Asset::size() const
 {
   return m_base.size;
@@ -230,7 +235,12 @@ Asset Asset_manager::open (const std::string& filename, bool file_is_package)
 bool Asset_manager::exists (const std::string& filename)
 {
   Asset asset = open (filename);
-  return bool(asset);
+  if (asset)
+  {
+    asset.close();
+    return true;
+  }
+  return false;
 }
 
 std::tuple<int, int, int> Asset_manager::image_info (const std::string& filename)

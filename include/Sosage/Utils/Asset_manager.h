@@ -57,6 +57,7 @@ public:
   operator bool() const;
   void close();
   SDL_RWops* base();
+  Buffer* buffer();
   std::size_t size() const;
   std::size_t read (void* ptr, std::size_t max_num);
   void write (const std::string& str);
