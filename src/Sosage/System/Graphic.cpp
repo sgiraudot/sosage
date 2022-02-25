@@ -67,11 +67,13 @@ void Graphic::run()
 
   if (request<C::String>("Game", "new_room"))
   {
-    m_core.clear_managers();
     run_loading();
     SOSAGE_TIMER_STOP(System_Graphic__run);
     return;
   }
+
+  if (receive("Game", "clear_managers"))
+    m_core.clear_managers();
 
   if (receive ("Window", "rescaled"))
     m_core.update_view ();

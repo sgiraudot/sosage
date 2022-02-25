@@ -131,6 +131,8 @@ void File_IO::clean_content()
        // Keep system components
        return !c->is_system();
      });
+
+  emit("Game", "clear_managers");
 }
 
 void File_IO::read_config()

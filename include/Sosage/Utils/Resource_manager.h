@@ -57,7 +57,18 @@ public:
     : m_deleter(deleter)
   { }
 
-  void clear() { m_data.clear(); }
+  void clear()
+  {
+    Data new_data;
+    for (const auto& d : m_data)
+      if (d.second.use_count() > 1)
+        new_data.insert (d);
+      else
+      {
+        debug << "Remove " << typeid(Resource*).name() << " " << d.first << std::endl;
+      }
+    m_data.swap(new_data);
+  }
 
   std::size_t size() const { return m_data.size(); }
 
