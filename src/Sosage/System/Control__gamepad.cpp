@@ -65,6 +65,7 @@ void Control::idle_gamepad()
   }
   else if (receive("Action", "look"))
   {
+    emit ("Cancel", "action");
     if (auto active_object = request<C::String>("Interface", "active_object"))
     {
       if (auto right = request<C::Boolean>(active_object->value() + "_goto", "right"))
@@ -374,7 +375,7 @@ void Control::code_gamepad()
   {
     emit ("Interface", "hide_window");
     code->reset();
-    remove("Code_hover", "image");
+    remove("Code_hover", "image", true);
     status()->pop();
   }
   else if (received_key == "look")

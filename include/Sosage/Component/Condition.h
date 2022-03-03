@@ -29,6 +29,7 @@
 
 #include <Sosage/Component/Base.h>
 #include <Sosage/Component/Simple.h>
+#include <Sosage/Utils/conversions.h>
 
 namespace Sosage::Component
 {
@@ -61,6 +62,9 @@ public:
   virtual bool value() const;
   void begin_temporary_true();
   void end_temporary_true();
+
+  STR_NAME("Boolean")
+  STR_VALUE(to_string(m_value));
 };
 
 using Boolean_handle = std::shared_ptr<Boolean>;
@@ -79,6 +83,9 @@ public:
   { }
 
   virtual bool value() const { return m_handle->value() == m_value; }
+  STR_NAME("Value_condition")
+  STR_VALUE(to_string(m_value));
+  STR_SUB(return component_str(m_handle, indent+1, "Reference = "););
 };
 
 template <typename T>
@@ -98,6 +105,9 @@ public:
   { }
 
   virtual bool value() const { return m_handle->value() == m_value; }
+
+  STR_NAME("Simple_condition")
+  STR_SUB(return component_str(m_handle, indent+1, "Reference = "););
 };
 
 template <typename T>
@@ -112,6 +122,10 @@ public:
   And (const std::string& entity, const std::string& component,
        Condition_handle first, Condition_handle second);
   virtual bool value() const;
+
+  STR_NAME("And");
+  STR_SUB(return component_str(m_values.first, indent+1, "A = ")
+          + component_str(m_values.second, indent+1, "B = "););
 };
 
 using And_handle = std::shared_ptr<And>;
@@ -125,6 +139,9 @@ public:
   Or (const std::string& entity, const std::string& component,
       Condition_handle first, Condition_handle second);
   virtual bool value() const;
+  STR_NAME("Or");
+  STR_SUB(return component_str(m_values.first, indent+1, "A = ")
+          + component_str(m_values.second, indent+1, "B = "););
 };
 
 using Or_handle = std::shared_ptr<Or>;
@@ -137,6 +154,8 @@ public:
 
   Not (const std::string& entity, const std::string& component, Condition_handle value);
   virtual bool value() const;
+  STR_NAME("Not");
+  STR_SUB(return component_str(m_value, indent+1, "Negate = "););
 };
 
 using Not_handle = std::shared_ptr<Not>;

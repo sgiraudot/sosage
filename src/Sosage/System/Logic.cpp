@@ -96,7 +96,7 @@ void Logic::run ()
 {
   SOSAGE_TIMER_START(System_Logic__run);
   m_current_time = value<C::Double> (CLOCK__TIME);
-
+  update_debug_info (get<C::Debug>(GAME__DEBUG));
   if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU)
       || request<C::Signal>("Game", "reset"))
   {
@@ -130,8 +130,11 @@ void Logic::run ()
             if (C::cast<C::Signal>(th.second))
               set (th.second);
             else if (th.second->entity() != "wait")
+            {
+              debug << a->str() << " remove " << th.second->str() << std::endl;
               // comments might already have been removed
               remove (th.second, true);
+            }
             return false;
           }
           else if (skip_dialog)
@@ -235,6 +238,7 @@ void Logic::run ()
       emit ("code", "play_success");
       get<C::Action>("Logic", "action")->schedule (m_current_time + Config::button_click_duration,
                                                 C::make_handle<C::Signal>("code", "quit"));
+      status()->push(LOCKED);
     }
     else
       emit ("code", "play_click");
@@ -242,12 +246,13 @@ void Logic::run ()
 
   if (receive ("code", "cheat")) // For testing purposes...
   {
-    std::cerr << "CHEAT CODE RECEIVED" << std::endl;
+    debug << "CHEAT CODE RECEIVED" << std::endl;
     auto code = get<C::Code>("Game", "code");
     code->reset();
     emit ("code", "play_success");
     get<C::Action>("Logic", "action")->schedule (m_current_time + Config::button_click_duration,
                                               C::make_handle<C::Signal>("code", "quit"));
+    status()->push(LOCKED);
   }
 
   if (receive ("code", "stop_flashing"))
@@ -264,6 +269,7 @@ void Logic::run ()
     emit("Interface", "hide_window");
     code->reset();
     remove("Code_hover", "image", true);
+    status()->pop();
     status()->pop();
 
     get<C::Action>(get<C::Code>("Game", "code")->entity() , "action")->launch();
@@ -345,7 +351,6 @@ void Logic::run ()
         }
       }
 
-  update_debug_info (get<C::Debug>(GAME__DEBUG));
   SOSAGE_TIMER_STOP(System_Logic__run);
 }
 
@@ -447,6 +452,7 @@ void Logic::update_debug_info (C::Debug_handle debug_info)
     auto dbg_img = set<C::Image> ("Debug", "image",
                                                     debug_font, "FFFFFF",
                                                     debug_info->debug_str());
+    dbg_img->z() = Config::loading_depth;
     auto dbg_pos = set<C::Absolute_position>("Debug", "position", Point(0,0));
   }
   else

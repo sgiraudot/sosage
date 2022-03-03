@@ -72,13 +72,6 @@ void Image::compose_with (const std::shared_ptr<Image>& other)
   m_core = Core::Graphic::compose ({m_core, other->m_core});
 }
 
-std::string Image::str() const
-{
-  return Base::str() + " at (" + std::to_string (m_origin.x())
-    + ";" + std::to_string(m_origin.y())
-    + ";" + std::to_string(m_z) + "), " + (m_on ? "ON" : "OFF");
-}
-
 void Image::set_collision (const Collision_type& collision)
 {
   if (m_collision == PIXEL_PERFECT && collision != PIXEL_PERFECT)

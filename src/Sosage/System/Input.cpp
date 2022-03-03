@@ -179,8 +179,11 @@ void Input::run()
 
     if (ev == Event(KEY_UP, Sosage::C))
     {
-      get<C::Position>(CAMERA__POSITION)->set(Point(200,200));
-      get<C::Double>(CAMERA__ZOOM)->set(2.);
+      for (const auto& cmp : m_content)
+        for (const auto& c : cmp)
+        {
+          debug << component_str(c.second, 0);
+        }
     }
 
     if constexpr (!Config::emscripten) // Do not prevent web users to use F1/F2/etc

@@ -73,7 +73,6 @@ public:
   void launch();
   void stop();
   bool on() const;
-  std::string str() const;
   std::size_t size() const;
   std::vector<Step>::const_iterator begin() const;
   std::vector<Step>::const_iterator end() const;
@@ -84,6 +83,8 @@ public:
   bool ready() const;
   const Step& next_step();
   const Step& last_step();
+
+  STR_NAME("Action");
 };
 
 using Action_handle = std::shared_ptr<Action>;

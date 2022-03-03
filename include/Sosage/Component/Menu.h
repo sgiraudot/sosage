@@ -92,6 +92,8 @@ public:
   std::string increment (const std::string& setting);
   std::string decrement (const std::string& setting);
   Node root() const;
+
+  STR_NAME("Menu");
 };
 
 using Menu_handle = std::shared_ptr<Menu>;

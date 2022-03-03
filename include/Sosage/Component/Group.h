@@ -57,6 +57,12 @@ public:
       else if (auto g = cast<Group>(h)) // Recursively call on nested groups
         g->apply<Comp> (functor);
   }
+
+  STR_NAME("Group");
+  STR_SUB(std::string out = "";
+          for (Handle h : m_items)
+            out += component_str(h, indent+1, "Item = ");
+          return out;);
 };
 
 using Group_handle = std::shared_ptr<Group>;

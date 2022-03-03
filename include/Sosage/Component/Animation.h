@@ -71,6 +71,8 @@ public:
   virtual int ymin() const;
   virtual int ymax() const;
   bool next_frame();
+
+  STR_NAME("Animation");
 };
 
 using Animation_handle = std::shared_ptr<Animation>;

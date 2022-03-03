@@ -58,8 +58,12 @@ public:
                Handle if_true,
                Handle if_false = Handle());
   virtual ~Conditional();
-  virtual std::string str() const;
   virtual Handle get() const;
+
+  STR_NAME("Conditional");
+  STR_SUB(return component_str(m_condition, indent+1, "Condition = ")
+          + component_str(m_if_true, indent+1, "If true = ")
+          + component_str(m_if_true, indent+1, "If true = "););
 };
 
 using Conditional_handle = std::shared_ptr<Conditional>;
@@ -74,7 +78,6 @@ public:
   String_conditional (const std::string& entity, const std::string& component,
                       String_handle state);
   virtual ~String_conditional();
-  virtual std::string str() const;
   void add (const std::string& state, Handle h);
   void set (const std::string& state, Handle h);
   virtual Handle get() const;
@@ -90,7 +93,6 @@ public:
 
   Random_conditional (const std::string& entity, const std::string& component);
   virtual ~Random_conditional();
-  virtual std::string str() const;
   void add (Handle h);
   virtual Handle get() const;
 };

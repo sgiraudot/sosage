@@ -64,7 +64,6 @@ public:
          const std::string& text, bool outlined = false);
   Image (const std::string& entity, const std::string& component, std::shared_ptr<Image> copy);
   void compose_with (const std::shared_ptr<Image>& other);
-  virtual std::string str() const;
   void set_relative_origin (double ratio_x, double ratio_y);
   const Core::Graphic::Image& core() const;
   const Point& origin() const;
@@ -88,6 +87,8 @@ public:
   unsigned char alpha() const;
   void set_highlight (unsigned char alpha);
   bool is_target_inside (int x, int y) const;
+
+  STR_NAME("Image");
 };
 
 using Image_handle = std::shared_ptr<Image>;

@@ -25,6 +25,7 @@
 */
 
 #include <Sosage/Component/Base.h>
+#include <Sosage/Utils/demangle.h>
 #include <Sosage/Utils/profiling.h>
 
 namespace Sosage::Component
@@ -98,7 +99,17 @@ const std::string& Base::component() const
 
 std::string Base::str() const
 {
-  return m_id.first + ":" + m_id.second;
+  std::string out = str_name() + "(" + m_id.first + ":" + m_id.second + ")";
+  std::string v = str_value();
+  if (v != "")
+    out += " = " + v;
+  return out;
+}
+
+std::string component_str (Handle handle, const std::size_t& indent, const std::string& prefix)
+{
+  return std::string(indent*2, '-') + prefix + (handle ? handle->str() : "nullptr") + "\n"
+      + (handle ? handle->str_sub(indent) : "");
 }
 
 } // namespace Sosage::Component

@@ -46,6 +46,8 @@ public:
   const Core::Sound::Music& core() const;
   const bool& on() const;
   bool& on();
+
+  STR_NAME("Music");
 };
 
 using Music_handle = std::shared_ptr<Music>;

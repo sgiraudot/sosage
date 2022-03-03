@@ -29,6 +29,7 @@
 
 #include <Sosage/Component/Base.h>
 #include <Sosage/Utils/geometry.h>
+#include <Sosage/Utils/conversions.h>
 
 #include <functional>
 
@@ -60,11 +61,13 @@ public:
 
   Absolute_position (const std::string& entity, const std::string& component,
                      const Point& coord, bool is_interface = true);
-  virtual std::string str() const;
   virtual Point value () const;
   virtual void set (const Point& p);
   bool is_interface() const;
   bool& is_interface();
+
+  STR_NAME("Absolute_position");
+  STR_VALUE("Point(" + to_string(m_pos.x()) + ";" + to_string(m_pos.y()) + ")");
 };
 
 using Absolute_position_handle = std::shared_ptr<Absolute_position>;
@@ -86,6 +89,10 @@ public:
   virtual void set (const Point& p);
   void set (const Sosage::Vector& v);
   bool is_interface() const;
+
+  STR_NAME("Relative_position");
+  STR_VALUE("Vector(" + to_string(m_diff.x()) + ";" + to_string(m_diff.y()) + ")");
+  STR_SUB(return component_str(m_ref, indent+1, "Reference -> "););
 };
 
 class Functional_position : public Position
@@ -104,6 +111,9 @@ public:
   virtual Point value() const;
   virtual void set (const Point& p);
   bool is_interface() const;
+
+  STR_NAME("Functional_position");
+  STR_VALUE("arg(" + m_arg + ")");
 };
 
 

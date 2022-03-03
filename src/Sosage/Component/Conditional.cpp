@@ -52,14 +52,6 @@ Conditional::~Conditional()
   m_if_false = Handle();
 }
 
-std::string Conditional::str() const
-{
-  std::string ift = "[" + (m_if_true ? m_if_true->str() : "NULL") + "]";
-  std::string iff = "[" + (m_if_false ? m_if_false->str() : "NULL") + "]";
-  return Base::str() + " -> " + m_condition->str() + " ? "
-    + ift + " : " + iff;
-}
-
 Handle Conditional::get() const
 {
   return (m_condition->value() ? m_if_true : m_if_false);
@@ -75,12 +67,6 @@ String_conditional::~String_conditional()
 {
   m_state = String_handle();
   m_handles.clear();
-}
-
-std::string String_conditional::str() const
-{
-  return Base::str() + " -> " + m_state->str() + " ? "
-    + (get() ? get()->str() : "NULL");
 }
 
 void String_conditional::add (const std::string& state, Handle h)
@@ -112,11 +98,6 @@ Random_conditional::Random_conditional (const std::string& entity, const std::st
 Random_conditional::~Random_conditional()
 {
   m_handles.clear();
-}
-
-std::string Random_conditional::str() const
-{
-  return Base::str() + " -> " + get()->str();
 }
 
 void Random_conditional::add (Handle h)

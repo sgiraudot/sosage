@@ -43,6 +43,8 @@ public:
   Sound (const std::string& entity, const std::string& component, const std::string& file_name);
   virtual ~Sound();
   const Core::Sound::Sound& core() const;
+
+  STR_NAME("Sound");
 };
 
 using Sound_handle = std::shared_ptr<Sound>;

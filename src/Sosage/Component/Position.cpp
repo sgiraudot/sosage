@@ -45,12 +45,6 @@ Absolute_position::Absolute_position (const std::string& entity, const std::stri
   }
 }
 
-std::string Absolute_position::str() const
-{
-  return Base::str() + " (" + std::to_string (m_pos.x())
-    + ";" + std::to_string(m_pos.y()) + ")";
-}
-
 Point Absolute_position::value () const
 {
   return m_pos;

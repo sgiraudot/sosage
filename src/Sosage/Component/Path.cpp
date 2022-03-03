@@ -39,14 +39,6 @@ Path::Path (const std::string& entity, const std::string& component, std::vector
   m_steps.swap(steps);
 }
 
-std::string Path::str() const
-{
-  std::string out = Base::str();
-  for (const Point& p : m_steps)
-    out += " (" + std::to_string(p.x()) + ";" + std::to_string(p.y()) + ")";
-  return out;
-}
-
 std::size_t Path::size() const
 {
   return m_steps.size();

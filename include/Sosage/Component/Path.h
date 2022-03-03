@@ -44,12 +44,13 @@ public:
 
   Path (const std::string& entity, const std::string& component, const Point& coord);
   Path (const std::string& entity, const std::string& component, std::vector<Point>& steps);
-  virtual std::string str() const;
   std::size_t size() const;
   const Point& operator[] (const std::size_t& idx) const;
   Point& operator[] (const std::size_t& idx);
   const std::size_t& current() const;
   std::size_t& current();
+
+  STR_NAME("Path");
 };
 
 using Path_handle = std::shared_ptr<Path>;

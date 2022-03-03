@@ -105,7 +105,7 @@ void Test_input::run_mouse()
     remove ("Action", "finish", true);
 
   // Generate random click in 10% of cases
-  if (!status()->is(LOCKED) && (random_chance(0.1)))
+  if (!status()->is(LOCKED, CUTSCENE) && (random_chance(0.1)))
   {
     Point target (random_int(0, Config::world_width), random_int(0, Config::world_height));
     debug << "[TEST MOUSE] Random click at " << target << std::endl;
@@ -347,7 +347,7 @@ void Test_input::run_touchscreen()
     remove ("Path", "finish", true);
 
   // Generate random click in 10% of cases
-  if (!status()->is(LOCKED) && (random_chance(0.1)))
+  if (!status()->is(LOCKED, CUTSCENE) && (random_chance(0.1)))
   {
     Point target (random_int(0, Config::world_width), random_int(0, Config::world_height));
     debug << "[TEST TOUCH] Random click at " << target << std::endl;
@@ -727,7 +727,6 @@ Point Test_input::cursor_target (const std::string& id)
 
 std::function<void(void)> Test_input::new_mode()
 {
-  //return BIND(run_mouse_chaos);
   return random_choice ({ BIND(run_mouse),
                           BIND(run_mouse_chaos),
                           BIND(run_touchscreen),

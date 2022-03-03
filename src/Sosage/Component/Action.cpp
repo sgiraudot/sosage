@@ -89,21 +89,6 @@ bool Action::on() const
  return m_on;
 }
 
-std::string Action::str() const
-{
-  std::string out = Base::str() + ":\n";
-  
-  for (const Step& s : m_steps)
-  {
-    out += " * " + s.function() + " ";
-    for (std::size_t i = 0; i < s.args().size(); ++ i)
-      out += s.args()[i] + " ";
-    out += "\n";
-  }
-
-  return out;
-}
-
 std::size_t Action::size() const
 {
   return m_steps.size();
@@ -131,6 +116,7 @@ void Action::schedule (double time, Handle h)
 
 void Action::reset_scheduled()
 {
+  debug << this->str() << " reset scheduled" << std::endl;
   m_timed.clear();
 }
 

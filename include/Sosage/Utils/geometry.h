@@ -94,6 +94,7 @@ public:
 
   friend std::ostream& operator<< (std::ostream& os, const Point& c)
   {
+    os.precision(18);
     os << "Point(" << c.m_x << ";" << c.m_y << ")";
     return os;
   }
@@ -134,8 +135,9 @@ public:
 
   friend Orientation orientation (const Point& a, const Point& b, const Point& c)
   {
-    int val = (b.m_y - a.m_y) * (c.m_x - b.m_x) -
+    double val = (b.m_y - a.m_y) * (c.m_x - b.m_x) -
               (b.m_x - a.m_x) * (c.m_y - b.m_y); 
+
 
     if (val == 0)
       return COLINEAR;
@@ -233,6 +235,11 @@ public:
     
     if (o0 != o1 && o2 != o3)
       return true;
+
+    // We ignore colinear intersections (only point intersection are needed)
+    return false;
+
+    // Outdated incomplete code = does not work if one segment contains entirely the other
     if (o0 == COLINEAR && a.projection(b.m_source).second)
       return true; 
     if (o1 == COLINEAR && a.projection(b.m_target).second)

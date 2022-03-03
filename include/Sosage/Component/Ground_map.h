@@ -91,7 +91,7 @@ class Ground_map : public Base
     }
   };
 
-  const double snapping_dist = 2.;
+  const double snapping_dist = 5.;
   Core::Graphic::Surface m_image;
   int m_radius;
   int m_front_z;
@@ -146,6 +146,7 @@ public:
   Neighbor_query closest_intersected_edge (const Point& p, const Sosage::Vector& direction,
                                            const Edge_condition& condition) const;
 
+  STR_NAME("Ground_map");
 };
 
 using Ground_map_handle = std::shared_ptr<Ground_map>;

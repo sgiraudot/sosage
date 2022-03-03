@@ -69,6 +69,8 @@ public:
   int xmax();
   int ymin();
   int ymax();
+
+  STR_NAME("Code");
 };
 
 using Code_handle = std::shared_ptr<Code>;

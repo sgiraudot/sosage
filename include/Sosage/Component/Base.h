@@ -30,6 +30,10 @@
 #include <memory>
 #include <string>
 
+#define STR_NAME(x) virtual std::string str_name() const { return x; }
+#define STR_VALUE(x) virtual std::string str_value() const { return x; }
+#define STR_SUB(x) virtual std::string str_sub(const std::size_t& indent) const { x }
+
 namespace Sosage::Component
 {
 
@@ -52,10 +56,16 @@ public:
   std::string character_entity() const;
   std::string target_entity() const;
   const std::string& component() const;
-  virtual std::string str() const;
+  std::string str() const;
+
+  STR_NAME("Base");
+  STR_VALUE("");
+  virtual std::string str_sub(const std::size_t&) const { return ""; }
 };
 
 using Handle = std::shared_ptr<Base>;
+
+std::string component_str(Handle handle, const std::size_t& indent, const std::string& prefix = "");
 
 template <typename T>
 class Value : public Base

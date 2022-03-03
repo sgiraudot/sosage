@@ -49,6 +49,8 @@ public:
   virtual int xmax() const;
   virtual int ymin() const;
   virtual int ymax() const;
+
+  STR_NAME("Cropped");
 };
 
 using Cropped_handle = std::shared_ptr<Cropped>;

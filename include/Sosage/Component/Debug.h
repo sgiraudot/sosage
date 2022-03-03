@@ -46,6 +46,8 @@ public:
   Debug (const std::string& entity, const std::string& component, Content& content, const Clock& clock);
   virtual ~Debug();
   std::string debug_str();
+
+  STR_NAME("Debug");
 };
 
 using Debug_handle = std::shared_ptr<Debug>;

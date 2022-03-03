@@ -41,6 +41,9 @@ public:
   Variable (const std::string& entity, const std::string& component, Handle target);
   void set (Handle target);
   virtual Handle get() const;
+
+  STR_NAME("Variable");
+  STR_SUB(return component_str(m_target, indent+1, "Target = "););
 };
 
 using Variable_handle = std::shared_ptr<Variable>;

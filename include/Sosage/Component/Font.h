@@ -43,6 +43,8 @@ public:
   Font (const std::string& entity, const std::string& component, const std::string& file_name, int size);
   virtual ~Font();
   const Core::Graphic::Font& core() const;
+
+  STR_NAME("Font");
 };
 
 using Font_handle = std::shared_ptr<Font>;

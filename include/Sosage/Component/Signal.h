@@ -37,6 +37,8 @@ class Signal : public Base
 public:
 
   Signal (const std::string& entity, const std::string& component);
+
+  STR_NAME("Signal");
 };
 
 using Signal_handle = std::shared_ptr<Signal>;

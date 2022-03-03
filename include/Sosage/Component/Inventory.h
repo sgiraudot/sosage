@@ -61,6 +61,8 @@ public:
   std::size_t position() const;
   std::string get (std::size_t i) const;
   const std::vector<std::string>& data() const;
+
+  STR_NAME("Inventory");
 };
 
 using Inventory_handle = std::shared_ptr<Inventory>;

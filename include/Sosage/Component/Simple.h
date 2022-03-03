@@ -38,6 +38,12 @@ namespace Sosage::Component
 {
 
 template <typename T>
+std::string type_name (T*) { return typeid(T).name(); }
+inline std::string type_name (int*) { return "int"; }
+inline std::string type_name (double*) { return "double"; }
+inline std::string type_name (std::string*) { return "std::string"; }
+
+template <typename T>
 class Simple : public Base
 {
 public:
@@ -60,6 +66,8 @@ public:
     m_value = value;
     mark_as_altered();
   }
+
+  STR_NAME("Simple<" + type_name((T*)(nullptr)) + ">");
 };
 
 template <typename T>
@@ -89,6 +97,8 @@ public:
 
   const T& operator[] (const std::size_t& idx) const
   { return this->m_value[idx]; }
+
+  STR_NAME("Array<" + type_name((T*)(nullptr)) + "," + std::to_string(S) + ">");
 };
 
 template <typename T, std::size_t S>
@@ -104,6 +114,7 @@ public:
     : Base(entity, component, value) { }
 
   void push_back (const T& t) { this->m_value.push_back (t); }
+  STR_NAME("Vector<" + type_name((T*)(nullptr)) + ">");
 };
 
 template <typename T>
@@ -125,6 +136,8 @@ public:
 
   typename set_t::const_iterator begin() const { return this->m_value.begin(); }
   typename set_t::const_iterator end() const { return this->m_value.end(); }
+
+  STR_NAME("Set<" + type_name((T*)(nullptr)) + ">");
 };
 
 template <typename T>
@@ -147,6 +160,7 @@ public:
   T2& second() { return this->m_value.second(); }
   const T2& second() const { return this->m_value.second(); }
 
+  STR_NAME("Pair<" + type_name((T1*)(nullptr)) + "," + type_name((T2*)(nullptr)) + ">");
 };
 
 template <typename T1, typename T2>
@@ -178,6 +192,8 @@ public:
   {
     return std::get<I>(this->m_value);
   }
+
+  STR_NAME("Tuple<...>");
 };
 
 template <typename ... T>

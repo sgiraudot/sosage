@@ -53,7 +53,32 @@ public:
   bool is (const Sosage::Status& s1, const Sosage::Status& s2);
   bool is (const Sosage::Status& s1, const Sosage::Status& s2, const Sosage::Status& s3);
   bool was (const Sosage::Status& s);
-  virtual std::string str() const;
+
+  STR_NAME("Status");
+  STR_VALUE([&]()
+            {
+              auto copy = m_value;
+              std::string out = "";
+              while (!copy.empty())
+              {
+                Sosage::Status s = copy.top();
+                copy.pop();
+                if (s == IDLE) out += " idle";
+                else if (s == CUTSCENE) out += " cutscene";
+                else if (s == PAUSED) out += " pause";
+                else if (s == LOCKED) out += " locked";
+                else if (s == ACTION_CHOICE) out += " action";
+                else if (s == INVENTORY_ACTION_CHOICE) out += " inventory_action";
+                else if (s == DIALOG_CHOICE) out += " dialog";
+                else if (s == OBJECT_CHOICE) out += " object";
+                else if (s == IN_INVENTORY) out += " in_inventory";
+                else if (s == IN_MENU) out += " in_menu";
+                else if (s == IN_WINDOW) out += " in_window";
+                else if (s == IN_CODE) out += " in_code";
+              }
+              return out;
+            }());
+
 };
 
 using Status_handle = std::shared_ptr<Status>;

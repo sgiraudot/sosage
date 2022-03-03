@@ -468,6 +468,8 @@ void Ground_map::find_path (Point origin, Sosage::Vector direction, std::vector<
       edge = query.edge;
   }
 
+  debug_gm << "Find path from " << origin << " with direction " << direction << std::endl;
+  std::size_t repeat = 0;
   while (true)
   {
     // if free point
@@ -491,6 +493,37 @@ void Ground_map::find_path (Point origin, Sosage::Vector direction, std::vector<
     //   else
     //     edge = first intersected edge
     //     out.push_back(snapping point)
+
+    debug_gm << "Iteration " << repeat << ": ";
+    if (vertex != Graph::null_vertex())
+    {
+      debug_gm << "v" << vertex << " = " << m_latest_graph[vertex].point;
+    }
+    else if (edge != Graph::null_vertex())
+    {
+      debug_gm << "e" << edge << "(v" << m_latest_graph.source(edge)
+               << ", v" << m_latest_graph.target(edge)
+               << ") = (" << m_latest_graph[m_latest_graph.source(edge)].point
+               << ", " << m_latest_graph[m_latest_graph.target(edge)].point
+               << ")" << std::endl;
+    }
+
+    if (!out.empty())
+    {
+      debug_gm << " latest=" << out.back() << std::endl;
+    }
+
+    ++ repeat;
+    if (repeat > m_graph.num_edges() + m_graph.num_vertices())
+    {
+      debug_gm << "Loop has run for too long, first points are: ";
+      for (std::size_t i = 0; i < 50; ++ i)
+      {
+        debug_gm << out[i] << " ";
+      }
+      debug_gm << std::endl;
+      check(false, "Infinite loop while finding path");
+    }
 
     if (vertex != Graph::null_vertex())
     {
@@ -639,6 +672,7 @@ Ground_map::Neighbor_query Ground_map::closest_simplex (const Point& p) const
     debug_gm << "Dist(v" << v << "," << p << ") = " << dist << std::endl;
     if (dist < min_dist)
     {
+      debug_gm << " -> v" << v << " is now best candidate" << std::endl;
       point = m_graph[v].point;
       min_dist = dist;
       vertex = v;
@@ -662,12 +696,18 @@ Ground_map::Neighbor_query Ground_map::closest_simplex (const Point& p) const
       debug_gm << "Dist(e" << e << "," << p << ") = " << dist << std::endl;
       if (dist < min_dist)
       {
+        debug_gm << " -> e" << e << " is now best candidate" << std::endl;
         point = proj;
         min_dist = dist;
         vertex = Graph::null_vertex();
         edge = e;
       }
     }
+  }
+
+  if (min_dist > snapping_dist)
+  {
+    debug_gm << "Free point because " << min_dist << " > " << snapping_dist << std::endl;
   }
   
   return {vertex, edge, min_dist, point};

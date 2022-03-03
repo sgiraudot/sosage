@@ -74,6 +74,9 @@ public:
   virtual void finalize();
   virtual void update_impl (double current_time);
   virtual const Id& object_id();
+
+  STR_NAME("GUI_position_animation");
+  STR_SUB(return component_str(m_position, indent+1, "Animated = "););
 };
 
 using GUI_position_animation_handle = std::shared_ptr<GUI_position_animation>;
@@ -97,6 +100,9 @@ public:
   virtual void finalize();
   virtual void update_impl (double current_time);
   virtual const Id& object_id();
+
+  STR_NAME("GUI_image_animation");
+  STR_SUB(return component_str(m_image, indent+1, "Animated = "););
 };
 
 using GUI_image_animation_handle = std::shared_ptr<GUI_image_animation>;

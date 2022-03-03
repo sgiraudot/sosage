@@ -88,6 +88,8 @@ public:
       if (m_graph[e].status != DISABLED)
         choices.push_back (m_graph[e].line);
   }
+
+  STR_NAME("Dialog");
 };
 
 using Dialog_handle = std::shared_ptr<Dialog>;
