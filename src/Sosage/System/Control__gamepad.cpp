@@ -59,13 +59,22 @@ void Control::idle_gamepad()
 
   if (receive("Action", "inventory"))
   {
-    status()->push (IN_INVENTORY);
+    m_status = IN_INVENTORY;
+    status()->push (m_status);
+    end_status(IDLE);
+    begin_status(m_status);
     emit("Click", "play_sound");
     emit ("Cancel", "action");
+    const std::string& id = value<C::String>("Player", "name");
+    remove(id , "path", true);
+    emit(id, "stop_walking");
   }
   else if (receive("Action", "look"))
   {
     emit ("Cancel", "action");
+    const std::string& id = value<C::String>("Player", "name");
+    remove(id , "path", true);
+    emit(id, "stop_walking");
     if (auto active_object = request<C::String>("Interface", "active_object"))
     {
       if (auto right = request<C::Boolean>(active_object->value() + "_goto", "right"))
