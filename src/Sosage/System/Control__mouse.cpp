@@ -122,7 +122,6 @@ void Control::idle_touchscreen()
 
 void Control::idle_sub_click (const std::string& target)
 {
-  emit ("Click", "play_sound");
   emit ("Cancel", "action");
   auto source = request<C::String>("Interface", "source_object");
   if (target != "")
@@ -135,16 +134,21 @@ void Control::idle_sub_click (const std::string& target)
         set<C::Variable>("Character", "triggered_action", action);
       else
         set<C::Variable>("Character", "triggered_action", get<C::Action>("Default_inventory", "action"));
+      emit ("Click", "play_sound");
       remove("Interface", "source_object");
     }
     // Object is path to another room
     else if (auto right = request<C::Boolean>(target + "_goto", "right"))
+    {
       set_action(target + "_goto", "Default_goto");
+      emit ("Click", "play_sound");
+    }
     // Default
     else
     {
       set<C::String>("Interface", "action_choice_target", target);
       status()->push (ACTION_CHOICE);
+      emit ("Click", "play_sound");
     }
     remove ("Interface", "active_object");
   }
