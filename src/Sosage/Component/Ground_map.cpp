@@ -36,7 +36,7 @@
 #include <queue>
 #include <set>
 
-//#define SOSAGE_DEBUG_GROUND_MAP
+#define SOSAGE_DEBUG_GROUND_MAP
 #ifdef SOSAGE_DEBUG_GROUND_MAP
 #  define debug_gm debug
 #else

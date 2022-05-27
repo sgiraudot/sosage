@@ -41,6 +41,10 @@
 #define SOSAGE_TEST_INPUT
 #endif
 
+#ifdef SOSAGE_CFG_GUILESS
+#define SOSAGE_GUILESS
+#endif
+
 #ifdef SOSAGE_CFG_USE_SDL_TIME
 #define SOSAGE_SDL_TIME
 #endif

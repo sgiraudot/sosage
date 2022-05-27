@@ -183,11 +183,16 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
 
   SDL_FillRect(surf, nullptr, SDL_MapRGBA(surf->format, Uint8(r), Uint8(g), Uint8(b), Uint8(a)));
 
+#ifndef SOSAGE_GUILESS
   Texture text = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf);
   check (text != Texture(), "Cannot create rectangle texture ("
          + std::string(SDL_GetError()) + ")");
+#else
+  Texture text;
+#endif
   Image out (text, Bitmap(), surf->w, surf->h, 1, (unsigned char)(255));
 
+#ifndef SOSAGE_GUILESS
   if (a == 0) // special ellipse highlight for fully transparent objects
   {
     SDL_Surface* highlight = SDL_CreateRGBSurface (0, surf->w,
@@ -211,6 +216,7 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
     out.highlight = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, highlight);
     SDL_FreeSurface (highlight);
   }
+#endif
 
   SDL_FreeSurface(surf);
 
@@ -273,6 +279,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
 
          height = surf->h;
          width = surf->w;
+#ifndef SOSAGE_GUILESS
          int width_max = m_info.max_texture_width;
          int height_max = m_info.max_texture_height;
          if (surf->w > width_max || surf->h > height_max)
@@ -301,7 +308,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
            SDL_FreeSurface(old);
            SOSAGE_TIMER_STOP(SDL_Image__load_image_texture_downscale);
          }
-
+#endif
          m_image_info.make_mapped (file_name, [](int w, int h, double td) -> std::tuple<int,int,double>*
          {
           return new std::tuple<int,int,double>(w,h,td);
@@ -309,9 +316,13 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
          width, height, texture_downscale);
 
          SOSAGE_TIMER_START(SDL_Image__load_image_texture);
+#ifndef SOSAGE_GUILESS
          SDL_Texture* out = SDL_CreateTextureFromSurface(m_renderer, surf);
          check (out != nullptr, "Cannot create texture from " + file_name
          + " (" + std::string(SDL_GetError()) + ")");
+#else
+         SDL_Texture* out = nullptr;
+#endif
          SOSAGE_TIMER_STOP(SDL_Image__load_image_texture);
          return out;
        });
@@ -344,6 +355,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
   }
 
   Image out (text, mask, width, height, 1);
+#ifndef SOSAGE_GUILESS
   if (with_highlight)
   {
     if (surf == nullptr)
@@ -358,6 +370,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
       SOSAGE_TIMER_STOP(SDL_Image__load_image_hightlight_2);
     }
   }
+#endif
 
   out.texture_downscale = texture_downscale;
   SDL_FreeSurface(surf);
@@ -378,6 +391,7 @@ SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
     total_width += width (img);
   }
 
+#ifndef SOSAGE_GUILESS
   Texture texture = m_textures.make_single
                     (SDL_CreateTexture, m_renderer, SDL_PIXELFORMAT_ARGB8888,
                      SDL_TEXTUREACCESS_TARGET, total_width, total_height);
@@ -426,6 +440,9 @@ SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
   }
 
   SDL_SetRenderTarget(m_renderer, nullptr);
+#else
+  Texture texture, highlight;
+#endif
 
   Image out (texture, Bitmap(), total_width, total_height);
   out.highlight = highlight;
@@ -452,6 +469,7 @@ SDL::Font SDL::load_font (const std::string& file_name, int size)
 
 Bitmap_2* SDL::create_mask (SDL_Surface* surf)
 {
+  debug << "SURF = " << surf->w << "x" << surf->h << std::endl;
   Bitmap_2* out = new Bitmap_2 (surf->w, surf->h);
 
   Surface_access access (surf);
@@ -504,8 +522,12 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
     int width = surf->w;
     int height = surf->h;
     check (surf != nullptr, "Cannot create text \"" + text + "\"");
+#ifndef SOSAGE_GUILESS
     Texture out = m_textures.make_single(SDL_CreateTextureFromSurface, m_renderer, surf);
     check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
+#else
+    Texture out;
+#endif
     SDL_FreeSurface (surf);
     return Image (out, Bitmap(), width, height);
   }
@@ -534,8 +556,12 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
        }, width, height, 1.);
 
        check (surf != nullptr, "Cannot create text \"" + text + "\"");
+#ifndef SOSAGE_GUILESS
        SDL_Texture* out = SDL_CreateTextureFromSurface(m_renderer, surf);
        check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
+#else
+       SDL_Texture* out = nullptr;
+#endif
        SDL_FreeSurface (surf);
        return out;
      });
@@ -581,8 +607,12 @@ SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& 
          return new std::tuple<int,int,double>(w,h,td);
        }, width, height, 1.);
 
+#ifndef SOSAGE_GUILESS
        SDL_Texture* out = SDL_CreateTextureFromSurface(m_renderer, back);
        check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
+#else
+       SDL_Texture* out = nullptr;
+#endif
        SDL_FreeSurface (surf);
        SDL_FreeSurface (back);
        return out;
@@ -686,6 +716,9 @@ SDL::SDL ()
 
 void SDL::init (int& window_width, int& window_height, bool fullscreen)
 {
+#ifdef SOSAGE_GUILESS
+  putenv("SDL_VIDEODRIVER=dummy");
+#endif
   int okay = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
   check (okay != -1, "Cannot initialize SDL");
 
@@ -695,6 +728,7 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
   okay = TTF_Init();
   check (okay != -1, "Cannot initialize SDL TTF");
 
+#ifndef SOSAGE_GUILESS
   if (window_width == -1 || window_height == -1)
   {
     SDL_DisplayMode DM;
@@ -732,6 +766,7 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
   SDL_RenderClear (m_renderer);
   SDL_RenderPresent (m_renderer);
   SDL_ShowCursor(SDL_DISABLE);
+#endif
 
   SDL_GameController *controller = NULL;
   for (int i = 0; i < SDL_NumJoysticks(); ++i) {
@@ -752,8 +787,10 @@ SDL::~SDL ()
   clear_managers();
   TTF_Quit ();
   IMG_Quit ();
+#ifndef SOSAGE_GUILESS
   SDL_DestroyRenderer (m_renderer);
   SDL_DestroyWindow (m_window);
+#endif
   SDL_Quit ();
 }
 
@@ -797,6 +834,7 @@ void SDL::toggle_cursor (bool visible)
 
 void SDL::begin()
 {
+#ifndef SOSAGE_GUILESS
   // Out of bound background is gray
   SDL_SetRenderDrawColor (m_renderer, 48, 48, 48, 255);
   SDL_RenderClear (m_renderer);
@@ -810,6 +848,7 @@ void SDL::begin()
 
   SDL_SetRenderDrawColor(m_renderer, Uint8(0), Uint8(0), Uint8(0), 255);
   SDL_RenderFillRect(m_renderer, &rect);
+#endif
 }
 
 void SDL::draw (const Image& image,
@@ -818,6 +857,7 @@ void SDL::draw (const Image& image,
                 const int xtarget, const int ytarget,
                 const int wtarget, const int htarget)
 {
+#ifndef SOSAGE_GUILESS
   SDL_Rect source;
   source.x = image.texture_downscale * xsource;
   source.y = image.texture_downscale * ysource;
@@ -837,18 +877,22 @@ void SDL::draw (const Image& image,
     SDL_SetTextureAlphaMod(image.highlight.get(), image.highlight_alpha);
     SDL_RenderCopy(m_renderer, image.highlight.get(), &source, &target);
   }
+#endif
 }
 
 void SDL::draw_line (const int xa, const int ya, const int xb, const int yb,
                      unsigned int red, unsigned green, unsigned blue)
 {
+#ifndef SOSAGE_GUILESS
   SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), 255);
   SDL_RenderDrawLine (m_renderer, xa, ya, xb, yb);
+#endif
 }
 
 void SDL::draw_square (const int x, const int y, const int size,
                      unsigned int red, unsigned green, unsigned blue)
 {
+#ifndef SOSAGE_GUILESS
   SDL_Rect rect;
   rect.x = x - size / 2;
   rect.y = y - size / 2;
@@ -857,11 +901,13 @@ void SDL::draw_square (const int x, const int y, const int size,
 
   SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), 255);
   SDL_RenderFillRect(m_renderer, &rect);
+#endif
 }
 
 void SDL::draw_rectangle (const int x, const int y, const int width, const int height,
                           unsigned int red, unsigned green, unsigned blue, unsigned alpha)
 {
+#ifndef SOSAGE_GUILESS
   SDL_Rect rect;
   rect.x = x - width / 2;
   rect.y = y - height / 2;
@@ -870,11 +916,14 @@ void SDL::draw_rectangle (const int x, const int y, const int width, const int h
 
   SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), Uint8(alpha));
   SDL_RenderFillRect(m_renderer, &rect);
+#endif
 }
 
 void SDL::end ()
 {
+#ifndef SOSAGE_GUILESS
   SDL_RenderPresent (m_renderer);
+#endif
 }
 
 } // namespace Sosage::Third_party
