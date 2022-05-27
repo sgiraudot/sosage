@@ -70,11 +70,14 @@ bool Logic::function_add (const std::vector<std::string>& args)
 
     auto action = request<C::Action>(id, std::to_string(integer->value()));
     if (!action)
-      action = get<C::Action>(id , "default");
+      action = request<C::Action>(id , "default");
 
-    action->launch();
-    while (action->on())
-      apply_next_step (action);
+    if (action)
+    {
+      action->launch();
+      while (action->on())
+        apply_next_step (action);
+    }
   }
   else
   {

@@ -668,10 +668,10 @@ void Interface::menu_clicked ()
 
   if (effect->value() == "Save_and_quit")
   {
-#ifndef SOSAGE_TEST_INPUT // Avoid quitting when testing input
+//#ifndef SOSAGE_TEST_INPUT // Avoid quitting when testing input
     emit ("Game", "save");
     emit ("Game", "exit");
-#endif
+//#endif
   }
   else if (effect->value() == "New_game")
   {

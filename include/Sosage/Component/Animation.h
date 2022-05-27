@@ -65,6 +65,7 @@ public:
   const std::vector<Frame>& frames() const;
   std::vector<Frame>& frames();
   bool loop() const;
+  bool animated() const;
   int reset(bool all_frames = true, int duration = 1);
   virtual int xmin() const;
   virtual int xmax() const;

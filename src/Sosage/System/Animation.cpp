@@ -215,6 +215,9 @@ void Animation::run_animation_frame()
   for (auto c : components("stop_talking"))
   {
     const std::string& id = c->entity();
+    auto mhead = get<C::Position>(id + "_head_move", "position");
+    mhead->set (Point (0, 0));
+
     generate_random_idle_head_animation (id, is_looking_right(id));
     to_remove.push_back (c);
   }
@@ -329,7 +332,27 @@ void Animation::run_animation_frame()
   for (auto c : components("image"))
     if (auto anim = C::cast<C::Animation>(c))
       if (anim->on())
+      {
         animations.push_back(anim);
+
+        if (anim->animated())
+        {
+          // Randomly move head if character speaking
+          auto pos = anim->entity().find("_mouth");
+          if (pos != std::string::npos)
+          {
+            if (random_int(0,3) == 0)
+            {
+              std::string entity (anim->entity().begin(), anim->entity().begin() + pos);
+              auto mhead = get<C::Position>(entity + "_head_move", "position");
+
+              double direction = random_double(0, 2 * M_PI);
+              double length = random_double (2, 4);
+              mhead->set (Point (length * std::cos(direction), length * std::sin(direction)));
+            }
+          }
+        }
+      }
 
   for (C::Handle c : to_remove)
     remove(c);
@@ -512,6 +535,8 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
   if (!looking_right)
     row_index = 1;
 
+   mouth->frames().push_back ({0, row_index, 1});
+
   // Generate 10 poses with transitions
   int pose = 1;
   for (int i = 0; i < 10; ++ i)
@@ -532,14 +557,12 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
 
       // Stand still for a while
       head->frames().push_back ({pose, row_index, next_blink});
-      mouth->frames().push_back ({0, row_index, next_blink});
 
       if (remaining == 0)
         break;
 
       // Blink eyes
       head->frames().push_back ({0, row_index, 1});
-      mouth->frames().push_back ({0, row_index, 1});
     }
 
     if (random_int(0,4) == 0)

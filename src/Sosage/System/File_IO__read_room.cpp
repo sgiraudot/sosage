@@ -140,15 +140,19 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
     pbody = set<C::Absolute_position>(id + "_body", "position", Point(x, y), false);
   }
 
+  auto move_head = set<C::Absolute_position>(id + "_head_move", "position", Point(0,0), false);
+
   auto phead = set<C::Functional_position>
                (id + "_head", "position",
                 [&](const std::string& id) -> Point
                 {
                   auto abody = get<C::Image>(id + "_body", "image");
                   auto pbody = get<C::Position>(id + "_body", "position");
+                  auto mhead = get<C::Position>(id + "_head_move", "position");
                   return (pbody->value() - abody->core().scaling
-                          * value<C::Simple<Vector>>(id + "_head",
-                                                     (is_looking_right(id) ? "gap_right" : "gap_left")));
+                          * (value<C::Simple<Vector>>(id + "_head",
+                                                     (is_looking_right(id) ? "gap_right" : "gap_left"))
+                             + Vector(mhead->value())));
                 }, id);
 
   set<C::Functional_position>
@@ -501,20 +505,21 @@ void File_IO::read_integer (const std::string& id, const Core::File_IO::Node& no
   if (!integer)
     integer = set<C::Int>(id , "value", value);
 
-  for (std::size_t i = 0; i < node["triggers"].size(); ++ i)
-  {
-    const Core::File_IO::Node& itrigger = node["triggers"][i];
-
-    std::string value = itrigger["value"].string();
-
-    auto action = set<C::Action>(id, value);
-
-    for (std::size_t k = 0; k < itrigger["effect"].size(); ++ k)
+  if (node.has("triggers"))
+    for (std::size_t i = 0; i < node["triggers"].size(); ++ i)
     {
-      std::string function = itrigger["effect"][k].nstring();
-      action->add (function, itrigger["effect"][k][function].string_array());
+      const Core::File_IO::Node& itrigger = node["triggers"][i];
+
+      std::string value = itrigger["value"].string();
+
+      auto action = set<C::Action>(id, value);
+
+      for (std::size_t k = 0; k < itrigger["effect"].size(); ++ k)
+      {
+        std::string function = itrigger["effect"][k].nstring();
+        action->add (function, itrigger["effect"][k][function].string_array());
+      }
     }
-  }
 }
 
 void File_IO::read_object (const std::string& id, const Core::File_IO::Node& input)

@@ -67,6 +67,11 @@ bool Animation::loop() const
   return m_loop;
 }
 
+bool Animation::animated() const
+{
+  return m_frames.size() > 1;
+}
+
 int Animation::reset (bool all_frames, int duration)
 {
   int out = 0;

@@ -42,6 +42,7 @@
 #include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/error.h>
 #include <Sosage/Utils/geometry.h>
+#include <Sosage/Utils/helpers.h>
 
 #include <algorithm>
 #include <fstream>
@@ -532,7 +533,7 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
     std::string line;
     std::tie (character, line) = dialog->line();
     const std::string& player = value<C::String>("Player", "name");
-    if (player != character)
+    if (player != character && character != "Hinter")
       action->add ("look", { character });
 
     action->add ("talk", { character, line });
@@ -646,7 +647,11 @@ void Logic::create_hints()
   auto dialog = set<C::Dialog>("Hints", "dialog", "End_hints");
   set<C::String>("Hinter", "color", "FFFFFF");
   const std::string& player = value<C::String>("Player", "name");
-  set<C::Variable>("Hinter_body", "position", get<C::Position>(player + "_body", "position"));
+
+  Vector diff ((is_looking_right(player) ? 50 : -50), 0);
+  set<C::Relative_position>("Hinter_body", "position",
+                            get<C::Position>(player + "_body", "position"),
+                            diff);
 
   auto first = dialog->add_vertex ("Hinter", value<C::String>("Hint_welcome", "text"));
   auto choice = dialog->add_vertex();
