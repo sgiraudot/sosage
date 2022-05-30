@@ -346,8 +346,9 @@ void Animation::run_animation_frame()
               std::string entity (anim->entity().begin(), anim->entity().begin() + pos);
               auto mhead = get<C::Position>(entity + "_head_move", "position");
 
+              int radius = value<C::Int>(entity, "head_move_radius", 4);
               double direction = random_double(0, 2 * M_PI);
-              double length = random_double (2, 4);
+              double length = random_double (radius / 2., radius);
               mhead->set (Point (length * std::cos(direction), length * std::sin(direction)));
             }
           }

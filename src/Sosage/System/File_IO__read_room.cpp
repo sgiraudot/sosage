@@ -65,6 +65,9 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   std::string color = input["color"].string();
   set<C::String> (id , "color", color);
 
+  if (input.has("head_move_radius"))
+    set<C::Int> (id, "head_move_radius", input["head_move_radius"].integer());
+
   bool visible = value<C::Boolean>(id , "visible", true);
   remove(id , "visible", true);
 
