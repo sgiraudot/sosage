@@ -201,6 +201,13 @@ void Engine::handle_cmdline_args (int argc, char** argv)
         break;
       m_content.set<Component::String>("Cmdline", "locale", argv[i]);
     }
+    else if (arg == "--save" || arg == "-s")
+    {
+      ++ i;
+      if (i == argc)
+        break;
+      m_content.set<Component::String>("Save", "suffix", argv[i]);
+    }
   }
 }
 

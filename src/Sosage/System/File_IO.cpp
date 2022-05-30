@@ -222,7 +222,7 @@ void File_IO::write_config()
 
 bool File_IO::read_savefile()
 {
-  Core::File_IO input ("save.yaml", true);
+  Core::File_IO input ("save" + value<C::String>("Save", "suffix", "") +  ".yaml", true);
   if (!input.parse())
   {
     debug << "Can't parse save file" << std::endl;
@@ -312,7 +312,7 @@ bool File_IO::read_savefile()
 
 void File_IO::write_savefile()
 {
-  Core::File_IO output ("save.yaml", true, true);
+  Core::File_IO output ("save" + value<C::String>("Save", "suffix", "") +  ".yaml", true, true);
 
   output.write("room", value<C::String>("Game", "current_room"));
   output.write("player", value<C::String>("Player", "name"));
