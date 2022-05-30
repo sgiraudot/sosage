@@ -213,6 +213,7 @@ public:
   Line to_line() const;
   Box box() const;
   double length() const;
+  double projected_coordinate (const Point& p) const;
   std::pair<Point, bool> projection (const Point& p) const;
   
   friend std::ostream& operator<< (std::ostream& os, const Segment& s)

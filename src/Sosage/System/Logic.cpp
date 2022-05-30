@@ -189,6 +189,25 @@ void Logic::run ()
   if (receive ("Cursor", "clicked"))
     compute_path_from_target(get<C::Position>(CURSOR__POSITION));
 
+  if (receive ("Game", "test"))
+  {
+#if 0 // Uncomment to quickly test paths
+    auto ground_map = get<C::Ground_map>("background", "ground_map");
+    std::vector<Point> path;
+    try
+    {
+      ground_map->find_path (Point (500.240088725850512, 798.635244713044244),
+                             Vector (1.2107818576964271, 0.0870193337609507928), path);
+    }
+    catch (std::runtime_error&)
+    {
+      debug << "ERROR!" << std::endl;
+      //exit(1);
+    }
+    set<C::Absolute_position>("Debug_body", "position", Point (500.240088725850512, 798.635244713044244));
+    set<C::Path>("Debug", "path", path);
+#endif
+  }
 
   if (receive ("Stick", "moved"))
   {

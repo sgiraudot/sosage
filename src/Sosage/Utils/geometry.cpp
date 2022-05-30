@@ -149,6 +149,13 @@ double Segment::length() const
   return distance (m_source.x(), m_source.y(), m_target.x(), m_target.y());
 }
 
+double Segment::projected_coordinate (const Point& p) const
+{
+  Line l = to_line();
+  Point proj = l.projection(p);
+  return distance (m_source, proj);
+}
+
 std::pair<Point, bool> Segment::projection (const Point& p) const
 {
   Line l = to_line();

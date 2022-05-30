@@ -205,7 +205,7 @@ void Graphic::run()
         ([&](const Point& point)
         {
           Point p = point - camera;
-          m_core.draw_square (p.X(), p.Y(), 10);
+          m_core.draw_square (p.X(), p.Y(), 5);
         });
 
         ground_map->for_each_edge
@@ -226,7 +226,7 @@ void Graphic::run()
             for (std::size_t p = path->current(); p < path->size(); ++ p)
             {
               Point next = (*path)[p] - camera;
-            m_core.draw_square (next.X(), next.Y(), 10, 0, 255, 0);
+            m_core.draw_square (next.X(), next.Y(), 5, 0, 255, 0);
             m_core.draw_line (current.X(), current.Y(),
                               next.X(), next.Y(), 0, 255, 0);
             current = next;

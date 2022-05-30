@@ -279,7 +279,7 @@ void Animation::run_animation_frame()
   for (auto c : components("path"))
     if (auto path = C::cast<C::Path>(c))
     {
-      if (!compute_movement_from_path(path))
+      if (path->entity() != "Debug" && !compute_movement_from_path(path))
         to_remove.push_back(c);
       else if (path->entity() == value<C::String>("Player", "name"))
         has_moved = true;

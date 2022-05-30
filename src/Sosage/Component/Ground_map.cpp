@@ -207,6 +207,7 @@ void Ground_map::build_graph (const std::function<void()>& callback)
 
   debug << "Edges = " << m_graph.num_edges() << std::endl;
 
+  // Add edges between vertices
   for (auto it0 = m_graph.vertices().begin(); it0 != m_graph.vertices().end(); ++ it0)
   {
     GVertex v0 = *it0;
@@ -217,6 +218,7 @@ void Ground_map::build_graph (const std::function<void()>& callback)
       GVertex v1 = *it1;
       if (m_graph.is_edge(v0, v1))
         continue;
+
       Segment seg (m_graph[v0].point, m_graph[v1].point);
       if (intersects_border
           (m_graph, seg,
@@ -231,8 +233,37 @@ void Ground_map::build_graph (const std::function<void()>& callback)
       if (!is_ground_point(mid))
         continue;
 
-      GEdge e = m_graph.add_edge(v0, v1);
-      m_graph[e].border = false;
+      // Snap to close vertices along the way
+      std::vector<GVertex> vertices_along = { v0, v1 };
+      for (auto v : m_graph.vertices())
+      {
+        if (v == v0 || v == v1)
+          continue;
+        auto project = seg.projection(m_graph[v].point);
+        if (!project.second)
+          continue;
+
+        if (distance(m_graph[v].point, project.first) > snapping_dist * 2)
+          continue;
+
+        vertices_along.push_back(v);
+      }
+      std::sort (vertices_along.begin(), vertices_along.end(),
+                 [&](const GVertex& a, const GVertex& b) -> bool
+      {
+        return seg.projected_coordinate(m_graph[a].point)
+            < seg.projected_coordinate(m_graph[b].point);
+      });
+
+      for (std::size_t i = 0; i < vertices_along.size() - 1; ++ i)
+      {
+        GVertex a = vertices_along[i];
+        GVertex b = vertices_along[i+1];
+        if (m_graph.is_edge(a, b))
+          continue;
+        GEdge e = m_graph.add_edge(a, b);
+        m_graph[e].border = false;
+      }
     }
     callback();
   }
@@ -499,7 +530,7 @@ void Ground_map::find_path (Point origin, Sosage::Vector direction, std::vector<
     {
       debug_gm << "v" << vertex << " = " << m_latest_graph[vertex].point;
     }
-    else if (edge != Graph::null_vertex())
+    else if (edge != Graph::null_edge())
     {
       debug_gm << "e" << edge << "(v" << m_latest_graph.source(edge)
                << ", v" << m_latest_graph.target(edge)
@@ -832,7 +863,7 @@ Ground_map::Neighbor_query Ground_map::closest_intersected_edge (const Point& p,
     // Tricky case: midpoint might lie on edge or vertex
     // If it does, use it as next edge
     out = closest_simplex(mid);
-    if (out.dist > snapping_dist)
+    if (condition(out.edge) || out.dist > snapping_dist)
       return Neighbor_query();
   }
 

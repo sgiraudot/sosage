@@ -160,6 +160,9 @@ void Input::run()
     if (ev == Event(KEY_UP, D))
       get<C::Boolean>("Game", "debug")->toggle();
 
+    if (ev == Event(KEY_UP, T))
+      emit("Game", "test");
+
 #ifdef SOSAGE_PROFILE
     if (ev == Event(KEY_UP, P))
     {

@@ -213,13 +213,13 @@ public:
     if (Directed || incident_edges(va).size() < incident_edges(vb).size())
     {
       for (std::size_t i = 0; i < incident_edges(va).size(); ++ i)
-        if (incident_vertex(va, 0) == vb)
+        if (incident_vertex(va, i) == vb)
           return true;
     }
     else
     {
       for (std::size_t i = 0; i < incident_edges(vb).size(); ++ i)
-        if (incident_vertex(vb, 0) == va)
+        if (incident_vertex(vb, i) == va)
           return true;
     }
     return false;
