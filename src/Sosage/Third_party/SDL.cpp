@@ -854,8 +854,8 @@ void SDL::begin()
 void SDL::draw (const Image& image,
                 const int xsource, const int ysource,
                 const int wsource, const int hsource,
-                const int xtarget, const int ytarget,
-                const int wtarget, const int htarget)
+                const double xtarget, const double ytarget,
+                const double wtarget, const double htarget)
 {
 #ifndef SOSAGE_GUILESS
   SDL_Rect source;
@@ -864,18 +864,18 @@ void SDL::draw (const Image& image,
   source.w = image.texture_downscale * wsource;
   source.h = image.texture_downscale * hsource;
 
-  SDL_Rect target;
+  SDL_FRect target;
   target.x = xtarget;
   target.y = ytarget;
   target.w = wtarget;
   target.h = htarget;
 
   SDL_SetTextureAlphaMod(image.texture.get(), image.alpha);
-  SDL_RenderCopy(m_renderer, image.texture.get(), &source, &target);
+  SDL_RenderCopyF(m_renderer, image.texture.get(), &source, &target);
   if (image.highlight != nullptr && image.highlight_alpha != 0)
   {
     SDL_SetTextureAlphaMod(image.highlight.get(), image.highlight_alpha);
-    SDL_RenderCopy(m_renderer, image.highlight.get(), &source, &target);
+    SDL_RenderCopyF(m_renderer, image.highlight.get(), &source, &target);
   }
 #endif
 }

@@ -183,8 +183,8 @@ void Graphic::run()
     double height_target = ymax_target - ymin_target;
 
     m_core.draw (img->core(), xmin, ymin, width, height,
-                 round(xmin_target), round(ymin_target),
-                 round(width_target), round(height_target));
+                 xmin_target, ymin_target,
+                 width_target, height_target);
   }
 
   if (auto pos = request<C::Position>("couloir", "position"))

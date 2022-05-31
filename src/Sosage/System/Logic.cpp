@@ -195,7 +195,7 @@ void Logic::run ()
   if (receive ("Game", "test"))
   {
 
-#if 1 // Uncomment to quickly test paths
+#if 0 // Uncomment to quickly test paths
     Point p (-0.5, 970);
     Vector v (0.562398475328108716, -0.629368298259299408);
     auto ground_map = get<C::Ground_map>("background", "ground_map");
