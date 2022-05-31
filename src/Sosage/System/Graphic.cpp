@@ -152,29 +152,6 @@ void Graphic::run()
     double ymin_target = std::get<2>(td);
     double xmax_target = std::get<3>(td);
     double ymax_target = std::get<4>(td);
-    double zoom = std::get<5>(td);
-
-    // Cut if image goes beyond boundaries
-    if (xmin_target < 0)
-    {
-      xmin -= round(xmin_target / (img->core().scaling * zoom));
-      xmin_target = 0;
-    }
-    if (ymin_target < 0)
-    {
-      ymin -= round(ymin_target / (img->core().scaling * zoom));
-      ymin_target = 0;
-    }
-    if (xmax_target > limit_width)
-    {
-      xmax -= round((xmax_target - limit_width) / (img->core().scaling * zoom));
-      xmax_target = limit_width;
-    }
-    if (ymax_target > limit_height)
-    {
-      ymax -= round((ymax_target - limit_height) / (img->core().scaling * zoom));
-      ymax_target = limit_height;
-    }
 
     int width = xmax - xmin;
     int height = ymax - ymin;
