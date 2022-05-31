@@ -121,6 +121,7 @@ private:
   void menu_gamepad();
   void menu_sub_triggered (const Event_value& key);
   void menu_sub_switch_active_item (bool right);
+  void flush_gamepad_keys();
   std::vector<std::string> detect_active_objects();
   Event_value stick_left_right();
   Event_value stick_up_down();

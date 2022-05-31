@@ -79,6 +79,7 @@ void emscripten_main_loop()
 
 Engine::Engine (int argc, char** argv)
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Engine::Engine()");
   debug << "Running Sosage " << Sosage::Version::str() << std::endl;
   srand(static_cast<unsigned int>(time(nullptr)));
 

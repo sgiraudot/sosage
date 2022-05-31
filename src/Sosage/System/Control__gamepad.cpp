@@ -91,6 +91,8 @@ void Control::idle_gamepad()
       emit("Click", "play_sound");
     }
   }
+
+  flush_gamepad_keys();
 }
 
 void Control::idle_sub_update_active_objects()
@@ -184,6 +186,7 @@ void Control::action_choice_gamepad()
     if (received_key != "")
       action_choice_sub_triggered (received_key);
   }
+  flush_gamepad_keys();
 }
 
 void Control::action_choice_sub_triggered (const std::string& key)
@@ -222,6 +225,8 @@ void Control::object_choice_gamepad()
 
   if (received_key != "")
     object_choice_sub_triggered (received_key);
+
+  flush_gamepad_keys();
 }
 
 void Control::object_choice_sub_triggered (const std::string& key)
@@ -278,6 +283,8 @@ void Control::inventory_gamepad()
 
   if (received_key != "")
     inventory_sub_triggered (received_key);
+
+  flush_gamepad_keys();
 }
 
 void Control::inventory_sub_switch_active_object (bool right)
@@ -362,6 +369,8 @@ void Control::window_gamepad()
     emit ("Interface", "hide_window");
     status()->pop();
   }
+
+  flush_gamepad_keys();
 }
 
 void Control::code_gamepad()
@@ -390,6 +399,8 @@ void Control::code_gamepad()
   else if (received_key == "look")
     if (code->click())
       emit ("code", "button_clicked");
+
+  flush_gamepad_keys();
 }
 
 void Control::dialog_gamepad()
@@ -411,6 +422,8 @@ void Control::dialog_gamepad()
 
   if (received_key == "look" || received_key == "inventory")
     dialog_sub_click ();
+
+  flush_gamepad_keys();
 }
 
 void Control::dialog_sub_switch_active_object (bool right)
@@ -459,6 +472,8 @@ void Control::menu_gamepad()
     menu_sub_triggered (SOUTH);
   else if (received_key == "look")
     menu_sub_triggered (EAST);
+
+  flush_gamepad_keys();
 }
 
 void Control::menu_sub_triggered (const Event_value& key)
@@ -574,6 +589,13 @@ void Control::menu_sub_switch_active_item (bool right)
   }
 
   set<C::String>("Interface", "active_menu_item", active_item->value());
+}
+
+void Control::flush_gamepad_keys()
+{
+  for (const std::string& key : {"move", "take", "inventory", "look"})
+    receive("Action", key);
+  remove("Switch", "right", true);
 }
 
 std::vector<std::string> Control::detect_active_objects()

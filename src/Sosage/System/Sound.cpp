@@ -45,6 +45,8 @@ Sound::Sound (Content& content)
 void Sound::run()
 {
   SOSAGE_TIMER_START(System_Sound__run);
+  SOSAGE_UPDATE_DBG_LOCATION("Sound::run()");
+
   auto music = request<C::Music>("Game", "music");
 
   double volume = value<C::Int>("Music", "volume") / 10.;

@@ -96,6 +96,8 @@ Logic::Logic (Content& content)
 void Logic::run ()
 {
   SOSAGE_TIMER_START(System_Logic__run);
+  SOSAGE_UPDATE_DBG_LOCATION("Logic::run()");
+
   m_current_time = value<C::Double> (CLOCK__TIME);
   update_debug_info (get<C::Debug>(GAME__DEBUG));
   if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU)
@@ -109,6 +111,36 @@ void Logic::run ()
     status()->pop();
 
   bool skip_dialog = receive("Game", "skip_dialog");
+
+  if (receive ("Cancel", "action"))
+  {
+    // Cancel current action
+    if (auto action = request<C::Action>("Character", "action"))
+    {
+      auto logic_action = get<C::Action>("Logic", "action");
+
+      for (const auto& th : action->scheduled())
+      {
+        if (th.first == 0) // special case for Path
+          continue;
+        if (th.second->entity().find("Comment_") == 0) // keep dialogs when moving
+          logic_action->schedule (th.first, th.second);
+        else
+        {
+          if (C::cast<C::Signal>(th.second))
+            set (th.second);
+          else
+            remove (th.second);
+        }
+      }
+
+      action->stop();
+      remove("Character", "action");
+      const std::string& id = value<C::String>("Player", "name");
+      remove(id , "path", true);
+      emit(id, "stop_walking");
+    }
+  }
 
   std::set<std::string> done;
   for (auto c : components("action"))
@@ -156,55 +188,28 @@ void Logic::run ()
         });
       }
 
-  if (receive ("Cancel", "action"))
-  {
-    // Cancel current action
-    if (auto action = request<C::Action>("Character", "action"))
-    {
-      auto logic_action = get<C::Action>("Logic", "action");
-
-      for (const auto& th : action->scheduled())
-      {
-        if (th.first == 0) // special case for Path
-          continue;
-        if (th.second->entity().find("Comment_") == 0) // keep dialogs when moving
-          logic_action->schedule (th.first, th.second);
-        else
-        {
-          if (C::cast<C::Signal>(th.second))
-            set (th.second);
-          else
-            remove (th.second);
-        }
-      }
-
-      action->stop();
-      remove("Character", "action");
-      const std::string& id = value<C::String>("Player", "name");
-      remove(id , "path", true);
-      emit(id, "stop_walking");
-    }
-  }
 
   if (receive ("Cursor", "clicked"))
     compute_path_from_target(get<C::Position>(CURSOR__POSITION));
 
   if (receive ("Game", "test"))
   {
-#if 0 // Uncomment to quickly test paths
+
+#if 1 // Uncomment to quickly test paths
+    Point p (-0.5, 970);
+    Vector v (0.562398475328108716, -0.629368298259299408);
     auto ground_map = get<C::Ground_map>("background", "ground_map");
     std::vector<Point> path;
+    ground_map->find_path (p, v, path);
     try
     {
-      ground_map->find_path (Point (500.240088725850512, 798.635244713044244),
-                             Vector (1.2107818576964271, 0.0870193337609507928), path);
     }
-    catch (std::runtime_error&)
+    catch (std::runtime_error& e)
     {
-      debug << "ERROR!" << std::endl;
+      debug << e.what() << std::endl;
       //exit(1);
     }
-    set<C::Absolute_position>("Debug_body", "position", Point (500.240088725850512, 798.635244713044244));
+    set<C::Absolute_position>("Debug_body", "position", p);
     set<C::Path>("Debug", "path", path);
 #endif
   }

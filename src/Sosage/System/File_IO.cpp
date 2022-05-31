@@ -80,6 +80,8 @@ File_IO::File_IO (Content& content)
 void File_IO::run()
 {
   SOSAGE_TIMER_START(System_File_IO__run);
+  SOSAGE_UPDATE_DBG_LOCATION("File_IO::run()");
+
   if (auto new_room = request<C::String>("Game", "new_room"))
   {
     read_room (new_room->value());

@@ -52,6 +52,7 @@ Input::Input (Content& content)
 void Input::run()
 {
   SOSAGE_TIMER_START(System_Input__run);
+  SOSAGE_UPDATE_DBG_LOCATION("Input::run()");
 
   bool keyboard_used = false;
   bool mouse_used = false;

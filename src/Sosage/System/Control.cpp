@@ -85,6 +85,7 @@ Control::Control(Content& content)
 void Control::run()
 {
   SOSAGE_TIMER_START(System_Control__run);
+  SOSAGE_UPDATE_DBG_LOCATION("Control::run()");
   const Input_mode& new_mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   const Status& new_status = status()->value();
 

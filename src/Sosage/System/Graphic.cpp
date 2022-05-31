@@ -62,6 +62,8 @@ void Graphic::init()
 void Graphic::run()
 {
   SOSAGE_TIMER_START(System_Graphic__run);
+  SOSAGE_UPDATE_DBG_LOCATION("Graphic::run()");
+
   if (receive("Game", "name_changed"))
     m_core.update_window (locale_get("Game", "name"), value<C::String>("Icon", "filename"));
 

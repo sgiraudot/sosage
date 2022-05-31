@@ -53,6 +53,8 @@ Test_input::Test_input (Content& content)
 
 void Test_input::run()
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Test_input::run()");
+
   // Allow exiting
   while (Event ev = m_core.next_event ())
   {

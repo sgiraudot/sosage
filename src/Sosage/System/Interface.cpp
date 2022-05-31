@@ -55,6 +55,8 @@ Interface::Interface (Content& content)
 void Interface::run()
 {
   SOSAGE_TIMER_START(System_Interface__run);
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::run()");
+
   update_active_objects();
   update_action_selector();
   update_object_switcher();

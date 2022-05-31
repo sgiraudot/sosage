@@ -49,6 +49,8 @@ Animation::Animation (Content& content)
 void Animation::run()
 {
   SOSAGE_TIMER_START(System_Animation__run);
+  SOSAGE_UPDATE_DBG_LOCATION("Animation::run()");
+
   std::size_t new_frame_id = frame_id(value<C::Double>(CLOCK__TIME));
 
   if (status()->is (PAUSED))

@@ -863,7 +863,8 @@ Ground_map::Neighbor_query Ground_map::closest_intersected_edge (const Point& p,
     // Tricky case: midpoint might lie on edge or vertex
     // If it does, use it as next edge
     out = closest_simplex(mid);
-    if (condition(out.edge) || out.dist > snapping_dist)
+    if ((out.edge != Graph::null_edge() && condition(out.edge))
+        || out.dist > snapping_dist)
       return Neighbor_query();
   }
 

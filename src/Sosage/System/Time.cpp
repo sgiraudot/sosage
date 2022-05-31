@@ -45,6 +45,8 @@ Time::Time (Content& content)
 void Time::run()
 {
   SOSAGE_TIMER_START(System_Time__run);
+  SOSAGE_UPDATE_DBG_LOCATION("Time::run()");
+
   bool frame_under_refresh_time = m_clock.wait(true);
   SOSAGE_COUNT(Frames);
   if (!frame_under_refresh_time)

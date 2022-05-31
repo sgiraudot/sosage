@@ -34,8 +34,14 @@
 #include <iostream>
 #include <sstream>
 
+#define SOSAGE_UPDATE_DBG_LOCATION(x) \
+  static const char* location = x;    \
+  dbg_location = const_cast<char*>(location);
+
 namespace Sosage
 {
+
+extern char* dbg_location;
 
 #if !defined(SOSAGE_DEBUG)
 #define debug if(false) std::cerr
