@@ -117,6 +117,7 @@ void Logic::run ()
     // Cancel current action
     if (auto action = request<C::Action>("Character", "action"))
     {
+      debug << "Cancel action " << action->str() << std::endl;
       auto logic_action = get<C::Action>("Logic", "action");
 
       for (const auto& th : action->scheduled())

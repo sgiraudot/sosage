@@ -626,20 +626,25 @@ void Interface::update_dialog_choices()
 {
   if (receive("Dialog", "clean"))
   {
-    const std::vector<std::string>& choices
-        = value<C::Vector<std::string> >("Dialog", "choices");
-
-    // Clean up
-    for (int c = int(choices.size()) - 1; c >= 0; -- c)
+    // Optional, if user is really quick, choice can be
+    // made *before* images are actually created
+    if (request<C::Image>("Dialog_choice_background", "image"))
     {
-      std::string entity = "Dialog_choice_" + std::to_string(c);
-      remove(entity + "_off", "image");
-      remove(entity + "_off", "position");
-      remove(entity + "_on", "image");
-      remove(entity + "_on", "position");
+      const std::vector<std::string>& choices
+          = value<C::Vector<std::string> >("Dialog", "choices");
+
+      // Clean up
+      for (int c = int(choices.size()) - 1; c >= 0; -- c)
+      {
+        std::string entity = "Dialog_choice_" + std::to_string(c);
+        remove(entity + "_off", "image");
+        remove(entity + "_off", "position");
+        remove(entity + "_on", "image");
+        remove(entity + "_on", "position");
+      }
+      remove("Dialog_choice_background", "image");
+      remove("Dialog_choice_background", "position");
     }
-    remove("Dialog_choice_background", "image");
-    remove("Dialog_choice_background", "position");
   }
 
   if (!status()->is(DIALOG_CHOICE) && !status()->was(DIALOG_CHOICE))

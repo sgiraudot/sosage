@@ -763,6 +763,12 @@ bool Logic::function_trigger (const std::vector<std::string>& args)
   if (auto action = request<C::Action>(id , "action"))
   {
     action->launch();
+
+    // If trigger is from the character action, then the new action
+    // becomes the character action
+    auto char_action = request<C::Action>("Character", "action");
+    if (m_current_action == char_action)
+      set<C::Variable>("Character", "action", action);
     return true;
   }
 
