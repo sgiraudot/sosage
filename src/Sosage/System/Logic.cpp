@@ -520,6 +520,8 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
 
   if (!is_continue)
   {
+    if (status()->is(IN_INVENTORY))
+      status()->pop();
     status()->push(LOCKED);
     if (auto pos = request<C::Int>("Saved_game", "dialog_position"))
     {
