@@ -151,7 +151,9 @@ double Yaml::Node::time() const
 void Yaml::Node::print(std::string prefix)
 {
   if (value != "")
-    std::cerr << prefix << " -> " << value << std::endl;
+  {
+    debug << prefix << " -> " << value << std::endl;
+  }
   else
   {
     for (const auto& m : map)

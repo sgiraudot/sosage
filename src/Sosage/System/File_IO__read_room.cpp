@@ -270,17 +270,17 @@ void File_IO::read_room (const std::string& file_name)
 
   int current_depth = -Config::cursor_depth;
 
-  std::cerr << "[LAYERS BEGIN]" << std::endl;
+  debug << "[LAYERS BEGIN]" << std::endl;
   for (C::Image_handle img : images)
   {
     if (img->z() != current_depth)
     {
       current_depth = img->z();
-      std::cerr << "# Depth " << current_depth << ":" << std::endl;
+      debug << "# Depth " << current_depth << ":" << std::endl;
     }
-    std::cerr << "  * " << img->str() << std::endl;
+    debug << "  * " << img->str() << std::endl;
   }
-  std::cerr << "[LAYERS END]" << std::endl;
+  debug << "[LAYERS END]" << std::endl;
 #endif
 
   SOSAGE_TIMER_STOP(File_IO__read_room);
@@ -572,7 +572,7 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
       {
         state_handle->set(state);
         state_handle->mark_as_unaltered();
-        std::cerr << "Set state " << state << " to " << id << std::endl;
+        debug << "Set state " << state << " to " << id << std::endl;
       }
       conditional_handle = set<C::String_conditional>(id , "image", state_handle);
     }

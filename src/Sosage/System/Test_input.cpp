@@ -63,11 +63,10 @@ void Test_input::run()
   }
 
   // For scripted input, uncomment and add whatever is needed
-
 //  static int nb = 0;
 //  if (nb == 1)
 //  {
-//    get<C::Position> (CURSOR__POSITION)->set(cursor_target("bouteille"));
+//    get<C::Position> (CURSOR__POSITION)->set(cursor_target("cable"));
 //    emit ("Cursor", "clicked");
 //    set<C::Boolean>("Click", "left", true);
 //  }

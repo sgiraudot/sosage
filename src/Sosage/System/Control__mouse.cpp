@@ -524,7 +524,6 @@ void Control::dialog_mouse()
     choice = to_int(std::string(collision.begin() +
                                     std::ptrdiff_t(std::string("Dialog_choice_").size()),
                                     collision.end()));
-    std::cerr << "Choice = " << choice << std::endl;
     set<C::Int>("Interface", "active_dialog_item", choice);
   }
   else

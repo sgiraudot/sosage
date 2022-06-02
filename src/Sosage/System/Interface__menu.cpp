@@ -750,7 +750,7 @@ void Interface::menu_clicked ()
 
 void Interface::apply_setting (const std::string& setting, const std::string& v)
 {
-  std::cerr << "Apply setting " << v << " to " << setting << std::endl;
+  debug << "Apply setting " << v << " to " << setting << std::endl;
   if (setting == "Language")
   {
     auto available = value<C::Vector<std::string>>("Game", "available_locales");

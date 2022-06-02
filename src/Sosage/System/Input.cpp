@@ -175,9 +175,9 @@ void Input::run()
         if (comp.size() <= 3)
           ++ nb_small;
       }
-      std::cerr << m_content.size() << " UNIQUE COMPONENTS" << std::endl;
-      std::cerr << "(" << nb_small << " small ones -> "
-                << 100. * nb_small / m_content.size() << "%)" << std::endl;
+      debug << m_content.size() << " UNIQUE COMPONENTS" << std::endl;
+      debug << "(" << nb_small << " small ones -> "
+            << 100. * nb_small / m_content.size() << "%)" << std::endl;
     }
 #endif
 
@@ -329,7 +329,6 @@ void Input::run()
         if ((ev.value() == UP_ARROW || ev.value() == DOWN_ARROW ||
              ev.value() == RIGHT_ARROW || ev.value() == LEFT_ARROW))
         {
-          std::cerr << "DPAD" << std::endl;
           m_x = 0;
           m_y = 0;
 
