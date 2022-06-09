@@ -250,6 +250,8 @@ bool Logic::function_load (const std::vector<std::string>& args)
   check (args.size() == 2, "function_load takes 2 arguments");
   set<C::String>("Game", "new_room", args[0]);
   set<C::String>("Game", "new_room_origin", args[1]);
+  if (status()->is(CUTSCENE))
+    status()->pop();
   status()->push(LOCKED);
   return true;
 }
