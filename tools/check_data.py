@@ -12,7 +12,7 @@ root_folder = sys.argv[1]
 verbose = False
 if len(sys.argv) > 2 and sys.argv[2] == '-v':
     verbose = True
-exit_at_first_error = True
+exit_at_first_error = False
 
 clean_unused = False
 if len(sys.argv) > 2 and sys.argv[2] == '-c':
@@ -760,13 +760,14 @@ for filename in yaml_files:
                 refname = filename + ":integers"
                 if test(i, "id"):
                     refname = filename + ":" + i["id"]
-                if test(i, "triggers", is_array):
-                    for t in i["triggers"]:
-                        if test(t, "value"):
-                            if not is_convertible_to_int(t["value"]) and t["value"] != "default":
-                                error("value is neither int nor default (" + t["value"] + ")")
-                        if "effect" in t:
-                            test(t, "effect", test_action)
+                if "triggers" in i:
+                    if test(i, "triggers", is_array):
+                        for t in i["triggers"]:
+                            if test(t, "value"):
+                                if not is_convertible_to_int(t["value"]) and t["value"] != "default":
+                                    error("value is neither int nor default (" + t["value"] + ")")
+                            if "effect" in t:
+                                test(t, "effect", test_action)
 
         if "actions" in data:
             for a in data["actions"]:
