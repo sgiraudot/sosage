@@ -240,7 +240,7 @@ void File_IO::read_room (const std::string& file_name)
       }
   }
 
-  // Special handling for inventory after reloading save (may need to
+  // Special handling for inventory/numbers after reloading save (may need to
   // search in other rooms for the object)
   auto inventory = get<C::Inventory>("Game", "inventory");
   for (std::size_t i = 0; i < inventory->size(); ++ i)
@@ -251,6 +251,15 @@ void File_IO::read_room (const std::string& file_name)
       read_object (inventory->get(i), subfile.root());
       callback->value();
     }
+  if (auto numbers = request<C::Vector<std::string>>("phone_numbers", "list"))
+    for (std::size_t i = 0; i < numbers->value().size(); ++ i)
+      if (!request<C::Action>(numbers->value()[i], "action"))
+      {
+        Core::File_IO subfile ("data/actions/" + numbers->value()[i] + ".yaml");
+        subfile.parse();
+        read_action (numbers->value()[i], subfile.root());
+        callback->value();
+      }
 
   emit ("Game", "in_new_room");
   emit ("Game", "loading_done");

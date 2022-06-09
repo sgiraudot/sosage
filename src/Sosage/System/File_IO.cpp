@@ -102,8 +102,11 @@ void File_IO::clean_content()
     for (const std::string& entity : *inventory)
       force_keep.insert (entity);
     if (auto phone_numbers = request<C::Vector<std::string>>("phone_numbers", "list"))
+    {
+      force_keep.insert("phone_numbers");
       for (const std::string& entity : phone_numbers->value())
         force_keep.insert (entity);
+    }
   }
   else
   {
@@ -246,6 +249,13 @@ bool File_IO::read_savefile()
   for (std::size_t i = 0; i < input["inventory"].size(); ++ i)
     inventory->add(input["inventory"][i].string());
 
+  if (input.has("phone_numbers"))
+  {
+    auto numbers = set<C::Vector<std::string>>("phone_numbers", "list");
+    for (std::size_t i = 0; i < input["phone_numbers"].size(); ++ i)
+      numbers->push_back(input["phone_numbers"][i].string());
+  }
+
   double camera_target = input["camera"].floating();
   get<C::Absolute_position>(CAMERA__POSITION)->set (Point(camera_target, 0));
   auto action = set<C::Action>("Saved_game", "action");
@@ -322,6 +332,8 @@ void File_IO::write_savefile()
     output.write("follower", value<C::String>("Follower", "name"));
   output.write("camera", value<C::Absolute_position>(CAMERA__POSITION).x());
   output.write("inventory", get<C::Inventory>("Game", "inventory")->data());
+  if (auto numbers = request<C::Vector<std::string>>("phone_numbers", "list"))
+    output.write("phone_numbers", numbers->value());
   output.write("music", get<C::Music>("Game", "music")->entity());
 
   if (auto dialog = request<C::String>("Game", "current_dialog"))
