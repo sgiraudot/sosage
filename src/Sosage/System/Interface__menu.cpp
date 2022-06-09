@@ -855,6 +855,11 @@ void Interface::update_phone_menu()
         uptodate = false;
         break;
       }
+      else if (!request<C::Image>((*phone_menu)[idx].image()->entity(), (*phone_menu)[idx].image()->component()))
+      {
+        uptodate = false;
+        break;
+      }
       ++ idx;
     }
   }
