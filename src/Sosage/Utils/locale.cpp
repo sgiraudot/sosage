@@ -33,6 +33,8 @@
 #elif defined(SOSAGE_WINDOWS)
 #  include <wchar.h>
 #  include <winnls.h>
+#elif defined(SOSAGE_MAC)
+#  include <CoreFoundation/CoreFoundation.h>
 #else
 #  include <locale>
 #endif
@@ -62,6 +64,15 @@ std::string get_locale()
     return "";
   std::wstring ws (name, name + l);
   return std::string(ws.begin(), ws.end());
+#elif defined(SOSAGE_MAC)
+  CFLocaleRef cflocale = CFLocaleCopyCurrent();
+  CFStringRef language = (CFStringRef)CFLocaleGetValue(cflocale, kCFLocaleLanguageCode);
+  CFStringRef country = (CFStringRef)CFLocaleGetValue(cflocale, kCFLocaleCountryCode);
+  char lstr[256], cstr[256];
+  CFStringGetCString(language, lstr, 256, kCFStringEncodingUTF8);
+  CFStringGetCString(country, cstr, 256, kCFStringEncodingUTF8);
+  CFRelease(cflocale);
+  return std::string(lstr) + "_" + std::string(cstr);
 #else
   try // std::locale might throw runtime error if no locale declared
   {
