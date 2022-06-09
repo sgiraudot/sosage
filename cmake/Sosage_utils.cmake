@@ -23,11 +23,11 @@ set(CPACK_PACKAGE_EXECUTABLES "${SOSAGE_EXE_NAME};${SOSAGE_NAME}")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.md")
 
 set(CPACK_DEBIAN_PACKAGE_SECTION "games")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl2-2.0-0, libsdl2-image-2.0-0, libsdl2-mixer-2.0-0, libsdl2-ttf-2.0-0, libyaml-0-2, liblz4-1")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl2-2.0-0 (>=2.0.10), libsdl2-image-2.0-0, libsdl2-mixer-2.0-0, libsdl2-ttf-2.0-0, libyaml-0-2, liblz4-1")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE ${SOSAGE_URL})
 
 set(CPACK_RPM_PACKAGE_GROUP "Games")
-set(CPACK_RPM_PACKAGE_REQUIRES "SDL2, SDL2_image, SDL2_mixer, SDL2_ttf, libyaml, liblz4")
+set(CPACK_RPM_PACKAGE_REQUIRES "SDL2 >= 2.0.10, SDL2_image, SDL2_mixer, SDL2_ttf, libyaml, lz4-libs")
 set(CPACK_RPM_PACKAGE_URL ${SOSAGE_URL})
 set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/share/icons /usr/share/icons/hicolor /usr/share/icons/hicolor/scalable /usr/share/icons/hicolor/scalable/apps /usr/share/applications)
 
