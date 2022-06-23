@@ -294,9 +294,18 @@ bool Logic::function_look (const std::vector<std::string>& args)
 
   debug << "Action_look " << id << " " << target << std::endl;
 
-  if (target == "default" || !request<C::Position>(target , "position"))
+  if (auto t = request<C::String>("Click", "target"))
+  {
+    set<C::Absolute_position>(id , "lookat",
+                              value<C::Position>(t->value(), "position"));
+    remove(t);
+  }
+  else if (!request<C::Position>(target , "position"))
+  {
     set<C::Absolute_position>(id , "lookat",
                               value<C::Position>(CURSOR__POSITION));
+    debug << get<C::Action>("Character", "action")->target_entity() << std::endl;
+  }
   else
   {
     auto state = request<C::String>(target , "state");

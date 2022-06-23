@@ -130,6 +130,8 @@ void Control::idle_sub_click (const std::string& target)
     if (source)
     {
       std::string action_id = target + "_inventory_" + source->value();
+      set<C::String>("Click", "target", target);
+
       if (auto action = request<C::Action>(action_id , "action"))
         set<C::Variable>("Character", "triggered_action", action);
       else
@@ -326,6 +328,7 @@ void Control::object_choice_sub_click (const std::string& id)
 
   auto target = get<C::String>("Interface", "target_object");
   std::string action_id = target->value() + "_inventory_" + id;
+  set<C::String>("Click", "target", target->value());
   set_action (action_id, "Default_inventory");
   remove ("Interface", "target_object");
   remove("Interface", "active_object");
