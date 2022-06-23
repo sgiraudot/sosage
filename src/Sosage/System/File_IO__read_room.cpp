@@ -588,7 +588,7 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
     else
       conditional_handle = get<C::String_conditional>(id , "image");
 
-    if (!istate.has("skin"))
+    if (!istate.has("skin") && !istate.has("size"))
       conditional_handle->add(state, nullptr);
     else
     {
