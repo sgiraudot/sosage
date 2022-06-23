@@ -83,7 +83,6 @@ sosage_option(SOSAGE_CFG_PROFILE "Profile and display timing info (requires debu
 sosage_option(SOSAGE_CFG_USE_SDL_TIME "Use SDL clock instead of STL clock" OFF)
 sosage_option(SOSAGE_CFG_TEST_INPUT "Use auto generated input instead of user input for testing" OFF)
 sosage_option(SOSAGE_CFG_GUILESS "Do not instanciate window/renderer, for testing purposes" OFF)
-sosage_option(SOSAGE_COMPILE_TESTS "Compile test executables" OFF)
 sosage_option(SOSAGE_COMPILE_SCAP "Compile Sosage Compressed Data Packager" OFF)
 sosage_option(SOSAGE_CONFIG_ANDROID "Configure Sosage for Android" OFF)
 
@@ -278,39 +277,4 @@ if(SOSAGE_COMPILE_SCAP)
   add_executable("SCAP" "src/Sosage/SCAP.cpp" ${SCAP_SRC})
   target_link_libraries("SCAP" PUBLIC sosage)
   target_compile_options("SCAP" PUBLIC -DSOSAGE_SCAP)
-endif()
-
-if(SOSAGE_COMPILE_TESTS)
-
-  list(REMOVE_ITEM SOSAGE_SRC ${CMAKE_SOURCE_DIR}/src/Sosage/Sosage.cpp)
-
-  enable_testing()
-
-  set (SOSAGE_TEST_TARGETS "unit_Component_Ground_map")
-  set (SOSAGE_TEST_TARGETS ${SOSAGE_TEST_TARGETS} "check_data_validity")
-
-  foreach(target ${SOSAGE_TEST_TARGETS})
-    add_executable("test_${target}" "test/${target}.cpp" ${SOSAGE_SRC})
-    target_link_libraries("test_${target}" PUBLIC sosage)
-    sosage_add_test("test_${target}")
-  endforeach()
-
-  file(GLOB_RECURSE GROUND_MAPS "${SOSAGE_DATA_FOLDER}/data/images/backgrounds/*_map.png")
-  list(JOIN GROUND_MAPS "\;" GROUND_MAPS_STR)
-  target_compile_definitions("test_unit_Component_Ground_map" PUBLIC "-DSOSAGE_GROUND_MAPS=\"${GROUND_MAPS_STR}\"")
-
-  file(GLOB_RECURSE DATA_FILES "${SOSAGE_DATA_FOLDER}/data/data/*/*.yaml")
-  list(JOIN DATA_FILES "\;" DATA_FILES_STR)
-  target_compile_definitions("test_check_data_validity" PUBLIC "-DSOSAGE_DATA_FILES=\"${DATA_FILES_STR}\"")
-
-  file(GLOB_RECURSE SOSAGE_HEADERS "include/Sosage/*.h")
-  foreach(header ${SOSAGE_HEADERS})
-    string(REPLACE "/" "_" target ${header})
-    string(REPLACE "." "_" target ${target})
-    add_executable("check_header_${target}" "test/check_header.cpp")
-    target_compile_definitions("check_header_${target}" PUBLIC "-DSOSAGE_TESTED_HEADER=\"${header}\"")
-    target_link_libraries("check_header_${target}" PUBLIC sosage)
-    sosage_add_test("check_header_${target}")
-  endforeach()
-
 endif()
