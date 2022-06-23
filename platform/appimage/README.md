@@ -1,10 +1,9 @@
-# Sosage pour AppImage
+# Sosage for AppImage
 
-Pour générer un fichier AppImage portable pour les systèmes GNU/Linux:
+To generate a portable AppImage file for GNU/Linux systems:
 
-1. Installer Linux Deploy
-2. Lancer `create_appimage.sh` avec comme arguments
-  - Votre fichier Linux Deploy
-  - Le dossier de données de jeu
-  - Le nom de l'exécutable produit
-  
+1. Install Linux Deploy
+2. Run `create_appimage.sh` with, as arguments:
+  - Your Linux Deploy file
+  - The game data folder
+  - The name of the produced executable

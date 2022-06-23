@@ -1,6 +1,6 @@
 # Sosage (Superfluous Open Source Adventure Game Engine)
 
-## Dépendances
+## Dependencies
 
  - SDL2 (>= 2.0.10)
  - SDL2_Image
@@ -9,31 +9,25 @@
  - libyaml
  - liblz4
 
-## Données de jeu
+## Game Data
 
-Ce dépôt ne contient que le code source du moteur Sosage : les données
-de jeu sont fournies séparément. Pour compiler le jeu, il faut
-renseigner le dossier contenant les données de jeu via la variable
-cmake `SOSAGE_DATA_FOLDER`. Ce dossier doit contenir le fichier
-`config.cmake` fourni.
+This repository only contains the source code of the Sosage engine:
+game data are provided separately. To compile the game, you need to
+specify the folder containing game data through the cmake variable
+`SOSAGE_DATA_FOLDER`. That folder must contain the provided
+`config.cmake` file.
 
-## Compilation (GNU/Linux)
+## Compilation (Debian-based GNU/Linux)
 
-__ATTENTION : les données du jeu _Superflu Riteurnz_ ne sont
-compatibles qu'avec la version 1. Vous êtes actuellement sur la
-branche `dev` qui est la branche de développement, veuillez utilisez
-la branche `v1.0.x` pour compiler _Superflu Riteurnz_.__
+For Debian-based GNU/Linux distributions:
 
 1. `# apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev libyaml-dev liblz4-1`
 2. `$ mkdir build && cd build`
 3. `$ cmake .. -DCMAKE_BUILD_TYPE=Release -DSOSAGE_DATA_FOLDER=[where_the_data_is]`
 4. `$ make`
 
-## Autres plateformes
+Compilation should also work with other Linux distributions, with
+Windows and with MacOS
 
-La compilation devrait être similaire pour Windows et Mac OS (à part
-la gestion des dépendances, bien entendu).
-
-En ce qui concerne les plateformes nécessitant un traitement
-spécifique (Android, Emscripten, etc.), voir les différents
-`README.md` dans `platform`.
+For other platforms (Android, Emscripten, etc.), please refer to the
+`README.md` files in the subfolders of `platform`.
