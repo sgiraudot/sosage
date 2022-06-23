@@ -810,16 +810,18 @@ void SDL::update_window (const std::string& name, const std::string& icon_filena
 
 void SDL::update_view()
 {
-#if 1
-  SDL_RenderSetLogicalSize(m_renderer, Config::world_width, Config::world_height);
-#else
   int width, height;
   SDL_GetWindowSize (m_window, &width, &height);
   double ratio_w = width / double(Config::world_width);
   double ratio_h = height / double(Config::world_height);
   double ratio = std::min(ratio_w, ratio_h);
-  SDL_RenderSetScale (m_renderer, ratio, ratio);
-#endif
+
+  // To avoid fullscreen overlay to miss one pixel on the border
+  // because of integer rounding,
+  // we compute the "real" size (can be 1919 instead of 1920)
+  width = int(int(Config::world_width * ratio) / ratio);
+  height = int(int(Config::world_height * ratio) / ratio);
+  SDL_RenderSetLogicalSize(m_renderer, width, height);
 }
 
 void SDL::toggle_fullscreen (bool fullscreen)
