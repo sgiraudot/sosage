@@ -2,7 +2,38 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v1.2.0 (demo)` - TBD
+## `v1.2.0 (summer2022demo)` - 2022-06-27
+
+### Release Management
+
+- Global script to build for every platform
+- Cross-compilation Gnunux to MacOS
+- GUI-less mode (for auto-testing)
+- Automatic random-input testing
+
+### Interface and Menus
+
+- Phone numbers
+- Hint system integrated to the phone
+- Head moves while character speaks
+
+### Game Engine
+
+- Fully reworked component storing to be more efficient, limiting string constructions
+- Improved gamepad handling
+- Simultaneous actions at the same time
+- Camera zoom
+- Cutscenes are now simple rooms with specific functions
+- 60fps moves/scalings
+- Possibility to skip dialogs
+- Unified fade mechanism
+- Subpixel rendering
+- Stereo sound effects
+
+### Bug Fixes
+
+- Many many MANY bugs found from auto-random-input
+- Adjacent edges in graphs were broken, they are fixed
 
 ## `v1.1.0 (modern-ui)` - 2021-10-05
 
@@ -28,7 +59,7 @@ History of versions and modifications of the SOSAGE engine.
 - Precompute ground map borders
 - I18n support
 
-### Bug fixes
+### Bug Fixes
 
 - Music volume was not taken into account when starting a new music
 
