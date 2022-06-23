@@ -71,6 +71,7 @@ public:
   virtual int xmax() const;
   virtual int ymin() const;
   virtual int ymax() const;
+  const Frame& current_frame() const;
   bool next_frame();
 
   STR_NAME("Animation");

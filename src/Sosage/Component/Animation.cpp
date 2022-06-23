@@ -122,6 +122,11 @@ int Animation::ymax() const
   return h * (m_frames[m_current].y + 1);
 }
 
+const Animation::Frame& Animation::current_frame() const
+{
+ return m_frames[m_current];
+}
+
 bool Animation::next_frame()
 {
   if (++ m_frames[m_current].ellapsed == m_frames[m_current].duration)

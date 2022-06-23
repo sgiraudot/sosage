@@ -473,6 +473,8 @@ void File_IO::read_init ()
 
   std::string click_sound = input["click_sound"].string("sounds", "effects", "ogg");
   set<C::Sound>("Click", "sound", click_sound);
+  std::string step_sound = input["step_sound"].string("sounds", "effects", "ogg");
+  set<C::Sound>("Step", "sound", step_sound);
 
   std::string left_circle = input["circle"][0].string("images", "interface", "png");
   auto left_circle_img = set<C::Image>("Left_circle", "image", left_circle, 1, BOX, true);

@@ -354,6 +354,13 @@ void Animation::run_animation_frame()
               mhead->set (Point (length * std::cos(direction), length * std::sin(direction)));
             }
           }
+
+          pos = anim->entity().find("_body");
+          if (pos != std::string::npos && value<C::Boolean>(anim->character_entity(), "walking"))
+          {
+            if (anim->current_frame().x == 0 || anim->current_frame().x == 4)
+              emit ("Step", "play_sound");
+          }
         }
       }
 
