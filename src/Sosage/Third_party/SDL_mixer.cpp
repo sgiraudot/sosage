@@ -35,6 +35,7 @@ namespace Sosage::Third_party
 {
 
 SDL_mixer::SDL_mixer()
+  : m_current_channel(0)
 {
   int init = Mix_OpenAudio (44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
   check (init != -1, "Cannot initialized SDL Mixer (" + std::string(Mix_GetError() )+ ")");
@@ -73,10 +74,10 @@ void SDL_mixer::delete_sound (const SDL_mixer::Sound& sound)
   Mix_FreeChunk (sound);
 }
 
-void SDL_mixer::start_music (const SDL_mixer::Music& music, double percentage)
+void SDL_mixer::start_music (const SDL_mixer::Music& music, double volume)
 {
-  debug << "Start music with volume " << percentage << "% (" << int(percentage * Config::max_music_volume) << ")" << std::endl;
-  Mix_VolumeMusic(int(percentage * Config::max_music_volume));
+  debug << "Start music with volume " << volume << "% (" << int(volume * Config::max_music_volume) << ")" << std::endl;
+  Mix_VolumeMusic(int(volume * Config::max_music_volume));
   Mix_PlayMusic (music, -1);
 }
 
@@ -119,10 +120,14 @@ void SDL_mixer::resume_music (const SDL_mixer::Music&)
   Mix_ResumeMusic();
 }
 
-void SDL_mixer::play_sound (const SDL_mixer::Sound& sound, double percentage)
+void SDL_mixer::play_sound (const SDL_mixer::Sound& sound, double volume, double panning)
 {
-  Mix_VolumeChunk (sound, int(percentage * Config::max_music_volume));
-  Mix_PlayChannel(-1, sound, 0);
+  int left = int(panning * 2 * volume * Config::max_music_volume);
+  int right = int((1. - panning) * 2 * volume * Config::max_music_volume);
+  Mix_VolumeChunk (sound, 255);
+  Mix_SetPanning(m_current_channel, left, right);
+  Mix_PlayChannel(m_current_channel, sound, 0);
+  m_current_channel = (m_current_channel + 1) % 8;
 }
 
 

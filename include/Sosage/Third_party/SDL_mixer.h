@@ -40,7 +40,7 @@ namespace Sosage
 
 namespace Config
 {
-constexpr int max_music_volume = 100;
+constexpr int max_music_volume = 127;
 } // namespace Config
 
 namespace Third_party
@@ -55,6 +55,8 @@ public:
 
 private:
 
+  int m_current_channel;
+
 public:
 
   SDL_mixer ();
@@ -66,13 +68,13 @@ public:
   static void delete_music (const Music& music);
   static void delete_sound (const Sound& sound);
 
-  void start_music (const Music& music, double percentage);
+  void start_music (const Music& music, double volume);
   void stop_music();
   void fade (const Music& music, double time, bool in);
   void set_volume (double percentage);
   void pause_music (const Music& music);
   void resume_music (const Music& music);
-  void play_sound (const Sound& sound, double percentage);
+  void play_sound (const Sound& sound, double volume, double panning = 0.5);
 };
 
 } // namespace Third_party

@@ -424,6 +424,16 @@ bool Logic::function_play (const std::vector<std::string>& args)
   if (request<C::Base>(target , "sound"))
   {
     emit (target , "play_sound");
+    auto panning = set<C::Double>(target, "panning", 0.5);
+    if (auto entity = request<C::Action>("Character", "action"))
+    {
+      if (auto pos = request<C::Position>(entity->target_entity(), "position"))
+      {
+        Point point = pos->value() - value<C::Absolute_position>(CAMERA__POSITION);
+        panning->set(1. - (point.x() / Config::world_width));
+      }
+    }
+
     return true;
   }
   if (auto music = request<C::Music>(target , "music"))

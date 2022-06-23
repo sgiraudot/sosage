@@ -125,7 +125,8 @@ void Sound::run()
   for (C::Handle ev : components("play_sound"))
   {
     m_core.play_sound (get<C::Sound> (ev->entity() , "sound")->core(),
-                       value<C::Int>("Sounds", "volume") / 10.);
+                       value<C::Int>("Sounds", "volume") / 10.,
+                       value<C::Double>(ev->entity(), "panning", 0.5));
     to_remove.push_back (ev);
   }
 

@@ -359,7 +359,12 @@ void Animation::run_animation_frame()
           if (pos != std::string::npos && value<C::Boolean>(anim->character_entity(), "walking"))
           {
             if (anim->current_frame().x == 0 || anim->current_frame().x == 4)
+            {
               emit ("Step", "play_sound");
+              Point point = value<C::Position>(anim->character_entity(), "position")
+                          - value<C::Absolute_position>(CAMERA__POSITION);
+              set<C::Double>("Step", "panning", 1. - (point.x() / Config::world_width));
+            }
           }
         }
       }
