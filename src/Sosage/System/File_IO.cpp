@@ -260,6 +260,12 @@ bool File_IO::read_savefile()
   action->add ("play", { input["music"].string() });
   action->add ("fadein", { "0.5" });
 
+  for (std::size_t i = 0; i < input["hints"].size(); ++ i)
+  {
+    const Core::File_IO::Node& ihint = input["hints"][i];
+    action->add ("show", { ihint.string() });
+  }
+
   std::unordered_map<std::string, std::string> looking_right;
   for (std::size_t i = 0; i < input["characters"].size(); ++ i)
   {
@@ -343,6 +349,14 @@ void File_IO::write_savefile()
       output.write("dialog_position", value<C::Int>("Game", "dialog_position"));
     }
   }
+
+  output.start_section("hints");
+  {
+    auto hints = get<C::Set<std::string>>("Hints", "list");
+    for (const std::string& hint : hints->value())
+      output.write_list_item(std::string(hint.begin() + 5, hint.end()));
+  }
+  output.end_section();
 
   output.start_section("characters");
   for (C::Handle c : components("group"))
