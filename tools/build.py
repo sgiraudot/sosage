@@ -180,7 +180,7 @@ if data["mac"]:
     run_cmd("python3 ../tools/fix_mac_lib_paths.py install/" + gamename + ".app/Contents/MacOS/" + gamename)
     run_cmd("cp -r install " + steam_dir + "/mac")
     run_cmd("genisoimage -V " + gamename + ".app -D -R -apple -no-pad -o " + gamename + ".dmg install")
-    run_cmd("cp " + gamename + ".dmg " + output_dir + "/" + appname + "-mac.dmg")
+    run_cmd("cp " + gamename + ".dmg " + output_dir + "/" + appname + "-macos.dmg")
     chdir("..")
     run_cmd("rm -rf " + mac_buildir)
     end = time.perf_counter()

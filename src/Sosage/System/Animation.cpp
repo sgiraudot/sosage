@@ -42,7 +42,7 @@ namespace Sosage::System
 namespace C = ::Sosage::Component;
 
 Animation::Animation (Content& content)
-  : Base (content), m_frame_id(0), m_fade_to_remove(false)
+  : Base (content), m_frame_id(0)
 {
 }
 
@@ -88,13 +88,12 @@ void Animation::run_gui_frame()
 {
   if (auto camera_fade = request<C::Tuple<double, double, bool>>("Camera", "fade"))
   {
-    fade (camera_fade->get<0>(), camera_fade->get<1>(), camera_fade->get<2>());
-    m_fade_to_remove = camera_fade->get<2>();
-  }
-  else if (m_fade_to_remove)
-  {
-    get<C::Image>("Blackscreen", "image")->on() = false;
-    m_fade_to_remove = false;
+    if (!fade (camera_fade->get<0>(), camera_fade->get<1>(), camera_fade->get<2>()))
+    {
+      remove(camera_fade);
+      if (camera_fade->get<2>())
+        get<C::Image>("Blackscreen", "image")->on() = false;
+    }
   }
 
   double current_time = value<C::Double>(CLOCK__TIME);
@@ -712,12 +711,9 @@ void Animation::generate_animation (const std::string& id, const std::string& an
   image->frames().push_back ({index, row_index, 1});
 }
 
-void Animation::fade (double begin_time, double end_time, bool fadein)
+bool Animation::fade (double begin_time, double end_time, bool fadein)
 {
   double current_time = value<C::Double>(CLOCK__TIME);
-
-  if (current_time > end_time)
-    return;
 
   double alpha = (fadein ? (end_time - current_time) / (end_time - begin_time)
                          : (current_time - begin_time) / (end_time - begin_time));
@@ -730,6 +726,8 @@ void Animation::fade (double begin_time, double end_time, bool fadein)
   auto img = get<C::Image>("Blackscreen", "image");
   img->on() = true;
   img->set_alpha((unsigned char)(255 * alpha));
+
+  return (current_time < end_time);
 }
 
 void Animation::update_camera_target ()

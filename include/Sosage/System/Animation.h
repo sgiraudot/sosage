@@ -51,7 +51,6 @@ class Animation : public Base
 private:
 
   std::size_t m_frame_id;
-  bool m_fade_to_remove;
 
 public:
 
@@ -77,7 +76,7 @@ private:
   void generate_random_mouth_animation (const std::string& id);
   void generate_animation (const std::string& id, const std::string& anim);
 
-  void fade (double begin_time, double end_time, bool fadein);
+  bool fade (double begin_time, double end_time, bool fadein);
 
   void update_camera_target();
 };
