@@ -505,7 +505,7 @@ bool Logic::subfunction_fade (bool fadein, double duration)
 {
   auto fade = set<C::Tuple<double, double, bool>>("Camera", "fade",
                                                   m_current_time, m_current_time + duration, fadein);
-  m_current_action->schedule (m_current_time + duration, C::make_handle<C::Base>("wait", "wait"));
+  m_current_action->schedule (m_current_time + duration, C::make_handle<C::Base>("Fade", "dummy"));
   return true;
 }
 
