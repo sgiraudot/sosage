@@ -99,8 +99,6 @@ void File_IO::clean_content()
 
   if (!full_reset)
   {
-    for (const std::string& entity : *inventory)
-      force_keep.insert (entity);
     if (auto phone_numbers = request<C::Vector<std::string>>("phone_numbers", "list"))
     {
       force_keep.insert("phone_numbers");

@@ -158,6 +158,8 @@ def check_signature(key, funcname, args, signature):
 def check_line(line):
     if '…' in line:
         warning("forbidden symbol '…' found in line " + line)
+    if ' ' in line:
+        warning("forbidden symbol ' ' (small NBSP) found in line " + line)
     for locale in locales:
         if line not in translation[locale]:
             warning("missing " + locale + " translation of '" + line + "'")
@@ -829,6 +831,7 @@ for filename in yaml_files:
         test(data, "inventory_arrows/1", file_exists, ["images/interface", "png"])
         test(data, "inventory_chamfer", file_exists, ["images/interface", "png"])
         test(data, "click_sound", file_exists, ["sounds/effects", "ogg"])
+        test(data, "step_sound", file_exists, ["sounds/effects", "ogg"])
         test(data, "circle/0", file_exists, ["images/interface", "png"])
         test(data, "circle/1", file_exists, ["images/interface", "png"])
         test(data, "circle/2", file_exists, ["images/interface", "png"])
