@@ -338,8 +338,12 @@ void File_IO::write_savefile()
 
   if (auto dialog = request<C::String>("Game", "current_dialog"))
   {
-    output.write("dialog", dialog->value());
-    output.write("dialog_position", value<C::Int>("Game", "dialog_position"));
+    // Do not save hint dialog, as it's generated on the fly
+    if (dialog->value() != "Hints")
+    {
+      output.write("dialog", dialog->value());
+      output.write("dialog_position", value<C::Int>("Game", "dialog_position"));
+    }
   }
 
   output.start_section("characters");
