@@ -46,6 +46,7 @@ namespace C = Component;
 Test_input::Test_input (Content& content)
   : Base (content)
   , m_mode (new_mode())
+  , m_randgen(std::random_device()())
 {
   set_fac<C::Simple<Vector>>(STICK__DIRECTION, "Stick", "direction", Vector(0, 0));
   get<C::Boolean>("Game", "debug")->set(true);
@@ -257,7 +258,7 @@ void Test_input::run_mouse()
 
   if (!ids.empty())
   {
-    std::random_shuffle (ids.begin(), ids.end());
+    std::shuffle (ids.begin(), ids.end(), m_randgen);
     for (const std::string& id : ids)
     {
       Point target = cursor_target (id);
@@ -519,7 +520,7 @@ void Test_input::run_touchscreen()
 
   if (!ids.empty())
   {
-    std::random_shuffle (ids.begin(), ids.end());
+    std::shuffle (ids.begin(), ids.end(), m_randgen);
     for (const std::string& id : ids)
     {
       Point target = cursor_target (id);

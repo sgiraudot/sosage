@@ -35,6 +35,8 @@
 #include <Sosage/System/Base.h>
 #include <Sosage/Utils/geometry.h>
 
+#include <random>
+
 namespace Sosage::System
 {
 
@@ -42,6 +44,7 @@ class Test_input : public Base
 {
   Core::Input m_core;
   std::function<void(void)> m_mode;
+  std::mt19937 m_randgen;
 
 public:
 
