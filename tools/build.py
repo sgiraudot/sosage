@@ -3,18 +3,22 @@ import sys
 import subprocess
 import time
 import yaml
+import re
 
 if len(sys.argv) != 2:
     print("Usage: " + sys.argv[0] + "[build.yaml]")
 
 yaml_file = open(sys.argv[1], 'r')
 data = yaml.safe_load(yaml_file)
-    
+
 gamename = ''
+fullname = ''
 for line in open(data["folder"] + '/config.cmake').readlines():
     if 'SOSAGE_EXE_NAME "' in line:
         gamename = line.split('SOSAGE_EXE_NAME "')[1].split('"')[0]
-        break
+    if 'SOSAGE_NAME "' in line:
+        fullname = re.escape(line.split('SOSAGE_NAME "')[1].split('"')[0])
+
 if gamename == '':
     print("Couldn't find SOSAGE_EXE_NAME in " + data["folder"] + "/config.cmake")
     exit()
@@ -46,8 +50,8 @@ appname = gamename + "-" + version
 cmake_cmd = "cmake -DCMAKE_BUILD_TYPE=" + data["build"] + " -DSOSAGE_CFG_DISPLAY_DEBUG_INFO:BOOL=" + str(data["debug"]) + " -DSOSAGE_DATA_FOLDER=" + data_folder
 if data["testinput"]:
     cmake_cmd += " -DSOSAGE_CFG_TEST_INPUT:BOOL=True"
-    appname += "testinput"
-    
+    appname += "-testinput"
+
 
 def todo(key):
     return len(packages_to_do) == 0 or key in packages_to_do
@@ -111,11 +115,19 @@ if data["data"]:
     try:
         print("### BUILDING DATA ZIP")
         begin = time.perf_counter()
+        run_cmd("rm -rf " + output_dir + "/" + appname + "-data.zip")
         run_cmd("rm -rf " + data_dir)
         run_cmd("mkdir " + data_dir)
         chdir(data_dir)
         copy_data_dir = appname + "-data"
-        run_cmd("cp -r " + data_folder + " " + copy_data_dir)
+        run_cmd("rm -rf " + copy_data_dir)
+        run_cmd("mkdir " + copy_data_dir)
+        run_cmd("cp -r " + raw_data_folder + "/resources " + copy_data_dir)
+        run_cmd("cp -r " + raw_data_folder + "/data " + copy_data_dir)
+        run_cmd("cp -r " + raw_data_folder + "/config.cmake " + copy_data_dir)
+        run_cmd("cp -r " + raw_data_folder + "/build.yaml " + copy_data_dir)
+        run_cmd("cp -r " + raw_data_folder + "/LICENSE.md " + copy_data_dir)
+        run_cmd("cp -r " + raw_data_folder + "/README.md " + copy_data_dir)
         run_cmd("zip -r " + output_dir + "/" + appname + "-data.zip " + copy_data_dir)
         chdir("..")
         run_cmd("rm -rf " + data_dir)
@@ -197,8 +209,8 @@ if data["mac"]:
                 + " -DCMAKE_INSTALL_PREFIX=./install ..")
         run_cmd("make -j " + str(data["threads"]))
         run_cmd("make install")
-        run_cmd("python3 ../tools/fix_mac_lib_paths.py install/" + gamename + ".app/Contents/libs/*.dylib")
-        run_cmd("python3 ../tools/fix_mac_lib_paths.py install/" + gamename + ".app/Contents/MacOS/" + gamename)
+        run_cmd("python3 ../tools/fix_mac_lib_paths.py install/" + fullname + ".app/Contents/libs/*.dylib")
+        run_cmd("python3 ../tools/fix_mac_lib_paths.py install/" + fullname + ".app/Contents/MacOS/" + gamename)
         run_cmd("cp -r install " + steam_dir + "/mac")
         run_cmd("genisoimage -V " + gamename + ".app -D -R -apple -no-pad -o " + gamename + ".dmg install")
         run_cmd("cp " + gamename + ".dmg " + output_dir + "/" + appname + "-macos.dmg")
@@ -257,7 +269,7 @@ if data["androidapk"] or data["androidaab"]:
             run_cmd("./gradlew bundleRelease --parallel --max-workers=" + str(data["threads"]))
             run_cmd("cp app/build/outputs/bundle/release/app.aab " + output_dir + "/" + appname + "-android.aab")
         chdir("../..")
-        run_cmd("rm -rf " + android_buildir)
+#        run_cmd("rm -rf " + android_buildir)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
     except:

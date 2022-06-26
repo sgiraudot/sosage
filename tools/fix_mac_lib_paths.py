@@ -24,10 +24,10 @@ def run_cmd(cmd):
                 exit()
 
 for exe in sys.argv[1:]:
-    libs = subprocess.check_output('x86_64-apple-darwin19-otool -L ' + exe, shell=True).decode().split('\n')
+    libs = subprocess.check_output('x86_64-apple-darwin19-otool -L "' + exe + '"', shell=True).decode().split('\n')
     for l in libs:
         if '/opt/local/lib/' in l:
             lname = l.split('/opt/local/lib/')[1].split(' ')[0]
             old = '/opt/local/lib/' + lname
             new = '@executable_path/../libs/' + lname
-            run_cmd('x86_64-apple-darwin19-install_name_tool -change "' + old + '" "' + new + '" ' + exe)
+            run_cmd('x86_64-apple-darwin19-install_name_tool -change "' + old + '" "' + new + '" "' + exe + '"')
