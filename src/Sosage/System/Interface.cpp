@@ -170,6 +170,7 @@ void Interface::init()
 
 void Interface::update_active_objects()
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_active_objects()");
   // Clear if input mode changed
   if (receive("Input_mode", "changed") || status()->is (IN_MENU))
   {
@@ -338,6 +339,8 @@ void Interface::update_active_objects()
 
 void Interface::update_action_selector()
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_action_selector()");
+
   const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
   if (status()->is(CUTSCENE, LOCKED, DIALOG_CHOICE))
@@ -411,6 +414,8 @@ void Interface::update_action_selector()
 
 void Interface::update_object_switcher()
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_object_switcher()");
+
   bool keyboard_on = false;
   bool gamepad_on = false;
 
@@ -478,6 +483,8 @@ void Interface::update_object_switcher()
 
 void Interface::update_inventory()
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_inventory()");
+
   if (status()->is(IN_MENU))
     return;
 
@@ -577,6 +584,8 @@ void Interface::update_inventory()
 
 void Interface::update_code_hover()
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_code_hover()");
+
   double current_time = value<C::Double>(CLOCK__TIME);
 
   if (receive("Interface", "show_window"))
@@ -624,6 +633,8 @@ void Interface::update_code_hover()
 
 void Interface::update_dialog_choices()
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_dialog_choices()");
+
   if (receive("Dialog", "clean"))
   {
     // Optional, if user is really quick, choice can be
@@ -724,6 +735,8 @@ void Interface::update_dialog_choices()
 
 void Interface::update_skip_message()
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_skip_message()");
+
   if (receive ("Skip_message", "create"))
   {
     auto interface_font = get<C::Font> ("Interface", "font");
@@ -760,6 +773,8 @@ void Interface::update_skip_message()
 
 void Interface::update_cursor()
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_cursor()");
+
   const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
   if (mode == MOUSE)

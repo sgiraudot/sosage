@@ -479,6 +479,8 @@ void Interface::make_settings_item (Component::Menu::Node node, const std::strin
 
 void Interface::update_menu()
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_menu()");
+
   if (auto menu = request<C::String>("Menu", "create"))
   {
     create_menu (menu->value());

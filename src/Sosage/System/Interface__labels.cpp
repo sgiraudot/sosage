@@ -48,6 +48,8 @@ namespace C = Component;
 
 void Interface::create_object_label (const std::string& id)
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::create_object_label()");
+
   debug << status()->str() << std::endl;
   debug << "Create object_label " << id << std::endl;
   // Special case for inventory
@@ -138,6 +140,8 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
                               bool open_left, bool open_right,
                               const Collision_type& collision, double scale, bool arrow)
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::create_label()");
+
   SOSAGE_TIMER_START(Interface__create_label);
   const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
@@ -244,6 +248,8 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
 void Interface::animate_label (const std::string& id, const Animation_style& style,
                                bool button , const Point& position)
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::animate_label()");
+
   debug << "Animate label " << id << std::endl;
   if (style == NONE)
     return;
@@ -346,6 +352,8 @@ void Interface::update_label (const std::string& id,
                               bool open_left, bool open_right, C::Position_handle pos,
                               double scale)
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_label()");
+
   auto label = request<C::Image>(id , "image");
   auto back = get<C::Image>(id + "_back", "image");
   int back_width = round (scale * back->width());
@@ -390,6 +398,8 @@ void Interface::update_label (const std::string& id,
 
 void Interface::update_label_position (const std::string& id, double scale)
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_label_position()");
+
   if (status()->is (IN_INVENTORY, OBJECT_CHOICE))
     return;
   debug << "Update label position " << id << std::endl;
@@ -430,6 +440,8 @@ void Interface::update_label_position (const std::string& id, double scale)
 
 void Interface::delete_label (const std::string& id)
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::delete_label()");
+
   auto group = request<C::Group>(id , "group");
   if (!group)
   {
@@ -455,6 +467,8 @@ void Interface::delete_label (const std::string& id)
 
 void Interface::fade_action_selector (const std::string& id, bool fade_in)
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::fade_action_selector()");
+
   // Exit if animation already happening
   if (request<C::GUI_image_animation>(id + "_left", "animation"))
     return;
@@ -479,6 +493,8 @@ void Interface::fade_action_selector (const std::string& id, bool fade_in)
 
 void Interface::highlight_object (const std::string& id, unsigned char highlight)
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::highlight_object()");
+
   debug << "Highlight " << id << " by " << int(highlight) << std::endl;
   // Image might have been destroyed here
   if (auto img = request<C::Image>(id , "image"))
@@ -487,6 +503,8 @@ void Interface::highlight_object (const std::string& id, unsigned char highlight
 
 void Interface::set_action_selector (const Selector_type& type, const std::string& id)
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::set_action_selector()");
+
   // Already up to date, do nothing
   if (m_selector_type == type && m_selector_id == id)
     return;
@@ -616,6 +634,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
 
 void Interface::reset_action_selector()
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::reset_action_selector()");
+
   debug << "Reset action selector" << std::endl;
   for (std::string& id : m_action_selector)
   {
@@ -629,6 +649,8 @@ void Interface::generate_action (const std::string& id, const std::string& actio
                                  const Button_orientation& orientation, const std::string& button,
                                  C::Position_handle position, const Animation_style& style)
 {
+  SOSAGE_UPDATE_DBG_LOCATION("Interface::generate_action()");
+
   auto label = request<C::String>(id + "_" + action , "label");
   if (isupper(action[0]))
     label = get<C::String>(action , "text");
