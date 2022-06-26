@@ -355,9 +355,9 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
   }
 
   Image out (text, mask, width, height, 1);
-#ifndef SOSAGE_GUILESS
   if (with_highlight)
   {
+#ifndef SOSAGE_GUILESS
     if (surf == nullptr)
       out.highlight = m_textures.get (file_name + "highlight");
     else
@@ -369,8 +369,10 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
       SDL_FreeSurface (highlight);
       SOSAGE_TIMER_STOP(SDL_Image__load_image_hightlight_2);
     }
-  }
+#else
+    SDL_FreeSurface (highlight);
 #endif
+  }
 
   out.texture_downscale = texture_downscale;
   SDL_FreeSurface(surf);
