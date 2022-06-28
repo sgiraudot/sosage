@@ -338,6 +338,12 @@ void Logic::run ()
   if (status()->is(CUTSCENE))
     skip = receive ("Game", "skip_cutscene");
 
+  // Quick'n'dirty workaround for the cutscene camera
+  // bug. I should rework the full wait/schedule/etc.
+  // framework to be clean.
+  if (skip)
+    remove("Camera", "move60fps", true);
+
   for (auto c : components("action"))
     if (auto a = C::cast<C::Action>(c))
       if (c->entity() != "Character")

@@ -111,12 +111,10 @@ bool Logic::function_camera (const std::vector<std::string>& args)
       double begin_time = m_current_time;
       double end_time = begin_time + duration;
 
-      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy", "event"));
-
       auto anim = set<C::Tuple<Point, Point, double, double>>
           ("Camera", "move60fps", position->value(), Point(xtarget, ytarget),
            begin_time, end_time);
-      m_current_action->schedule (end_time, anim);
+      m_current_action->schedule (end_time, C::make_handle<C::Base>("Camera", "dummy"));
     }
   }
   else

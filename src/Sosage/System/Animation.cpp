@@ -114,23 +114,11 @@ void Animation::run_gui_frame()
         (Point(x_start + shift * current_intensity, 0));
   }
 
-  std::vector<C::GUI_animation_handle> to_remove;
+  std::vector<C::Handle> to_remove;
   for (auto c : components("animation"))
     if (auto a = C::cast<C::GUI_animation>(c))
       if (!a->update(current_time))
         to_remove.emplace_back(a);
-
-  for (C::GUI_animation_handle a : to_remove)
-  {
-    if (a->remove_after())
-    {
-      const C::Id& object_id = a->object_id();
-      remove(object_id.first, object_id.second);
-      if (object_id.second == "image")
-        remove(object_id.first, "position");
-    }
-    remove(a);
-  }
 
   for (auto c : components("move60fps"))
     if (auto a = C::cast<C::Tuple<Point, Point, double, double>>(c))
@@ -140,10 +128,31 @@ void Animation::run_gui_frame()
 
       Point current = ratio * a->get<1>() + (1 - ratio) * a->get<0>();
       if (ratio > 1)
+      {
         current = a->get<1>();
+
+        // TODO improve scheduled action so that it's not needed
+        if (c->entity() == "Camera")
+          to_remove.emplace_back(a);
+      }
 
       get<C::Position>(a->entity() , "position")->set (current);
     }
+
+  for (auto tr : to_remove)
+  {
+    if (auto a = C::cast<C::GUI_animation>(tr))
+    {
+      if (a->remove_after())
+      {
+        const C::Id& object_id = a->object_id();
+        remove(object_id.first, object_id.second);
+        if (object_id.second == "image")
+          remove(object_id.first, "position");
+      }
+    }
+    remove(tr);
+  }
 
   for (auto c : components("rescale60fps"))
     if (auto a = C::cast<C::Tuple<double, double, double, double>>(c))
