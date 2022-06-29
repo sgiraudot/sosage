@@ -2,6 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.2.1 (summer2022demo1)` - 2022-06-29
+
+### Bug Fixes
+
+- Blocked camera after cutscene is fixed
+
 ## `v1.2.0 (summer2022demo)` - 2022-06-27
 
 ### Release Management
