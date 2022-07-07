@@ -747,8 +747,12 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
   check (m_window != nullptr, "Cannot create SDL Window ("
          + std::string(SDL_GetError()) + ")");
 
-  m_renderer = SDL_CreateRenderer (m_window, -1, 0);
+  m_renderer = SDL_CreateRenderer (m_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   check (m_renderer != nullptr, "Cannot create SDL Renderer");
+
+  SDL_DisplayMode mode;
+  SDL_GetWindowDisplayMode(m_window, &mode);
+  debug << "Refresh rate: " << mode.refresh_rate << "Hz" << std::endl;
 
   int result = SDL_GetRendererInfo (m_renderer, &m_info);
   check (result == 0, "Cannot create SDL Renderer Info");
@@ -829,6 +833,7 @@ void SDL::update_view()
 void SDL::toggle_fullscreen (bool fullscreen)
 {
   SDL_SetWindowFullscreen (m_window, (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
+
 }
 
 void SDL::toggle_cursor (bool visible)
