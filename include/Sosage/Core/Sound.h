@@ -64,7 +64,7 @@ public:
   void set_volume (double percentage) {}
   void pause_music (const Music& music) {}
   void resume_music (const Music& music) {}
-  void play_sound (const Sound& sound, double percentage) {}
+  void play_sound (const Sound& sound, double percentage, double panning = 0.5) {}
 
 };
 
