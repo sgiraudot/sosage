@@ -2,6 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.2.2 (summer2022demo2)` - TBD
+
+### Bug Fixes
+
+- Virtual synchronisation in fullscreen mode
+
 ## `v1.2.1 (summer2022demo1)` - 2022-06-29
 
 ### Bug Fixes
