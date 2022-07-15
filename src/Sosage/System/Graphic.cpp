@@ -119,12 +119,12 @@ void Graphic::run()
       int xmax = img->xmax();
       int ymax = img->ymax();
 
-      Point screen_position = p - img->core().scaling * Vector(img->origin());
+      Point screen_position = p - img->scale() * Vector(img->origin());
 
       double xmin_target = zoom * screen_position.x();
       double ymin_target = zoom * screen_position.y();
-      double xmax_target = zoom * (screen_position.x() + img->core().scaling * (xmax - xmin));
-      double ymax_target = zoom * (screen_position.y() + img->core().scaling * (ymax - ymin));
+      double xmax_target = zoom * (screen_position.x() + img->scale() * (xmax - xmin));
+      double ymax_target = zoom * (screen_position.y() + img->scale() * (ymax - ymin));
 
       // Skip out of boundaries images
       if ((xmax_target < 0 || xmin_target > limit_width)
@@ -159,7 +159,8 @@ void Graphic::run()
     double width_target = xmax_target - xmin_target;
     double height_target = ymax_target - ymin_target;
 
-    m_core.draw (img->core(), xmin, ymin, width, height,
+    m_core.draw (img->core(), img->alpha(), img->highlight(),
+                 xmin, ymin, width, height,
                  xmin_target, ymin_target,
                  width_target, height_target);
   }
@@ -254,12 +255,13 @@ void Graphic::run_loading()
   int xmax = img->xmax();
   int ymax = img->ymax();
 
-  Point screen_position = p - img->core().scaling * Vector(img->origin());
+  Point screen_position = p - img->scale() * Vector(img->origin());
 
-  m_core.draw (img->core(), xmin, ymin, (xmax - xmin), (ymax - ymin),
+  m_core.draw (img->core(), img->alpha(), img->highlight(),
+               xmin, ymin, (xmax - xmin), (ymax - ymin),
                screen_position.X(), screen_position.Y(),
-               int(img->core().scaling * (xmax - xmin)),
-               int(img->core().scaling * (ymax - ymin)));
+               int(img->scale() * (xmax - xmin)),
+               int(img->scale() * (ymax - ymin)));
 
   m_core.end();
 }

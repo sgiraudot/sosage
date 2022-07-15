@@ -66,33 +66,28 @@ public:
 
   using Font_base = std::tuple<TTF_Font*, TTF_Font*, Buffer*>;
 
-  using Texture_manager = Resource_manager<SDL_Texture>;
-  using Info_manager = Resource_manager<std::tuple<int, int, double>>;
-  using Bitmap_manager = Resource_manager<Bitmap_2>;
-  using Font_manager = Resource_manager<Font_base>;
-
-  using Surface = std::shared_ptr<SDL_Surface>;
-  using Texture = typename Texture_manager::Resource_handle;
-  using Image_info = typename Info_manager::Resource_handle;
-  using Bitmap = typename Bitmap_manager::Resource_handle;
-  using Font = typename Font_manager::Resource_handle;
-
-  struct Image
+  struct Image_base
   {
-    Texture texture;
-    Texture highlight;
-    Bitmap mask;
-    double scaling;
+    SDL_Texture* texture;
+    SDL_Texture* highlight;
+    Bitmap_2 mask;
     double texture_downscale;
-    unsigned char highlight_alpha = 0;
-    unsigned char alpha;
     int width;
     int height;
 
-    Image (Texture texture = Texture(), Bitmap mask = Bitmap(), int width = -1, int height = -1,
-           double scaling = 1., unsigned char alpha = 255);
-    void free_mask();
+    Image_base (SDL_Texture* texture = nullptr, SDL_Texture* highlight = nullptr,
+                int width = -1, int height = -1);
   };
+
+  static Image_base* make_image (SDL_Texture* texture = nullptr, SDL_Texture* highlight = nullptr,
+                                 int width = -1, int height = -1);
+
+  using Image_manager = Resource_manager<Image_base>;
+  using Font_manager = Resource_manager<Font_base>;
+
+  using Surface = std::shared_ptr<SDL_Surface>;
+  using Image = typename Image_manager::Resource_handle;
+  using Font = typename Font_manager::Resource_handle;
 
   struct Surface_access
   {
@@ -110,9 +105,7 @@ public:
   static SDL_Window* m_window;
   static SDL_Renderer* m_renderer;
   static SDL_RendererInfo m_info;
-  static Texture_manager m_textures;
-  static Info_manager m_image_info;
-  static Bitmap_manager m_masks;
+  static Image_manager m_images;
   static Font_manager m_fonts;
   Surface m_icon;
 
@@ -122,14 +115,13 @@ public:
   static Image load_image (const std::string& file_name, bool with_mask, bool with_highlight);
   static Image compose (const std::initializer_list<Image>& images);
   static Font load_font (const std::string& file_name, int size);
-  static Bitmap_2* create_mask (SDL_Surface* surf);
+  static Bitmap_2 create_mask (SDL_Surface* surf);
   static SDL_Color black();
   static SDL_Color color (const std::string& color_str);
   static Image create_text (const Font& font, const std::string& color_str,
                             const std::string& text);
   static Image create_outlined_text (const Font& font, const std::string& color_str,
                                      const std::string& text);
-  static void rescale (Image& source, double scaling);
   static bool is_inside_image (Image image, int x, int y);
   static int width (Image image);
   static int height (Image image);
@@ -153,7 +145,8 @@ public:
   void toggle_cursor(bool visible);
   void get_window_size (int& w, int& h);
   void begin();
-  void draw (const Image& image,
+  void draw (const Image& image, unsigned char alpha,
+             unsigned char highlight_alpha,
              const int xsource, const int ysource,
              const int wsource, const int hsource,
              const double xtarget, const double ytarget,

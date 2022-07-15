@@ -52,6 +52,9 @@ private:
   int m_z;
   bool m_on;
   Collision_type m_collision;
+  double m_scaling;
+  unsigned char m_highlight_alpha;
+  unsigned char m_alpha;
 
 public:
 
@@ -86,6 +89,7 @@ public:
   void set_alpha (unsigned char alpha);
   unsigned char alpha() const;
   void set_highlight (unsigned char alpha);
+  unsigned char highlight() const;
   bool is_target_inside (int x, int y) const;
 
   STR_NAME("Image");

@@ -42,9 +42,12 @@ namespace Sosage::Third_party
 SDL_Window* SDL::m_window = nullptr;
 SDL_Renderer* SDL::m_renderer = nullptr;
 SDL_RendererInfo SDL::m_info;
-SDL::Texture_manager SDL::m_textures (SDL_DestroyTexture);
-SDL::Info_manager SDL::m_image_info;
-SDL::Bitmap_manager SDL::m_masks;
+SDL::Image_manager SDL::m_images
+([](Image_base* img)
+{
+  if (img->texture) SDL_DestroyTexture (img->texture);
+  if (img->highlight) SDL_DestroyTexture (img->highlight);
+});
 SDL::Font_manager SDL::m_fonts
 ([](Font_base* font)
 {
@@ -54,17 +57,18 @@ SDL::Font_manager SDL::m_fonts
   delete font;
 });
 
-SDL::Image::Image (Texture texture, Bitmap mask, int width, int height,
-                   double scaling, unsigned char alpha)
-  : texture (texture), mask(mask),
-    scaling (scaling), texture_downscale(1), alpha(alpha),
-    width(width), height(height)
+SDL::Image_base::Image_base (SDL_Texture* texture, SDL_Texture* highlight,
+                             int width, int height)
+  : texture (texture), highlight (highlight),
+    texture_downscale(1), width(width), height(height)
 { }
 
-void SDL::Image::free_mask()
+SDL::Image_base* SDL::make_image  (SDL_Texture* texture, SDL_Texture* highlight,
+                                  int width, int height)
 {
-  mask = nullptr;
+  return new Image_base (texture, highlight, width, height);
 }
+
 
 SDL::Surface_access::Surface_access (SDL_Surface* surface)
   : surface (surface)
@@ -184,21 +188,21 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
   SDL_FillRect(surf, nullptr, SDL_MapRGBA(surf->format, Uint8(r), Uint8(g), Uint8(b), Uint8(a)));
 
 #ifndef SOSAGE_GUILESS
-  Texture text = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, surf);
-  check (text != Texture(), "Cannot create rectangle texture ("
+  SDL_Texture* text = SDL_CreateTextureFromSurface (m_renderer, surf);
+  check (text != nullptr, "Cannot create rectangle texture ("
          + std::string(SDL_GetError()) + ")");
 #else
-  Texture text;
+  SDL_Texture* text;
 #endif
-  Image out (text, Bitmap(), surf->w, surf->h, 1, (unsigned char)(255));
 
 #ifndef SOSAGE_GUILESS
+  SDL_Texture* highlight = nullptr;
   if (a == 0) // special ellipse highlight for fully transparent objects
   {
-    SDL_Surface* highlight = SDL_CreateRGBSurface (0, surf->w,
-                                                   surf->h, 32, rmask, gmask, bmask, amask);
+    SDL_Surface* high = SDL_CreateRGBSurface (0, surf->w,
+                                              surf->h, 32, rmask, gmask, bmask, amask);
 
-    Surface_access access(highlight);
+    Surface_access access(high);
     for (std::size_t i = 0; i < access.width(); ++ i)
       for (std::size_t j = 0; j < access.height(); ++ j)
       {
@@ -213,8 +217,8 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
       }
 
     access.release();
-    out.highlight = m_textures.make_single (SDL_CreateTextureFromSurface, m_renderer, highlight);
-    SDL_FreeSurface (highlight);
+    highlight = SDL_CreateTextureFromSurface (m_renderer, high);
+    SDL_FreeSurface (high);
   }
 #endif
 
@@ -222,24 +226,19 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
 
   SOSAGE_TIMER_STOP(SDL_Image__create_rectangle);
 
-  return out;
+  return m_images.make_single (make_image, text, highlight, w, h);
 }
 
 SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool with_highlight)
 {
   SOSAGE_TIMER_START(SDL_Image__load_image);
 
-  SDL_Surface* surf = nullptr;
-  SDL_Surface* highlight = nullptr;
-  int width = -1;
-  int height = -1;
-  double texture_downscale = 1.;
-
-  Texture text = m_textures.make_mapped
+  Image out = m_images.make_mapped
       (file_name,
-       [&]() -> SDL_Texture*
+       [&]() -> Image_base*
        {
          SOSAGE_TIMER_START(SDL_Image__load_image_file);
+         SDL_Surface* surf;
          if (Asset_manager::packaged())
          {
            int width, height;
@@ -261,24 +260,19 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
 
          SOSAGE_TIMER_STOP(SDL_Image__load_image_file);
 
-         if (with_highlight)
-         {
-           SOSAGE_TIMER_START(SDL_Image__load_image_create_highlight);
-           highlight = SDL_CreateRGBSurfaceWithFormat (0, surf->w,
-           surf->h, 32, SDL_PIXELFORMAT_ABGR8888);
-           SDL_BlitSurface (surf, nullptr, highlight, nullptr);
+#ifndef SOSAGE_GUILESS
+         SOSAGE_TIMER_START(SDL_Image__load_image_texture);
+         SDL_Texture* texture = SDL_CreateTextureFromSurface(m_renderer, surf);
+         check (texture!= nullptr, "Cannot create texture from " + file_name
+         + " (" + std::string(SDL_GetError()) + ")");
+         SOSAGE_TIMER_STOP(SDL_Image__load_image_texture);
+#else
+         SDL_Texture* texture = nullptr;
+#endif
 
-           Surface_access access (highlight);
-           for (std::size_t j = 0; j < access.height(); ++ j)
-           for (std::size_t i = 0; i < access.width(); ++ i)
-           access.set(i,j, {255, 255, 255, (unsigned char)(0.5 * access.get(i,j)[3])});
-
-           access.release();
-           SOSAGE_TIMER_STOP(SDL_Image__load_image_create_highlight);
-         }
-
-         height = surf->h;
-         width = surf->w;
+         int height = surf->h;
+         int width = surf->w;
+         double texture_downscale = 1.;
 #ifndef SOSAGE_GUILESS
          int width_max = m_info.max_texture_width;
          int height_max = m_info.max_texture_height;
@@ -309,73 +303,39 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
            SOSAGE_TIMER_STOP(SDL_Image__load_image_texture_downscale);
          }
 #endif
-         m_image_info.make_mapped (file_name, [](int w, int h, double td) -> std::tuple<int,int,double>*
-         {
-          return new std::tuple<int,int,double>(w,h,td);
-         },
-         width, height, texture_downscale);
 
-         SOSAGE_TIMER_START(SDL_Image__load_image_texture);
-#ifndef SOSAGE_GUILESS
-         SDL_Texture* out = SDL_CreateTextureFromSurface(m_renderer, surf);
-         check (out != nullptr, "Cannot create texture from " + file_name
-         + " (" + std::string(SDL_GetError()) + ")");
-#else
-         SDL_Texture* out = nullptr;
-#endif
-         SOSAGE_TIMER_STOP(SDL_Image__load_image_texture);
+         SDL_Texture* highlight = nullptr;
+         if (with_highlight)
+         {
+           SOSAGE_TIMER_START(SDL_Image__load_image_create_highlight);
+           SDL_Surface* high = SDL_CreateRGBSurfaceWithFormat
+           (0, surf->w, surf->h, 32, SDL_PIXELFORMAT_ABGR8888);
+           SDL_BlitSurface (surf, nullptr, high, nullptr);
+
+           Surface_access access (high);
+           for (std::size_t j = 0; j < access.height(); ++ j)
+             for (std::size_t i = 0; i < access.width(); ++ i)
+               access.set(i,j, {255, 255, 255, (unsigned char)(0.5 * access.get(i,j)[3])});
+           access.release();
+           SOSAGE_TIMER_STOP(SDL_Image__load_image_create_highlight);
+
+           SOSAGE_TIMER_START(SDL_Image__load_image_hightlight_2);
+           highlight = SDL_CreateTextureFromSurface(m_renderer, high);
+           SDL_FreeSurface (high);
+           SOSAGE_TIMER_STOP(SDL_Image__load_image_hightlight_2);
+         }
+
+         auto out = new Image_base (texture, highlight, width, height);
+         out->texture_downscale = texture_downscale;
+         if (with_mask)
+         {
+           SOSAGE_TIMER_START(SDL_Image__load_image_mask);
+           out->mask = create_mask (surf);
+           SOSAGE_TIMER_STOP(SDL_Image__load_image_mask);
+         }
+         SDL_FreeSurface (surf);
          return out;
        });
-
-  if (surf != nullptr)
-  {
-    debug << file_name << " was loaded" << std::endl;
-  }
-  else
-  {
-    debug << file_name << " was reused" << std::endl;
-    auto info = m_image_info.get(file_name);
-    width = std::get<0>(*info);
-    height = std::get<1>(*info);
-    texture_downscale = std::get<2>(*info);
-  }
-
-  Bitmap mask = nullptr;
-  if (with_mask)
-  {
-    if (surf == nullptr) // Image already loaded
-      mask = m_masks.get (file_name);
-    else
-    {
-      SOSAGE_TIMER_START(SDL_Image__load_image_mask);
-      check (surf != nullptr, "Cannot create mask from null surface, from " + file_name);
-      mask = m_masks.make_mapped (file_name, create_mask, surf);
-      SOSAGE_TIMER_STOP(SDL_Image__load_image_mask);
-    }
-  }
-
-  Image out (text, mask, width, height, 1);
-  if (with_highlight)
-  {
-#ifndef SOSAGE_GUILESS
-    if (surf == nullptr)
-      out.highlight = m_textures.get (file_name + "highlight");
-    else
-    {
-      SOSAGE_TIMER_START(SDL_Image__load_image_hightlight_2);
-      check (highlight != nullptr, "Cannot create hightlight from null surface, from " + file_name);
-      out.highlight = m_textures.make_mapped (file_name + "highlight",
-                                              SDL_CreateTextureFromSurface, m_renderer, highlight);
-      SDL_FreeSurface (highlight);
-      SOSAGE_TIMER_STOP(SDL_Image__load_image_hightlight_2);
-    }
-#else
-    SDL_FreeSurface (highlight);
-#endif
-  }
-
-  out.texture_downscale = texture_downscale;
-  SDL_FreeSurface(surf);
 
   SOSAGE_TIMER_STOP(SDL_Image__load_image);
 
@@ -394,15 +354,14 @@ SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
   }
 
 #ifndef SOSAGE_GUILESS
-  Texture texture = m_textures.make_single
-                    (SDL_CreateTexture, m_renderer, SDL_PIXELFORMAT_ARGB8888,
-                     SDL_TEXTUREACCESS_TARGET, total_width, total_height);
+  SDL_Texture* texture = SDL_CreateTexture (m_renderer, SDL_PIXELFORMAT_ARGB8888,
+                                            SDL_TEXTUREACCESS_TARGET, total_width, total_height);
 
-  SDL_SetRenderTarget(m_renderer, texture.get());
+  SDL_SetRenderTarget(m_renderer, texture);
   SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
   SDL_RenderClear(m_renderer);
   SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
-  SDL_SetTextureBlendMode (texture.get(), SDL_BLENDMODE_BLEND);
+  SDL_SetTextureBlendMode (texture, SDL_BLENDMODE_BLEND);
   Uint32 x = 0;
   for (SDL::Image img : images)
   {
@@ -411,20 +370,19 @@ SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
     rect.w = width (img);
     rect.x = x;
     rect.y = (total_height - rect.h) / 2;
-    SDL_SetTextureBlendMode (img.texture.get(), SDL_BLENDMODE_BLEND);
-    SDL_RenderCopy (m_renderer, img.texture.get(), nullptr, &rect);
+    SDL_SetTextureBlendMode (img->texture, SDL_BLENDMODE_BLEND);
+    SDL_RenderCopy (m_renderer, img->texture, nullptr, &rect);
     x += rect.w;
   }
 
-  Texture highlight = m_textures.make_single
-                      (SDL_CreateTexture, m_renderer, SDL_PIXELFORMAT_ARGB8888,
-                       SDL_TEXTUREACCESS_TARGET, total_width, total_height);
+  SDL_Texture* highlight = SDL_CreateTexture (m_renderer, SDL_PIXELFORMAT_ARGB8888,
+                                              SDL_TEXTUREACCESS_TARGET, total_width, total_height);
 
-  SDL_SetRenderTarget(m_renderer, highlight.get());
+  SDL_SetRenderTarget(m_renderer, highlight);
   SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
   SDL_RenderClear(m_renderer);
   SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
-  SDL_SetTextureBlendMode (highlight.get(), SDL_BLENDMODE_BLEND);
+  SDL_SetTextureBlendMode (highlight, SDL_BLENDMODE_BLEND);
   x = 0;
   for (SDL::Image img : images)
   {
@@ -433,22 +391,20 @@ SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
     rect.w = width (img);
     rect.x = x;
     rect.y = (total_height - rect.h) / 2;
-    if (img.highlight)
+    if (img->highlight)
     {
-      SDL_SetTextureBlendMode (img.highlight.get(), SDL_BLENDMODE_BLEND);
-      SDL_RenderCopy (m_renderer, img.highlight.get(), nullptr, &rect);
+      SDL_SetTextureBlendMode (img->highlight, SDL_BLENDMODE_BLEND);
+      SDL_RenderCopy (m_renderer, img->highlight, nullptr, &rect);
     }
     x += rect.w;
   }
 
   SDL_SetRenderTarget(m_renderer, nullptr);
 #else
-  Texture texture, highlight;
+  SDL_Texture* texture, highlight;
 #endif
 
-  Image out (texture, Bitmap(), total_width, total_height);
-  out.highlight = highlight;
-  return out;
+  return m_images.make_single (make_image, texture, highlight, total_width, total_height);
 }
 
 SDL::Font SDL::load_font (const std::string& file_name, int size)
@@ -469,16 +425,16 @@ SDL::Font SDL::load_font (const std::string& file_name, int size)
   return out;
 }
 
-Bitmap_2* SDL::create_mask (SDL_Surface* surf)
+Bitmap_2 SDL::create_mask (SDL_Surface* surf)
 {
   debug << "SURF = " << surf->w << "x" << surf->h << std::endl;
-  Bitmap_2* out = new Bitmap_2 (surf->w, surf->h);
+  Bitmap_2 out (surf->w, surf->h);
 
   Surface_access access (surf);
 
-  for (std::size_t y = 0; y < out->height(); ++ y)
-    for (std::size_t x = 0; x < out->width(); ++ x)
-      (*out)(x, y) = (access.get(x,y)[3] != 0);
+  for (std::size_t y = 0; y < out.height(); ++ y)
+    for (std::size_t x = 0; x < out.width(); ++ x)
+      out(x, y) = (access.get(x,y)[3] != 0);
 
   access.release();
 
@@ -525,71 +481,48 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
     int height = surf->h;
     check (surf != nullptr, "Cannot create text \"" + text + "\"");
 #ifndef SOSAGE_GUILESS
-    Texture out = m_textures.make_single(SDL_CreateTextureFromSurface, m_renderer, surf);
+    SDL_Texture* out = SDL_CreateTextureFromSurface (m_renderer, surf);
     check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
 #else
-    Texture out;
+    SDL_Texture* out = nullptr;
 #endif
     SDL_FreeSurface (surf);
-    return Image (out, Bitmap(), width, height);
+    return m_images.make_single(make_image, out, nullptr, width, height);
   }
-
-  int width = -1;
-  int height = -1;
 
   std::string id = to_string(std::size_t(std::get<0>(*font))) + color_str + text;
-
-  Texture texture = m_textures.make_mapped
-    (id,
-     [&]() -> SDL_Texture*
-     {
-       SDL_Surface* surf;
-       if (!contains (text, "\n"))
-         surf = TTF_RenderUTF8_Blended(std::get<0>(*font), text.c_str(), color(color_str));
-       else
-         surf = TTF_RenderUTF8_Blended_Wrapped(std::get<0>(*font), text.c_str(), color(color_str), 1920);
-
-       width = surf->w;
-       height = surf->h;
-
-       m_image_info.make_mapped (id, [](int w, int h, double td) -> std::tuple<int,int,double>*
-       {
-         return new std::tuple<int,int,double>(w,h,td);
-       }, width, height, 1.);
-
-       check (surf != nullptr, "Cannot create text \"" + text + "\"");
-#ifndef SOSAGE_GUILESS
-       SDL_Texture* out = SDL_CreateTextureFromSurface(m_renderer, surf);
-       check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
-#else
-       SDL_Texture* out = nullptr;
-#endif
-       SDL_FreeSurface (surf);
-       return out;
-     });
-
-  if (height == -1)
+  return m_images.make_mapped
+      (id, [&]() -> Image_base*
   {
-    auto info = m_image_info.get(id);
-    width = std::get<0>(*info);
-    height = std::get<1>(*info);
-  }
+    SDL_Surface* surf = nullptr;
+    if (!contains (text, "\n"))
+      surf = TTF_RenderUTF8_Blended(std::get<0>(*font), text.c_str(), color(color_str));
+    else
+      surf = TTF_RenderUTF8_Blended_Wrapped(std::get<0>(*font), text.c_str(), color(color_str), 1920);
+    check (surf != nullptr, "Cannot create text \"" + text + "\"");
 
-  Image out (texture, Bitmap(), width, height);
-  return out;
+    int width = surf->w;
+    int height = surf->h;
+
+#ifndef SOSAGE_GUILESS
+    SDL_Texture* out = SDL_CreateTextureFromSurface(m_renderer, surf);
+    check (out != nullptr, "Cannot create texture from text \"" + text + "\"");
+#else
+    SDL_Texture* out = nullptr;
+#endif
+    SDL_FreeSurface (surf);
+    return new Image_base (out, nullptr, width, height);
+  });
 }
 
 SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& color_str,
                                       const std::string& text)
 {
-  int width = -1;
-  int height = -1;
-
   std::string id = to_string(std::size_t(std::get<0>(*font))) + "outlined" + color_str + text;
 
-  Texture texture = m_textures.make_mapped
+  return m_images.make_mapped
     (id,
-     [&]() -> SDL_Texture*
+     [&]() -> Image_base*
      {
        SDL_Surface* surf = TTF_RenderUTF8_Blended (std::get<0>(*font), text.c_str(), color(color_str));
        check (surf != nullptr, "Cannot create text \"" + text + "\"");
@@ -601,13 +534,8 @@ SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& 
        SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_BLEND);
        SDL_BlitSurface (surf, NULL, back, &rect);
 
-       width = back->w;
-       height = back->h;
-
-       m_image_info.make_mapped (id, [](int w, int h, double td) -> std::tuple<int,int,double>*
-       {
-         return new std::tuple<int,int,double>(w,h,td);
-       }, width, height, 1.);
+       int width = back->w;
+       int height = back->h;
 
 #ifndef SOSAGE_GUILESS
        SDL_Texture* out = SDL_CreateTextureFromSurface(m_renderer, back);
@@ -617,34 +545,19 @@ SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& 
 #endif
        SDL_FreeSurface (surf);
        SDL_FreeSurface (back);
-       return out;
+       return new Image_base (out, nullptr, width, height);
      });
-
-  if (height == -1)
-  {
-    auto info = m_image_info.get(id);
-    width = std::get<0>(*info);
-    height = std::get<1>(*info);
-  }
-
-  Image out (texture, Bitmap(), width, height);
-  return out;
 }
 
-void SDL::rescale (SDL::Image& source, double scaling)
-{
-  source.scaling = scaling;
-}
 
 int SDL::width (SDL::Image image)
 {
-  return image.width;
+  return image->width;
 }
 int SDL::height (SDL::Image image)
 {
-  return image.height;
+  return image->height;
 }
-
 
 SDL::Surface SDL::load_surface (const std::string& file_name)
 {
@@ -802,8 +715,7 @@ SDL::~SDL ()
 
 void SDL::clear_managers()
 {
-  m_textures.clear();
-  m_masks.clear();
+  m_images.clear();
   m_fonts.clear();
 }
 
@@ -860,7 +772,8 @@ void SDL::begin()
 #endif
 }
 
-void SDL::draw (const Image& image,
+void SDL::draw (const Image& image, unsigned char alpha,
+                unsigned char highlight_alpha,
                 const int xsource, const int ysource,
                 const int wsource, const int hsource,
                 const double xtarget, const double ytarget,
@@ -868,10 +781,10 @@ void SDL::draw (const Image& image,
 {
 #ifndef SOSAGE_GUILESS
   SDL_Rect source;
-  source.x = image.texture_downscale * xsource;
-  source.y = image.texture_downscale * ysource;
-  source.w = image.texture_downscale * wsource;
-  source.h = image.texture_downscale * hsource;
+  source.x = image->texture_downscale * xsource;
+  source.y = image->texture_downscale * ysource;
+  source.w = image->texture_downscale * wsource;
+  source.h = image->texture_downscale * hsource;
 
   SDL_FRect target;
   target.x = xtarget;
@@ -879,12 +792,12 @@ void SDL::draw (const Image& image,
   target.w = wtarget;
   target.h = htarget;
 
-  SDL_SetTextureAlphaMod(image.texture.get(), image.alpha);
-  SDL_RenderCopyF(m_renderer, image.texture.get(), &source, &target);
-  if (image.highlight != nullptr && image.highlight_alpha != 0)
+  SDL_SetTextureAlphaMod(image->texture, alpha);
+  SDL_RenderCopyF(m_renderer, image->texture, &source, &target);
+  if (image->highlight != nullptr && highlight_alpha != 0)
   {
-    SDL_SetTextureAlphaMod(image.highlight.get(), image.highlight_alpha);
-    SDL_RenderCopyF(m_renderer, image.highlight.get(), &source, &target);
+    SDL_SetTextureAlphaMod(image->highlight, alpha);
+    SDL_RenderCopyF(m_renderer, image->highlight, &source, &target);
   }
 #endif
 }

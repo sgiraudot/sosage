@@ -46,7 +46,7 @@ private:
 
 public:
 
-  Bitmap_2 (const std::size_t& width, const std::size_t& height, const bool& value = true);
+  Bitmap_2 (const std::size_t& width = 0, const std::size_t& height = 0, const bool& value = true);
   bool empty() const;
   void clear();
   void resize (const std::size_t& width, const std::size_t& height, const bool& value = true);

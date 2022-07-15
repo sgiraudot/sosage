@@ -33,7 +33,7 @@ namespace Sosage::Component
 Image::Image (const std::string& entity, const std::string& component,
               int w, int h, int r, int g, int b, int a)
   : Base(entity, component), m_origin(0,0), m_z(Config::interface_depth), m_on(true),
-    m_collision(BOX)
+    m_collision(BOX), m_scaling(1), m_highlight_alpha(0), m_alpha(255)
 {
   m_core = Core::Graphic::create_rectangle (w, h, r, g, b, a);
 }
@@ -42,7 +42,7 @@ Image::Image (const std::string& entity, const std::string& component,
               const std::string& file_name, int z,
               const Collision_type& collision, bool with_highlight)
   : Base(entity, component), m_origin(0,0), m_z(z), m_on(true),
-    m_collision (collision)
+    m_collision (collision), m_scaling(1), m_highlight_alpha(0), m_alpha(255)
 {
   m_core = Core::Graphic::load_image (file_name, (collision == PIXEL_PERFECT), with_highlight);
 }
@@ -51,7 +51,7 @@ Image::Image (const std::string& entity, const std::string& component,
               Font_handle font, const std::string& color_str,
               const std::string& text, bool outlined)
   : Base(entity, component), m_origin(0,0), m_z(Config::inventory_depth), m_on(true),
-    m_collision (BOX)
+    m_collision (BOX), m_scaling(1), m_highlight_alpha(0), m_alpha(255)
 {
   if (outlined)
     m_core = Core::Graphic::create_outlined_text (font->core(), color_str, text);
@@ -62,7 +62,9 @@ Image::Image (const std::string& entity, const std::string& component,
 // Image that share the same Graphic core
 Image::Image (const std::string& entity, const std::string& component, std::shared_ptr<Image> copy)
   : Base(entity, component), m_core (copy->m_core), m_origin(copy->m_origin),
-    m_z(copy->m_z), m_on(copy->m_on), m_collision(copy->m_collision)
+    m_z(copy->m_z), m_on(copy->m_on), m_collision(copy->m_collision),
+    m_scaling(copy->m_scaling), m_highlight_alpha(copy->m_highlight_alpha),
+    m_alpha(copy->m_alpha)
 {
 
 }
@@ -74,8 +76,6 @@ void Image::compose_with (const std::shared_ptr<Image>& other)
 
 void Image::set_collision (const Collision_type& collision)
 {
-  if (m_collision == PIXEL_PERFECT && collision != PIXEL_PERFECT)
-    m_core.free_mask();
   m_collision = collision;
 }
 
@@ -156,43 +156,47 @@ int& Image::z()
 
 double Image::scale() const
 {
-  return m_core.scaling;
+  return m_scaling;
 }
 
 void Image::rescale (double z)
 {
   m_z = static_cast<int>(z);
-  double scaling = z / double(Config::world_depth);
-  Core::Graphic::rescale (m_core, scaling);
+  m_scaling = z / double(Config::world_depth);
 }
 
 void Image::set_scale (double scale)
 {
-  Core::Graphic::rescale (m_core, scale);
+  m_scaling = scale;
 }
 
 void Image::set_alpha (unsigned char alpha)
 {
-  m_core.alpha = alpha;
+  m_alpha = alpha;
 }
 
 unsigned char Image::alpha() const
 {
-  return m_core.alpha;
+  return m_alpha;
 }
 
 void Image::set_highlight (unsigned char alpha)
 {
-  m_core.highlight_alpha = alpha;
+  m_highlight_alpha = alpha;
+}
+
+unsigned char Image::highlight() const
+{
+  return m_highlight_alpha;
 }
 
 bool Image::is_target_inside (int x, int y) const
 {
-  check (m_core.mask != nullptr, "Checkin pixel perfect collision without mask");
+  check (!m_core->mask.empty(), "Checkin pixel perfect collision without mask");
   dbg_check (x < width() && y < height(),
              "Out of bound pixel " + std::to_string(x) + "/" + std::to_string(width())
              + " x " + std::to_string(y) + "/" + std::to_string(height()));
-  return (*m_core.mask)(x, y);
+  return m_core->mask(x, y);
 }
 
 } // namespace Sosage::Component

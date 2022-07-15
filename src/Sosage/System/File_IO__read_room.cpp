@@ -152,7 +152,7 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
                   auto abody = get<C::Image>(id + "_body", "image");
                   auto pbody = get<C::Position>(id + "_body", "position");
                   auto mhead = get<C::Position>(id + "_head_move", "position");
-                  return (pbody->value() - abody->core().scaling
+                  return (pbody->value() - abody->scale()
                           * (value<C::Simple<Vector>>(id + "_head",
                                                      (is_looking_right(id) ? "gap_right" : "gap_left"))
                              + Vector(mhead->value())));
@@ -164,7 +164,7 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
        {
          auto ahead = get<C::Animation>(id + "_head", "image");
          auto phead = get<C::Position>(id + "_head", "position");
-         return (phead->value() - ahead->core().scaling
+         return (phead->value() - ahead->scale()
                  * value<C::Simple<Vector>>(id + "_mouth",
                                             (is_looking_right(id) ? "gap_right" : "gap_left")));
        }, id);

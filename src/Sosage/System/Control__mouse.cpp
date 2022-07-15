@@ -624,11 +624,11 @@ bool Control::collides (C::Position_handle cursor, C::Image_handle img)
     if (!absol->is_interface())
       p = p + Vector (-value<C::Absolute_position>(CAMERA__POSITION).x(), 0);
 
-  Point screen_position = p - img->core().scaling * Vector(img->origin());
+  Point screen_position = p - img->scale() * Vector(img->origin());
   int xmin = screen_position.X();
   int ymin = screen_position.Y();
-  int xmax = xmin + int(img->core().scaling * (img->xmax() - img->xmin()));
-  int ymax = ymin + int(img->core().scaling * (img->ymax() - img->ymin()));
+  int xmax = xmin + int(img->scale() * (img->xmax() - img->xmin()));
+  int ymax = ymin + int(img->scale() * (img->ymax() - img->ymin()));
 
   if (cursor->value().X() < xmin ||
       cursor->value().X() >= xmax ||
