@@ -4,9 +4,10 @@ History of versions and modifications of the SOSAGE engine.
 
 ## `v1.2.2 (summer2022demo2)` - TBD
 
-### Bug Fixes
+### Game Engine
 
-- Virtual synchronisation in fullscreen mode
+- Add vsync to avoid artifacts in fullscreen
+- Remove CPU-handled FPS, let vsync deal with frame syncing/delay
 
 ## `v1.2.1 (summer2022demo1)` - 2022-06-29
 
