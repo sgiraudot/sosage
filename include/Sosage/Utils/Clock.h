@@ -32,28 +32,14 @@
 namespace Sosage
 {
 
-namespace Config
-{
-constexpr int gui_fps = 60;
-} // namespace Config
-
 using namespace Core;
 
 class Clock
 {
   Time::Unit m_latest;
-  Time::Duration m_refresh_time;
-
   double m_mean;
-  double m_active;
   std::size_t m_nb;
-
-  std::size_t m_nb_recorded;
-  std::size_t m_nb_missed;
-
   double m_fps;
-  double m_cpu;
-
   Time::Unit m_start;
   double m_time;
 
@@ -62,17 +48,10 @@ class Clock
 public:
 
   Clock();
-  void update();
-  bool wait(bool verbose);
+  void update(bool verbose = false);
   double fps() const;
-  double cpu() const;
   double time() const;
 
-private:
-
-  // 60fps might be too greedy for some configs,
-  // adapt if too many missed frames
-  void adapt_fps(bool missed);
 };
 
 std::size_t frame_id (const double& time);

@@ -46,22 +46,9 @@ void Time::run()
 {
   SOSAGE_TIMER_START(System_Time__run);
   SOSAGE_UPDATE_DBG_LOCATION("Time::run()");
-
-  bool frame_under_refresh_time = m_clock.wait(true);
-  SOSAGE_COUNT(Frames);
-  if (!frame_under_refresh_time)
-  {
-    SOSAGE_COUNT(Frames_exceeding_refresh_time);
-  }
-
+  m_clock.update(true);
   get<C::Double> (CLOCK__TIME)->set(m_clock.time());
   SOSAGE_TIMER_STOP(System_Time__run);
-}
-
-void Time::run_loading()
-{
-  m_clock.update();
-  get<C::Double> (CLOCK__TIME)->set(m_clock.time());
 }
 
 } // namespace Sosage::System

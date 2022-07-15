@@ -43,8 +43,6 @@ public:
   Time (Content& content);
 
   virtual void run();
-
-  void run_loading();
 };
 
 } // namespace Sosage::System

@@ -46,7 +46,6 @@ std::string Debug::debug_str()
 {
   std::string out = "[Debug info]\n";
   out += "FPS = " + std::to_string(m_clock.fps()) + "\n";
-  out += "CPU = " + std::to_string(m_clock.cpu()) + "%\n";
   out += m_content.get<Component::Status>(GAME__STATUS)->str() + "\n\n";
 
   std::size_t nb_comp = 0;

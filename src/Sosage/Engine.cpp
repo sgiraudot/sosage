@@ -152,7 +152,7 @@ bool Engine::run (const std::string& folder_name)
        [&]()
        {
 #ifndef SOSAGE_EMSCRIPTEN
-          time->run_loading();
+          time->run();
           if (animation->run_loading())
             graphic->run_loading();
 #endif
