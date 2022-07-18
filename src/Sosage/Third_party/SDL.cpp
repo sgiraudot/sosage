@@ -45,8 +45,10 @@ SDL_RendererInfo SDL::m_info;
 SDL::Image_manager SDL::m_images
 ([](Image_base* img)
 {
-  if (img->texture) SDL_DestroyTexture (img->texture);
-  if (img->highlight) SDL_DestroyTexture (img->highlight);
+  for (SDL_Texture* t : img->texture)
+    SDL_DestroyTexture (t);
+  for (SDL_Texture* t : img->highlight)
+    SDL_DestroyTexture (t);
 });
 SDL::Font_manager SDL::m_fonts
 ([](Font_base* font)
@@ -57,18 +59,31 @@ SDL::Font_manager SDL::m_fonts
   delete font;
 });
 
-SDL::Image_base::Image_base (SDL_Texture* texture, SDL_Texture* highlight,
-                             int width, int height)
-  : texture (texture), highlight (highlight),
-    texture_downscale(1), width(width), height(height)
-{ }
-
-SDL::Image_base* SDL::make_image  (SDL_Texture* texture, SDL_Texture* highlight,
-                                  int width, int height)
+SDL::Image_base* SDL::make_images (const std::vector<SDL_Texture*>& texture,
+                                   const std::vector<SDL_Texture*>& highlight,
+                                   int width, int height)
 {
-  return new Image_base (texture, highlight, width, height);
+  Image_base* out = new Image_base();
+  out->texture = texture;
+  out->highlight = highlight;
+  out->width = width;
+  out->height = height;
+  out->texture_downscale = 1.;
+  return out;
 }
 
+SDL::Image_base* SDL::make_image (SDL_Texture* texture,
+                                  SDL_Texture* highlight,
+                                  int width, int height)
+{
+  Image_base* out = new Image_base();
+  out->texture.push_back(texture);
+  out->highlight.push_back(highlight);
+  out->width = width;
+  out->height = height;
+  out->texture_downscale = 1.;
+  return out;
+}
 
 SDL::Surface_access::Surface_access (SDL_Surface* surface)
   : surface (surface)
@@ -325,7 +340,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
            SOSAGE_TIMER_STOP(SDL_Image__load_image_hightlight_2);
          }
 
-         auto out = new Image_base (texture, highlight, width, height);
+         auto out = make_image (texture, highlight, width, height);
          out->texture_downscale = texture_downscale;
          if (with_mask)
          {
@@ -370,8 +385,8 @@ SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
     rect.w = width (img);
     rect.x = x;
     rect.y = (total_height - rect.h) / 2;
-    SDL_SetTextureBlendMode (img->texture, SDL_BLENDMODE_BLEND);
-    SDL_RenderCopy (m_renderer, img->texture, nullptr, &rect);
+    SDL_SetTextureBlendMode (img->texture[0], SDL_BLENDMODE_BLEND);
+    SDL_RenderCopy (m_renderer, img->texture[0], nullptr, &rect);
     x += rect.w;
   }
 
@@ -391,10 +406,10 @@ SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
     rect.w = width (img);
     rect.x = x;
     rect.y = (total_height - rect.h) / 2;
-    if (img->highlight)
+    if (img->highlight[0])
     {
-      SDL_SetTextureBlendMode (img->highlight, SDL_BLENDMODE_BLEND);
-      SDL_RenderCopy (m_renderer, img->highlight, nullptr, &rect);
+      SDL_SetTextureBlendMode (img->highlight[0], SDL_BLENDMODE_BLEND);
+      SDL_RenderCopy (m_renderer, img->highlight[0], nullptr, &rect);
     }
     x += rect.w;
   }
@@ -511,7 +526,7 @@ SDL::Image SDL::create_text (const SDL::Font& font, const std::string& color_str
     SDL_Texture* out = nullptr;
 #endif
     SDL_FreeSurface (surf);
-    return new Image_base (out, nullptr, width, height);
+    return make_image (out, nullptr, width, height);
   });
 }
 
@@ -545,7 +560,7 @@ SDL::Image SDL::create_outlined_text (const SDL::Font& font, const std::string& 
 #endif
        SDL_FreeSurface (surf);
        SDL_FreeSurface (back);
-       return new Image_base (out, nullptr, width, height);
+       return make_image (out, nullptr, width, height);
      });
 }
 
@@ -780,24 +795,27 @@ void SDL::draw (const Image& image, unsigned char alpha,
                 const double wtarget, const double htarget)
 {
 #ifndef SOSAGE_GUILESS
-  SDL_Rect source;
-  source.x = image->texture_downscale * xsource;
-  source.y = image->texture_downscale * ysource;
-  source.w = image->texture_downscale * wsource;
-  source.h = image->texture_downscale * hsource;
-
-  SDL_FRect target;
-  target.x = xtarget;
-  target.y = ytarget;
-  target.w = wtarget;
-  target.h = htarget;
-
-  SDL_SetTextureAlphaMod(image->texture, alpha);
-  SDL_RenderCopyF(m_renderer, image->texture, &source, &target);
-  if (image->highlight != nullptr && highlight_alpha != 0)
+  if (image->texture.size() == 1)
   {
-    SDL_SetTextureAlphaMod(image->highlight, alpha);
-    SDL_RenderCopyF(m_renderer, image->highlight, &source, &target);
+    SDL_Rect source;
+    source.x = image->texture_downscale * xsource;
+    source.y = image->texture_downscale * ysource;
+    source.w = image->texture_downscale * wsource;
+    source.h = image->texture_downscale * hsource;
+
+    SDL_FRect target;
+    target.x = xtarget;
+    target.y = ytarget;
+    target.w = wtarget;
+    target.h = htarget;
+
+    SDL_SetTextureAlphaMod(image->texture[0], alpha);
+    SDL_RenderCopyF(m_renderer, image->texture[0], &source, &target);
+    if (image->highlight[0] != nullptr && highlight_alpha != 0)
+    {
+      SDL_SetTextureAlphaMod(image->highlight[0], alpha);
+      SDL_RenderCopyF(m_renderer, image->highlight[0], &source, &target);
+    }
   }
 #endif
 }

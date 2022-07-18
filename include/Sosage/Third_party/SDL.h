@@ -68,19 +68,21 @@ public:
 
   struct Image_base
   {
-    SDL_Texture* texture;
-    SDL_Texture* highlight;
+    std::vector<SDL_Texture*> texture;
+    std::vector<SDL_Texture*> highlight;
     Bitmap_2 mask;
     double texture_downscale;
     int width;
     int height;
-
-    Image_base (SDL_Texture* texture = nullptr, SDL_Texture* highlight = nullptr,
-                int width = -1, int height = -1);
   };
 
-  static Image_base* make_image (SDL_Texture* texture = nullptr, SDL_Texture* highlight = nullptr,
-                                 int width = -1, int height = -1);
+  static Image_base* make_images (const std::vector<SDL_Texture*>& texture,
+                                  const std::vector<SDL_Texture*>& highlight,
+                                  int width, int height);
+
+  static Image_base* make_image (SDL_Texture* texture,
+                                 SDL_Texture* highlight,
+                                 int width, int height);
 
   using Image_manager = Resource_manager<Image_base>;
   using Font_manager = Resource_manager<Font_base>;
