@@ -257,16 +257,18 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
          Uint32 nb_y = 1;
          int width = -1, height = -1;
          int format_int = -1;
+         Bitmap_2 mask;
+         std::vector<SDL_Texture*> textures;
+         std::vector<SDL_Texture*> highlights;
          if (Asset_manager::packaged())
          {
            std::tie (width, height, format_int) = Asset_manager::image_info (file_name);
            nb_x = Splitter::nb_sub (width);
            nb_y = Splitter::nb_sub (height);
+           textures.reserve(nb_x * nb_y);
+           highlights.reserve(nb_x * nb_y);
          }
 
-         Bitmap_2 mask;
-         std::vector<SDL_Texture*> textures;
-         std::vector<SDL_Texture*> highlights;
          for (Uint32 x = 0; x < nb_x; ++ x)
          {
            for (Uint32 y = 0; y < nb_y; ++ y)
@@ -279,10 +281,9 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
                SOSAGE_TIMER_START(SDL_Image__load_image_file);
                surf = SDL_CreateRGBSurfaceWithFormat (0, rect.w, rect.h, 32, format_int);
                SDL_LockSurface (surf);
-               Asset_manager::open (file_name, surf->pixels);
+               Asset_manager::open (file_name, surf->pixels, x, y);
                SDL_UnlockSurface (surf);
                SOSAGE_TIMER_STOP(SDL_Image__load_image_file);
-
              }
              else
              {
@@ -789,7 +790,7 @@ void SDL::draw (const Image& image, unsigned char alpha,
                 const double wtarget, const double htarget)
 {
 #ifndef SOSAGE_GUILESS
-  if (image->texture.size() == 2)
+  if (image->texture.size() == 1)
   {
     SDL_Rect source;
     source.x = xsource;
@@ -823,8 +824,6 @@ void SDL::draw (const Image& image, unsigned char alpha,
 
     Uint32 nb_x = Splitter::nb_sub (image->width);
     Uint32 nb_y = Splitter::nb_sub (image->height);
-    nb_x = 1;
-    nb_y = 1;
 
     Uint32 idx = 0;
     for (Uint32 x = 0; x < nb_x; ++ x)
@@ -832,10 +831,6 @@ void SDL::draw (const Image& image, unsigned char alpha,
       for (Uint32 y = 0; y < nb_y; ++ y)
       {
         SDL_Rect rect = Splitter::rect (image->width, image->height, x, y);
-        rect.x = 0;
-        rect.y = 0;
-        rect.w = image->width;
-        rect.h = image->height;
 
         SDL_Rect inter;
         if (SDL_IntersectRect (&source, &rect, &inter) == SDL_FALSE)
@@ -845,10 +840,13 @@ void SDL::draw (const Image& image, unsigned char alpha,
         }
 
         SDL_FRect target;
-        target.x = x * Splitter::max_length * scale + xtarget;
-        target.y = y * Splitter::max_length * scale + ytarget;
+        target.x = (inter.x - xsource) * scale + xtarget;
+        target.y = (inter.y - ysource) * scale + ytarget;
         target.w = scale * inter.w;
         target.h = scale * inter.h;
+
+        inter.x -= rect.x;
+        inter.y -= rect.y;
 
         SDL_SetTextureAlphaMod(image->texture[idx], alpha);
         SDL_RenderCopyF(m_renderer, image->texture[idx], &inter, &target);

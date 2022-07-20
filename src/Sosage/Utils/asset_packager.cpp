@@ -107,13 +107,13 @@ void write_image (std::ofstream& ofile, const std::string& filename)
   unsigned short width = (unsigned short)(output->w);
   unsigned short height = (unsigned short)(output->h);
   unsigned int bpp = (unsigned int)(output->format->BytesPerPixel);
+  SDL_UnlockSurface(output);
 
   binary_write (ofile, width);
   binary_write (ofile, height);
   binary_write (ofile, surface_format);
 
   std::vector<SDL_Surface*> tiles = Splitter::split_image(output);
-  SDL_UnlockSurface(output);
   SDL_FreeSurface(output);
 
   for (SDL_Surface* tile : tiles)
@@ -125,12 +125,12 @@ void write_image (std::ofstream& ofile, const std::string& filename)
     binary_write (ofile, buffer.size());
     binary_write (ofile, buffer);
     SDL_UnlockSurface(tile);
-    SDL_FreeSurface (tile);
     std::size_t size_after = buffer.size();
     std::cerr << " -> compressed by " << 100. * (size_before - size_after) / double(size_before)
               << "%" << std::endl;
     if (size_after > size_before)
       std::cerr << "   WARNING: compression is counterproductive here!" << std::endl;
+    SDL_FreeSurface (tile);
   }
 }
 

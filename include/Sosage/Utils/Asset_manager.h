@@ -104,7 +104,7 @@ public:
   static Asset open (const std::string& filename, bool file_is_package = false);
   static bool exists (const std::string& filename);
   static std::tuple<int, int, int> image_info (const std::string& filename);
-  static void open (const std::string& filename, void* memory);
+  static void open (const std::string& filename, void* memory, Uint32 x, Uint32 y);
 
 private:
 

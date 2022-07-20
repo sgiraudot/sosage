@@ -35,6 +35,7 @@ namespace Sosage::SCAP
 {
 
 constexpr unsigned int surface_format = SDL_PIXELFORMAT_ARGB8888;
+constexpr unsigned int flat_surface_format = SDL_PIXELFORMAT_RGB888;
 
 std::string package (const std::string& filename);
 
