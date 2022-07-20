@@ -30,6 +30,7 @@
 #include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/geometry.h>
 #include <Sosage/Utils/error.h>
+#include <Sosage/Utils/image_split.h>
 #include <Sosage/Utils/profiling.h>
 
 #include <SDL_image.h>
@@ -252,103 +253,96 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
       (file_name,
        [&]() -> Image_base*
        {
-         SOSAGE_TIMER_START(SDL_Image__load_image_file);
-         SDL_Surface* surf;
+         Uint32 nb_x = 1;
+         Uint32 nb_y = 1;
+         int width = -1, height = -1;
+         int format_int = -1;
          if (Asset_manager::packaged())
          {
-           int width, height;
-           int format_int;
            std::tie (width, height, format_int) = Asset_manager::image_info (file_name);
-
-           surf = SDL_CreateRGBSurfaceWithFormat (0, width, height, 32, format_int);
-           SDL_LockSurface (surf);
-           Asset_manager::open (file_name, surf->pixels);
-           SDL_UnlockSurface (surf);
+           nb_x = Splitter::nb_sub (width);
+           nb_y = Splitter::nb_sub (height);
          }
-         else
+
+         Bitmap_2 mask;
+         std::vector<SDL_Texture*> textures;
+         std::vector<SDL_Texture*> highlights;
+         for (Uint32 x = 0; x < nb_x; ++ x)
          {
-           Asset asset = Asset_manager::open(file_name);
-           surf = IMG_Load_RW (asset.base(), 1);
-         }
-         check (surf != nullptr, "Cannot load image " + file_name
-         + " (" + std::string(SDL_GetError()) + ")");
+           for (Uint32 y = 0; y < nb_y; ++ y)
+           {
+             SDL_Surface* surf;
+             if (Asset_manager::packaged())
+             {
+               SDL_Rect rect = Splitter::rect (width, height, x, y);
 
-         SOSAGE_TIMER_STOP(SDL_Image__load_image_file);
+               SOSAGE_TIMER_START(SDL_Image__load_image_file);
+               surf = SDL_CreateRGBSurfaceWithFormat (0, rect.w, rect.h, 32, format_int);
+               SDL_LockSurface (surf);
+               Asset_manager::open (file_name, surf->pixels);
+               SDL_UnlockSurface (surf);
+               SOSAGE_TIMER_STOP(SDL_Image__load_image_file);
 
+             }
+             else
+             {
+               SOSAGE_TIMER_START(SDL_Image__load_image_file);
+               Asset asset = Asset_manager::open(file_name);
+               surf = IMG_Load_RW (asset.base(), 1);
+               check (surf != nullptr, "Cannot load image " + file_name
+               + " (" + std::string(SDL_GetError()) + ")");
+               SOSAGE_TIMER_STOP(SDL_Image__load_image_file);
+               height = surf->h;
+               width = surf->w;
+             }
 #ifndef SOSAGE_GUILESS
-         SOSAGE_TIMER_START(SDL_Image__load_image_texture);
-         SDL_Texture* texture = SDL_CreateTextureFromSurface(m_renderer, surf);
-         check (texture!= nullptr, "Cannot create texture from " + file_name
-         + " (" + std::string(SDL_GetError()) + ")");
-         SOSAGE_TIMER_STOP(SDL_Image__load_image_texture);
+             SOSAGE_TIMER_START(SDL_Image__load_image_texture);
+             SDL_Texture* texture = SDL_CreateTextureFromSurface(m_renderer, surf);
+             check (texture != nullptr, "Cannot create texture from " + file_name
+             + " (" + std::string(SDL_GetError()) + ")");
+             SOSAGE_TIMER_STOP(SDL_Image__load_image_texture);
 #else
-         SDL_Texture* texture = nullptr;
+             SDL_Texture* texture = nullptr;
 #endif
+             textures.push_back(texture);
 
-         int height = surf->h;
-         int width = surf->w;
-         double texture_downscale = 1.;
+             SDL_Texture* highlight = nullptr;
 #ifndef SOSAGE_GUILESS
-         int width_max = m_info.max_texture_width;
-         int height_max = m_info.max_texture_height;
-         if (surf->w > width_max || surf->h > height_max)
-         {
-           SOSAGE_TIMER_START(SDL_Image__load_image_texture_downscale);
-           texture_downscale = std::min (double(width_max) / surf->w,
-           double(height_max) / surf->h);
-           debug << file_name << " is too large and will be downscaled by a factor " << texture_downscale << std::endl;
-           SDL_Surface* old = surf;
-           surf = SDL_CreateRGBSurface
-           (old->flags, old->w, old->h,
-           32, old->format->Rmask, old->format->Gmask, old->format->Bmask, old->format->Amask);
-           SDL_BlitSurface (old, nullptr, surf, nullptr);
-           SDL_FreeSurface (old);
+             if (with_highlight)
+             {
+               SOSAGE_TIMER_START(SDL_Image__load_image_create_highlight);
+               SDL_Surface* high = SDL_CreateRGBSurfaceWithFormat
+               (0, surf->w, surf->h, 32, SDL_PIXELFORMAT_ABGR8888);
+               SDL_BlitSurface (surf, nullptr, high, nullptr);
 
-           old = surf;
-           surf = SDL_CreateRGBSurface
-           (old->flags, int(texture_downscale * old->w), int(texture_downscale * old->h),
-           32, old->format->Rmask, old->format->Gmask, old->format->Bmask, old->format->Amask);
-           check (surf != nullptr, "Cannot create rectangle surface ("
-           + std::string(SDL_GetError()) + ")");
+               Surface_access access (high);
+               for (std::size_t j = 0; j < access.height(); ++ j)
+                 for (std::size_t i = 0; i < access.width(); ++ i)
+                   access.set(i,j, {255, 255, 255, (unsigned char)(0.5 * access.get(i,j)[3])});
+               access.release();
+               SOSAGE_TIMER_STOP(SDL_Image__load_image_create_highlight);
 
-           int result = SDL_BlitScaled(old, nullptr, surf, nullptr);
-           check (result == 0, "Couldn't blit surface ("
-           + std::string(SDL_GetError()) + ")");
-           SDL_FreeSurface(old);
-           SOSAGE_TIMER_STOP(SDL_Image__load_image_texture_downscale);
-         }
+               SOSAGE_TIMER_START(SDL_Image__load_image_hightlight_2);
+               highlight = SDL_CreateTextureFromSurface(m_renderer, high);
+               SDL_FreeSurface (high);
+               SOSAGE_TIMER_STOP(SDL_Image__load_image_hightlight_2);
+             }
 #endif
+             highlights.push_back(highlight);
 
-         SDL_Texture* highlight = nullptr;
-         if (with_highlight)
-         {
-           SOSAGE_TIMER_START(SDL_Image__load_image_create_highlight);
-           SDL_Surface* high = SDL_CreateRGBSurfaceWithFormat
-           (0, surf->w, surf->h, 32, SDL_PIXELFORMAT_ABGR8888);
-           SDL_BlitSurface (surf, nullptr, high, nullptr);
-
-           Surface_access access (high);
-           for (std::size_t j = 0; j < access.height(); ++ j)
-             for (std::size_t i = 0; i < access.width(); ++ i)
-               access.set(i,j, {255, 255, 255, (unsigned char)(0.5 * access.get(i,j)[3])});
-           access.release();
-           SOSAGE_TIMER_STOP(SDL_Image__load_image_create_highlight);
-
-           SOSAGE_TIMER_START(SDL_Image__load_image_hightlight_2);
-           highlight = SDL_CreateTextureFromSurface(m_renderer, high);
-           SDL_FreeSurface (high);
-           SOSAGE_TIMER_STOP(SDL_Image__load_image_hightlight_2);
+             if (with_mask)
+             {
+               SOSAGE_TIMER_START(SDL_Image__load_image_mask);
+               mask = create_mask(surf);
+               SOSAGE_TIMER_STOP(SDL_Image__load_image_mask);
+             }
+             SDL_FreeSurface(surf);
+           }
          }
 
-         auto out = make_image (texture, highlight, width, height);
-         out->texture_downscale = texture_downscale;
+         auto out = make_images (textures, highlights, width, height);
          if (with_mask)
-         {
-           SOSAGE_TIMER_START(SDL_Image__load_image_mask);
-           out->mask = create_mask (surf);
-           SOSAGE_TIMER_STOP(SDL_Image__load_image_mask);
-         }
-         SDL_FreeSurface (surf);
+           out->mask = mask;
          return out;
        });
 
@@ -795,13 +789,13 @@ void SDL::draw (const Image& image, unsigned char alpha,
                 const double wtarget, const double htarget)
 {
 #ifndef SOSAGE_GUILESS
-  if (image->texture.size() == 1)
+  if (image->texture.size() == 2)
   {
     SDL_Rect source;
-    source.x = image->texture_downscale * xsource;
-    source.y = image->texture_downscale * ysource;
-    source.w = image->texture_downscale * wsource;
-    source.h = image->texture_downscale * hsource;
+    source.x = xsource;
+    source.y = ysource;
+    source.w = wsource;
+    source.h = hsource;
 
     SDL_FRect target;
     target.x = xtarget;
@@ -815,6 +809,57 @@ void SDL::draw (const Image& image, unsigned char alpha,
     {
       SDL_SetTextureAlphaMod(image->highlight[0], alpha);
       SDL_RenderCopyF(m_renderer, image->highlight[0], &source, &target);
+    }
+  }
+  else
+  {
+    SDL_Rect source;
+    source.x = xsource;
+    source.y = ysource;
+    source.w = wsource;
+    source.h = hsource;
+
+    double scale = htarget / hsource;
+
+    Uint32 nb_x = Splitter::nb_sub (image->width);
+    Uint32 nb_y = Splitter::nb_sub (image->height);
+    nb_x = 1;
+    nb_y = 1;
+
+    Uint32 idx = 0;
+    for (Uint32 x = 0; x < nb_x; ++ x)
+    {
+      for (Uint32 y = 0; y < nb_y; ++ y)
+      {
+        SDL_Rect rect = Splitter::rect (image->width, image->height, x, y);
+        rect.x = 0;
+        rect.y = 0;
+        rect.w = image->width;
+        rect.h = image->height;
+
+        SDL_Rect inter;
+        if (SDL_IntersectRect (&source, &rect, &inter) == SDL_FALSE)
+        {
+          ++ idx;
+          continue;
+        }
+
+        SDL_FRect target;
+        target.x = x * Splitter::max_length * scale + xtarget;
+        target.y = y * Splitter::max_length * scale + ytarget;
+        target.w = scale * inter.w;
+        target.h = scale * inter.h;
+
+        SDL_SetTextureAlphaMod(image->texture[idx], alpha);
+        SDL_RenderCopyF(m_renderer, image->texture[idx], &inter, &target);
+        if (image->highlight[idx] != nullptr && highlight_alpha != 0)
+        {
+          SDL_SetTextureAlphaMod(image->highlight[idx], alpha);
+          SDL_RenderCopyF(m_renderer, image->highlight[idx], &inter, &target);
+        }
+
+        ++ idx;
+      }
     }
   }
 #endif
