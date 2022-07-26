@@ -109,6 +109,8 @@ public:
   static SDL_RendererInfo m_info;
   static Image_manager m_images;
   static Font_manager m_fonts;
+  static void* m_buffer;
+  static void* m_hbuffer;
   Surface m_icon;
 
 public:

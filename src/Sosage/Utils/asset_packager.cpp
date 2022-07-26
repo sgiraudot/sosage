@@ -72,6 +72,16 @@ Package_files open_packages (const std::string& root)
   return out;
 }
 
+inline std::string size_str (std::size_t size)
+{
+  if (size > 1024 * 1024)
+    return std::to_string(size / (1024 * 1024)) + "MB";
+  else if (size > 1024)
+    return std::to_string(size / 1024) + "kB";
+  // else
+  return std::to_string(size) + "B";
+}
+
 void write_file (std::ofstream& ofile, const std::string& filename, bool compressed)
 {
   std::ifstream ifile (filename);
@@ -79,7 +89,7 @@ void write_file (std::ofstream& ofile, const std::string& filename, bool compres
   oss << ifile.rdbuf();
   std::string str = oss.str();
   Buffer buffer (str.begin(), str.end());
-  if (compressed)
+ // if (compressed)
   {
     std::size_t size_before = buffer.size();
     binary_write (ofile, buffer.size());
@@ -87,7 +97,7 @@ void write_file (std::ofstream& ofile, const std::string& filename, bool compres
     buffer.swap(cbuffer);
     std::size_t size_after = buffer.size();
     std::cerr << " -> compressed by " << 100. * (size_before - size_after) / double(size_before)
-              << "%" << std::endl;
+              << "% (" << size_str(size_before) << " -> " << size_str(size_after) << ")" << std::endl;
     if (size_after > size_before)
       std::cerr << "   WARNING: compression is counterproductive here!" << std::endl;
   }
@@ -116,22 +126,26 @@ void write_image (std::ofstream& ofile, const std::string& filename)
   std::vector<SDL_Surface*> tiles = Splitter::split_image(output);
   SDL_FreeSurface(output);
 
+  std::size_t total_size_before = 0;
+  std::size_t total_size_after = 0;
   for (SDL_Surface* tile : tiles)
   {
     SDL_LockSurface(tile);
     unsigned int size = bpp * tile->w * tile->h;
     std::size_t size_before = size;
+    total_size_before += size_before;
     Buffer buffer = lz4_compress_buffer (tile->pixels, size);
     binary_write (ofile, buffer.size());
     binary_write (ofile, buffer);
     SDL_UnlockSurface(tile);
     std::size_t size_after = buffer.size();
-    std::cerr << " -> compressed by " << 100. * (size_before - size_after) / double(size_before)
-              << "%" << std::endl;
-    if (size_after > size_before)
-      std::cerr << "   WARNING: compression is counterproductive here!" << std::endl;
+    total_size_after += size_after;
     SDL_FreeSurface (tile);
   }
+  std::cerr << " -> compressed by " << 100. * (total_size_before - total_size_after) / double(total_size_before)
+            << "% (" << size_str(total_size_before) << " -> " << size_str(total_size_after) << ")" << std::endl;
+  if (total_size_after > total_size_before)
+    std::cerr << "   WARNING: compression is counterproductive here!" << std::endl;
 }
 
 
@@ -188,7 +202,7 @@ void compile_package (const std::string& input_folder, const std::string& output
       path.resize(path.size() - 3);
       path += "sdl_surface.lz4";
     }
-    else if (extension != "ogg")
+    else
       path += ".lz4";
 
     std::cerr << "Packaging " << path << std::endl;

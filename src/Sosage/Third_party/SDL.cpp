@@ -59,6 +59,8 @@ SDL::Font_manager SDL::m_fonts
   delete std::get<2>(*font);
   delete font;
 });
+void* SDL::m_buffer = nullptr;
+void* SDL::m_hbuffer = nullptr;
 
 SDL::Image_base* SDL::make_images (const std::vector<SDL_Texture*>& texture,
                                    const std::vector<SDL_Texture*>& highlight,
@@ -279,7 +281,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
                SDL_Rect rect = Splitter::rect (width, height, x, y);
 
                SOSAGE_TIMER_START(SDL_Image__load_image_file);
-               surf = SDL_CreateRGBSurfaceWithFormat (0, rect.w, rect.h, 32, format_int);
+               surf = SDL_CreateRGBSurfaceWithFormatFrom (m_buffer, rect.w, rect.h, 32, rect.w * 4, format_int);
                SDL_LockSurface (surf);
                Asset_manager::open (file_name, surf->pixels, x, y);
                SDL_UnlockSurface (surf);
@@ -312,8 +314,9 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
              if (with_highlight)
              {
                SOSAGE_TIMER_START(SDL_Image__load_image_create_highlight);
-               SDL_Surface* high = SDL_CreateRGBSurfaceWithFormat
-               (0, surf->w, surf->h, 32, SDL_PIXELFORMAT_ABGR8888);
+               SDL_Surface* high = SDL_CreateRGBSurfaceWithFormatFrom
+               (m_hbuffer, surf->w, surf->h, 32, surf->pitch, SDL_PIXELFORMAT_ARGB8888);
+               SDL_FillRect(high, nullptr, SDL_MapRGBA(high->format, Uint8(0), Uint8(0), Uint8(0), Uint8(0)));
                SDL_BlitSurface (surf, nullptr, high, nullptr);
 
                Surface_access access (high);
@@ -636,7 +639,8 @@ void SDL::display_error (const std::string& error)
 
 SDL::SDL ()
 {
-
+  m_buffer = (void*)(new char[Splitter::max_length * Splitter::max_length * 4]);
+  m_hbuffer = (void*)(new char[Splitter::max_length * Splitter::max_length * 4]);
 }
 
 void SDL::init (int& window_width, int& window_height, bool fullscreen)
@@ -713,6 +717,8 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
 
 SDL::~SDL ()
 {
+  delete (char*)m_buffer;
+  delete (char*)m_hbuffer;
   clear_managers();
   TTF_Quit ();
   IMG_Quit ();

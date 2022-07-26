@@ -29,6 +29,7 @@
 #include <Sosage/Utils/error.h>
 
 #include <lz4.h>
+#include <lz4hc.h>
 
 namespace Sosage
 {
@@ -38,7 +39,8 @@ Buffer lz4_compress_buffer (void* data, std::size_t size)
   const char* cdata = reinterpret_cast<const char*>(data);
   unsigned int max_lz4_size = LZ4_compressBound(size);
   Buffer out (max_lz4_size);
-  unsigned int true_size = LZ4_compress_default(cdata, out.data(), size, max_lz4_size);
+  unsigned int true_size = LZ4_compress_HC(cdata, out.data(), size, max_lz4_size,
+                                           LZ4HC_CLEVEL_MAX);
   out.resize(true_size);
   return out;
 }
