@@ -29,24 +29,15 @@
 namespace Sosage
 {
 
+Bitmap_2::Bitmap_2() : m_width(0) { }
+
 Bitmap_2::Bitmap_2 (const std::size_t& width, const std::size_t& height, const bool& value)
-  : m_data (width * height, value), m_width (width)
+  : m_data (1 + (width * height) / 8, (value ? 255 : 0)), m_width (width)
 { }
 
 bool Bitmap_2::empty() const
 {
   return m_data.empty();
-}
-
-void Bitmap_2::clear()
-{
-  m_data.clear(); m_width = 0;
-}
-
-void Bitmap_2::resize (const std::size_t& width, const std::size_t& height, const bool& value)
-{
-  m_data.resize (width * height, value);
-  m_width = width;
 }
 
 std::size_t Bitmap_2::width() const
@@ -56,29 +47,27 @@ std::size_t Bitmap_2::width() const
 
 std::size_t Bitmap_2::height() const
 {
-  return m_data.size() / m_width;
+  return (m_data.size() * 8) / m_width;
 }
 
 std::size_t Bitmap_2::size() const
 {
-  return m_data.size();
+  return (m_data.size() * 8);
 }
 
 bool Bitmap_2::operator() (const std::size_t& x, const std::size_t& y) const
 {
-  return m_data[x + m_width * y];
+  std::size_t idx = x + m_width * y;
+  return bool((m_data[idx / 8] >> (idx % 8)) & 1);
 }
 
-Bitmap_2::reference Bitmap_2::operator() (const std::size_t& x, const std::size_t& y)
+void Bitmap_2::set (const std::size_t& x, const std::size_t& y, bool value)
 {
-  return m_data[x + m_width * y];
-}
-
-void Bitmap_2::swap (Bitmap_2& other)
-{
-  m_data.swap (other.m_data);
-  m_width = other.m_width;
-  other.m_width = 0;
+  std::size_t idx = x + m_width * y;
+  if (value)
+    m_data[idx / 8] |= (1 << (idx % 8));
+  else
+    m_data[idx / 8] &= ~(1 << (idx % 8));
 }
 
 } // namespace Sosage

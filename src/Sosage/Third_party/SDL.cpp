@@ -457,7 +457,7 @@ Bitmap_2 SDL::create_mask (SDL_Surface* surf)
 
   for (std::size_t y = 0; y < out.height(); ++ y)
     for (std::size_t x = 0; x < out.width(); ++ x)
-      out(x, y) = (access.get(x,y)[3] != 0);
+      out.set (x, y, access.get(x,y)[3] != 0);
 
   access.release();
 

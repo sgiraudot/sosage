@@ -34,28 +34,20 @@ namespace Sosage
 
 class Bitmap_2
 {
-public:
-
-  using Base = std::vector<bool>;
-  using const_reference = typename Base::reference;
-  using reference = typename Base::reference;
-
 private:
-  Base m_data;
+  std::vector<unsigned char> m_data;
   std::size_t m_width;
 
 public:
 
-  Bitmap_2 (const std::size_t& width = 0, const std::size_t& height = 0, const bool& value = true);
+  Bitmap_2 ();
+  Bitmap_2 (const std::size_t& width, const std::size_t& height, const bool& value = true);
   bool empty() const;
-  void clear();
-  void resize (const std::size_t& width, const std::size_t& height, const bool& value = true);
   std::size_t width() const;
   std::size_t height() const;
   std::size_t size() const;
   bool operator() (const std::size_t& x, const std::size_t& y) const;
-  reference operator() (const std::size_t& x, const std::size_t& y);
-  void swap (Bitmap_2& other);
+  void set (const std::size_t& x, const std::size_t& y, bool value);
 };
 
 }
