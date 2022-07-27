@@ -35,7 +35,7 @@ Image::Image (const std::string& entity, const std::string& component,
   : Base(entity, component), m_origin(0,0), m_z(Config::interface_depth), m_on(true),
     m_collision(BOX), m_scaling(1), m_highlight_alpha(0), m_alpha(255)
 {
-  m_core = Core::Graphic::create_rectangle (w, h, r, g, b, a);
+  std::tie (m_core, m_scaling) = Core::Graphic::create_rectangle (w, h, r, g, b, a);
 }
 
 Image::Image (const std::string& entity, const std::string& component,

@@ -182,7 +182,7 @@ void SDL::Surface_access::release()
     SDL_UnlockSurface(surface);
 }
 
-SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
+std::pair<SDL::Image, double> SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
 {
   SOSAGE_TIMER_START(SDL_Image__create_rectangle);
 
@@ -199,7 +199,16 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
   amask = 0xff000000;
 #endif
 
-  SDL_Surface* surf = SDL_CreateRGBSurface (0, w, h, 32, rmask, gmask, bmask, amask);
+  double scale = 1.;
+  Uint32 l = std::max(w,h);
+  if (l > Splitter::max_length)
+  {
+    scale = std::ceil(l / double(Splitter::max_length));
+    w /= scale;
+    h /= scale;
+  }
+
+  SDL_Surface* surf = SDL_CreateRGBSurfaceFrom (m_buffer, w, h, 32, w * 4, rmask, gmask, bmask, amask);
   check (surf != nullptr, "Cannot create rectangle surface ("
          + std::string(SDL_GetError()) + ")");
 
@@ -217,8 +226,8 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
   SDL_Texture* highlight = nullptr;
   if (a == 0) // special ellipse highlight for fully transparent objects
   {
-    SDL_Surface* high = SDL_CreateRGBSurface (0, surf->w,
-                                              surf->h, 32, rmask, gmask, bmask, amask);
+    SDL_Surface* high = SDL_CreateRGBSurfaceFrom (m_hbuffer, surf->w,
+                                                  surf->h, 32, surf->w * 4, rmask, gmask, bmask, amask);
 
     Surface_access access(high);
     for (std::size_t i = 0; i < access.width(); ++ i)
@@ -244,7 +253,8 @@ SDL::Image SDL::create_rectangle (int w, int h, int r, int g, int b, int a)
 
   SOSAGE_TIMER_STOP(SDL_Image__create_rectangle);
 
-  return m_images.make_single (make_image, text, highlight, w, h);
+  return std::make_pair (m_images.make_single (make_image, text, highlight, w, h),
+                         scale);
 }
 
 SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool with_highlight)
@@ -717,8 +727,8 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
 
 SDL::~SDL ()
 {
-  delete (char*)m_buffer;
-  delete (char*)m_hbuffer;
+  delete[] (char*)m_buffer;
+  delete[] (char*)m_hbuffer;
   clear_managers();
   TTF_Quit ();
   IMG_Quit ();

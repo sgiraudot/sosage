@@ -115,7 +115,7 @@ public:
 
 public:
 
-  static Image create_rectangle (int w, int h, int r, int g, int b, int a);
+  static std::pair<Image, double> create_rectangle (int w, int h, int r, int g, int b, int a);
   static Image load_image (const std::string& file_name, bool with_mask, bool with_highlight);
   static Image compose (const std::initializer_list<Image>& images);
   static Font load_font (const std::string& file_name, int size);
