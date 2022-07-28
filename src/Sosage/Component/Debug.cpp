@@ -82,7 +82,7 @@ void Debug::end_loop()
     double time = m_mean / m_nb;
     m_mean = 0.;
     m_nb = 0;
-    m_cpu = time / (1000 / m_clock.fps());
+    m_cpu = std::min(1., time / (1000 / m_clock.fps()));
   }
 }
 

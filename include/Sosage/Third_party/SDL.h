@@ -71,9 +71,11 @@ public:
     std::vector<SDL_Texture*> texture;
     std::vector<SDL_Texture*> highlight;
     Bitmap_2 mask;
-    double texture_downscale;
     int width;
     int height;
+
+    Image_base () { }
+    Image_base (const Image_base&) = delete;
   };
 
   static Image_base* make_images (const std::vector<SDL_Texture*>& texture,

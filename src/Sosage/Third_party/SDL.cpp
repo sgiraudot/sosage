@@ -46,9 +46,12 @@ SDL::Image_manager SDL::m_images
 ([](Image_base* img)
 {
   for (SDL_Texture* t : img->texture)
-    SDL_DestroyTexture (t);
+    if (t != nullptr)
+      SDL_DestroyTexture (t);
   for (SDL_Texture* t : img->highlight)
-    SDL_DestroyTexture (t);
+    if (t != nullptr)
+      SDL_DestroyTexture (t);
+  delete img;
 });
 SDL::Font_manager SDL::m_fonts
 ([](Font_base* font)
@@ -70,7 +73,6 @@ SDL::Image_base* SDL::make_images (const std::vector<SDL_Texture*>& texture,
   out->highlight = highlight;
   out->width = width;
   out->height = height;
-  out->texture_downscale = 1.;
   return out;
 }
 
@@ -83,7 +85,6 @@ SDL::Image_base* SDL::make_image (SDL_Texture* texture,
   out->highlight.push_back(highlight);
   out->width = width;
   out->height = height;
-  out->texture_downscale = 1.;
   return out;
 }
 
