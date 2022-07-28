@@ -282,7 +282,7 @@ if(SOSAGE_COMPILE_SCAP)
     "src/Sosage/Utils/asset_packager.cpp" "src/Sosage/Utils/Asset_manager.cpp" "src/Sosage/Utils/Bitmap_2.cpp"
      "src/Sosage/Utils/binary_io.cpp" "src/Sosage/Utils/color.cpp"
     "src/Sosage/Utils/conversions.cpp" "src/Sosage/Utils/error.cpp" "src/Sosage/Utils/geometry.cpp"
-    "src/Sosage/Utils/profiling.cpp")
+    "src/Sosage/Utils/image_split.cpp" "src/Sosage/Utils/profiling.cpp")
   add_executable("SCAP" "src/Sosage/SCAP.cpp" ${SCAP_SRC})
   target_link_libraries("SCAP" PUBLIC sosage)
   target_compile_options("SCAP" PUBLIC -DSOSAGE_SCAP)
