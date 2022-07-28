@@ -42,6 +42,9 @@
 namespace Sosage::SCAP
 {
 
+std::size_t package_size_before = 0;
+std::size_t package_size_after = 0;
+
 std::string package (const std::string& filename)
 {
   std::string out = "";
@@ -72,14 +75,23 @@ Package_files open_packages (const std::string& root)
   return out;
 }
 
-inline std::string size_str (std::size_t size)
+inline void display_compression (std::size_t before, std::size_t after)
 {
-  if (size > 1024 * 1024)
-    return std::to_string(size / (1024 * 1024)) + "MB";
-  else if (size > 1024)
-    return std::to_string(size / 1024) + "kB";
-  // else
-  return std::to_string(size) + "B";
+  if (after > before)
+    std::cerr << " -> counterproductive compression (";
+  else if (int(std::round(before / double(after)) < 2))
+    std::cerr << " -> compressed by " << 100. * (before - after) / double(before) << "% (";
+  else
+    std::cerr << " -> compressed x" << int(std::round(before / double(after))) << " (";
+
+  std::size_t min = std::min(before, after);
+
+  if (min > 1024 * 1024)
+    std::cerr << before / (1024 * 1024) << " MB  ->  " << after / (1024 * 1024) << " MB)" << std::endl;
+  else if (min > 1024)
+    std::cerr << before / 1024 << " kB  ->  " << after / 1024 << " kB)" << std::endl;
+  else
+    std::cerr << before << " B  ->  " << after << " B)" << std::endl;
 }
 
 void write_file (std::ofstream& ofile, const std::string& filename, bool compressed)
@@ -92,26 +104,30 @@ void write_file (std::ofstream& ofile, const std::string& filename, bool compres
  // if (compressed)
   {
     std::size_t size_before = buffer.size();
+    package_size_before += size_before;
+
     binary_write (ofile, buffer.size());
     Buffer cbuffer = lz4_compress_buffer (buffer.data(), buffer.size());
     buffer.swap(cbuffer);
     std::size_t size_after = buffer.size();
-    std::cerr << " -> compressed by " << 100. * (size_before - size_after) / double(size_before)
-              << "% (" << size_str(size_before) << " -> " << size_str(size_after) << ")" << std::endl;
-    if (size_after > size_before)
-      std::cerr << "   WARNING: compression is counterproductive here!" << std::endl;
+    package_size_after += size_after;
+    display_compression (size_before, size_after);
   }
   binary_write (ofile, buffer.size());
   binary_write (ofile, buffer);
 }
 
-void write_image (std::ofstream& ofile, const std::string& filename)
+void write_image (std::ofstream& ofile, const std::string& filename, bool is_object)
 {
   SDL_Surface* input = IMG_Load (filename.c_str());
   SDL_PixelFormat* format = SDL_AllocFormat(surface_format);
   SDL_Surface *output = SDL_ConvertSurface(input, format, 0);
   SDL_FreeFormat(format);
   SDL_FreeSurface(input);
+
+  Bitmap_2 mask;
+  if (is_object)
+    mask = Third_party::SDL::create_mask(output);
 
   SDL_LockSurface(output);
   unsigned short width = (unsigned short)(output->w);
@@ -123,8 +139,16 @@ void write_image (std::ofstream& ofile, const std::string& filename)
   binary_write (ofile, height);
   binary_write (ofile, surface_format);
 
-  std::vector<SDL_Surface*> tiles = Splitter::split_image(output);
-  SDL_FreeSurface(output);
+  std::vector<SDL_Surface*> tiles;
+  if (endswith (filename, "_map.png"))
+  {
+    tiles.push_back(output);
+  }
+  else
+  {
+    tiles = Splitter::split_image(output);
+    SDL_FreeSurface(output);
+  }
 
   std::size_t total_size_before = 0;
   std::size_t total_size_after = 0;
@@ -140,17 +164,56 @@ void write_image (std::ofstream& ofile, const std::string& filename)
     SDL_UnlockSurface(tile);
     std::size_t size_after = buffer.size();
     total_size_after += size_after;
+
+    // Highlight
+    if (is_object)
+    {
+      SDL_Surface* high = SDL_CreateRGBSurfaceWithFormat (0, tile->w, tile->h, 32, surface_format);
+      SDL_FillRect(high, nullptr, SDL_MapRGBA(high->format, Uint8(0), Uint8(0), Uint8(0), Uint8(0)));
+      SDL_BlitSurface (tile, nullptr, high, nullptr);
+
+      Third_party::SDL::Surface_access access (high);
+      for (std::size_t j = 0; j < access.height(); ++ j)
+        for (std::size_t i = 0; i < access.width(); ++ i)
+          access.set(i,j, {255, 255, 255, (unsigned char)(0.5 * access.get(i,j)[3])});
+      access.release();
+
+      SDL_LockSurface(high);
+      total_size_before += size_before;
+      Buffer buffer = lz4_compress_buffer (high->pixels, size);
+      binary_write (ofile, buffer.size());
+      binary_write (ofile, buffer);
+      SDL_UnlockSurface(high);
+      size_after = buffer.size();
+      total_size_after += size_after;
+
+      SDL_FreeSurface (high);
+    }
     SDL_FreeSurface (tile);
   }
-  std::cerr << " -> compressed by " << 100. * (total_size_before - total_size_after) / double(total_size_before)
-            << "% (" << size_str(total_size_before) << " -> " << size_str(total_size_after) << ")" << std::endl;
-  if (total_size_after > total_size_before)
-    std::cerr << "   WARNING: compression is counterproductive here!" << std::endl;
+
+  if (is_object)
+  {
+    std::size_t size_before = mask.size();
+    total_size_before += size_before;
+    Buffer buffer = lz4_compress_buffer (mask.data(), size_before);
+    binary_write (ofile, size_before);
+    binary_write (ofile, buffer.size());
+    binary_write (ofile, buffer);
+    std::size_t size_after = buffer.size();
+    total_size_after += size_after;
+  }
+
+  package_size_before += total_size_before;
+  package_size_after += total_size_after;
+
+  display_compression (total_size_before, total_size_after);
 }
 
 
 void compile_package (const std::string& input_folder, const std::string& output_folder)
 {
+  std::cerr.precision(3);
   // Prepare package
   std::filesystem::create_directory(output_folder + "/data/");
   std::filesystem::create_directory(output_folder + "/resources");
@@ -216,7 +279,8 @@ void compile_package (const std::string& input_folder, const std::string& output
     binary_write (*file, path);
 
     if (extension == "png")
-      write_image (*file, abs_path);
+      write_image (*file, abs_path, contains(path, "images/objects") ||
+                   contains(path, "images/interface") || contains(path, "images/inventory"));
     else
     {
       if (extension != "yaml" && extension != "ogg" && extension != "ttf")
@@ -227,6 +291,9 @@ void compile_package (const std::string& input_folder, const std::string& output
   unsigned char zero_size = 0;
   for (auto& f : files)
     binary_write(*(f.second), zero_size);
+
+  std::cerr << "All done" << std::endl;
+  display_compression (package_size_before, package_size_after);
 }
 
 void decompile_package (const std::string& filename, const std::string& folder)

@@ -147,6 +147,7 @@ bool Asset_manager::init (const std::string& folder, bool scap_mode)
         passet.buffer_id = buffer_id;
 
         auto ext = fname.find(".sdl_surface.lz4");
+        debug << fname << std::endl;
         if (ext != std::string::npos) // custom surface
         {
           fname.resize(ext);
@@ -158,14 +159,29 @@ bool Asset_manager::init (const std::string& folder, bool scap_mode)
           unsigned int bpp = (unsigned int)(pixel_format->BytesPerPixel);
           SDL_FreeFormat(pixel_format);
 
-          Uint32 nb_x = Splitter::nb_sub (passet.width);
-          Uint32 nb_y = Splitter::nb_sub (passet.height);
+          bool is_object = contains(fname, "images/objects") ||
+                           contains(fname, "images/interface") ||
+                           contains(fname, "images/inventory");
+
+          bool is_map = endswith (fname, "_map.png");
+
+          Uint32 nb_x = 1;
+          Uint32 nb_y = 1;
+          if (!is_map)
+          {
+            nb_x = Splitter::nb_sub (passet.width);
+            nb_y = Splitter::nb_sub (passet.height);
+          }
 
           for (Uint32 x = 0; x < nb_x; ++ x)
           {
             for (Uint32 y = 0; y < nb_y; ++ y)
             {
-              SDL_Rect rect = Splitter::rect (passet.width, passet.height, x, y);
+              SDL_Rect rect;
+              rect.x = 0; rect.y = 0; rect.w = passet.width; rect.h = passet.height;
+              if (!is_map)
+                rect = Splitter::rect (passet.width, passet.height, x, y);
+
               Packaged_asset lpasset;
               lpasset.buffer_id = buffer_id;
               lpasset.width = rect.w;
@@ -180,7 +196,38 @@ bool Asset_manager::init (const std::string& folder, bool scap_mode)
               std::string lfname = fname + "." + std::to_string(x)
                       + "x" + std::to_string(y);
               package_asset_map.insert (std::make_pair (lfname, lpasset));
+
+              if (is_object)
+              {
+                Packaged_asset lpasset;
+                lpasset.buffer_id = buffer_id;
+                lpasset.width = rect.w;
+                lpasset.height = rect.h;
+                lpasset.format = passet.format;
+                lpasset.size = bpp * lpasset.width * lpasset.height;
+                lpasset.compressed_size = asset.binary_read<unsigned int>();
+                lpasset.position = asset.tell();
+                end = lpasset.position + lpasset.compressed_size;
+                asset.seek(end);
+
+                std::string lfname = fname + "." + std::to_string(x)
+                        + "x" + std::to_string(y) + ".HL";
+                package_asset_map.insert (std::make_pair (lfname, lpasset));
+              }
             }
+          }
+
+          if (is_object)
+          {
+            Packaged_asset lpasset;
+            lpasset.buffer_id = buffer_id;
+            lpasset.size = asset.binary_read<unsigned int>();
+            lpasset.compressed_size = asset.binary_read<unsigned int>();
+            lpasset.position = asset.tell();
+            end = lpasset.position + lpasset.compressed_size;
+            asset.seek(end);
+            std::string lfname = fname + ".mask";
+            package_asset_map.insert (std::make_pair (lfname, lpasset));
           }
         }
         else if (!contains (fname, ".lz4")) // uncompressed file
@@ -271,9 +318,11 @@ std::tuple<int, int, int> Asset_manager::image_info (const std::string& filename
   return std::make_tuple(asset.width, asset.height, asset.format);
 }
 
-void Asset_manager::open (const std::string& filename, void* memory, Uint32 x, Uint32 y)
+void Asset_manager::open (const std::string& filename, void* memory, Uint32 x, Uint32 y, bool highlight)
 {
   std::string fname = filename + "." + std::to_string(x) + "x" + std::to_string(y);
+  if (highlight)
+    fname += ".HL";
   auto iter = package_asset_map.find(fname);
   check (iter != package_asset_map.end(), "Packaged asset " + fname + " not found");
   Packaged_asset& asset = iter->second;

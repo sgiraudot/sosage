@@ -52,7 +52,7 @@ std::size_t Bitmap_2::height() const
 
 std::size_t Bitmap_2::size() const
 {
-  return (m_data.size() * 8);
+  return m_data.size();
 }
 
 bool Bitmap_2::operator() (const std::size_t& x, const std::size_t& y) const
@@ -68,6 +68,11 @@ void Bitmap_2::set (const std::size_t& x, const std::size_t& y, bool value)
     m_data[idx / 8] |= (1 << (idx % 8));
   else
     m_data[idx / 8] &= ~(1 << (idx % 8));
+}
+
+unsigned char* Bitmap_2::data()
+{
+  return m_data.data();
 }
 
 } // namespace Sosage

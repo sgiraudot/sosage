@@ -48,6 +48,8 @@ public:
   std::size_t size() const;
   bool operator() (const std::size_t& x, const std::size_t& y) const;
   void set (const std::size_t& x, const std::size_t& y, bool value);
+
+  unsigned char* data();
 };
 
 }
