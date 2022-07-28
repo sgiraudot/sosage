@@ -723,12 +723,12 @@ Point Test_input::cursor_target (const std::string& id)
   int xmax = img->xmax();
   int ymax = img->ymax();
 
-  Point screen_position = p - img->core().scaling * Vector(img->origin());
+  Point screen_position = p - img->scale() * Vector(img->origin());
 
   double xmin_target = zoom * screen_position.x();
   double ymin_target = zoom * screen_position.y();
-  double xmax_target = zoom * (screen_position.x() + img->core().scaling * (xmax - xmin));
-  double ymax_target = zoom * (screen_position.y() + img->core().scaling * (ymax - ymin));
+  double xmax_target = zoom * (screen_position.x() + img->scale() * (xmax - xmin));
+  double ymax_target = zoom * (screen_position.y() + img->scale() * (ymax - ymin));
 
   // Skip out of boundaries images
   if ((xmax_target < 0 || xmin_target > limit_width)
