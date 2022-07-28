@@ -31,6 +31,7 @@
 #include <Sosage/Core/Graphic.h>
 #include <Sosage/Content.h>
 #include <Sosage/System/Base.h>
+#include <Sosage/Utils/Clock.h>
 
 #include <vector>
 
@@ -42,6 +43,9 @@ class Graphic : public Base
 private:
 
   Core::Graphic m_core;
+  Clock m_clock;
+  double m_start;
+  double m_loop;
 
 public:
 

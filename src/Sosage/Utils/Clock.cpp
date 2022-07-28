@@ -42,6 +42,11 @@ Clock::Clock()
   m_latest = m_start;
 }
 
+double Clock::get() const
+{
+  return Time::now();
+}
+
 void Clock::update(bool verbose)
 {
   Time::Unit now = Time::now();
@@ -49,7 +54,7 @@ void Clock::update(bool verbose)
   {
     m_mean += (now - m_latest);
     ++ m_nb;
-    if (m_nb == 20)
+    if (m_nb == 60)
     {
       m_fps = 1000. / (m_mean / m_nb);
       m_mean = 0.;

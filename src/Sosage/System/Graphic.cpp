@@ -26,6 +26,7 @@
 
 
 #include <Sosage/Component/Animation.h>
+#include <Sosage/Component/Debug.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Path.h>
@@ -45,7 +46,9 @@ namespace C = Component;
 
 Graphic::Graphic (Content& content)
   : Base (content)
-{ }
+{
+  set<C::Double>("CPU", "usage", 0);
+}
 
 void Graphic::init()
 {
@@ -237,7 +240,9 @@ void Graphic::run()
 
   to_display.clear();
 
+  get<C::Debug>(GAME__DEBUG)->end_loop();
   m_core.end();
+  get<C::Debug>(GAME__DEBUG)->start_loop();
 
   SOSAGE_TIMER_STOP(System_Graphic__run);
 }

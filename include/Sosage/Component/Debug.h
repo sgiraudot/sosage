@@ -40,12 +40,19 @@ private:
 
   Content& m_content;
   const Clock& m_clock;
+  double m_start;
+  double m_mean;
+  double m_nb;
+  double m_cpu;
   
 public:
 
   Debug (const std::string& entity, const std::string& component, Content& content, const Clock& clock);
   virtual ~Debug();
   std::string debug_str();
+
+  void start_loop();
+  void end_loop();
 
   STR_NAME("Debug");
 };

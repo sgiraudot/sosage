@@ -48,6 +48,7 @@ class Clock
 public:
 
   Clock();
+  double get() const;
   void update(bool verbose = false);
   double fps() const;
   double time() const;

@@ -37,6 +37,7 @@ namespace Sosage::Component
 
 Debug::Debug (const std::string& entity, const std::string& component, Content& content, const Clock& clock)
   : Boolean(entity, component, false), m_content (content), m_clock (clock)
+  , m_start(0), m_mean(0), m_nb(0)
 { }
 
 Debug::~Debug()
@@ -45,7 +46,8 @@ Debug::~Debug()
 std::string Debug::debug_str()
 {
   std::string out = "[Debug info]\n";
-  out += "FPS = " + std::to_string(m_clock.fps()) + "\n";
+  out += "FPS = " + std::to_string(int(std::round(m_clock.fps()))) + "Hz\n";
+  out += "CPU = " + std::to_string(int(std::round(100. * m_cpu))) + "%\n";
   out += m_content.get<Component::Status>(GAME__STATUS)->str() + "\n\n";
 
   std::size_t nb_comp = 0;
@@ -63,6 +65,25 @@ std::string Debug::debug_str()
            + ", " + std::to_string(pos->value().y()) + ", " + std::to_string(img->z()) + "]\n";
   }
   return out;
+}
+
+void Debug::start_loop()
+{
+  m_start = m_clock.get();
+}
+
+void Debug::end_loop()
+{
+  double end = m_clock.get();
+  m_mean += (end - m_start);
+  ++ m_nb;
+  if (m_nb == 60)
+  {
+    double time = m_mean / m_nb;
+    m_mean = 0.;
+    m_nb = 0;
+    m_cpu = time / (1000 / m_clock.fps());
+  }
 }
 
 } // namespace Sosage::Component
