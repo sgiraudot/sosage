@@ -106,7 +106,6 @@ public:
 
   static SDL_Window* m_window;
   static SDL_Renderer* m_renderer;
-  static SDL_RendererInfo m_info;
   static Image_manager m_images;
   static Font_manager m_fonts;
   static void* m_buffer;

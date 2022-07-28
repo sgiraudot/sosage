@@ -43,7 +43,7 @@ using Output_file = std::shared_ptr<std::ofstream>;
 using Package_files = std::unordered_map<std::string, Output_file>;
 
 Package_files open_packages (const std::string& root);
-void write_file (std::ofstream& ofile, const std::string& filename, bool compressed);
+void write_file (std::ofstream& ofile, const std::string& filename);
 void write_image (std::ofstream& ofile, const std::string& filename, bool is_object);
 void compile_package (const std::string& input_folder, const std::string& output_folder);
 void decompile_package (const std::string& filename, const std::string& folder);

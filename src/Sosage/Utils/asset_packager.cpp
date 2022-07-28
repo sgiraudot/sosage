@@ -94,25 +94,23 @@ inline void display_compression (std::size_t before, std::size_t after)
     std::cerr << before << " B  ->  " << after << " B)" << std::endl;
 }
 
-void write_file (std::ofstream& ofile, const std::string& filename, bool compressed)
+void write_file (std::ofstream& ofile, const std::string& filename)
 {
   std::ifstream ifile (filename);
   std::ostringstream oss;
   oss << ifile.rdbuf();
   std::string str = oss.str();
   Buffer buffer (str.begin(), str.end());
- // if (compressed)
-  {
-    std::size_t size_before = buffer.size();
-    package_size_before += size_before;
+  std::size_t size_before = buffer.size();
+  package_size_before += size_before;
 
-    binary_write (ofile, buffer.size());
-    Buffer cbuffer = lz4_compress_buffer (buffer.data(), buffer.size());
-    buffer.swap(cbuffer);
-    std::size_t size_after = buffer.size();
-    package_size_after += size_after;
-    display_compression (size_before, size_after);
-  }
+  binary_write (ofile, buffer.size());
+  Buffer cbuffer = lz4_compress_buffer (buffer.data(), buffer.size());
+  buffer.swap(cbuffer);
+  std::size_t size_after = buffer.size();
+  package_size_after += size_after;
+  display_compression (size_before, size_after);
+
   binary_write (ofile, buffer.size());
   binary_write (ofile, buffer);
 }
@@ -257,7 +255,7 @@ void compile_package (const std::string& input_folder, const std::string& output
       Output_file file = files[package(path)];
       binary_write (*file, path_size);
       binary_write (*file, map_path);
-      write_file (*file, abs_map_path, true);
+      write_file (*file, abs_map_path);
     }
 
     if (extension == "png")
@@ -285,7 +283,7 @@ void compile_package (const std::string& input_folder, const std::string& output
     {
       if (extension != "yaml" && extension != "ogg" && extension != "ttf")
         std::cerr << "Warning: unknown extension " << extension << std::endl;
-      write_file (*file, abs_path, extension != "ogg");
+      write_file (*file, abs_path);
     }
   }
   unsigned char zero_size = 0;

@@ -147,7 +147,6 @@ bool Asset_manager::init (const std::string& folder, bool scap_mode)
         passet.buffer_id = buffer_id;
 
         auto ext = fname.find(".sdl_surface.lz4");
-        debug << fname << std::endl;
         if (ext != std::string::npos) // custom surface
         {
           fname.resize(ext);

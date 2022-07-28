@@ -42,7 +42,6 @@ namespace Sosage::Third_party
 
 SDL_Window* SDL::m_window = nullptr;
 SDL_Renderer* SDL::m_renderer = nullptr;
-SDL_RendererInfo SDL::m_info;
 SDL::Image_manager SDL::m_images
 ([](Image_base* img)
 {
@@ -478,7 +477,6 @@ SDL::Font SDL::load_font (const std::string& file_name, int size)
 
 Bitmap_2 SDL::create_mask (SDL_Surface* surf)
 {
-  debug << "SURF = " << surf->w << "x" << surf->h << std::endl;
   Bitmap_2 out (surf->w, surf->h);
 
   Surface_access access (surf);
@@ -719,14 +717,22 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
   SDL_GetWindowDisplayMode(m_window, &mode);
   debug << "Refresh rate: " << mode.refresh_rate << "Hz" << std::endl;
 
-  int result = SDL_GetRendererInfo (m_renderer, &m_info);
+  SDL_RendererInfo info;
+  int result = SDL_GetRendererInfo (m_renderer, &info);
   check (result == 0, "Cannot create SDL Renderer Info");
 
-  debug << "Renderer name: " << m_info.name << std::endl;
-  debug << "Supported texture formats: " << std::endl;
-  for (Uint32 i = 0; i < m_info.num_texture_formats; ++ i)
+  debug << "Video display: " << SDL_GetCurrentVideoDriver() << std::endl;
+  debug << "Available video displays: " << std::endl;
+  for (int i = 0; i < SDL_GetNumVideoDrivers(); ++ i)
   {
-    debug << SDL_GetPixelFormatName (m_info.texture_formats[i]) << std::endl;
+    debug << " * " << SDL_GetVideoDriver(i) << std::endl;
+  }
+
+  debug << "Renderer name: " << info.name << std::endl;
+  debug << "Supported texture formats: " << std::endl;
+  for (Uint32 i = 0; i < info.num_texture_formats; ++ i)
+  {
+    debug << " * " << SDL_GetPixelFormatName (info.texture_formats[i]) << std::endl;
   }
 
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");

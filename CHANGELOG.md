@@ -6,8 +6,11 @@ History of versions and modifications of the SOSAGE engine.
 
 ### Game Engine
 
-- Add vsync to avoid artifacts in fullscreen
 - Remove CPU-handled FPS, let vsync deal with frame syncing/delay
+
+### Bug Fixes 
+
+- Use vsync to avoid artifacts in fullscreen
 
 ## `v1.2.1 (summer2022demo1)` - 2022-06-29
 
