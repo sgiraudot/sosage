@@ -42,8 +42,8 @@ SDL_Rect rect (const Uint32& width, const Uint32& height,
 {
   Uint32 nb_x = nb_sub(width);
   Uint32 nb_y = nb_sub(height);
-  Uint32 w = width / nb_x;
-  Uint32 h = height / nb_y;
+  Uint32 w = 1 + width / nb_x;
+  Uint32 h = 1 + height / nb_y;
 
   SDL_Rect out;
   out.x = w * x;

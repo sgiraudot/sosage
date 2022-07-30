@@ -35,7 +35,7 @@
 namespace Sosage::Splitter
 {
 
-constexpr Uint32 max_length = 1024;
+constexpr Uint32 max_length = 512;
 Uint32 nb_sub (const Uint32& length);
 SDL_Rect rect (const Uint32& width, const Uint32& height,
                const Uint32& x, const Uint32& y);
