@@ -222,8 +222,8 @@ std::pair<SDL::Image, double> SDL::create_rectangle (int w, int h, int r, int g,
   SDL_Texture* text;
 #endif
 
-#ifndef SOSAGE_GUILESS
   SDL_Texture* highlight = nullptr;
+#ifndef SOSAGE_GUILESS
   if (a == 0) // special ellipse highlight for fully transparent objects
   {
     SDL_Surface* high = SDL_CreateRGBSurfaceFrom (m_hbuffer, surf->w,
@@ -452,7 +452,8 @@ SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
 
   SDL_SetRenderTarget(m_renderer, nullptr);
 #else
-  SDL_Texture* texture, highlight;
+  SDL_Texture* texture;
+  SDL_Texture* highlight;
 #endif
 
   return m_images.make_single (make_image, texture, highlight, total_width, total_height);
@@ -686,7 +687,7 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
   putenv("SDL_VIDEODRIVER=dummy");
 #endif
   int okay = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
-  check (okay != -1, "Cannot initialize SDL");
+  check (okay != -1, "Cannot initialize SDL: (" + std::string(SDL_GetError()) + ")");
 
   okay = IMG_Init(IMG_INIT_PNG);
   check (okay != -1, "Cannot initialize SDL Image");
@@ -712,7 +713,7 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
          + std::string(SDL_GetError()) + ")");
 
   m_renderer = SDL_CreateRenderer (m_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-  check (m_renderer != nullptr, "Cannot create SDL Renderer");
+  check (m_renderer != nullptr, "Cannot create SDL Renderer: (" + std::string(SDL_GetError()) + ")");
 
   SDL_DisplayMode mode;
   SDL_GetWindowDisplayMode(m_window, &mode);
