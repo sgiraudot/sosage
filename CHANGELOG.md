@@ -7,10 +7,15 @@ History of versions and modifications of the SOSAGE engine.
 ### Game Engine
 
 - Remove CPU-handled FPS, let vsync deal with frame syncing/delay
+- Segment surfaces/textures to avoid overly large memory usage
+- Remove now useless texture downscale
+- Use HC LZ4 compression
+- Precompute highlights and masks
 
 ### Bug Fixes 
 
 - Use vsync to avoid artifacts in fullscreen
+- Memory leaks on sound/music objects fixed
 
 ## `v1.2.1 (summer2022demo1)` - 2022-06-29
 

@@ -373,6 +373,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
                  mask = Bitmap_2 (width, height, false);
                  Asset asset = Asset_manager::open (file_name + ".mask");
                  asset.read (mask.data(), mask.size());
+                 asset.close();
                }
                else
                  mask = create_mask(surf);

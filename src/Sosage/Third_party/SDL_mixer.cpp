@@ -26,7 +26,7 @@
 
 #include <Sosage/Config/config.h>
 #include <Sosage/Third_party/SDL_mixer.h>
-#include <Sosage/Utils/Asset_manager.h>
+
 #include <Sosage/Utils/error.h>
 
 #ifdef SOSAGE_LINKED_WITH_SDL_MIXER
@@ -50,26 +50,28 @@ SDL_mixer::~SDL_mixer()
 SDL_mixer::Music SDL_mixer::load_music (const std::string& file_name)
 {
   Asset asset = Asset_manager::open(file_name);
-  Mix_Music* music = Mix_LoadMUS_RW (asset.base(), 1);
+  Mix_Music* music = Mix_LoadMUS_RW (asset.base(), 0);
   check (music != nullptr, "Cannot load music " + file_name);
-  return music;
+  return std::make_pair (music, asset);
 }
 
 SDL_mixer::Sound SDL_mixer::load_sound (const std::string& file_name)
 {
   Asset asset = Asset_manager::open(file_name);
-  Mix_Chunk* sound = Mix_LoadWAV_RW (asset.base(), 1);
+  Mix_Chunk* sound = Mix_LoadWAV_RW (asset.base(), 0);
+  asset.close();
   check (sound != nullptr, "Cannot load sound " + file_name);
   return sound;
 }
 
-void SDL_mixer::delete_music (const SDL_mixer::Music& music)
+void SDL_mixer::delete_music (SDL_mixer::Music& music)
 {
   debug << "Delete music" << std::endl;
-  Mix_FreeMusic (music);
+  Mix_FreeMusic (music.first);
+  music.second.close();
 }
 
-void SDL_mixer::delete_sound (const SDL_mixer::Sound& sound)
+void SDL_mixer::delete_sound (SDL_mixer::Sound& sound)
 {
   Mix_FreeChunk (sound);
 }
@@ -78,7 +80,7 @@ void SDL_mixer::start_music (const SDL_mixer::Music& music, double volume)
 {
   debug << "Start music with volume " << volume << "% (" << int(volume * Config::max_music_volume) << ")" << std::endl;
   Mix_VolumeMusic(int(volume * Config::max_music_volume));
-  Mix_PlayMusic (music, -1);
+  Mix_PlayMusic (music.first, -1);
 }
 
 void SDL_mixer::stop_music()
@@ -93,7 +95,7 @@ void SDL_mixer::fade (const SDL_mixer::Music& music, double time, bool in)
   {
     debug << "Fade in music " << time << std::endl;
     Mix_HaltMusic(); // Avoid sound "jump" if music still plays
-    Mix_FadeInMusic(music, -1, int(1000 * time));
+    Mix_FadeInMusic(music.first, -1, int(1000 * time));
   }
   else
   {

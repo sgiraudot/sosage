@@ -28,6 +28,7 @@
 #define SOSAGE_THIRD_PARTY_SDL_MIXER_H
 
 #include <Sosage/Config/platform.h>
+#include <Sosage/Utils/Asset_manager.h>
 
 #ifdef SOSAGE_LINKED_WITH_SDL_MIXER
 
@@ -50,7 +51,7 @@ class SDL_mixer
 {
 public:
 
-  using Music = Mix_Music*;
+  using Music = std::pair<Mix_Music*, Asset>;
   using Sound = Mix_Chunk*;
 
 private:
@@ -65,8 +66,8 @@ public:
   static Music load_music (const std::string& file_name);
   static Sound load_sound (const std::string& file_name);
 
-  static void delete_music (const Music& music);
-  static void delete_sound (const Sound& sound);
+  static void delete_music (Music& music);
+  static void delete_sound (Sound& sound);
 
   void start_music (const Music& music, double volume);
   void stop_music();
