@@ -330,6 +330,11 @@ void Asset_manager::open (const std::string& filename, void* memory, Uint32 x, U
       memory, asset.size);
 }
 
+const Package_asset_map& Asset_manager::asset_map()
+{
+  return Asset_manager::package_asset_map;
+}
+
 std::string Asset_manager::local_file_name (const std::string& filename)
 {
   return folder_name + filename;

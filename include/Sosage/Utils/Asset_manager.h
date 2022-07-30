@@ -106,6 +106,8 @@ public:
   static std::tuple<int, int, int> image_info (const std::string& filename);
   static void open (const std::string& filename, void* memory, Uint32 x = 0, Uint32 y = 0, bool highlight = false);
 
+  static const Package_asset_map& asset_map();
+
 private:
 
   static std::string local_file_name (const std::string& filename);

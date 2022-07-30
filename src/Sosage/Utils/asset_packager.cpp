@@ -28,6 +28,7 @@
 
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Third_party/LZ4.h>
+#include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/asset_packager.h>
 #include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/binary_io.h>
@@ -146,6 +147,7 @@ void write_image (std::ofstream& ofile, const std::string& filename, bool is_obj
   {
     tiles = Splitter::split_image(output);
     SDL_FreeSurface(output);
+    std::cerr << " -> image splitted into " << tiles.size() << std::endl;
   }
 
   std::size_t total_size_before = 0;
@@ -294,89 +296,78 @@ void compile_package (const std::string& input_folder, const std::string& output
   display_compression (package_size_before, package_size_after);
 }
 
-void decompile_package (const std::string& filename, const std::string& folder)
+void decompile_package (const std::string& ifolder, const std::string& folder)
 {
-  std::ifstream ifile (filename, std::ios::binary);
-
-  std::unordered_map<std::string, std::pair<std::size_t, std::size_t> > map;
-  std::unordered_map<std::string, std::size_t>  sizes;
-
-  std::size_t end = 0;
-  while (true)
+  if (!Asset_manager::init(ifolder))
   {
-    auto path_size = binary_read<unsigned char>(ifile);
-    if (path_size == 0)
-      break;
-
-    Buffer path (path_size);
-    binary_read(ifile, path);
-    std::string fname = std::string (path.begin(), path.end());
-    std::cerr << fname << std::endl;
-    if (contains (fname, ".sdl_surface.lz4"))
-    {
-      auto width = binary_read<unsigned short>(ifile);
-      auto height= binary_read<unsigned short>(ifile);
-      auto format_enum = binary_read<unsigned int>(ifile);
-      SDL_PixelFormat* format = SDL_AllocFormat(format_enum);
-      unsigned int bpp = (unsigned int)(format->BytesPerPixel);
-      auto uncompressed_size = bpp * width * height;
-      auto file_size = binary_read<unsigned int>(ifile);
-      std::size_t begin = ifile.tellg();
-      end = begin + file_size;
-      ifile.seekg(end);
-      sizes.insert (std::make_pair (fname, uncompressed_size));
-      map.insert (std::make_pair (fname, std::make_pair(begin, end)));
-    }
-    else if (!contains (fname, ".lz4")) // uncompressed file
-    {
-      auto file_size = binary_read<unsigned int>(ifile);
-      std::size_t begin = ifile.tellg();
-      end = begin + file_size;
-      ifile.seekg(end);
-      std::string fname = std::string (path.begin(), path.end());
-      map.insert (std::make_pair (fname, std::make_pair(begin, end)));
-    }
-    else
-    {
-      auto uncompressed_size = binary_read<unsigned int>(ifile);
-      auto file_size = binary_read<unsigned int>(ifile);
-      std::size_t begin = ifile.tellg();
-      end = begin + file_size;
-      ifile.seekg(end);
-      sizes.insert (std::make_pair (fname, uncompressed_size));
-      map.insert (std::make_pair (fname, std::make_pair(begin, end)));
-    }
+    debug << "Asset manager could not use " << ifolder << std::endl;
+    return;
   }
 
-  Buffer buffer(end);
-  ifile.seekg(0);
-  ifile.read(buffer.data(), end);
-  ifile.close();
-
-  for (const auto& m : map)
+  for (const auto& asset : Asset_manager::asset_map())
   {
-    std::string p = m.first;
-    std::cerr << "Decompressing " << p << std::endl;
-    continue;
-
-    std::size_t begin = m.second.first;
-    std::size_t end = m.second.second;
-    std::size_t output_size = sizes[p];
-    std::replace (p.begin(), p.end(), '/', '_');
-    if (!contains(p, ".lz4")) // uncompressed file
+    const std::string& fname = asset.first;
+    auto pos = fname.find(".png.");
+    if (pos != std::string::npos)
     {
-      std::ofstream ofile(p, std::ios::binary);
-      ofile.write (buffer.data() + begin, end - begin);
+      std::string postfix (fname.begin() + pos + 4, fname.end());
+      bool is_hl = false;
+      auto pos2 = postfix.find(".HL");
+      if (pos2 != std::string::npos)
+      {
+        is_hl = true;
+        postfix.resize(pos2);
+      }
+      std::string iname = fname;
+      iname.resize(pos);
+      std::string aname = iname + postfix + ".png";
+      iname += ".png";
+      if (postfix == ".mask")
+        continue;
+      debug << aname << ": ";
+
+      pos2 = postfix.find('x');
+      Uint32 x = std::atoi(std::string(postfix.begin() + 1, postfix.begin() + pos2).c_str());
+      Uint32 y = std::atoi(std::string(postfix.begin() + pos2 + 1, postfix.end()).c_str());
+      int width = -1, height = -1;
+      int format_int = -1;
+      std::tie (width, height, format_int) = Asset_manager::image_info (iname);
+      SDL_Rect rect = Splitter::rect (width, height, x, y);
+      if (contains(iname, "_map.png"))
+      {
+        rect.w = width;
+        rect.h = height;
+      }
+      debug << rect.w << "x" << rect.h << std::endl;
+
+      SDL_Surface* surf = SDL_CreateRGBSurfaceWithFormat (0, rect.w, rect.h, 32, format_int);
+      SDL_LockSurface (surf);
+      Asset_manager::open (iname, surf->pixels, x, y, is_hl);
+
+      std::string ofname = aname;
+      std::replace (ofname.begin(), ofname.end(), '/', '_');
+      ofname = folder + ofname;
+      if (is_hl)
+      {
+        ofname.resize(ofname.size() - 3);
+        ofname += "HL.png";
+      }
+
+      SDL_UnlockSurface (surf);
+      IMG_SavePNG(surf, ofname.c_str());
+      SDL_FreeSurface(surf);
     }
-    else
+    else if (!contains(fname, ".png"))
     {
-      p.resize(p.size() - 4);
-      p = folder + "/" + p;
+      debug << fname << std::endl;
+      std::string ofname = fname;
+      std::replace (ofname.begin(), ofname.end(), '/', '_');
+      ofname = folder + ofname;
 
-      std::ofstream ofile(p, std::ios::binary);
-      Buffer out (output_size);
-      lz4_decompress_buffer (buffer.data() + begin, (end - begin), out.data(), output_size);
-      binary_write (ofile, out);
+      Asset asset = Asset_manager::open(fname);
+      std::ofstream ofile(ofname, std::ios::binary);
+      binary_write (ofile, *asset.buffer());
+      asset.close();
     }
   }
 }
