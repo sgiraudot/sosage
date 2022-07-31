@@ -959,6 +959,8 @@ void SDL::end ()
 {
 #ifndef SOSAGE_GUILESS
   SDL_RenderPresent (m_renderer);
+#else
+  SDL_Delay(20); // If no GUI, simulate GPU delay
 #endif
 }
 
