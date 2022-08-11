@@ -4,7 +4,10 @@ nb_arg = len(sys.argv)
 H = 1080
 
 try:
-    if nb_arg == 4:
+    if nb_arg == 2:
+        h = int(sys.argv[1])
+        print("depth: " + str(3240 * h / 519.113))
+    elif nb_arg == 4:
         if sys.argv[1] == "view":
             ix = int(sys.argv[2])
             iy = int(sys.argv[3])
@@ -58,3 +61,4 @@ except:
     print(" * " + sys.argv[0] + " label X Y W H")
     print(" * " + sys.argv[0] + " view X Y")
     print(" * " + sys.argv[0] + " depth HEIGHT_BACK HEIGHT_FRONT")
+    print(" * " + sys.argv[0] + " CHARACTER_HEIGHT")
