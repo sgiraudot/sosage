@@ -342,8 +342,7 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
                if (with_highlight)
                {
                  SOSAGE_TIMER_START(SDL_Image__load_image_create_highlight);
-                 SDL_Surface* high = SDL_CreateRGBSurfaceWithFormatFrom
-                 (m_hbuffer, surf->w, surf->h, 32, surf->pitch, SDL_PIXELFORMAT_ARGB8888);
+                 SDL_Surface* high = SDL_CreateRGBSurfaceWithFormat (0, surf->w, surf->h, 32, SDL_PIXELFORMAT_ARGB8888);
                  SDL_FillRect(high, nullptr, SDL_MapRGBA(high->format, Uint8(0), Uint8(0), Uint8(0), Uint8(0)));
                  SDL_BlitSurface (surf, nullptr, high, nullptr);
 
