@@ -200,10 +200,15 @@ std::pair<SDL::Image, double> SDL::create_rectangle (int w, int h, int r, int g,
 #endif
 
   double scale = 1.;
-  Uint32 l = std::max(w,h);
-  if (l > Splitter::max_length)
+  if (h*w > int(Splitter::max_length * Splitter::max_length))
   {
-    scale = std::ceil(l / double(Splitter::max_length));
+    scale = std::ceil(h*w / double(Splitter::max_length * Splitter::max_length));
+
+    if (w != round(int(w / scale) * scale) || h != round(int(h / scale) * scale))
+    {
+      debug << "Warning: scaled rectangle's size is modified: " << w << "x" << h << " -> " << round(int(w / scale) * scale) << "x" << round(int(h / scale) * scale) << std::endl;
+    }
+
     w /= scale;
     h /= scale;
   }
