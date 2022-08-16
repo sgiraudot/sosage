@@ -2,7 +2,7 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v1.2.2 (summer2022demo2)` - TBD
+## `v1.2.2 (summer2022demo2)` - 2022-08-16
 
 ### Game Engine
 
