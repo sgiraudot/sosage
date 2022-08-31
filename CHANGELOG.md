@@ -2,6 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.2.3 (summer2022demo3)` - 2022-08-31
+
+### Bug Fixes 
+
+- Update Android framework to latest SDL version to fix AAB-compatibility
+
 ## `v1.2.2 (summer2022demo2)` - 2022-08-16
 
 ### Game Engine
