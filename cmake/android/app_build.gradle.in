@@ -8,13 +8,13 @@ else {
 }
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 31
     defaultConfig {
         if (buildAsApplication) {
             applicationId "${SOSAGE_EDITOR_EXT}.${SOSAGE_EDITOR_PATH}.${SOSAGE_ACTIVITY}"
         }
         minSdkVersion 16
-        targetSdkVersion 26
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0"
         externalNativeBuild {
@@ -24,11 +24,28 @@ android {
             }
         }
     }
+    signingConfigs {
+         release {
+            if (project.hasProperty('SUPERFLUOUS_UPLOAD_STORE_FILE')) {
+                storeFile file(SUPERFLUOUS_UPLOAD_STORE_FILE)
+                storePassword SUPERFLUOUS_UPLOAD_STORE_PASSWORD
+                keyAlias SUPERFLUOUS_UPLOAD_KEY_ALIAS
+                keyPassword SUPERFLUOUS_UPLOAD_KEY_PASSWORD
+            }
+        }
+    }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+           minifyEnabled false
+//           shrinkResources true
+//           debuggable false
+           signingConfig signingConfigs.release
+           proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    applicationVariants.all { variant ->
+        tasks["merge${HACK_VARIANT_NAME}Assets"]
+            .dependsOn("externalNativeBuild${HACK_VARIANT_NAME}")
     }
     if (!project.hasProperty('EXCLUDE_NATIVE_LIBS')) {
         sourceSets.main {

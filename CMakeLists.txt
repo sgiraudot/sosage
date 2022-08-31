@@ -219,6 +219,7 @@ if (SOSAGE_CONFIG_ANDROID)
   set(SDL2_TTF_SOURCE_PATH "" CACHE PATH "Source of the SDL TTF library")
   set(YAML_SOURCE_PATH "" CACHE PATH "Source of the YAML library")
   set(LZ4_SOURCE_PATH "" CACHE PATH "Source of the LZ4 library")
+  set(HACK_VARIANT_NAME "\$\{variant.name.capitalize()\}")
 
   file(COPY "${CMAKE_SOURCE_DIR}/platform/android/" DESTINATION "${CMAKE_BINARY_DIR}/android/")
 
