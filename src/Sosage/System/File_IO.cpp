@@ -612,6 +612,15 @@ void File_IO::read_init ()
     if (auto orig = request<C::String>("Game", "init_new_room_origin"))
       set<C::Variable>("Game", "new_room_origin", orig);
   }
+  if (auto force = request<C::String>("Force_load", "room"))
+  {
+    debug << "Force load " << force->value() << std::endl;
+    set<C::Variable>("Game", "new_room", force);
+    if (auto orig = request<C::String>("Force_load", "origin"))
+      set<C::Variable>("Game", "new_room_origin", orig);
+    else
+      set<C::String>("Game", "new_room_origin", force->value() + "_test");
+  }
 
   read_locale();
   read_hints();

@@ -209,6 +209,22 @@ void Engine::handle_cmdline_args (int argc, char** argv)
         break;
       m_content.set<Component::String>("Save", "suffix", argv[i]);
     }
+#ifdef SOSAGE_DEBUG
+    else if (arg == "--room" || arg == "-r")
+    {
+      ++ i;
+      if (i == argc)
+        break;
+      m_content.set<Component::String>("Force_load", "room", argv[i]);
+      ++ i;
+      if (i == argc)
+        break;
+      if (argv[i][0] == '-')
+        -- i;
+      else
+        m_content.set<Component::String>("Force_load", "origin", argv[i]);
+    }
+#endif
   }
 }
 
