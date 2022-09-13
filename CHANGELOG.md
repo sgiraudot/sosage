@@ -2,6 +2,16 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.3.0 (superfluous)` - TBD
+
+### Release Management
+
+- Handle APK version number with CMake
+
+### Bug Fixes 
+
+- Fix capitalization of first letter with accents
+  
 ## `v1.2.3 (summer2022demo3)` - 2022-08-31
 
 ### Bug Fixes 
