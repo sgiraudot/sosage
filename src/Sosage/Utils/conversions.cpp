@@ -67,6 +67,16 @@ std::string to_string (const bool& t)
   return (t ? "true" : "false");
 }
 
+void capitalize (std::string& str)
+{
+  if (startswith(str, "é"))
+  {
+    str = "É" + std::string(str.begin() + std::string("é").size(), str.end());
+  }
+  else
+    str[0] = toupper(str[0]);
+}
+
 bool contains (const std::initializer_list<const char*>& list, const std::string& str)
 {
   for (const char* s : list)

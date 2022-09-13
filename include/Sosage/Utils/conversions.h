@@ -55,6 +55,8 @@ inline std::string to_string (const T& t, const Ts& ... ts)
   return to_string(t) + to_string(std::forward<const Ts>(ts)...);
 }
 
+void capitalize(std::string& str);
+
 template <typename Set, typename T>
 bool contains (const Set& set, const T& t)
 {

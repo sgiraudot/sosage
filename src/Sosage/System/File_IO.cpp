@@ -564,7 +564,7 @@ void File_IO::read_init ()
   {
     const Core::File_IO::Node& itext = input["text"][i];
     std::string id = itext["id"].string();
-    id[0] = toupper(id[0]); // system id start with uppercase
+    capitalize(id); // system id start with uppercase
     set<C::String>(id , "text", itext["value"].string());
 
     if (itext.has("icon"))

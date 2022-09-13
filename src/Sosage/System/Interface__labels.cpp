@@ -155,7 +155,7 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
   C::Image_handle label, left, right, back;
   if (name != "")
   {
-    name[0] = toupper(name[0]);
+    capitalize(name);
     label = set<C::Image>(id , "image", get<C::Font>("Interface", "font"), "FFFFFF", name);
     group->add(label);
 
