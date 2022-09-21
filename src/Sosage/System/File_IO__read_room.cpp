@@ -588,7 +588,7 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
     else
       conditional_handle = get<C::String_conditional>(id , "image");
 
-    if (!istate.has("skin") && !istate.has("size"))
+    if (!istate.has("skin") && !istate.has("size") && !istate.has("mask"))
       conditional_handle->add(state, nullptr);
     else
     {
@@ -600,6 +600,8 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
         else
           skin = istate["skin"].string("images", "objects", "png");
       }
+      else if (istate.has("mask"))
+        skin = istate["mask"].string("images", "objects", "png");
 
       C::Image_handle img;
       if (istate.has("frames")) // Animation
@@ -625,9 +627,13 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
           img->z() = z;
         }
         else
+        {
           img = C::make_handle<C::Image>(id , "conditional_image", skin, z,
                                          (box_collision ? BOX : PIXEL_PERFECT),
                                          true);
+          if (istate.has("mask"))
+            img->set_alpha(0);
+        }
       }
 
       if (state == "inventory")

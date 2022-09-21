@@ -8,6 +8,10 @@ History of versions and modifications of the SOSAGE engine.
 
 - Handle APK version number with CMake
 
+### Game Engine
+
+- Add possibility to only define highlight mask of object
+
 ### Bug Fixes 
 
 - Fix capitalization of first letter with accents
