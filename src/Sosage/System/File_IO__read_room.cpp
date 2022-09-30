@@ -102,9 +102,12 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
 
   if (input.has("walk"))
   {
+    int steps = 8;
+    if (input["walk"].has("steps"))
+      steps = input["walk"]["steps"].integer();
     std::string walk = input["walk"]["skin"].string("images", "characters", "png");
     awalk = C::make_handle<C::Animation>(id + "_body", "image", walk,
-                                         0, 8, 4, true);
+                                         0, steps, 4, true);
     awalk->set_relative_origin(0.5, 0.95);
     awalk->on() = visible;
   }

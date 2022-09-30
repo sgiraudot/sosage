@@ -41,6 +41,7 @@ namespace Config
 constexpr int camera_limit_left = world_width / 4;
 constexpr int camera_limit_right = (3 * world_width) / 4;
 constexpr int character_speed = 34;
+constexpr double speed_factor = 1.25;
 } // namespace Config
 
 namespace System

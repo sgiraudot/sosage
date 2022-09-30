@@ -439,6 +439,9 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
   Point pos = pbody->value();
 
   double to_walk = Config::character_speed;
+  if constexpr (Config::speed_factor != 1.0)
+      to_walk *= Config::speed_factor;
+
   if (auto ground_map = request<C::Ground_map>("background", "ground_map"))
     to_walk *= ground_map->z_at_point (pos) / Config::world_depth;
 
@@ -519,12 +522,36 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
   else
     row_index = 3; // up
 
-  image->frames().resize(8);
-  for (std::size_t i = 0; i < 8; ++ i)
+  if constexpr (Config::speed_factor != 1.0)
   {
-    image->frames()[i].x = int(i);
-    image->frames()[i].y = row_index;
-    image->frames()[i].duration = 1;
+    image->frames().clear();
+    int nb_images = image->width_subdiv();
+    int normal_id = 0;
+    int fast_id = 0;
+    int i = 0;
+    do
+    {
+      image->frames().emplace_back();
+
+      image->frames().back().x = int(fast_id);
+      image->frames().back().y = row_index;
+      image->frames().back().duration = 1;
+
+      ++ i;
+      normal_id = i % nb_images;
+      fast_id = round(i * Config::speed_factor) % nb_images;
+    }
+    while (normal_id != 0 && fast_id != 0);
+  }
+  else
+  {
+    image->frames().resize(image->width_subdiv());
+    for (std::size_t i = 0; i < std::size_t(image->width_subdiv()); ++ i)
+    {
+      image->frames()[i].x = int(i);
+      image->frames()[i].y = row_index;
+      image->frames()[i].duration = 1;
+    }
   }
 }
 
