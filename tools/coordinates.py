@@ -48,6 +48,16 @@ try:
             ox = ix + iw // 2
             oy = H - iy - round(0.05 * ih)
             print("coordinates: [" + str(ox) + ", " + str(oy) + "]")
+    elif nb_arg == 7:
+        if sys.argv[1] == "code":
+            ix = int(sys.argv[2])
+            iy = int(sys.argv[3])
+            iw = int(sys.argv[4])
+            ih = int(sys.argv[5])
+            H = int(sys.argv[6])
+            ox = ix
+            oy = H - iy - ih
+            print("coordinates: [" + str(ox) + ", " + str(oy) + ", " + str(iw) + ", " + str(ih) + "]")
 
     else:
         raise Exception()
