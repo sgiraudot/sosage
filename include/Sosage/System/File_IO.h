@@ -27,6 +27,7 @@
 #ifndef SOSAGE_SYSTEM_FILE_IO_H
 #define SOSAGE_SYSTEM_FILE_IO_H
 
+#include <Sosage/Component/Action.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Config/config.h>
@@ -66,6 +67,8 @@ public:
 
 private:
 
+  void parse_metafunction (const std::vector<std::string>& args,
+                           Component::Action_handle action);
   void create_locale_dependent_text (const std::string& id, Component::Font_handle font,
                                      const std::string& color, const std::string& text);
   void load_locale_dependent_image (const std::string& entity, const std::string& component,

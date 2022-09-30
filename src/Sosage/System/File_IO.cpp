@@ -560,6 +560,19 @@ void File_IO::read_init ()
   menu_settings_button->set_relative_origin(0.5, 0.5);
   menu_settings_button->on() = false;
 
+  for (std::size_t i = 0; i < input["metafunctions"].size(); ++ i)
+  {
+    const Core::File_IO::Node& imeta = input["metafunctions"][i];
+    std::string id = imeta["id"].string();
+    capitalize(id);
+    auto action = set<C::Action>(id, "metafunction");
+    for (std::size_t k = 0; k < imeta["effect"].size(); ++ k)
+    {
+      std::string function = imeta["effect"][k].nstring();
+      action->add (function, imeta["effect"][k][function].string_array());
+    }
+  }
+
   for (std::size_t i = 0; i < input["text"].size(); ++ i)
   {
     const Core::File_IO::Node& itext = input["text"][i];
@@ -724,6 +737,27 @@ void File_IO::read_hints()
   }
 
   set<C::Set<std::string>>("Hints", "list");
+}
+
+void File_IO::parse_metafunction (const std::vector<std::string>& args,
+                                  Component::Action_handle action)
+{
+  std::string id = args[0];
+  capitalize(id);
+  auto meta = get<C::Action>(id, "metafunction");
+  for (const auto& step : *meta)
+  {
+    std::vector<std::string> fargs = step.args();
+    for (std::string& a : fargs)
+    {
+      if (startswith(a, "ARG"))
+      {
+        std::size_t idx = to_int(std::string(a.begin() + 3, a.end()));
+        a = args[idx + 1];
+      }
+    }
+    action->add (step.function(), fargs);
+  }
 }
 
 void File_IO::create_locale_dependent_text (const std::string& id, Component::Font_handle font,

@@ -69,7 +69,7 @@ void Action::clear()
 
 void Action::add (const std::string& function, const std::vector<std::string>& args)
 {
-  m_steps.push_back (Step ("function_" + function, args));
+  m_steps.push_back (Step (function, args));
 }
 
 void Action::launch()

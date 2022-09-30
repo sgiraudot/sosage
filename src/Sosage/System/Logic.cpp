@@ -50,7 +50,7 @@
 #include <vector>
 
 #define INIT_DISPATCHER(x) \
-  m_dispatcher.insert (std::make_pair(#x, std::bind(&Logic::x, this, std::placeholders::_1)))
+  m_dispatcher.insert (std::make_pair(#x, std::bind(&Logic::function_##x, this, std::placeholders::_1)))
 
 namespace Sosage::System
 {
@@ -60,35 +60,35 @@ namespace C = Component;
 Logic::Logic (Content& content)
   : Base (content), m_current_time(0)
 {
-  INIT_DISPATCHER(function_add);
-  INIT_DISPATCHER(function_camera);
-  INIT_DISPATCHER(function_control);
-  INIT_DISPATCHER(function_cutscene);
-  INIT_DISPATCHER(function_exit);
-  INIT_DISPATCHER(function_fadein);
-  INIT_DISPATCHER(function_fadeout);
-  INIT_DISPATCHER(function_goto);
-  INIT_DISPATCHER(function_hide);
-  INIT_DISPATCHER(function_load);
-  INIT_DISPATCHER(function_lock);
-  INIT_DISPATCHER(function_look);
-  INIT_DISPATCHER(function_loop);
-  INIT_DISPATCHER(function_message);
-  INIT_DISPATCHER(function_move);
-  INIT_DISPATCHER(function_move60fps);
-  INIT_DISPATCHER(function_play);
-  INIT_DISPATCHER(function_rescale);
-  INIT_DISPATCHER(function_rescale60fps);
-  INIT_DISPATCHER(function_set);
-  INIT_DISPATCHER(function_shake);
-  INIT_DISPATCHER(function_show);
-  INIT_DISPATCHER(function_stop);
-  INIT_DISPATCHER(function_talk);
-  INIT_DISPATCHER(function_timer);
-  INIT_DISPATCHER(function_trigger);
-  INIT_DISPATCHER(function_unlock);
-  INIT_DISPATCHER(function_wait);
-  INIT_DISPATCHER(function_zoom);
+  INIT_DISPATCHER(add);
+  INIT_DISPATCHER(camera);
+  INIT_DISPATCHER(control);
+  INIT_DISPATCHER(cutscene);
+  INIT_DISPATCHER(exit);
+  INIT_DISPATCHER(fadein);
+  INIT_DISPATCHER(fadeout);
+  INIT_DISPATCHER(goto);
+  INIT_DISPATCHER(hide);
+  INIT_DISPATCHER(load);
+  INIT_DISPATCHER(lock);
+  INIT_DISPATCHER(look);
+  INIT_DISPATCHER(loop);
+  INIT_DISPATCHER(message);
+  INIT_DISPATCHER(move);
+  INIT_DISPATCHER(move60fps);
+  INIT_DISPATCHER(play);
+  INIT_DISPATCHER(rescale);
+  INIT_DISPATCHER(rescale60fps);
+  INIT_DISPATCHER(set);
+  INIT_DISPATCHER(shake);
+  INIT_DISPATCHER(show);
+  INIT_DISPATCHER(stop);
+  INIT_DISPATCHER(talk);
+  INIT_DISPATCHER(timer);
+  INIT_DISPATCHER(trigger);
+  INIT_DISPATCHER(unlock);
+  INIT_DISPATCHER(wait);
+  INIT_DISPATCHER(zoom);
 
   set<C::Action>("Logic", "action");
 }
@@ -334,8 +334,8 @@ void Logic::run ()
     // already pretty close to the target point, don't move at all
     // and immediately leave
     if (endswith(triggered_action->entity(), "_goto")
-        && triggered_action->first_step().function() == "function_goto"
-        && triggered_action->last_step().function() == "function_load")
+        && triggered_action->first_step().function() == "goto"
+        && triggered_action->last_step().function() == "load")
     {
       auto pos = value<C::Position>(value<C::String>("Player", "name"), "position");
       auto target = value<C::Position>(triggered_action->target_entity(), "position");
