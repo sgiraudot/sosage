@@ -135,7 +135,6 @@ void Animation::run_gui_frame()
         if (c->entity() == "Camera")
           to_remove.emplace_back(a);
       }
-
       get<C::Position>(a->entity() , "position")->set (current);
     }
 
@@ -763,8 +762,12 @@ void Animation::update_camera_target ()
   if (request<C::GUI_animation>("Camera", "animation"))
     return;
 
-  double current_time = value<C::Double>(CLOCK__TIME);
+
   auto position = get<C::Position>(CAMERA__POSITION);
+  if (target == position->value().X())
+    return;
+
+  double current_time = value<C::Double>(CLOCK__TIME);
   set<C::GUI_position_animation>("Camera", "animation", current_time, current_time + Config::camera_speed,
                                  position, Point (target, position->value().y()));
 }
