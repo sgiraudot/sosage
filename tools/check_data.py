@@ -17,7 +17,7 @@ exit_at_first_error = False
 clean_unused = False
 if len(sys.argv) > 2 and sys.argv[2] == '-c':
     clean_unused = True
-    
+
 errors = []
 def error(string):
     if exit_at_first_error:
@@ -445,6 +445,75 @@ if test(data, "hints"):
         test(h, "question", is_line)
         test(h, "answer", is_line)
 
+
+# First, get all states
+for filename in yaml_files:
+    refname = filename
+    current_id = filename.split('/', 1)[-1].split('.',1)[0]
+    data = load_yaml(data_folder + filename)
+    if not data:
+        error("invalid YAML input")
+        continue
+    if filename.startswith("codes/"):
+        if test(data, "states"):
+            all_states[current_id] = set()
+            for s in data["states"]:
+                if test(s, "id"):
+                    all_states[current_id].add(s["id"])
+    elif filename.startswith("objects/"):
+        if test(data, "states"):
+            all_states[current_id] = set()
+            for s in data["states"]:
+                if not test(s, "id"):
+                    continue
+                sid = s["id"]
+                all_states[current_id].add(sid)
+    elif filename.startswith("rooms/"):
+        if "actions" in data:
+            for a in data["actions"]:
+                refname = filename + ":actions"
+                if "states" in a and "id" in a:
+                    id = a["id"]
+                    all_states[id] = set()
+                    for s in a["states"]:
+                        if test(s, "id"):
+                            all_states[id].add(s["id"])
+                        if "states" in a:
+                            all_states[id] = set()
+                            for s in a["states"]:
+                                refname = fname + ":states"
+                                if test(s, "id"):
+                                    all_states[id].add(s["id"])
+                elif "id" not in a:
+                    fname = data_folder + "actions/" + a + ".yaml"
+                    if os.path.exists(fname):
+                        aid = a
+                        a = load_yaml(fname)
+                        if "states" in a:
+                            all_states[aid] = set()
+                            for s in a["states"]:
+                                refname = fname + ":states"
+                                if test(s, "id"):
+                                    all_states[aid].add(s["id"])
+                                    
+        if "musics" in data:
+            for m in data["musics"]:
+                refname = filename + ":musics"
+                if "states" in m:
+                    all_states[m["id"]] = set()
+                    for s in m["states"]:
+                        if test(s, "id"):
+                            all_states[m["id"]].add(s["id"])
+        if "scenery" in data:
+            for s in data["scenery"]:
+                refname = filename + ":scenery"
+                if test(s, "id"):
+                    if "states" in s:
+                        all_states[s["id"]] = set()
+                        for st in s["states"]:
+                            if test(st, "id"):
+                                all_states[s["id"]].add(st["id"])
+        
 iteration = 0
 for filename in yaml_files:
     iteration += 1
@@ -455,7 +524,6 @@ for filename in yaml_files:
 
     data = load_yaml(data_folder + filename)
     if not data:
-        error("invalid YAML input")
         continue
 
     if filename.startswith("characters/"):
@@ -479,10 +547,7 @@ for filename in yaml_files:
         test(data, "idle/positions", is_array)
     elif filename.startswith("codes/"):
         if test(data, "states"):
-            all_states[current_id] = set()
             for s in data["states"]:
-                if test(s, "id"):
-                    all_states[current_id].add(s["id"])
                 test(s, "skin/0", file_exists, ["images/windows", "png"])
                 test(s, "skin/1", file_exists, ["images/windows", "png"])
         test(data, "button_sound", file_exists, ["sounds/effects", "ogg"])
@@ -538,12 +603,10 @@ for filename in yaml_files:
 
         inventory_only = True
         if test(data, "states"):
-            all_states[current_id] = set()
             for s in data["states"]:
                 if not test(s, "id"):
                     continue
                 sid = s["id"]
-                all_states[current_id].add(sid)
                 if "skin" in s:
                     if sid != "inventory":
                         inventory_only = False
@@ -557,6 +620,10 @@ for filename in yaml_files:
                         inventory_only = False
                     test(s, "size/0", is_int)
                     test(s, "size/1", is_int)
+                elif "mask" in s:
+                    if sid != "inventory":
+                        inventory_only = False
+                    test(s, "mask", file_exists, ["images/masks", "png"])
                 if "frames" in s:
                     test(s, "frames", is_int)
                     test(s, "duration", is_int)
@@ -595,12 +662,6 @@ for filename in yaml_files:
                         a = load_yaml(fname)
                 action_ids.add(id)
                 room_ids.add(id)
-
-                if "states" in a:
-                    all_states[id] = set()
-                    for s in a["states"]:
-                        if test(s, "id"):
-                            all_states[id].add(s["id"])
 
         animation_ids = set()
         if "animations" in data:
@@ -672,10 +733,7 @@ for filename in yaml_files:
                     music_ids.add(m["id"])
                     all_ids, ref_ids = test_id_unicity(all_ids, m["id"], ref_ids)
                 if "states" in m:
-                    all_states[m["id"]] = set()
                     for s in m["states"]:
-                        if test(s, "id"):
-                            all_states[m["id"]].add(s["id"])
                         test(s, "sound", file_exists, ["sounds/musics", "ogg"])
                 else:
                     test(m, "sound", file_exists, ["sounds/musics", "ogg"])
@@ -700,10 +758,8 @@ for filename in yaml_files:
                     scenery_ids.add(s["id"])
                     all_ids, ref_ids = test_id_unicity(all_ids, s["id"], ref_ids)
                     if "states" in s:
-                        all_states[s["id"]] = set()
                         for st in s["states"]:
                             if test(st, "id"):
-                                all_states[s["id"]].add(st["id"])
                                 if "skin" in st:
                                     test(st, "skin", file_exists, ["images/scenery", "png"])
                     else:
@@ -885,7 +941,13 @@ else:
         else:
             print("Warning: [" + e[1] + "] " + e[2])
 
+
+safety = True
+            
 if clean_unused:
+    if safety:
+        print("Deactivate safety to remove files")
+        exit()
     for file in to_clean:
         print('rm ' + file)
         out = subprocess.run('rm ' + file, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, check=True)
