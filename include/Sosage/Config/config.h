@@ -39,8 +39,8 @@ constexpr int world_height = 1080;
 constexpr int inventory_height = 150;
 constexpr int inventory_active_zone = 50;
 
-constexpr int object_reach_x = 150;
-constexpr int object_reach_y = 65;
+constexpr int object_reach_x = 250;
+constexpr int object_reach_y = 100;
 constexpr int object_reach_hysteresis = 20;
 
 constexpr double camera_speed = 1.0;
