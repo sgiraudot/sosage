@@ -601,7 +601,7 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
           skin = istate["skin"].string("images", "objects", "png");
       }
       else if (istate.has("mask"))
-        skin = istate["mask"].string("images", "objects", "png");
+        skin = istate["mask"].string("images", "masks", "png");
 
       C::Image_handle img;
       if (istate.has("frames")) // Animation
