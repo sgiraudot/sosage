@@ -329,6 +329,24 @@ void Logic::run ()
       action->stop();
     }
     triggered_action->launch();
+
+    // Very specific event: if we're about to leave a room and we're
+    // already pretty close to the target point, don't move at all
+    // and immediately leave
+    if (endswith(triggered_action->entity(), "_goto")
+        && triggered_action->first_step().function() == "function_goto"
+        && triggered_action->last_step().function() == "function_load")
+    {
+      auto pos = value<C::Position>(value<C::String>("Player", "name"), "position");
+      auto target = value<C::Position>(triggered_action->target_entity(), "position");
+      if (std::abs(pos.X() - target.X()) < Config::goto_active_zone_x
+          && std::abs(pos.Y() - target.Y()) < Config::goto_active_zone_y)
+      {
+        debug << "Player is already close to target, leave room immediately" << std::endl;
+        triggered_action->next_step();
+      }
+    }
+
     debug << "Action " << triggered_action->entity() << " launched" << std::endl;
     set<C::Variable>("Character", "action", triggered_action);
     remove ("Character", "triggered_action");

@@ -164,6 +164,11 @@ const Action::Step& Action::next_step()
   return out;
 }
 
+const Action::Step& Action::first_step()
+{
+  return m_steps.front();
+}
+
 const Action::Step& Action::last_step()
 {
   return m_steps.back();

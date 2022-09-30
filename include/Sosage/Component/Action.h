@@ -82,6 +82,7 @@ public:
   void update_scheduled (const std::function<bool(Timed_handle)>& predicate);
   bool ready() const;
   const Step& next_step();
+  const Step& first_step();
   const Step& last_step();
 
   STR_NAME("Action");

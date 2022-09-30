@@ -43,6 +43,8 @@ constexpr int follow_factor = 1500;
 constexpr double char_spoken_time = 0.05;
 constexpr double min_reading_time = 1.5;
 constexpr double button_click_duration = 0.1;
+constexpr int goto_active_zone_x = 75;
+constexpr int goto_active_zone_y = 30;
 } // Config
 
 namespace System
