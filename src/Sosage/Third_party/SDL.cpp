@@ -245,7 +245,7 @@ std::pair<SDL::Image, double> SDL::create_rectangle (int w, int h, int r, int g,
           access.set(i,j, { 255, 255, 255, 0 });
         else
           access.set(i,j, { 255, 255, 255,
-                            (unsigned char)(255 * (1.0 - dist_to_center)) });
+                            (unsigned char)(128 * (1.0 - dist_to_center)) });
       }
 
     access.release();
