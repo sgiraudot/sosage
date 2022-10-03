@@ -65,7 +65,7 @@ void Sound::run()
   {
     debug << value<C::Double>(CLOCK__TIME) << ": music start" << std::endl;
     check (music, "No music to start");
-    m_core.start_music (music->core(), volume);
+    m_core.start_music (music->core(0), volume);
     music->on() = true;
   }
 
@@ -75,7 +75,7 @@ void Sound::run()
     double current_time = value<C::Double> (CLOCK__TIME);
     m_core.stop_music();
     m_core.set_volume (volume);
-    m_core.fade(music->core(), fade->get<1>() - current_time, fade->get<2>());
+    m_core.fade(music->core(0), fade->get<1>() - current_time, fade->get<2>());
     music->on() = true;
     remove("Music", "fade");
   }
@@ -90,7 +90,7 @@ void Sound::run()
     if (paused && music->on())
     {
       if (status()->was (CUTSCENE))
-        m_core.pause_music (music->core());
+        m_core.pause_music (music->core(0));
       else
         m_core.set_volume(0.15 * volume);
       music->on() = false;
@@ -98,7 +98,7 @@ void Sound::run()
     else if (!paused && !music->on())
     {
       if (status()->is (CUTSCENE))
-        m_core.resume_music(music->core());
+        m_core.resume_music(music->core(0));
       else
         m_core.set_volume (volume);
       music->on() = true;

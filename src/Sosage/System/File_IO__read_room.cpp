@@ -723,35 +723,30 @@ void File_IO::read_action (const std::string& id, const Core::File_IO::Node& nod
 
 void File_IO::read_music(const std::string& id, const Core::File_IO::Node& node)
 {
-  if (node.has("states"))
+  auto music = set<C::Music>(id, "music");
+
+  for (std::size_t i = 0; i < node["tracks"].size(); ++ i)
   {
-    auto state_handle = set<C::String>(id , "state");
-    C::String_conditional_handle conditional_handle;
-    for (std::size_t j = 0; j < node["states"].size(); ++ j)
-    {
-      const Core::File_IO::Node& istate = node["states"][j];
-
-      std::string state = istate["id"].string();
-
-      // init with first state found
-      if (j == 0)
-      {
-        if (state_handle->value() == "")
-          state_handle->set(state);
-        conditional_handle = set<C::String_conditional>(id , "music", state_handle);
-      }
-      else
-        conditional_handle = get<C::String_conditional>(id , "music");
-
-      std::string music = istate["sound"].string("sounds", "musics", "ogg");
-      conditional_handle->add(state, C::make_handle<C::Music>(id , "music", music));
-    }
+    std::string track = node["tracks"][i].string("sounds", "musics", "ogg");
+    music->add_track (track);
   }
-  else
+
+  for (std::size_t i = 0; i < node["sources"].size(); ++ i)
   {
-    std::string music = node["sound"].string("sounds", "musics", "ogg");
-    set<C::Music>(id , "music", music);
+    const Core::File_IO::Node& isource= node["sources"][i];
+    std::string sid = isource["id"].string();
+    std::vector<double> mix (music->tracks());
+    for (std::size_t j = 0; j < music->tracks(); ++ j)
+      mix[j] = isource["mix"][j].floating();
+    if (isource.has("radius"))
+      music->add_source (sid, mix,
+                         isource["coordinates"][0].integer(),
+                         isource["coordinates"][1].integer(),
+                         isource["radius"].integer());
+    else
+      music->add_source (sid, mix);
   }
+  debug << "Read " << music->str() << std::endl;
 }
 
 std::pair<C::Handle, C::Handle>

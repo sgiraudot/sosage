@@ -29,20 +29,85 @@
 namespace Sosage::Component
 {
 
-Music::Music (const std::string& entity, const std::string& component, const std::string& file_name)
+Music::Music (const std::string& entity, const std::string& component)
   : Base(entity, component), m_on(false)
-{
-  m_core = Core::Sound::load_music (file_name);
-}
+{ }
 
 Music::~Music()
 {
-  Core::Sound::delete_music(m_core);
+  for (auto c : m_core)
+    Core::Sound::delete_music(c);
 }
 
-const Core::Sound::Music& Music::core() const
+void Music::add_track (const std::string& file_name)
 {
-  return m_core;
+  m_core.push_back (Core::Sound::load_music (file_name));
+  m_mix.push_back(0);
+}
+
+void Music::add_source (const std::string& id, const std::vector<double>& mix,
+                        double x, double y, double radius)
+{
+  Source& source =  m_sources.insert (std::make_pair (id, Source())).first->second;
+  if (radius != 0)
+  {
+    source.position = Point(x,y);
+    source.radius = radius;
+  }
+  source.mix = mix;
+}
+
+void Music::adjust_mix (const Point& position)
+{
+  for (double& m : m_mix)
+    m = 0.;
+
+  std::size_t gain = 0.;
+  for (const auto& s : m_sources)
+  {
+    const Source& source = s.second;
+    if (!source.on)
+      continue;
+
+    // General source, sound is 100% everywhere
+    if (source.radius == 0)
+    {
+      for (std::size_t i = 0; i < m_mix.size(); ++ i)
+        m_mix[i] += source.mix[i];
+      gain += 1.;
+    }
+    else
+    {
+      // Source becomes louder as we get close to the center
+      double dist = distance (source.position, position);
+      if (dist < source.radius)
+      {
+        double g = (source.radius - dist) / source.radius;
+        for (std::size_t i = 0; i < m_mix.size(); ++ i)
+          m_mix[i] += g * source.mix[i];
+        gain += g;
+      }
+    }
+  }
+
+  // Normalize
+  for (double& m : m_mix)
+    m /= gain;
+}
+
+std::size_t Music::tracks() const
+{
+  return m_core.size();
+}
+
+const Core::Sound::Music& Music::core (std::size_t i) const
+{
+  return m_core[i];
+}
+
+double Music::mix (std::size_t i) const
+{
+  return m_mix[i];
 }
 
 const bool& Music::on() const

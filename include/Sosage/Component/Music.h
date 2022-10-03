@@ -29,6 +29,10 @@
 
 #include <Sosage/Component/Base.h>
 #include <Sosage/Core/Sound.h>
+#include <Sosage/Utils/geometry.h>
+
+#include <unordered_map>
+#include <vector>
 
 namespace Sosage::Component
 {
@@ -36,14 +40,31 @@ namespace Sosage::Component
 class Music : public Base
 {
 private:
-  Core::Sound::Music m_core;
+
+  struct Source
+  {
+    Point position = Point::invalid();
+    double radius = 0;
+    std::vector<double> mix;
+    bool on = true;
+  };
+
+  std::vector<Core::Sound::Music> m_core;
+  std::vector<double> m_mix;
+  std::unordered_map<std::string, Source> m_sources;
   bool m_on;
   
 public:
 
-  Music (const std::string& entity, const std::string& component, const std::string& file_name);
+  Music (const std::string& entity, const std::string& component);
   virtual ~Music();
-  const Core::Sound::Music& core() const;
+  void add_track (const std::string& file_name);
+  void add_source (const std::string& id, const std::vector<double>& mix,
+                   double x = 0, double y = 0, double radius = 0);
+  void adjust_mix (const Point& position);
+  std::size_t tracks() const;
+  const Core::Sound::Music& core (std::size_t i) const;
+  double mix (std::size_t i) const;
   const bool& on() const;
   bool& on();
 
