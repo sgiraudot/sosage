@@ -654,10 +654,7 @@ bool Logic::function_stop (const std::vector<std::string>& args)
   check (args.size() == 1, "function_stop takes 1 argument");
   std::string target = args[0];
   if (target == "music")
-  {
-    remove("Game", "music");
     emit ("Music", "stop");
-  }
   else
     emit (target , "stop_animation");
   return true;

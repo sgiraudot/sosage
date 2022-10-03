@@ -33,14 +33,19 @@
 
 #include <SDL_mixer.h>
 
+#include <array>
 #include <string>
+#include <vector>
 
 namespace Sosage
 {
 
 namespace Config
 {
-constexpr int max_music_volume = 127;
+constexpr int max_music_volume = 128
+                                 ;
+constexpr int max_panning = 255;
+constexpr int sound_channels = 16;
 } // namespace Config
 
 namespace Third_party
@@ -55,8 +60,8 @@ public:
 
 private:
 
-  int m_music_channels;
-  int m_current_channel;
+  static std::array<bool, Config::sound_channels> m_available_channels;
+  std::vector<int> m_music_channels;
 
 public:
 
@@ -77,6 +82,10 @@ public:
   void pause_music (int channel);
   void resume_music (int channel);
   void play_sound (const Sound& sound, double volume, double panning = 0.5);
+
+private:
+
+  int reserve_channel();
 };
 
 } // namespace Third_party

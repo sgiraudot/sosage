@@ -69,7 +69,7 @@ void Music::adjust_mix (const Point& position)
   for (double& m : m_mix)
     m = 0.;
 
-  std::size_t gain = 0.;
+  double gain = 0.;
   for (const auto& s : m_sources)
   {
     const Source& source = s.second;
@@ -87,8 +87,6 @@ void Music::adjust_mix (const Point& position)
     {
       // Source becomes louder as we get close to the center
       double dist = distance (source.position, position);
-      debug << position << " VS " << source.position << std::endl,
-      debug << dist << " / " << source.radius << std::endl;
       if (dist < source.radius)
       {
         double g = (source.radius - dist) / source.radius;
@@ -99,9 +97,15 @@ void Music::adjust_mix (const Point& position)
     }
   }
 
+  gain = std::sqrt(gain);
   // Normalize
+  debug << "Mix = ";
   for (double& m : m_mix)
+  {
     m /= gain;
+    debug << m << " ";
+  }
+  debug << std::endl;
 }
 
 std::size_t Music::tracks() const

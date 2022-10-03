@@ -53,7 +53,7 @@ void Sound::run()
   double volume = value<C::Int>("Music", "volume") / 10.;
   // Low level when playing, higher on cutscenes
   if (!status()->is(CUTSCENE))
-    volume *= 0.25;
+    volume *= 0.75;
 
   bool volume_changed = false;
   if (receive("Music", "adjust_mix"))
@@ -66,7 +66,7 @@ void Sound::run()
   if (receive("Music", "stop"))
   {
     for (std::size_t i = 0; i < music->tracks(); ++ i)
-      m_core.stop_music(i);
+      m_core.fade(music->core(i), i, 0.2, false);
     if (music)
       music->on() = false;
   }

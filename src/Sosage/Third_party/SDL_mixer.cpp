@@ -32,20 +32,27 @@
 
 #ifdef SOSAGE_LINKED_WITH_SDL_MIXER
 
-namespace Sosage::Config
-{
-int sound_channels = MIX_CHANNELS;
-}
-
 namespace Sosage::Third_party
 {
 
+std::array<bool, Config::sound_channels> SDL_mixer::m_available_channels;
+
 SDL_mixer::SDL_mixer()
-  : m_music_channels(0), m_current_channel(0)
 {
-  int init = Mix_OpenAudio (44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
+  int init = Mix_OpenAudio (44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048);
   check (init != -1, "Cannot initialized SDL Mixer (" + std::string(Mix_GetError() )+ ")");
   Mix_AllocateChannels (Config::sound_channels);
+
+  for (std::size_t i = 0; i < Config::sound_channels; ++ i)
+  {
+    m_available_channels[i] = true;
+    Mix_ChannelFinished([](int channel)
+    {
+      debug << "Release channel " << channel << std::endl;
+      m_available_channels[channel] = true;
+    });
+  }
+
 }
 
 SDL_mixer::~SDL_mixer()
@@ -79,22 +86,27 @@ void SDL_mixer::delete_sound (SDL_mixer::Sound& sound)
 
 void SDL_mixer::set_music_channels (std::size_t nb)
 {
-  m_music_channels = nb;
-  if (m_current_channel < int(nb))
-    m_current_channel = int(nb);
+  m_music_channels.resize(nb);
+  for (std::size_t i = 0; i < nb; ++ i)
+  {
+    int channel = reserve_channel();
+    check (channel != -1, "No more sound channel available.");
+    Mix_SetPanning(channel, 255, 255);
+    m_music_channels[i] = channel;
+  }
 }
 
 void SDL_mixer::start_music (const SDL_mixer::Music& music, int channel, double volume)
 {
   debug << "Start music with volume " << volume << "% (" << int(volume * Config::max_music_volume) << ")" << std::endl;
-  Mix_Volume(channel, int(volume * Config::max_music_volume));
-  Mix_PlayChannel (channel, music, -1);
+  Mix_Volume(m_music_channels[channel], int(volume * Config::max_music_volume));
+  Mix_PlayChannel (m_music_channels[channel], music, -1);
 }
 
 void SDL_mixer::stop_music(int channel)
 {
   debug << "Stop music" << std::endl;
-  Mix_HaltChannel(channel);
+  Mix_HaltChannel(m_music_channels[channel]);
 }
 
 void SDL_mixer::fade (const SDL_mixer::Music& music, int channel, double time, bool in)
@@ -102,44 +114,54 @@ void SDL_mixer::fade (const SDL_mixer::Music& music, int channel, double time, b
   if (in)
   {
     debug << "Fade in music " << time << std::endl;
-    Mix_FadeInChannel(channel, music, -1, int(1000 * time));
+    Mix_FadeInChannel(m_music_channels[channel], music, -1, int(1000 * time));
   }
   else
   {
     debug << "Fade out music" << std::endl;
-    Mix_FadeOutChannel(channel, int(1000 * time));
+    Mix_FadeOutChannel(m_music_channels[channel], int(1000 * time));
   }
 }
 
 void SDL_mixer::set_volume (int channel, double percentage)
 {
   debug << "Set volume to " << percentage << "% (" << int(percentage * Config::max_music_volume) << ")" << std::endl;
-  Mix_Volume(channel, int(percentage * Config::max_music_volume));
+  Mix_Volume(m_music_channels[channel], int(percentage * Config::max_music_volume));
 }
 
 void SDL_mixer::pause_music (int channel)
 {
   debug << "Pause music" << std::endl;
-  Mix_Pause (channel);
+  Mix_Pause (m_music_channels[channel]);
 }
 
 void SDL_mixer::resume_music (int channel)
 {
   debug << "Resume music" << std::endl;
-  Mix_Resume(channel);
+  Mix_Resume(m_music_channels[channel]);
 }
 
 void SDL_mixer::play_sound (const SDL_mixer::Sound& sound, double volume, double panning)
 {
-  int left = int(panning * 2 * volume * Config::max_music_volume);
-  int right = int((1. - panning) * 2 * volume * Config::max_music_volume);
-  Mix_VolumeChunk (sound, 255);
-  Mix_SetPanning(m_current_channel, left, right);
-  Mix_PlayChannel(m_current_channel, sound, 0);
-  m_current_channel = m_music_channels + (m_current_channel + 1)
-                      % (Config::sound_channels - m_music_channels);
+  int channel = reserve_channel();
+  int left = int((panning) * Config::max_panning);
+  int right= int((1. - panning) * Config::max_panning);
+  Mix_Volume (channel, volume * Config::max_music_volume);
+  Mix_SetPanning(channel, left, right);
+  Mix_PlayChannel(channel, sound, 0);
 }
 
+int SDL_mixer::reserve_channel()
+{
+  for (std::size_t i = 0; i < Config::sound_channels; ++ i)
+    if (m_available_channels[i])
+    {
+      debug << "Reserve channel " << i << std::endl;
+      m_available_channels[i] = false;
+      return i;
+    }
+  return -1;
+}
 
 } // namespace Sosage::Third_party
 
