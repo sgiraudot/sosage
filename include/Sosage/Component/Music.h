@@ -68,6 +68,9 @@ public:
   double mix (std::size_t i) const;
   const bool& on() const;
   bool& on();
+  void disable_source (const std::string& id);
+  void enable_source (const std::string& id);
+  const std::unordered_map<std::string, Source>& sources() const;
 
   STR_NAME("Music");
 };

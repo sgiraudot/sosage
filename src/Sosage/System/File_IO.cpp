@@ -258,6 +258,8 @@ bool File_IO::read_savefile()
   get<C::Absolute_position>(CAMERA__POSITION)->set (Point(camera_target, 0));
   auto action = set<C::Action>("Saved_game", "action");
   action->add ("play", { input["music"].string() });
+  for (std::size_t i = 0; i < input["music_disabled_sources"].size(); ++ i)
+    action->add ("hide", { input["music"].string(), input["music_disabled_sources"][i].string() });
   action->add ("fadein", { "0.5" });
 
   for (std::size_t i = 0; i < input["hints"].size(); ++ i)
@@ -338,7 +340,17 @@ void File_IO::write_savefile()
   output.write("inventory", get<C::Inventory>("Game", "inventory")->data());
   if (auto numbers = request<C::Vector<std::string>>("phone_numbers", "list"))
     output.write("phone_numbers", numbers->value());
-  output.write("music", get<C::Music>("Game", "music")->entity());
+
+  std::string music_id = get<C::Music>("Game", "music")->entity();
+  output.write("music", music_id);
+  output.start_section("music_disabled_sources");
+  {
+    auto music = get<C::Music>(music_id, "music");
+    for (const auto& s : music->sources())
+      if (!s.second.on)
+        output.write_list_item(s.first);
+  }
+  output.end_section();
 
   if (auto dialog = request<C::String>("Game", "current_dialog"))
   {

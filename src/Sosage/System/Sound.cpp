@@ -67,8 +67,7 @@ void Sound::run()
   {
     for (std::size_t i = 0; i < music->tracks(); ++ i)
       m_core.fade(music->core(i), i, 0.2, false);
-    if (music)
-      music->on() = false;
+    music->on() = false;
   }
 
   if (receive("Music", "start"))
@@ -85,9 +84,9 @@ void Sound::run()
   {
     check (music, "No music to fade");
     double current_time = value<C::Double> (CLOCK__TIME);
+    m_core.set_music_channels(music->tracks());
     for (std::size_t i = 0; i < music->tracks(); ++ i)
     {
-      m_core.stop_music(i);
       m_core.set_volume (i, volume * music->mix(i));
       m_core.fade(music->core(i), i, fade->get<1>() - current_time, fade->get<2>());
     }

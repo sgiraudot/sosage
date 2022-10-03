@@ -133,4 +133,19 @@ bool& Music::on()
   return m_on;
 }
 
+void Music::disable_source (const std::string& id)
+{
+  m_sources[id].on = false;
+}
+
+void Music::enable_source (const std::string& id)
+{
+  m_sources[id].on = true;
+}
+
+const std::unordered_map<std::string, Music::Source>& Music::sources() const
+{
+  return m_sources;
+}
+
 } // namespace Sosage::Component

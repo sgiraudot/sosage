@@ -224,19 +224,29 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
 }
 
 /*
-  - hide: [ID hint_id]   -> makes hint unavailable
-  - hide: [ID target_id] -> makes target_id invisible
+  - hide: [ID hint_id]                -> makes hint unavailable
+  - hide: [ID target_id]              -> makes target_id invisible
+  - hide: [ID music_id, ID source_id] -> disable music source
  */
 bool Logic::function_hide (const std::vector<std::string>& args)
 {
-  check (args.size() == 1, "function_hide takes 1 argument");
+  check (args.size() == 1 || args.size() == 2, "function_hide takes 1 or 2 arguments");
   std::string target = args[0];
-  if (auto question = request<C::String>("Hint_" + target , "question"))
-    get<C::Set<std::string>>("Hints", "list")->erase("Hint_" + target);
-  else if (request<C::Group>(target , "group"))
-    emit (target , "set_hidden");
+  if (args.size() == 1)
+  {
+    if (auto question = request<C::String>("Hint_" + target , "question"))
+      get<C::Set<std::string>>("Hints", "list")->erase("Hint_" + target);
+    else if (request<C::Group>(target , "group"))
+      emit (target , "set_hidden");
+    else
+      get<C::Image>(target , "image")->on() = false;
+  }
   else
-    get<C::Image>(target , "image")->on() = false;
+  {
+    std::string id = args[1];
+    get<C::Music>(target, "music")->disable_source(id);
+    emit("Music", "adjust_mix");
+  }
   return true;
 }
 
@@ -610,37 +620,47 @@ bool Logic::function_shake (const std::vector<std::string>& args)
 }
 
 /*
-  - show: [ID hint_id] -> makes hint available
-  - show: [ID target_id] -> makes target visible
- */
+  - show: [ID hint_id]                -> makes hint available
+  - show: [ID target_id]              -> makes target visible
+  - show: [ID music_id, ID source_id] -> enable music source
+*/
 bool Logic::function_show (const std::vector<std::string>& args)
 {
-  check (args.size() == 1, "function_show takes 2 arguments");
+  check (args.size() == 1 || args.size() == 2, "function_show takes 1 or 2 arguments");
   std::string target = args[0];
-  if (auto group = request<C::Group>(target , "group")) // Character
-    emit (target , "set_visible");
-  else if (auto question = request<C::String>("Hint_" + target , "question"))
-    get<C::Set<std::string>>("Hints", "list")->insert ("Hint_" + target);
-  else
+  if (args.size() == 1)
   {
-    auto image = get<C::Image>(target , "image");
-    if (image->z() == Config::interface_depth) // window
+    if (auto group = request<C::Group>(target , "group")) // Character
+      emit (target , "set_visible");
+    else if (auto question = request<C::String>("Hint_" + target , "question"))
+      get<C::Set<std::string>>("Hints", "list")->insert ("Hint_" + target);
+    else
     {
-      set<C::Variable>("Game", "window", image);
-      emit ("Interface", "show_window");
-
-      auto code = request<C::Code>(target , "code");
-      if (code)
+      auto image = get<C::Image>(target , "image");
+      if (image->z() == Config::interface_depth) // window
       {
-        status()->push (IN_CODE);
-        set<C::Variable>("Game", "code", code);
+        set<C::Variable>("Game", "window", image);
+        emit ("Interface", "show_window");
+
+        auto code = request<C::Code>(target , "code");
+        if (code)
+        {
+          status()->push (IN_CODE);
+          set<C::Variable>("Game", "code", code);
+        }
+        else
+          status()->push (IN_WINDOW);
       }
       else
-        status()->push (IN_WINDOW);
-    }
-    else
-      image->on() = true;
+        image->on() = true;
 
+    }
+  }
+  else
+  {
+    std::string id = args[1];
+    get<C::Music>(target, "music")->enable_source(id);
+    emit("Music", "adjust_mix");
   }
   return true;
 }
