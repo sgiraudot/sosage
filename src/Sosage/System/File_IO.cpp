@@ -560,12 +560,12 @@ void File_IO::read_init ()
   menu_settings_button->set_relative_origin(0.5, 0.5);
   menu_settings_button->on() = false;
 
-  for (std::size_t i = 0; i < input["metafunctions"].size(); ++ i)
+  for (std::size_t i = 0; i < input["functions"].size(); ++ i)
   {
-    const Core::File_IO::Node& imeta = input["metafunctions"][i];
+    const Core::File_IO::Node& imeta = input["functions"][i];
     std::string id = imeta["id"].string();
     capitalize(id);
-    auto action = set<C::Action>(id, "metafunction");
+    auto action = set<C::Action>(id, "function");
     for (std::size_t k = 0; k < imeta["effect"].size(); ++ k)
     {
       std::string function = imeta["effect"][k].nstring();
@@ -739,12 +739,12 @@ void File_IO::read_hints()
   set<C::Set<std::string>>("Hints", "list");
 }
 
-void File_IO::parse_metafunction (const std::vector<std::string>& args,
-                                  Component::Action_handle action)
+void File_IO::parse_function (const std::vector<std::string>& args,
+                              Component::Action_handle action)
 {
   std::string id = args[0];
   capitalize(id);
-  auto meta = get<C::Action>(id, "metafunction");
+  auto meta = get<C::Action>(id, "function");
   for (const auto& step : *meta)
   {
     std::vector<std::string> fargs = step.args();

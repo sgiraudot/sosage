@@ -698,8 +698,8 @@ void File_IO::read_action (const std::string& id, const Core::File_IO::Node& nod
       for (std::size_t k = 0; k < istate["effect"].size(); ++ k)
       {
         std::string function = istate["effect"][k].nstring();
-        if (function == "meta")
-          parse_metafunction (istate["effect"][k][function].string_array(), action);
+        if (function == "func")
+          parse_function (istate["effect"][k][function].string_array(), action);
         else
           action->add (function, istate["effect"][k][function].string_array());
       }
@@ -713,8 +713,8 @@ void File_IO::read_action (const std::string& id, const Core::File_IO::Node& nod
     for (std::size_t k = 0; k < node["effect"].size(); ++ k)
     {
       std::string function = node["effect"][k].nstring();
-      if (function == "meta")
-        parse_metafunction (node["effect"][k][function].string_array(), action);
+      if (function == "func")
+        parse_function (node["effect"][k][function].string_array(), action);
       else
         action->add (function, node["effect"][k][function].string_array());
     }
@@ -793,8 +793,8 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
     for (std::size_t i = 0; i < node["effect"].size(); ++ i)
     {
       std::string function = node["effect"][i].nstring();
-      if (function == "meta")
-        parse_metafunction (node["effect"][i][function].string_array(), act);
+      if (function == "func")
+        parse_function (node["effect"][i][function].string_array(), act);
       else
         act->add (function, node["effect"][i][function].string_array());
     }
