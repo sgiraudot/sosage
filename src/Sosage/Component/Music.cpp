@@ -39,6 +39,13 @@ Music::~Music()
     Core::Sound::delete_music(c);
 }
 
+void Music::init()
+{
+  // Init with point at infinity, to just trigger general sources
+  adjust_mix (Point (std::numeric_limits<double>::infinity(),
+                     std::numeric_limits<double>::infinity()));
+}
+
 void Music::add_track (const std::string& file_name)
 {
   m_core.push_back (Core::Sound::load_music (file_name));
@@ -80,6 +87,8 @@ void Music::adjust_mix (const Point& position)
     {
       // Source becomes louder as we get close to the center
       double dist = distance (source.position, position);
+      debug << position << " VS " << source.position << std::endl,
+      debug << dist << " / " << source.radius << std::endl;
       if (dist < source.radius)
       {
         double g = (source.radius - dist) / source.radius;

@@ -32,15 +32,20 @@
 
 #ifdef SOSAGE_LINKED_WITH_SDL_MIXER
 
+namespace Sosage::Config
+{
+int sound_channels = MIX_CHANNELS;
+}
+
 namespace Sosage::Third_party
 {
 
 SDL_mixer::SDL_mixer()
-  : m_current_channel(1)
+  : m_music_channels(0), m_current_channel(0)
 {
   int init = Mix_OpenAudio (44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
   check (init != -1, "Cannot initialized SDL Mixer (" + std::string(Mix_GetError() )+ ")");
-  Mix_AllocateChannels (10);
+  Mix_AllocateChannels (Config::sound_channels);
 }
 
 SDL_mixer::~SDL_mixer()
@@ -72,49 +77,56 @@ void SDL_mixer::delete_sound (SDL_mixer::Sound& sound)
   Mix_FreeChunk (sound);
 }
 
-void SDL_mixer::start_music (const SDL_mixer::Music& music, double volume)
+void SDL_mixer::set_music_channels (std::size_t nb)
+{
+  m_music_channels = nb;
+  if (m_current_channel < int(nb))
+    m_current_channel = int(nb);
+}
+
+void SDL_mixer::start_music (const SDL_mixer::Music& music, int channel, double volume)
 {
   debug << "Start music with volume " << volume << "% (" << int(volume * Config::max_music_volume) << ")" << std::endl;
-  Mix_Volume(0, int(volume * Config::max_music_volume));
-  Mix_PlayChannel (0, music, -1);
+  Mix_Volume(channel, int(volume * Config::max_music_volume));
+  Mix_PlayChannel (channel, music, -1);
 }
 
-void SDL_mixer::stop_music()
+void SDL_mixer::stop_music(int channel)
 {
   debug << "Stop music" << std::endl;
-  Mix_HaltMusic();
+  Mix_HaltChannel(channel);
 }
 
-void SDL_mixer::fade (const SDL_mixer::Music& music, double time, bool in)
+void SDL_mixer::fade (const SDL_mixer::Music& music, int channel, double time, bool in)
 {
   if (in)
   {
     debug << "Fade in music " << time << std::endl;
-    Mix_FadeInChannel(0, music, -1, int(1000 * time));
+    Mix_FadeInChannel(channel, music, -1, int(1000 * time));
   }
   else
   {
     debug << "Fade out music" << std::endl;
-    Mix_FadeOutChannel(0, int(1000 * time));
+    Mix_FadeOutChannel(channel, int(1000 * time));
   }
 }
 
-void SDL_mixer::set_volume (double percentage)
+void SDL_mixer::set_volume (int channel, double percentage)
 {
   debug << "Set volume to " << percentage << "% (" << int(percentage * Config::max_music_volume) << ")" << std::endl;
-  Mix_Volume(0, int(percentage * Config::max_music_volume));
+  Mix_Volume(channel, int(percentage * Config::max_music_volume));
 }
 
-void SDL_mixer::pause_music (const SDL_mixer::Music&)
+void SDL_mixer::pause_music (int channel)
 {
   debug << "Pause music" << std::endl;
-  Mix_Pause(0);
+  Mix_Pause (channel);
 }
 
-void SDL_mixer::resume_music (const SDL_mixer::Music&)
+void SDL_mixer::resume_music (int channel)
 {
   debug << "Resume music" << std::endl;
-  Mix_Resume(0);
+  Mix_Resume(channel);
 }
 
 void SDL_mixer::play_sound (const SDL_mixer::Sound& sound, double volume, double panning)
@@ -124,7 +136,8 @@ void SDL_mixer::play_sound (const SDL_mixer::Sound& sound, double volume, double
   Mix_VolumeChunk (sound, 255);
   Mix_SetPanning(m_current_channel, left, right);
   Mix_PlayChannel(m_current_channel, sound, 0);
-  m_current_channel = 1 + (m_current_channel + 1) % 7;
+  m_current_channel = m_music_channels + (m_current_channel + 1)
+                      % (Config::sound_channels - m_music_channels);
 }
 
 

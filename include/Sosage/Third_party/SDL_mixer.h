@@ -55,6 +55,7 @@ public:
 
 private:
 
+  int m_music_channels;
   int m_current_channel;
 
 public:
@@ -68,12 +69,13 @@ public:
   static void delete_music (Music& music);
   static void delete_sound (Sound& sound);
 
-  void start_music (const Music& music, double volume);
-  void stop_music();
-  void fade (const Music& music, double time, bool in);
-  void set_volume (double percentage);
-  void pause_music (const Music& music);
-  void resume_music (const Music& music);
+  void set_music_channels (std::size_t nb);
+  void start_music (const Music& music, int channel, double volume);
+  void stop_music(int channel);
+  void fade (const Music& music, int channel, double time, bool in);
+  void set_volume (int channel, double percentage);
+  void pause_music (int channel);
+  void resume_music (int channel);
   void play_sound (const Sound& sound, double volume, double panning = 0.5);
 };
 

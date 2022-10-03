@@ -746,7 +746,7 @@ void File_IO::read_music(const std::string& id, const Core::File_IO::Node& node)
     else
       music->add_source (sid, mix);
   }
-  debug << "Read " << music->str() << std::endl;
+  music->init();
 }
 
 std::pair<C::Handle, C::Handle>

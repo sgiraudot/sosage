@@ -186,6 +186,7 @@ void Animation::run_animation_frame()
     bool looking_right = value<C::Boolean>(player , "looking_right");
     place_and_scale_character (player);
     generate_random_idle_animation (player, looking_right);
+    emit("Music", "adjust_mix");
 
     // Relaunch animations
     for (auto c : components("image"))
@@ -291,7 +292,10 @@ void Animation::run_animation_frame()
       if (path->entity() != "Debug" && !compute_movement_from_path(path))
         to_remove.push_back(c);
       else if (path->entity() == value<C::String>("Player", "name"))
+      {
         has_moved = true;
+        emit("Music", "adjust_mix");
+      }
     }
 
   for (auto c : components("start_talking"))

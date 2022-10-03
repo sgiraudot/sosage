@@ -58,6 +58,7 @@ public:
 
   Music (const std::string& entity, const std::string& component);
   virtual ~Music();
+  void init();
   void add_track (const std::string& file_name);
   void add_source (const std::string& id, const std::vector<double>& mix,
                    double x = 0, double y = 0, double radius = 0);

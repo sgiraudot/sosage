@@ -26,6 +26,7 @@
 
 #include <Sosage/Component/Code.h>
 #include <Sosage/Component/Music.h>
+#include <Sosage/Component/Position.h>
 #include <Sosage/Component/Sound.h>
 #include <Sosage/Component/Status.h>
 #include <Sosage/Config/platform.h>
@@ -54,9 +55,18 @@ void Sound::run()
   if (!status()->is(CUTSCENE))
     volume *= 0.25;
 
+  bool volume_changed = false;
+  if (receive("Music", "adjust_mix"))
+  {
+    const std::string& player = value<C::String>("Player", "name");
+    music->adjust_mix(value<C::Position>(player + "_body", "position"));
+    volume_changed = true;
+  }
+
   if (receive("Music", "stop"))
   {
-    m_core.stop_music();
+    for (std::size_t i = 0; i < music->tracks(); ++ i)
+      m_core.stop_music(i);
     if (music)
       music->on() = false;
   }
@@ -65,7 +75,9 @@ void Sound::run()
   {
     debug << value<C::Double>(CLOCK__TIME) << ": music start" << std::endl;
     check (music, "No music to start");
-    m_core.start_music (music->core(0), volume);
+    m_core.set_music_channels(music->tracks());
+    for (std::size_t i = 0; i < music->tracks(); ++ i)
+      m_core.start_music (music->core(i), int(i), volume * music->mix(i));
     music->on() = true;
   }
 
@@ -73,15 +85,19 @@ void Sound::run()
   {
     check (music, "No music to fade");
     double current_time = value<C::Double> (CLOCK__TIME);
-    m_core.stop_music();
-    m_core.set_volume (volume);
-    m_core.fade(music->core(0), fade->get<1>() - current_time, fade->get<2>());
+    for (std::size_t i = 0; i < music->tracks(); ++ i)
+    {
+      m_core.stop_music(i);
+      m_core.set_volume (i, volume * music->mix(i));
+      m_core.fade(music->core(i), i, fade->get<1>() - current_time, fade->get<2>());
+    }
     music->on() = true;
     remove("Music", "fade");
   }
 
-  if (receive("Music", "volume_changed"))
-    m_core.set_volume (volume);
+  if (receive("Music", "volume_changed") || volume_changed)
+    for (std::size_t i = 0; i < music->tracks(); ++ i)
+      m_core.set_volume (i, volume * music->mix(i));
 
   if (music)
   {
@@ -90,17 +106,21 @@ void Sound::run()
     if (paused && music->on())
     {
       if (status()->was (CUTSCENE))
-        m_core.pause_music (music->core(0));
+        for (std::size_t i = 0; i < music->tracks(); ++ i)
+          m_core.pause_music (i);
       else
-        m_core.set_volume(0.15 * volume);
+        for (std::size_t i = 0; i < music->tracks(); ++ i)
+          m_core.set_volume(i, 0.15 * volume * music->mix(i));
       music->on() = false;
     }
     else if (!paused && !music->on())
     {
       if (status()->is (CUTSCENE))
-        m_core.resume_music(music->core(0));
+        for (std::size_t i = 0; i < music->tracks(); ++ i)
+          m_core.resume_music(i);
       else
-        m_core.set_volume (volume);
+        for (std::size_t i = 0; i < music->tracks(); ++ i)
+          m_core.set_volume (i, volume * music->mix(i));
       music->on() = true;
     }
   }
