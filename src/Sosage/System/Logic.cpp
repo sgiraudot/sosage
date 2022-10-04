@@ -107,8 +107,12 @@ void Logic::run ()
     return;
   }
 
+  bool in_new_room = false;
   if (request<C::Signal>("Game", "in_new_room"))
+  {
+    in_new_room = true;
     status()->pop();
+  }
 
   bool skip_dialog = receive("Game", "skip_dialog");
 
@@ -301,8 +305,9 @@ void Logic::run ()
     get<C::Action>(get<C::Code>("Game", "code")->entity() , "action")->launch();
   }
 
-  if (auto follower = request<C::String>("Follower", "name"))
-    follow (follower->value());
+  if (!in_new_room)
+    if (auto follower = request<C::String>("Follower", "name"))
+      follow (follower->value());
 
   if (auto new_room_origin = request<C::String>("Game", "new_room_origin"))
   {
