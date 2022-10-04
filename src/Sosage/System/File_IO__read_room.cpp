@@ -742,7 +742,8 @@ void File_IO::read_music(const std::string& id, const Core::File_IO::Node& node)
       music->add_source (sid, mix,
                          isource["coordinates"][0].integer(),
                          isource["coordinates"][1].integer(),
-                         isource["radius"].integer());
+                         isource["radius"][0].integer(),
+                         isource["radius"][1].integer());
     else
       music->add_source (sid, mix);
   }

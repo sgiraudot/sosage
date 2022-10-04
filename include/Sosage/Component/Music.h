@@ -44,7 +44,8 @@ private:
   struct Source
   {
     Point position = Point::invalid();
-    double radius = 0;
+    double small_radius = 0;
+    double big_radius = 0;
     std::vector<double> mix;
     bool on = true;
   };
@@ -61,7 +62,8 @@ public:
   void init();
   void add_track (const std::string& file_name);
   void add_source (const std::string& id, const std::vector<double>& mix,
-                   double x = 0, double y = 0, double radius = 0);
+                   double x = 0, double y = 0,
+                   double small_radius = 0, double big_radius = 0);
   void adjust_mix (const Point& position);
   std::size_t tracks() const;
   const Core::Sound::Music& core (std::size_t i) const;

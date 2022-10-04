@@ -53,13 +53,14 @@ void Music::add_track (const std::string& file_name)
 }
 
 void Music::add_source (const std::string& id, const std::vector<double>& mix,
-                        double x, double y, double radius)
+                        double x, double y, double small_radius, double big_radius)
 {
   Source& source =  m_sources.insert (std::make_pair (id, Source())).first->second;
-  if (radius != 0)
+  if (big_radius != 0)
   {
     source.position = Point(x,y);
-    source.radius = radius;
+    source.small_radius = small_radius;
+    source.big_radius = big_radius;
   }
   source.mix = mix;
 }
@@ -77,7 +78,7 @@ void Music::adjust_mix (const Point& position)
       continue;
 
     // General source, sound is 100% everywhere
-    if (source.radius == 0)
+    if (source.big_radius == 0)
     {
       for (std::size_t i = 0; i < m_mix.size(); ++ i)
         m_mix[i] += source.mix[i];
@@ -87,9 +88,12 @@ void Music::adjust_mix (const Point& position)
     {
       // Source becomes louder as we get close to the center
       double dist = distance (source.position, position);
-      if (dist < source.radius)
+      if (dist < source.big_radius)
       {
-        double g = (source.radius - dist) / source.radius;
+        double g = 1.;
+        if (dist > source.small_radius)
+          g = (dist - source.big_radius) / (source.small_radius - source.big_radius);
+        debug << "GAIN = " << g << std::endl;
         for (std::size_t i = 0; i < m_mix.size(); ++ i)
           m_mix[i] += g * source.mix[i];
         gain += g;
