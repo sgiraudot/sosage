@@ -723,6 +723,14 @@ void File_IO::read_action (const std::string& id, const Core::File_IO::Node& nod
 
 void File_IO::read_music(const std::string& id, const Core::File_IO::Node& node)
 {
+  // Do not reload if it's already playing
+  if (auto current = request<C::Music>("Game", "music"))
+    if (current->entity() == id)
+    {
+      set(current);
+      return;
+    }
+
   auto music = set<C::Music>(id, "music");
 
   for (std::size_t i = 0; i < node["tracks"].size(); ++ i)
