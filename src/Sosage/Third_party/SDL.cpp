@@ -921,10 +921,10 @@ void SDL::draw (const Image& image, unsigned char alpha,
 }
 
 void SDL::draw_line (const int xa, const int ya, const int xb, const int yb,
-                     unsigned int red, unsigned green, unsigned blue)
+                     unsigned int red, unsigned green, unsigned blue, unsigned int alpha)
 {
 #ifndef SOSAGE_GUILESS
-  SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), 255);
+  SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), Uint8(alpha));
   SDL_RenderDrawLine (m_renderer, xa, ya, xb, yb);
 #endif
 }
@@ -945,17 +945,47 @@ void SDL::draw_square (const int x, const int y, const int size,
 }
 
 void SDL::draw_rectangle (const int x, const int y, const int width, const int height,
-                          unsigned int red, unsigned green, unsigned blue, unsigned alpha)
+                          unsigned int red, unsigned green, unsigned blue, unsigned alpha,
+                          bool filled)
 {
 #ifndef SOSAGE_GUILESS
-  SDL_Rect rect;
-  rect.x = x - width / 2;
-  rect.y = y - height / 2;
-  rect.w = width;
-  rect.h = height;
-
   SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), Uint8(alpha));
-  SDL_RenderFillRect(m_renderer, &rect);
+  if (filled)
+  {
+    SDL_Rect rect;
+    rect.x = x - width / 2;
+    rect.y = y - height / 2;
+    rect.w = width;
+    rect.h = height;
+
+    SDL_RenderFillRect(m_renderer, &rect);
+  }
+  else
+  {
+    SDL_RenderDrawLine (m_renderer, x - width / 2, y - height / 2, x + width / 2, y - height / 2);
+    SDL_RenderDrawLine (m_renderer, x + width / 2, y - height / 2, x + width / 2, y + height / 2);
+    SDL_RenderDrawLine (m_renderer, x + width / 2, y + height / 2, x - width / 2, y + height / 2);
+    SDL_RenderDrawLine (m_renderer, x - width / 2, y + height / 2, x - width / 2, y - height / 2);
+  }
+#endif
+}
+
+void SDL::draw_circle (const int x, const int y, const float radius,
+                       unsigned int red, unsigned int green, unsigned int blue,
+                       unsigned int alpha)
+{
+#ifndef SOSAGE_GUILESS
+  debug << "Draw circle"<< std::endl;
+  SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), Uint8(alpha));
+  int nb_points = std::max(8, int((2 * M_PI * radius) / 10.));
+  debug << nb_points << std::endl;
+  for (int i = 0; i < nb_points; ++ i)
+  {
+    double a1 = 2 * M_PI * (i / double(nb_points));
+    double a2 = 2 * M_PI * ((i+1) / double(nb_points));
+    SDL_RenderDrawLineF (m_renderer, x + radius * std::cos(a1), y + radius * std::sin(a1),
+                         x + radius * std::cos(a2), y + radius * std::sin(a2));
+  }
 #endif
 }
 

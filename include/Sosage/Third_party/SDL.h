@@ -157,11 +157,16 @@ public:
              const double xtarget, const double ytarget,
              const double wtarget, const double htarget);
   void draw_line (const int xa, const int ya, const int xb, const int yb,
-                  unsigned int red = 255, unsigned green = 0, unsigned blue = 0);
+                  unsigned int red = 255, unsigned green = 0, unsigned blue = 0,
+                  unsigned int alpha = 255);
   void draw_square (const int x, const int b, const int size,
                     unsigned int red = 255, unsigned green = 0, unsigned blue = 0);
   void draw_rectangle (const int x, const int y, const int width, const int height,
-                       unsigned int red, unsigned green, unsigned blue, unsigned alpha);
+                       unsigned int red, unsigned green, unsigned blue, unsigned alpha,
+                       bool filled = false);
+  void draw_circle (const int x, const int y, const float radius,
+                    unsigned int red = 255, unsigned green = 0, unsigned blue = 0,
+                    unsigned int alpha = 255);
   void end();
 
 };

@@ -29,6 +29,7 @@
 #include <Sosage/Component/Debug.h>
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Component/Image.h>
+#include <Sosage/Component/Music.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Status.h>
@@ -197,7 +198,7 @@ void Graphic::run()
           Point s = source - camera;
           Point t = target - camera;
           m_core.draw_line (s.X(), s.Y(), t.X(), t.Y(),
-                            (border ? 255 : 0), 0, (border ? 0 : 255));
+                            (border ? 255 : 0), 0, (border ? 0 : 255), 128);
         });
 
         for (auto c : components("path"))
@@ -233,9 +234,21 @@ void Graphic::run()
 
       m_core.draw_rectangle (view.X(), view.Y(),
                              2 * reach_factor * Config::object_reach_x, 2 * reach_factor * Config::object_reach_y,
-                             255, 0, 0, 16);
+                             128, 0, 0, 128);
     }
 
+    if (auto music = request<C::Music>("Game", "music"))
+    {
+      for (const auto& source : music->sources())
+      {
+       if (source.second.small_radius != 0)
+         m_core.draw_circle (source.second.position.X(), source.second.position.Y(),
+                             source.second.small_radius, 0, 0, 128, 128);
+       if (source.second.big_radius != 0)
+         m_core.draw_circle (source.second.position.X(), source.second.position.Y(),
+                             source.second.big_radius, 0, 0, 128, 128);
+      }
+    }
   }
 
   to_display.clear();
