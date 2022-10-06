@@ -85,6 +85,7 @@ public:
   int X() const;
   int Y() const;
   Box box() const;
+  bool is_invalid() const;
   static Point invalid();
 
   friend std::string to_string(const Point& p)
@@ -114,6 +115,10 @@ public:
   friend bool operator== (const Point& a, const Point& b)
   {
     return ((a.m_x == b.m_x) && (a.m_y == b.m_y));
+  }
+  friend bool operator!= (const Point& a, const Point& b)
+  {
+    return ((a.m_x != b.m_x) || (a.m_y != b.m_y));
   }
 
   friend bool operator< (const Point& a, const Point& b)

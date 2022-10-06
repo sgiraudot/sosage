@@ -125,10 +125,12 @@ void Interface::create_object_label (const std::string& id)
     if (!is_active)
       get<C::Image>(id + "_label", "image")->set_alpha(192);
 
-    auto pos = set<C::Relative_position>
-               (id + "_label", "global_position",
-                get<C::Position>(CAMERA__POSITION),
-                value<C::Position>(id , "label"), -1.);
+    auto base_pos = set<C::Relative_position>
+                    (id + "_label", "base_global_position",
+                     get<C::Position>(CAMERA__POSITION),
+                     value<C::Position>(id , "label"), -1.);
+    auto pos = wriggly_position (id + "_label", "global_position", base_pos, Vector(),
+                                 (open_right || open_left) ? RIGHT_BUTTON : UP, true, true);
 
     update_label(id + "_label", open_left, open_right, pos, scale);
   }
@@ -429,10 +431,12 @@ void Interface::update_label_position (const std::string& id, double scale)
       open_right = right->value();
     }
 
-    auto pos = set<C::Relative_position>
-               (id + "_label", "global_position",
-                get<C::Position>(CAMERA__POSITION),
-                value<C::Position>(id , "label"), -1.);
+    auto base_pos = set<C::Relative_position>
+                    (id + "_label", "base_global_position",
+                     get<C::Position>(CAMERA__POSITION),
+                     value<C::Position>(id , "label"), -1.);
+    auto pos = wriggly_position (id + "_label", "global_position", base_pos, Vector(),
+                                 (open_right || open_left) ? RIGHT_BUTTON : UP, true, true);
 
     update_label(id + "_label", open_left, open_right, pos, scale);
   }
@@ -753,8 +757,10 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   {
     std::string label_id = id + "_" + action + "_label";
     create_label (false, label_id, locale(label->value()), open_left, open_right, BOX);
+
     update_label (label_id, open_left, open_right,
-                  set<C::Relative_position>(label_id , "global_position", position, label_position));
+                  wriggly_position(label_id, "global_position",
+                                   position, label_position, orientation));
 
     // UPPER and DOWNER configs might need to be moved to be on screen
     if (orientation == UPPER || orientation == DOWNER)
@@ -769,8 +775,11 @@ void Interface::generate_action (const std::string& id, const std::string& actio
 
       if (diff != 0)
       {
-        auto pos = get<C::Position>(label_id , "global_position");
-        pos->set (Point (pos->value().x() + diff, pos->value().y()));
+        get<C::Functional_position>(label_id, "global_position")->set
+            (wriggly_position(label_id, "global_position",
+                              position,
+                              pos->value() - position->value() + Vector(diff, 0),
+                              orientation, false)->function());
       }
     }
 
@@ -784,7 +793,11 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     button_id = "Default_" + action + "_button";
     create_label (true, button_id, button, false, false, BOX);
     update_label (button_id, false, false,
-                  set<C::Relative_position>(button_id , "global_position", position, start_position));
+                  wriggly_position(button_id, "global_position",
+                                   position, button_position, orientation));
+    get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
+
+//                  set<C::Relative_position>(button_id , "global_position", position, start_position));
     if (auto img = request<C::Image>("Default_" + action + "_button", "image"))
       img->on() = false;
     get<C::Image>("Default_" + action + "_button_back", "image")->set_alpha(128);
@@ -794,10 +807,61 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     button_id = id + "_" + action + "_button";
     create_label (true, button_id, button, false, false, BOX);
     update_label (button_id, false, false,
-                  set<C::Relative_position>(button_id , "global_position", position, start_position));
+                  wriggly_position(button_id, "global_position",
+                                   position, button_position, orientation));
+    get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
+//                  set<C::Relative_position>(button_id , "global_position", position, start_position));
   }
 
   animate_label (button_id, style, true, position->value() + button_position);
 }
+
+C::Functional_position_handle Interface::wriggly_position (const std::string& id,
+                                                           const std::string& cmp,
+                                                           C::Position_handle origin,
+                                                           const Vector& diff,
+                                                           const Button_orientation& orientation,
+                                                           bool insert,
+                                                           bool object_label)
+{
+  constexpr double range = 5;
+  constexpr double period = 1;
+  auto time = get<C::Double>(CLOCK__TIME);
+  double tbegin = std::asin(-1) - time->value() - Config::inventory_speed;
+  if (object_label)
+    tbegin = random_double(0, 2*M_PI);
+
+  auto out = C::make_handle<C::Functional_position>
+      (id, cmp,
+       [origin, diff, time, tbegin, orientation, object_label](const std::string&) -> Point
+  {
+    if (object_label)
+    {
+      double sin_val = 0.5 * std::sin(tbegin + time->value() / period);
+      if (orientation == UP)
+        return origin->value() + diff + Vector (0, range * sin_val);
+      else
+        return origin->value() + diff + Vector (range * sin_val, 0);
+    }
+    else
+    {
+      double sin_val = 0.5 + 0.5 * std::sin(tbegin + time->value() / period);
+      if (orientation == UP || orientation == UPPER)
+        return origin->value() + diff + Vector (0, -range * sin_val);
+      else if (orientation == DOWN || orientation == DOWNER)
+        return origin->value() + diff + Vector (0, range * sin_val);
+      else if (orientation == RIGHT_BUTTON || orientation == UP_RIGHT || orientation == DOWN_RIGHT)
+        return origin->value() + diff + Vector (range * sin_val, 0);
+      else if (orientation == LEFT_BUTTON || orientation == UP_LEFT || orientation == DOWN_LEFT)
+        return origin->value() + diff + Vector (-range * sin_val, 0);
+    }
+    return origin->value() + diff;
+  }, id, true);
+
+  if (insert)
+    set(out);
+  return out;
+}
+
 
 } // namespace Sosage::System

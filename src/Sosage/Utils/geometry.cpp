@@ -77,6 +77,11 @@ Box Point::box() const
   return {m_x, m_y, m_x, m_y};
 }
 
+bool Point::is_invalid() const
+{
+  return std::isnan(m_x);
+}
+
 Point Point::invalid()
 {
   return Point (std::numeric_limits<double>::quiet_NaN(),

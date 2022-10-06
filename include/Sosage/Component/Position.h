@@ -95,12 +95,15 @@ public:
   STR_SUB(return component_str(m_ref, indent+1, "Reference -> "););
 };
 
+using Relative_position_handle = std::shared_ptr<Relative_position>;
+
 class Functional_position : public Position
 {
   using Function = std::function<Point(const std::string&)>;
   Function m_function;
   std::string m_arg;
   bool m_is_interface;
+  mutable Point m_tmp_point;
 
 public:
 
@@ -109,13 +112,16 @@ public:
                        bool is_interface = false);
 
   virtual Point value() const;
+  const Function& function() const;
   virtual void set (const Point& p);
+  void set (const Function& function);
   bool is_interface() const;
 
   STR_NAME("Functional_position");
   STR_VALUE("arg(" + m_arg + ")");
 };
 
+using Functional_position_handle = std::shared_ptr<Functional_position>;
 
 } // namespace Sosage::Component
 

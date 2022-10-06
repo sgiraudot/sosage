@@ -108,17 +108,35 @@ bool Relative_position::is_interface() const
 Functional_position::Functional_position (const std::string& entity, const std::string& component,
                                           const Function& function,
                                           const std::string& arg, bool is_interface)
-  : Position(entity, component), m_function(function), m_arg(arg), m_is_interface(is_interface)
+  : Position(entity, component), m_function(function), m_arg(arg), m_is_interface(is_interface),
+    m_tmp_point(Point::invalid())
 { }
 
 Point Functional_position::value() const
 {
+  if (!m_tmp_point.is_invalid())
+  {
+    Point out = m_tmp_point;
+    m_tmp_point = Point::invalid();
+    return out;
+  }
   return m_function(m_arg);
 }
 
-void Functional_position::set (const Point&)
+const Functional_position::Function& Functional_position::function() const
 {
-  check(false, "Trying to set hardcoded position of functional position");
+  return m_function;
+}
+
+void Functional_position::set (const Point& p)
+{
+//  check(false, "Trying to set hardcoded position of functional position");
+  m_tmp_point = p;
+}
+
+void Functional_position::set (const Function& function)
+{
+  m_function = function;
 }
 
 bool Functional_position::is_interface() const

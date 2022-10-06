@@ -102,6 +102,12 @@ private:
   void generate_action (const std::string& id, const std::string& action,
                         const Button_orientation& orientation, const std::string& button,
                         Component::Position_handle position, const Animation_style& style = NONE);
+  Component::Functional_position_handle wriggly_position (const std::string& id, const std::string& cmp,
+                                                          Component::Position_handle origin,
+                                                          const Vector& diff,
+                                                          const Button_orientation& orientation,
+                                                          bool insert = true,
+                                                          bool object_label = false);
 
   // Implemented in Interface__menu.cpp
   void init_menus();
