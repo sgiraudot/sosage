@@ -195,6 +195,13 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
   {
     id = init_args[0];
     args = std::vector<std::string>(init_args.begin() + 1, init_args.end());
+    if (auto follower = request<C::String>("Follower", "name"))
+      if (follower->value() == id)
+      {
+        // If goto on follower, follow mechanism should be disabled
+        // until action is completed
+        auto nofollow = set<C::Base>(id, "nofollow");
+      }
   }
   else
   {

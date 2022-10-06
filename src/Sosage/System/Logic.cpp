@@ -127,7 +127,10 @@ void Logic::run ()
       for (const auto& th : action->scheduled())
       {
         if (th.first == 0) // special case for Path
+        {
+          remove (th.second->entity(), "nofollow", true);
           continue;
+        }
         if (th.second->entity().find("Comment_") == 0) // keep dialogs when moving
           logic_action->schedule (th.first, th.second);
         else
@@ -161,6 +164,7 @@ void Logic::run ()
             auto current_path = request<C::Path>(saved_path->entity(), saved_path->component());
             if (saved_path == current_path)
               return true;
+            remove (saved_path->entity(), "nofollow", true);
             return false;
           }
           if (th.first <= m_current_time)
@@ -307,7 +311,8 @@ void Logic::run ()
 
   if (!in_new_room)
     if (auto follower = request<C::String>("Follower", "name"))
-      follow (follower->value());
+      if (!request<C::Base>(follower->value(), "nofollow"))
+        follow (follower->value());
 
   if (auto new_room_origin = request<C::String>("Game", "new_room_origin"))
   {
