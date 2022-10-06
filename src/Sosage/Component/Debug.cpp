@@ -58,11 +58,13 @@ std::string Debug::debug_str()
   if (auto player_cmp = m_content.request<Component::String>("Player", "name"))
   {
     const std::string& player = player_cmp->value();
-    auto img = m_content.get<Component::Image>(player + "_body", "image");
-    auto pos = m_content.get<Component::Position>(player + "_body", "position");
+    if (auto img = m_content.request<Component::Image>(player + "_body", "image"))
+    {
+      auto pos = m_content.get<Component::Position>(player + "_body", "position");
 
-    out += "Player position = [" + std::to_string(pos->value().x())
-           + ", " + std::to_string(pos->value().y()) + ", " + std::to_string(img->z()) + "]\n";
+      out += "Player position = [" + std::to_string(pos->value().x())
+             + ", " + std::to_string(pos->value().y()) + ", " + std::to_string(img->z()) + "]\n";
+    }
   }
   return out;
 }
