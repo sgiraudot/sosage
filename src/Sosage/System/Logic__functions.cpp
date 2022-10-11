@@ -790,6 +790,7 @@ bool Logic::function_timer (const std::vector<std::string>& args)
 
 /*
   - trigger: [ID action_id] -> triggers the wanted action
+  - trigger: [ID action_id, false] -> triggers the wanted action (but does not replace Character:action) TODO: change by continue[]
   - trigger: [ID dialog_id] -> triggers the wanted dialog
   - trigger: [ID menu_id]   -> triggers the wanted menu
   - trigger: ["hints"]      -> triggers hints
@@ -810,7 +811,7 @@ bool Logic::function_trigger (const std::vector<std::string>& args)
     // If trigger is from the character action, then the new action
     // becomes the character action
     auto char_action = request<C::Action>("Character", "action");
-    if (m_current_action == char_action)
+    if (args.size() == 1 && m_current_action == char_action)
       set<C::Variable>("Character", "action", action);
     return true;
   }
