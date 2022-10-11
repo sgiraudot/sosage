@@ -122,8 +122,8 @@ void File_IO::clean_content()
          if (contains(force_keep, c->entity()))
            return false;
 
-         // keep states and positions
-         if (c->component() == "state" || c->component() == "position")
+         // keep states, positions and signals
+         if (c->component() == "state" || c->component() == "position" || c->component() == "signal")
            return false;
 
          // keep integers
@@ -257,10 +257,14 @@ bool File_IO::read_savefile()
   double camera_target = input["camera"].floating();
   get<C::Absolute_position>(CAMERA__POSITION)->set (Point(camera_target, 0));
   auto action = set<C::Action>("Saved_game", "action");
-  action->add ("play", { input["music"].string() });
-  for (std::size_t i = 0; i < input["music_disabled_sources"].size(); ++ i)
-    action->add ("hide", { input["music"].string(), input["music_disabled_sources"][i].string() });
-  action->add ("fadein", { "0.5" });
+
+  if (input.has("music"))
+  {
+    action->add ("play", { input["music"].string() });
+    for (std::size_t i = 0; i < input["music_disabled_sources"].size(); ++ i)
+      action->add ("hide", { input["music"].string(), input["music_disabled_sources"][i].string() });
+    action->add ("fadein", { "0.5" });
+  }
 
   for (std::size_t i = 0; i < input["hints"].size(); ++ i)
   {
@@ -280,6 +284,12 @@ bool File_IO::read_savefile()
     const Core::File_IO::Node& istate = input["states"][i];
     auto state = set<C::String>(istate["id"].string() , "state", istate["value"].string());
     state->mark_as_altered();
+  }
+
+  for (std::size_t i = 0; i < input["signals"].size(); ++ i)
+  {
+    const Core::File_IO::Node& isignal = input["signals"][i];
+    emit (isignal.string(), "signal");
   }
 
   for (std::size_t i = 0; i < input["positions"].size(); ++ i)
@@ -341,16 +351,19 @@ void File_IO::write_savefile()
   if (auto numbers = request<C::Vector<std::string>>("phone_numbers", "list"))
     output.write("phone_numbers", numbers->value());
 
-  std::string music_id = get<C::Music>("Game", "music")->entity();
-  output.write("music", music_id);
-  output.start_section("music_disabled_sources");
+  if (auto music = request<C::Music>("Game", "music"))
   {
-    auto music = get<C::Music>(music_id, "music");
-    for (const auto& s : music->sources())
-      if (!s.second.on)
-        output.write_list_item(s.first);
+    std::string music_id = music->entity();
+    output.write("music", music_id);
+    output.start_section("music_disabled_sources");
+    {
+      auto music = get<C::Music>(music_id, "music");
+      for (const auto& s : music->sources())
+        if (!s.second.on)
+          output.write_list_item(s.first);
+    }
+    output.end_section();
   }
-  output.end_section();
 
   if (auto dialog = request<C::String>("Game", "current_dialog"))
   {
@@ -382,6 +395,13 @@ void File_IO::write_savefile()
     if (!c->is_system() && c->was_altered())
       if (auto s = C::cast<C::String>(c))
         output.write_list_item ("id", c->entity(), "value", s->value());
+  output.end_section();
+
+  output.start_section("signals");
+  for (C::Handle c : components("signal"))
+    if (!c->is_system())
+      if (auto s = C::cast<C::Signal>(c))
+        output.write_list_item (c->entity());
   output.end_section();
 
   output.start_section("positions");

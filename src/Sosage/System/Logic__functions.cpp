@@ -153,6 +153,16 @@ bool Logic::function_cutscene (const std::vector<std::string>&)
 }
 
 /*
+  - emit: [STRING signal] -> emits a signal can be received later in another room
+ */
+bool Logic::function_emit (const std::vector<std::string>& args)
+{
+  check (args.size() == 1, "function_emit takes 1 argument");
+  emit (args[0], "signal");
+  return true;
+}
+
+/*
   - exit: [] -> exits the game
  */
 bool Logic::function_exit (const std::vector<std::string>&)
@@ -511,6 +521,20 @@ bool Logic::function_play (const std::vector<std::string>& args)
 
       m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy", "event"));
     }
+  }
+  return true;
+}
+
+/*
+  - receive: [STRING signal, ID action_id] -> receives a signal emitted from another room and triggers action if so
+ */
+bool Logic::function_receive (const std::vector<std::string>& args)
+{
+  check (args.size() == 2, "function_receive takes 2 argument");
+  if (receive (args[0], "signal"))
+  {
+    debug << "Received " << args[0] << ", launching " << args[1] << std::endl;
+    get<C::Action>(args[1], "action")->launch();
   }
   return true;
 }

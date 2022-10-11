@@ -49,6 +49,7 @@
 #include <functional>
 #include <vector>
 
+// this line creates a dispatcher, for example INIT_DISPATCHER(name) -> m_dispatcher["name"] = Logic::function_name
 #define INIT_DISPATCHER(x) \
   m_dispatcher.insert (std::make_pair(#x, std::bind(&Logic::function_##x, this, std::placeholders::_1)))
 
@@ -64,6 +65,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(camera);
   INIT_DISPATCHER(control);
   INIT_DISPATCHER(cutscene);
+  INIT_DISPATCHER(emit);
   INIT_DISPATCHER(exit);
   INIT_DISPATCHER(fadein);
   INIT_DISPATCHER(fadeout);
@@ -77,6 +79,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(move);
   INIT_DISPATCHER(move60fps);
   INIT_DISPATCHER(play);
+  INIT_DISPATCHER(receive);
   INIT_DISPATCHER(rescale);
   INIT_DISPATCHER(rescale60fps);
   INIT_DISPATCHER(set);

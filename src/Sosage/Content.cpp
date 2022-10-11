@@ -54,6 +54,7 @@ Content::Content()
           "rescale60fps",
           "set_visible",
           "set_hidden",
+          "signal",
           "start_animation",
           "start_talking",
           "state",

@@ -87,6 +87,7 @@ private:
   bool function_camera (const std::vector<std::string>& args);
   bool function_control (const std::vector<std::string>& args);
   bool function_cutscene (const std::vector<std::string>& args);
+  bool function_emit (const std::vector<std::string>& args);
   bool function_exit (const std::vector<std::string>& args);
   bool function_fadein (const std::vector<std::string>& args);
   bool function_fadeout (const std::vector<std::string>& args);
@@ -100,6 +101,7 @@ private:
   bool function_move (const std::vector<std::string>& args);
   bool function_move60fps (const std::vector<std::string>& args);
   bool function_play (const std::vector<std::string>& args);
+  bool function_receive (const std::vector<std::string>& args);
   bool function_rescale (const std::vector<std::string>& args);
   bool function_rescale60fps (const std::vector<std::string>& args);
   bool function_set (const std::vector<std::string>& args);
