@@ -56,7 +56,7 @@ void Sound::run()
     volume *= 0.75;
 
   bool volume_changed = false;
-  if (receive("Music", "adjust_mix"))
+  if (receive("Music", "adjust_mix") && music)
   {
     const std::string& player = value<C::String>("Player", "name");
     music->adjust_mix(value<C::Position>(player + "_body", "position"));
