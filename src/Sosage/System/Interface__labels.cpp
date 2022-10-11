@@ -825,9 +825,9 @@ C::Functional_position_handle Interface::wriggly_position (const std::string& id
                                                            bool object_label)
 {
   constexpr double range = 5;
-  constexpr double period = 1;
+  constexpr double period = 0.75;
   auto time = get<C::Double>(CLOCK__TIME);
-  double tbegin = std::asin(-1) - time->value() - Config::inventory_speed;
+  double tbegin = std::asin(-1) - time->value() / period - Config::inventory_speed;
   if (object_label)
     tbegin = random_double(0, 2*M_PI);
 
