@@ -730,7 +730,7 @@ void File_IO::read_music(const std::string& id, const Core::File_IO::Node& node)
       set(current);
       return;
     }
-
+  SOSAGE_TIMER_START(File_IO__read_music);
   auto music = set<C::Music>(id, "music");
 
   for (std::size_t i = 0; i < node["tracks"].size(); ++ i)
@@ -756,6 +756,8 @@ void File_IO::read_music(const std::string& id, const Core::File_IO::Node& node)
       music->add_source (sid, mix);
   }
   music->init();
+  SOSAGE_TIMER_STOP(File_IO__read_music);
+
 }
 
 std::pair<C::Handle, C::Handle>
