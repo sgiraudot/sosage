@@ -39,6 +39,8 @@ using Sound = Third_party::SDL_mixer;
 
 #else
 
+#include <string>
+
 namespace Sosage::Core
 {
 
@@ -52,19 +54,20 @@ public:
   No_sound() { }
   ~No_sound() { }
 
-  static Music load_music (const std::string& file_name) { return 0; }
-  static Sound load_sound (const std::string& file_name) { return 0; }
+  static Music load_music (const std::string&) { return 0; }
+  static Sound load_sound (const std::string&) { return 0; }
 
-  static void delete_music (const Music& music) { }
-  static void delete_sound (const Sound& sound) { }
+  static void delete_music (const Music&) { }
+  static void delete_sound (const Sound&) { }
 
-  void start_music (const Music& music, double percentage) {}
-  void stop_music() {}
-  void fade (const Music& music, double time, bool in) {}
-  void set_volume (double percentage) {}
-  void pause_music (const Music& music) {}
-  void resume_music (const Music& music) {}
-  void play_sound (const Sound& sound, double percentage, double panning = 0.5) {}
+  void set_music_channels (std::size_t) { }
+  void start_music (const Music&, int, double) {}
+  void stop_music(int) {}
+  void fade (const Music&, int, double, bool) {}
+  void set_volume (int, double) {}
+  void pause_music (int) {}
+  void resume_music (int) {}
+  void play_sound (const Sound&, double, double = 0.5) {}
 
 };
 
