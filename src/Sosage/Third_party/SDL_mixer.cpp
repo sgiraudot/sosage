@@ -103,7 +103,7 @@ void SDL_mixer::start_music (const SDL_mixer::Music& music, int channel, double 
   Mix_PlayChannel (m_music_channels[channel], music, -1);
 }
 
-void SDL_mixer::stop_music(int channel)
+void SDL_mixer::stop_music(const SDL_mixer::Music&, int channel)
 {
   debug << "Stop music" << std::endl;
   Mix_HaltChannel(m_music_channels[channel]);
@@ -123,19 +123,19 @@ void SDL_mixer::fade (const SDL_mixer::Music& music, int channel, double time, b
   }
 }
 
-void SDL_mixer::set_volume (int channel, double percentage)
+void SDL_mixer::set_volume (const SDL_mixer_ext::Music&, int channel, double percentage)
 {
   debug << "Set volume to " << percentage << "% (" << int(percentage * Config::max_music_volume) << ")" << std::endl;
   Mix_Volume(m_music_channels[channel], int(percentage * Config::max_music_volume));
 }
 
-void SDL_mixer::pause_music (int channel)
+void SDL_mixer::pause_music (const SDL_mixer_ext::Music&, int channel)
 {
   debug << "Pause music" << std::endl;
   Mix_Pause (m_music_channels[channel]);
 }
 
-void SDL_mixer::resume_music (int channel)
+void SDL_mixer::resume_music (const SDL_mixer_ext::Music&, int channel)
 {
   debug << "Resume music" << std::endl;
   Mix_Resume(m_music_channels[channel]);

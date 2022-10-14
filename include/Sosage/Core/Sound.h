@@ -70,11 +70,11 @@ public:
 
   void set_music_channels (std::size_t) { }
   void start_music (const Music&, int, double) {}
-  void stop_music(int) {}
+  void stop_music(const Music&, int) {}
   void fade (const Music&, int, double, bool) {}
-  void set_volume (int, double) {}
-  void pause_music (int) {}
-  void resume_music (int) {}
+  void set_volume (const Music&, int, double) {}
+  void pause_music (const Music&, int) {}
+  void resume_music (const Music&, int) {}
   void play_sound (const Sound&, double, double = 0.5) {}
 
 };

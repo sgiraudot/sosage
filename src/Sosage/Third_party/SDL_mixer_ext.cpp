@@ -62,7 +62,10 @@ SDL_mixer_ext::~SDL_mixer_ext()
 
 SDL_mixer_ext::Music SDL_mixer_ext::load_music (const std::string& file_name)
 {
-  return load_sound(file_name);
+  Asset asset = Asset_manager::open(file_name);
+  Mix_Music* music = Mix_LoadMUS_RW (asset.base(), 0);
+  check (music != nullptr, "Cannot load music " + file_name);
+  return std::make_pair (music, asset);
 }
 
 SDL_mixer_ext::Sound SDL_mixer_ext::load_sound (const std::string& file_name)
@@ -76,7 +79,8 @@ SDL_mixer_ext::Sound SDL_mixer_ext::load_sound (const std::string& file_name)
 
 void SDL_mixer_ext::delete_music (SDL_mixer_ext::Music& music)
 {
-  delete_sound(music);
+  Mix_FreeMusic(music.first);
+  music.second.close();
 }
 
 void SDL_mixer_ext::delete_sound (SDL_mixer_ext::Sound& sound)
@@ -84,61 +88,53 @@ void SDL_mixer_ext::delete_sound (SDL_mixer_ext::Sound& sound)
   Mix_FreeChunk (sound);
 }
 
-void SDL_mixer_ext::set_music_channels (std::size_t nb)
+void SDL_mixer_ext::set_music_channels (std::size_t)
 {
-  m_music_channels.resize(nb);
-  for (std::size_t i = 0; i < nb; ++ i)
-  {
-    int channel = reserve_channel();
-    check (channel != -1, "No more sound channel available.");
-    Mix_SetPanning(channel, 255, 255);
-    m_music_channels[i] = channel;
-  }
 }
 
-void SDL_mixer_ext::start_music (const SDL_mixer_ext::Music& music, int channel, double volume)
+void SDL_mixer_ext::start_music (const SDL_mixer_ext::Music& music, int, double volume)
 {
   debug << "Start music with volume " << volume << "% (" << int(volume * Config::max_music_volume) << ")" << std::endl;
-  Mix_Volume(m_music_channels[channel], int(volume * Config::max_music_volume));
-  Mix_PlayChannel (m_music_channels[channel], music, -1);
+  Mix_VolumeMusicStream (music.first, int(volume * Config::max_music_volume));
+  Mix_PlayMusicStream (music.first, -1);
 }
 
-void SDL_mixer_ext::stop_music(int channel)
+void SDL_mixer_ext::stop_music(const SDL_mixer_ext::Music& music, int)
 {
   debug << "Stop music" << std::endl;
-  Mix_HaltChannel(m_music_channels[channel]);
+  Mix_HaltMusicStream (music.first);
 }
 
-void SDL_mixer_ext::fade (const SDL_mixer_ext::Music& music, int channel, double time, bool in)
+void SDL_mixer_ext::fade (const SDL_mixer_ext::Music& music, int, double time, bool in)
 {
   if (in)
   {
     debug << "Fade in music " << time << std::endl;
-    Mix_FadeInChannel(m_music_channels[channel], music, -1, int(1000 * time));
+    Mix_FadeInMusicStream(music.first, -1, int(1000 * time));
   }
   else
   {
     debug << "Fade out music" << std::endl;
-    Mix_FadeOutChannel(m_music_channels[channel], int(1000 * time));
+    Mix_FadeOutMusicStream(music.first, int(1000 * time));
   }
 }
 
-void SDL_mixer_ext::set_volume (int channel, double percentage)
+void SDL_mixer_ext::set_volume (const SDL_mixer_ext::Music& music, int, double percentage)
 {
   debug << "Set volume to " << percentage << "% (" << int(percentage * Config::max_music_volume) << ")" << std::endl;
-  Mix_Volume(m_music_channels[channel], int(percentage * Config::max_music_volume));
+  Mix_VolumeMusicStream (music.first, int(percentage * Config::max_music_volume));
 }
 
-void SDL_mixer_ext::pause_music (int channel)
+void SDL_mixer_ext::pause_music (const SDL_mixer_ext::Music& music, int)
 {
   debug << "Pause music" << std::endl;
-  Mix_Pause (m_music_channels[channel]);
+  Mix_PauseMusicStream (music.first);
 }
 
-void SDL_mixer_ext::resume_music (int channel)
+void SDL_mixer_ext::resume_music (const SDL_mixer_ext::Music& music, int)
 {
   debug << "Resume music" << std::endl;
-  Mix_Resume(m_music_channels[channel]);
+  Mix_ResumeMusicStream(music.first);
 }
 
 void SDL_mixer_ext::play_sound (const SDL_mixer_ext::Sound& sound, double volume, double panning)

@@ -31,6 +31,8 @@
 
 #ifdef SOSAGE_LINKED_WITH_SDL_MIXER_EXT
 
+#include <Sosage/Utils/Asset_manager.h>
+
 #include <SDL_mixer_ext.h>
 
 #include <array>
@@ -42,8 +44,7 @@ namespace Sosage
 
 namespace Config
 {
-constexpr int max_music_volume = 128
-                                 ;
+constexpr int max_music_volume = 128;
 constexpr int max_panning = 255;
 constexpr int sound_channels = 16;
 } // namespace Config
@@ -55,13 +56,12 @@ class SDL_mixer_ext
 {
 public:
 
-  using Music = Mix_Chunk*;
+  using Music = std::pair<Mix_Music*, Asset>;
   using Sound = Mix_Chunk*;
 
 private:
 
   static std::array<bool, Config::sound_channels> m_available_channels;
-  std::vector<int> m_music_channels;
 
 public:
 
@@ -76,11 +76,11 @@ public:
 
   void set_music_channels (std::size_t nb);
   void start_music (const Music& music, int channel, double volume);
-  void stop_music(int channel);
+  void stop_music(const Music& music, int channel);
   void fade (const Music& music, int channel, double time, bool in);
-  void set_volume (int channel, double percentage);
-  void pause_music (int channel);
-  void resume_music (int channel);
+  void set_volume (const Music& music, int channel, double percentage);
+  void pause_music (const Music& music, int channel);
+  void resume_music (const Music& music, int channel);
   void play_sound (const Sound& sound, double volume, double panning = 0.5);
 
 private:

@@ -87,7 +87,7 @@ void Sound::run()
     m_core.set_music_channels(music->tracks());
     for (std::size_t i = 0; i < music->tracks(); ++ i)
     {
-      m_core.set_volume (i, volume * music->mix(i));
+      m_core.set_volume (music->core(i), i, volume * music->mix(i));
       m_core.fade(music->core(i), i, fade->get<1>() - current_time, fade->get<2>());
     }
     music->on() = true;
@@ -96,7 +96,7 @@ void Sound::run()
 
   if (receive("Music", "volume_changed") || volume_changed)
     for (std::size_t i = 0; i < music->tracks(); ++ i)
-      m_core.set_volume (i, volume * music->mix(i));
+      m_core.set_volume (music->core(i), i, volume * music->mix(i));
 
   if (music)
   {
@@ -106,20 +106,20 @@ void Sound::run()
     {
       if (status()->was (CUTSCENE))
         for (std::size_t i = 0; i < music->tracks(); ++ i)
-          m_core.pause_music (i);
+          m_core.pause_music (music->core(i), i);
       else
         for (std::size_t i = 0; i < music->tracks(); ++ i)
-          m_core.set_volume(i, 0.15 * volume * music->mix(i));
+          m_core.set_volume(music->core(i), i, 0.15 * volume * music->mix(i));
       music->on() = false;
     }
     else if (!paused && !music->on())
     {
       if (status()->is (CUTSCENE))
         for (std::size_t i = 0; i < music->tracks(); ++ i)
-          m_core.resume_music(i);
+          m_core.resume_music(music->core(i), i);
       else
         for (std::size_t i = 0; i < music->tracks(); ++ i)
-          m_core.set_volume (i, volume * music->mix(i));
+          m_core.set_volume (music->core(i), i, volume * music->mix(i));
       music->on() = true;
     }
   }
