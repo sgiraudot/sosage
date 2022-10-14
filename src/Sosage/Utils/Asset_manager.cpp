@@ -160,7 +160,8 @@ bool Asset_manager::init (const std::string& folder, bool scap_mode)
 
           bool is_object = contains(fname, "images/objects") ||
                            contains(fname, "images/interface") ||
-                           contains(fname, "images/inventory");
+                           contains(fname, "images/inventory") ||
+                           contains(fname, "images/masks");
 
           bool is_map = endswith (fname, "_map.png");
 

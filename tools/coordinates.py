@@ -2,6 +2,7 @@ import sys
 
 nb_arg = len(sys.argv)
 H = 1080
+inkscape_updated = True
 
 try:
     if nb_arg == 4:

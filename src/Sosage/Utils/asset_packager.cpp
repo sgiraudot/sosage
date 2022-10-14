@@ -280,7 +280,7 @@ void compile_package (const std::string& input_folder, const std::string& output
 
     if (extension == "png")
       write_image (*file, abs_path, contains(path, "images/objects") ||
-                   contains(path, "images/interface") || contains(path, "images/inventory"));
+                   contains(path, "images/interface") || contains(path, "images/inventory") || contains(path, "images/masks"));
     else
     {
       if (extension != "yaml" && extension != "ogg" && extension != "ttf")
