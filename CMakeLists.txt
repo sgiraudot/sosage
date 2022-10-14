@@ -81,6 +81,7 @@ endif()
 sosage_option(SOSAGE_CFG_DISPLAY_DEBUG_INFO "Force displaying debug info even in Release mode" OFF)
 sosage_option(SOSAGE_CFG_PROFILE "Profile and display timing info (requires debug info ON)" OFF)
 sosage_option(SOSAGE_CFG_USE_SDL_TIME "Use SDL clock instead of STL clock" OFF)
+sosage_option(SOSAGE_CFG_USE_SDL_MIXER_EXT "Use more advanced fork of SDL_Mixer" OFF)
 sosage_option(SOSAGE_CFG_TEST_INPUT "Use auto generated input instead of user input for testing" OFF)
 sosage_option(SOSAGE_CFG_GUILESS "Do not instanciate window/renderer, for testing purposes" OFF)
 sosage_option(SOSAGE_COMPILE_SCAP "Compile Sosage Compressed Data Packager" OFF)
@@ -102,9 +103,16 @@ if (NOT SDL2_FOUND)
   set(SOSAGE_DEPENDENCIES_OKAY false)
 endif()
 
-find_package(SDL2_mixer QUIET)
-if (NOT SDL2_MIXER_FOUND)
-  message(STATUS "SDL2 Mixer is optional and not found (no sound will be available)")
+if (SOSAGE_CFG_USE_SDL_MIXER_EXT)
+  find_package(SDL2_mixer_ext QUIET)
+  if (NOT SDL2_MIXER_EXT_FOUND)
+    message(STATUS "SDL2 Mixer X is optional and not found (no sound will be available)")
+  endif()
+else()
+  find_package(SDL2_mixer QUIET)
+  if (NOT SDL2_MIXER_FOUND)
+    message(STATUS "SDL2 Mixer is optional and not found (no sound will be available)")
+  endif()
 endif()
 
 find_package(SDL2_image REQUIRED)
@@ -149,7 +157,26 @@ if(MINGW)
 endif(MINGW)
 
 add_executable(${SOSAGE_EXE_NAME} ${SOSAGE_SRC})
-target_link_libraries(${SOSAGE_EXE_NAME} PUBLIC sosage)
+target_include_directories(${SOSAGE_EXE_NAME} PUBLIC
+  "${CMAKE_SOURCE_DIR}/include"
+  "${YAML_INCLUDE_DIR}"
+  "${SDL2_INCLUDE_DIR}"
+  "${SDL2_IMAGE_INCLUDE_DIR}"
+  "${SDL2_TTF_INCLUDE_DIR}"
+  "${SDL2_MIXER_INCLUDE_DIR}"
+  "${LZ4_INCLUDE_DIR}")
+target_link_libraries(${SOSAGE_EXE_NAME}
+  ${YAML_LIBRARIES}
+  ${SDL2_LIBRARY}
+  ${SDL2_IMAGE_LIBRARIES}
+  ${SDL2_TTF_LIBRARIES}
+  ${SDL2_MIXER_LIBRARIES}
+  ${LZ4_LIBRARY})
+target_compile_definitions(${SOSAGE_EXE_NAME} PUBLIC
+  "SOSAGE_DATA_FOLDER=\"${SOSAGE_DATA_FOLDER}/data/\""
+  "SOSAGE_LINKED_WITH_SDL_MIXER"
+  "SOSAGE_PREF_PATH=\"${SOSAGE_EDITOR_PATH}\""
+  "SOSAGE_PREF_SUBPATH=\"${SOSAGE_EXE_NAME}\"")
 
 ## Platform-specific instructions
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
@@ -285,6 +312,25 @@ if(SOSAGE_COMPILE_SCAP)
     "src/Sosage/Utils/conversions.cpp" "src/Sosage/Utils/error.cpp" "src/Sosage/Utils/geometry.cpp"
     "src/Sosage/Utils/image_split.cpp" "src/Sosage/Utils/profiling.cpp")
   add_executable("SCAP" "src/Sosage/SCAP.cpp" ${SCAP_SRC})
-  target_link_libraries("SCAP" PUBLIC sosage)
-  target_compile_options("SCAP" PUBLIC -DSOSAGE_SCAP)
+  target_include_directories(SCAP PUBLIC
+    "${CMAKE_SOURCE_DIR}/include"
+    "${YAML_INCLUDE_DIR}"
+    "${SDL2_INCLUDE_DIR}"
+    "${SDL2_IMAGE_INCLUDE_DIR}"
+    "${SDL2_TTF_INCLUDE_DIR}"
+    "${SDL2_MIXER_INCLUDE_DIR}"
+    "${LZ4_INCLUDE_DIR}")
+  target_link_libraries(SCAP
+    ${YAML_LIBRARIES}
+    ${SDL2_LIBRARY}
+    ${SDL2_IMAGE_LIBRARIES}
+    ${SDL2_TTF_LIBRARIES}
+    ${SDL2_MIXER_LIBRARIES}
+    ${LZ4_LIBRARY})
+  target_compile_definitions(SCAP PUBLIC
+    "SOSAGE_DATA_FOLDER=\"${SOSAGE_DATA_FOLDER}/data/\""
+    "SOSAGE_LINKED_WITH_SDL_MIXER"
+    "SOSAGE_PREF_PATH=\"${SOSAGE_EDITOR_PATH}\""
+    "SOSAGE_PREF_SUBPATH=\"${SOSAGE_EXE_NAME}\""
+    "SOSAGE_SCAP")
 endif()
