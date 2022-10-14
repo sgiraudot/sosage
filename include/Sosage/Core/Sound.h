@@ -29,12 +29,20 @@
 
 #include <Sosage/Config/platform.h>
 
-#ifdef SOSAGE_LINKED_WITH_SDL_MIXER
+#if defined(SOSAGE_LINKED_WITH_SDL_MIXER)
 
 #include <Sosage/Third_party/SDL_mixer.h>
 namespace Sosage::Core
 {
 using Sound = Third_party::SDL_mixer;
+} // namespace Sosage::Core
+
+#elif defined(SOSAGE_LINKED_WITH_SDL_MIXER_EXT)
+
+#include <Sosage/Third_party/SDL_mixer_ext.h>
+namespace Sosage::Core
+{
+using Sound = Third_party::SDL_mixer_ext;
 } // namespace Sosage::Core
 
 #else

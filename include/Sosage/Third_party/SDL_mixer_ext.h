@@ -1,6 +1,6 @@
 /*
-  [include/Sosage/Third_party/SDL_mixer.h]
-  Wrapper for SDL library (sound system).
+  [include/Sosage/Third_party/SDL_mixer_ext.h]
+  Wrapper for SDL library (extended sound system).
 
   =====================================================================
 
@@ -24,14 +24,14 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_THIRD_PARTY_SDL_MIXER_H
-#define SOSAGE_THIRD_PARTY_SDL_MIXER_H
+#ifndef SOSAGE_THIRD_PARTY_SDL_MIXER_EXT_H
+#define SOSAGE_THIRD_PARTY_SDL_MIXER_EXT_H
 
 #include <Sosage/Config/platform.h>
 
-#ifdef SOSAGE_LINKED_WITH_SDL_MIXER
+#ifdef SOSAGE_LINKED_WITH_SDL_MIXER_EXT
 
-#include <SDL_mixer.h>
+#include <SDL_mixer_ext.h>
 
 #include <array>
 #include <string>
@@ -51,7 +51,7 @@ constexpr int sound_channels = 16;
 namespace Third_party
 {
 
-class SDL_mixer
+class SDL_mixer_ext
 {
 public:
 
@@ -65,8 +65,8 @@ private:
 
 public:
 
-  SDL_mixer ();
-  ~SDL_mixer ();
+  SDL_mixer_ext ();
+  ~SDL_mixer_ext ();
 
   static Music load_music (const std::string& file_name);
   static Sound load_sound (const std::string& file_name);
@@ -94,4 +94,4 @@ private:
 
 #endif
 
-#endif // SOSAGE_THIRD_PARTY_SDL_MIXER_H
+#endif // SOSAGE_THIRD_PARTY_SDL_MIXER_EXT_H
