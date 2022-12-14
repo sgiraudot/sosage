@@ -151,12 +151,12 @@ const Action::Step& Action::next_step()
          + " of action " + Base::str() + " of size " + to_string(m_steps.size()));
 
   // For debug porposes, we can skip some parts between "skip" and "include":
-  if (m_steps[m_next_step].function() == "function_skip")
+  if (m_steps[m_next_step].function() == "skip")
     do
     {
       ++ m_next_step;
     }
-    while (m_steps[m_next_step - 1].function() != "function_include");
+    while (m_steps[m_next_step - 1].function() != "include");
 
   const Step& out = m_steps[m_next_step ++];
   if (m_next_step == m_steps.size())
