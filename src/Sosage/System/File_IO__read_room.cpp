@@ -486,7 +486,10 @@ void File_IO::read_dialog (const std::string& id, const Core::File_IO::Node& inp
     {
       std::string character = l["line"][0].string();
       std::string line = l["line"][1].string();
-      C::Dialog::GVertex vertex = dialog->add_vertex (character, line);
+      std::string signal = "";
+      if (l["line"].size() == 3)
+        signal = l["line"][2].string();
+      C::Dialog::GVertex vertex = dialog->add_vertex (character, line, signal);
       if (latest_vertex != C::Dialog::GVertex())
         dialog->add_edge (latest_vertex, vertex);
       if (target != "")

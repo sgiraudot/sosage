@@ -601,8 +601,11 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
       action->add ("look", { character });
 
     action->add ("talk", { character, line });
+    if (dialog->has_signal())
+      action->add ("emit", {dialog->signal()});
     action->add ("wait", {});
     action->add ("trigger", { id, "continue" });
+
   }
   else
   {

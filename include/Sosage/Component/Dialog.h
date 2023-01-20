@@ -39,6 +39,7 @@ class Dialog : public Base
   {
     std::string character;
     std::string line;
+    std::string signal;
   };
 
   enum Edge_status { ALWAYS, ONCE, DISABLED };
@@ -67,7 +68,8 @@ public:
 
   Dialog (const std::string& entity, const std::string& component, const std::string& end = "");
   GVertex add_vertex (const std::string& character = "",
-                      const std::string& line = "");
+                      const std::string& line = "",
+                      const std::string& signal = "");
   GEdge add_edge (GVertex source, GVertex target,
                   bool once = false, const std::string& line = "");
   bool has_incident_edges (GVertex v);
@@ -79,7 +81,9 @@ public:
   void next (int choice);
   bool is_over() const;
   bool is_line() const;
+  bool has_signal() const;
   std::pair<std::string, std::string> line() const;
+  const std::string& signal() const;
 
   template <typename Container>
   void get_choices (Container& choices)

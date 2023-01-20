@@ -37,9 +37,11 @@ Dialog::Dialog (const std::string& entity, const std::string& component, const s
   m_vout = m_graph.add_vertex({end,"OUT"});
 }
 
-Dialog::GVertex Dialog::add_vertex (const std::string& character, const std::string& line)
+Dialog::GVertex Dialog::add_vertex (const std::string& character,
+                                    const std::string& line,
+                                    const std::string& signal)
 {
-  GVertex out = m_graph.add_vertex ({character, line});
+  GVertex out = m_graph.add_vertex ({character, line, signal});
   return out;
 }
 
@@ -112,9 +114,19 @@ bool Dialog::is_line() const
   return (m_graph[m_current].character != "");
 }
 
+bool Dialog::has_signal() const
+{
+  return (m_graph[m_current].signal != "");
+}
+
 std::pair<std::string, std::string> Dialog::line() const
 {
   return std::make_pair (m_graph[m_current].character, m_graph[m_current].line);
+}
+
+const std::string& Dialog::signal() const
+{
+  return m_graph[m_current].signal;
 }
 
 } // namespace Sosage::Component
