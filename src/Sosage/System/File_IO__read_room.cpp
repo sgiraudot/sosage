@@ -236,7 +236,8 @@ void File_IO::read_room (const std::string& file_name)
         else
         {
           Core::File_IO subfile ("data/" + section + "/" + s.string() + ".yaml");
-          subfile.parse();
+          bool okay = subfile.parse();
+          check(okay, "Can't open data/" + section + "/" + s.string() + ".yaml");
           func (s.string(), subfile.root());
         }
         callback->value()();
