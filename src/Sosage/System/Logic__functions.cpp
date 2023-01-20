@@ -526,15 +526,21 @@ bool Logic::function_play (const std::vector<std::string>& args)
 }
 
 /*
-  - receive: [STRING signal, ID action_id] -> receives a signal emitted from another room and triggers action if so
+  - receive: [STRING signal, ID action_id]               -> receives a signal emitted from another room and triggers action if so
+  - receive: [STRING signal, ID action_id, ID action_id] -> triggers action A if signal received, B otherwise
  */
 bool Logic::function_receive (const std::vector<std::string>& args)
 {
-  check (args.size() == 2, "function_receive takes 2 argument");
+  check (args.size() == 2 || args.size() == 3, "function_receive takes 2 or 3 argument");
   if (receive (args[0], "signal"))
   {
     debug << "Received " << args[0] << ", launching " << args[1] << std::endl;
     get<C::Action>(args[1], "action")->launch();
+  }
+  else if (args.size() == 3)
+  {
+    debug << "Didn't receive " << args[0] << ", launching " << args[2] << std::endl;
+    get<C::Action>(args[2], "action")->launch();
   }
   return true;
 }
