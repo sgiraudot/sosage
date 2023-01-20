@@ -183,11 +183,20 @@ void Input::run()
 
     if (ev == Event(KEY_UP, Sosage::C))
     {
+#if 0
       for (const auto& cmp : m_content)
         for (const auto& c : cmp)
         {
           debug << component_str(c.second, 0);
         }
+#endif
+
+#ifdef SOSAGE_DEBUG
+      debug << "> " << std::endl;
+      std::string text_input;
+      std::getline (std::cin, text_input);
+      set<C::String>("Test", "console_action", text_input);
+#endif
     }
 
     if constexpr (!Config::emscripten) // Do not prevent web users to use F1/F2/etc

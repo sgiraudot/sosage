@@ -153,6 +153,31 @@ void Logic::run ()
     }
   }
 
+  if (auto console_action = request<C::String>("Test", "console_action"))
+  {
+    std::stringstream ss(console_action->value());
+    std::string function;
+    std::getline(ss, function, ' ');
+    if (m_dispatcher.find(function) == m_dispatcher.end())
+    {
+      debug << "Function " << function << " not found" << std::endl;
+    }
+    else
+    {
+      std::vector<std::string> args(1);
+      while (std::getline(ss, args.back(), ' '))
+      {
+        args.emplace_back();
+      }
+      args.pop_back();
+
+      auto action = set<C::Action>("Console", "action");
+      action->add (function, args);
+      action->launch();
+    }
+    remove (console_action);
+  }
+
   std::set<std::string> done;
   for (auto c : components("action"))
     if (auto a = C::cast<C::Action>(c))
