@@ -168,7 +168,7 @@ void Test_input::run_mouse()
         if (source->value() == id)
           continue;
 
-      if (state->value() != "inventory")
+      if (!startswith(state->value(), "inventory"))
         continue;
 
       ids.emplace_back (id);
@@ -202,7 +202,7 @@ void Test_input::run_mouse()
       if (!state)
         continue;
 
-      if (state->value() != "inventory")
+      if (!startswith(state->value(), "inventory"))
         continue;
       ids.emplace_back (id);
     }
@@ -430,7 +430,7 @@ void Test_input::run_touchscreen()
         if (source->value() == id)
           continue;
 
-      if (state->value() != "inventory")
+      if (!startswith(state->value(), "inventory"))
         continue;
 
       ids.emplace_back (id);
@@ -464,7 +464,7 @@ void Test_input::run_touchscreen()
       if (!state)
         continue;
 
-      if (state->value() != "inventory")
+      if (!startswith(state->value(), "inventory"))
         continue;
       ids.emplace_back (id);
     }

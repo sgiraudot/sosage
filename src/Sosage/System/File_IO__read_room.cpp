@@ -601,7 +601,7 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
       std::string skin = "";
       if (istate.has("skin"))
       {
-        if (state == "inventory")
+        if (startswith(state, "inventory"))
           skin = istate["skin"].string("images", "inventory", "png");
         else
           skin = istate["skin"].string("images", "objects", "png");
@@ -642,7 +642,7 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
         }
       }
 
-      if (state == "inventory")
+      if (startswith (state, "inventory"))
       {
         img->set_relative_origin(0.5, 0.5);
         img->z() = Config::inventory_depth;

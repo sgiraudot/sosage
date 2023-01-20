@@ -611,14 +611,14 @@ bool Logic::function_set (const std::vector<std::string>& args)
     state = args[2];
   }
 
-  if (current_state->value() == "inventory")
+  if (startswith(current_state->value(), "inventory"))
   {
     get<C::Inventory>("Game", "inventory")->remove(target);
     //get<C::Absolute_position>(target , "position")->absolute() = false;
   }
 
   current_state->set (state);
-  if (state == "inventory")
+  if (startswith (state, "inventory"))
   {
     get<C::Inventory>("Game", "inventory")->add(target);
     auto img

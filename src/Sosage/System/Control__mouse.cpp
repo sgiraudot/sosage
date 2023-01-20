@@ -266,7 +266,7 @@ void Control::object_choice_mouse()
     if (!state)
       return false;
 
-    return (state->value() == "inventory");
+    return startswith(state->value(), "inventory");
   });
 
   if (collision != "")
@@ -304,7 +304,7 @@ void Control::object_choice_touchscreen()
       if (!state)
         return false;
 
-      return (state->value() == "inventory");
+      return startswith(state->value(), "inventory");
     });
 
     if (collision != "")
@@ -363,7 +363,7 @@ void Control::inventory_mouse()
       if (source->value() == id)
         return false;
 
-    return (state->value() == "inventory");
+    return startswith(state->value(), "inventory");
   });
 
   if (collision != "")
@@ -402,7 +402,7 @@ void Control::inventory_touchscreen()
         if (source->value() == id)
           return false;
 
-      return (state->value() == "inventory");
+      return startswith(state->value(), "inventory");
     });
 
     if (collision != "")
