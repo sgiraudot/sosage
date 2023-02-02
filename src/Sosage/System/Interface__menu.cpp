@@ -852,6 +852,11 @@ void Interface::update_phone_menu()
         uptodate = false;
         break;
       }
+      else if (!(*phone_menu)[idx].has_image())
+      {
+        uptodate = false;
+        break;
+      }
       else if ((*phone_menu)[idx].image()->entity() != id + "_button")
       {
         uptodate = false;
