@@ -97,6 +97,30 @@ public:
 
 using Relative_position_handle = std::shared_ptr<Relative_position>;
 
+class Double_relative_position : public Position
+{
+  Position_handle m_ref;
+  Position_handle m_diff;
+  double m_factor;
+
+public:
+
+  Double_relative_position (const std::string& entity, const std::string& component,
+                            Position_handle ref, Position_handle diff,
+                            double factor = 1.);
+  Absolute_position_handle absolute_reference();
+  virtual Point value() const;
+  virtual void set (const Point& p);
+  void set (const Sosage::Vector& v);
+  bool is_interface() const;
+
+  STR_NAME("Double_relative_position");
+  STR_SUB(return component_str(m_ref, indent+1, "Ref = ")
+          + component_str(m_diff, indent+1, "Diff = "););
+};
+
+using Relative_position_handle = std::shared_ptr<Relative_position>;
+
 class Functional_position : public Position
 {
   using Function = std::function<Point(const std::string&)>;

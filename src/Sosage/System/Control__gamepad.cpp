@@ -602,11 +602,12 @@ std::vector<std::string> Control::detect_active_objects()
 {
   if (request<C::Signal>("Player", "not_moved_yet"))
     return std::vector<std::string>();
+
   const std::string& id = value<C::String>("Player", "name", "");
   if (id == "")
     return std::vector<std::string>();
-  auto position = get<C::Position>(id + "_body", "position");
 
+  auto position = get<C::Position>(id + "_body", "position");
   std::unordered_set<std::string> active_objects;
   if (auto a = request<C::Vector<std::string>>("Interface", "active_objects"))
     active_objects = std::unordered_set<std::string>(a->value().begin(), a->value().end());
@@ -614,13 +615,12 @@ std::vector<std::string> Control::detect_active_objects()
   // Find objects with labels close to player
   std::vector<std::string> out;
   for (auto e : components("label"))
-    if (auto label = C::cast<C::Absolute_position>(e))
+    if (auto label = C::cast<C::Position>(e))
     {
       auto pos = get<C::Position>(label->entity() , "view");
 
       double dx = std::abs(position->value().x() - pos->value().x());
       double dy = std::abs(position->value().y() - pos->value().y());
-
       double reach_factor = value<C::Double>(label->entity(), "reach_factor", 1.);
 
       // Object out of reach

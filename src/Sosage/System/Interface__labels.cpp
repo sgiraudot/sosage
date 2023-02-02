@@ -125,10 +125,10 @@ void Interface::create_object_label (const std::string& id)
     if (!is_active)
       get<C::Image>(id + "_label", "image")->set_alpha(192);
 
-    auto base_pos = set<C::Relative_position>
+    auto base_pos = set<C::Double_relative_position>
                     (id + "_label", "base_global_position",
                      get<C::Position>(CAMERA__POSITION),
-                     value<C::Position>(id , "label"), -1.);
+                     get<C::Position>(id , "label"), -1.);
     auto pos = wriggly_position (id + "_label", "global_position", base_pos, Vector(),
                                  (open_right || open_left) ? RIGHT_BUTTON : UP, true, true);
 

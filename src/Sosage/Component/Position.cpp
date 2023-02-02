@@ -105,6 +105,42 @@ bool Relative_position::is_interface() const
   return m_ref->is_interface();
 }
 
+Double_relative_position::Double_relative_position (const std::string& entity,
+                                                    const std::string& component,
+                                                    Position_handle ref,
+                                                    Position_handle diff,
+                                                    double factor)
+  : Position(entity, component), m_ref(ref), m_diff(diff), m_factor(factor)
+{ }
+
+Absolute_position_handle Double_relative_position::absolute_reference()
+{
+  if (auto r = cast<Absolute_position>(m_ref))
+    return r;
+  return cast<Relative_position>(m_ref)->absolute_reference();
+}
+
+Point Double_relative_position::value() const
+{
+  return m_factor * m_ref->value() + m_diff->value();
+}
+
+void Double_relative_position::set (const Point& p)
+{
+  m_diff->set(Sosage::Vector(m_factor * m_ref->value(), p));
+  mark_as_altered();
+}
+
+void Double_relative_position::set (const Sosage::Vector& v)
+{
+  m_diff->set(v);
+}
+
+bool Double_relative_position::is_interface() const
+{
+  return m_ref->is_interface();
+}
+
 Functional_position::Functional_position (const std::string& entity, const std::string& component,
                                           const Function& function,
                                           const std::string& arg, bool is_interface)
