@@ -507,12 +507,10 @@ void File_IO::read_init ()
                                        Config::world_height - loading_spin_img->height() * 1.5));
 
   std::string left_arrow = input["inventory_arrows"][0].string("images", "interface", "png");
-  auto left_arrow_img = set<C::Image>("Left_arrow", "image", left_arrow);
-  left_arrow_img->z() = Config::inventory_depth;
+  auto left_arrow_img = set<C::Image>("Left_arrow", "image", left_arrow, Config::inventory_depth, PIXEL_PERFECT);
   left_arrow_img->set_relative_origin (0, 0.5);
   std::string right_arrow = input["inventory_arrows"][1].string("images", "interface", "png");
-  auto right_arrow_img = set<C::Image>("Right_arrow", "image", right_arrow);
-  right_arrow_img->z() = Config::inventory_depth;
+  auto right_arrow_img = set<C::Image>("Right_arrow", "image", right_arrow, Config::inventory_depth, PIXEL_PERFECT);
   right_arrow_img->set_relative_origin (1, 0.5);
 
   std::string chamfer = input["inventory_chamfer"].string("images", "interface", "png");

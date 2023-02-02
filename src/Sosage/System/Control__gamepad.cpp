@@ -311,6 +311,10 @@ void Control::inventory_sub_switch_active_object (bool right)
           diff = -2;
       }
       active_object->set (inventory->get(i+diff));
+      if (i+diff - inventory->position() == Config::displayed_inventory_size)
+        inventory->next();
+      if (i+diff == inventory->position() - 1)
+        inventory->prev();
       break;
     }
 }

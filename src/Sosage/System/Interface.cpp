@@ -57,10 +57,10 @@ void Interface::run()
   SOSAGE_TIMER_START(System_Interface__run);
   SOSAGE_UPDATE_DBG_LOCATION("Interface::run()");
 
+  update_inventory();
   update_active_objects();
   update_action_selector();
   update_object_switcher();
-  update_inventory();
   update_code_hover();
   update_dialog_choices();
   update_skip_message();
@@ -494,6 +494,9 @@ void Interface::update_inventory()
   Input_mode mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
   auto inventory_origin = get<C::Absolute_position>("Inventory", "origin");
+  auto inventory = get<C::Inventory>("Game", "inventory");
+  std::string active_object = value<C::String>("Interface", "active_object", "");
+  std::string source_object = value<C::String>("Interface", "source_object", "");
 
   double target = 0;
   double as_target = 0;
@@ -501,6 +504,19 @@ void Interface::update_inventory()
   {
     target = Config::world_height - Config::inventory_height;
     as_target = target - 80 - 2 * Config::inventory_margin;
+    std::size_t position = inventory->position();
+    for (std::size_t i = 0; i < inventory->size(); ++ i)
+    {
+      if (inventory->get(i) != active_object && inventory->get(i) != source_object)
+        continue;
+
+      if (position <= i && i < position + Config::displayed_inventory_size)
+      {
+        std::size_t pos = i - position;
+        if (pos > 6)
+          as_target -= 1.5 * Config::label_height;
+      }
+    }
   }
   else if ((mode == MOUSE || mode == TOUCHSCREEN) && status()->is (IDLE))
   {
@@ -516,31 +532,33 @@ void Interface::update_inventory()
   if (target != inventory_origin->value().y())
   {
     if (auto anim = request<C::GUI_position_animation>("Inventory", "animation"))
-    {
       anim->update(Point(0, target));
-      if (auto as_anim = request<C::GUI_position_animation>("Gamepad_action_selector", "animation"))
-        as_anim->update(Point(Config::world_width - 240, as_target));
-    }
     else
     {
       double current_time = value<C::Double>(CLOCK__TIME);
       auto position = get<C::Position>("Inventory", "origin");
       set<C::GUI_position_animation> ("Inventory", "animation", current_time, current_time + Config::inventory_speed,
                                       position, Point(0, target));
+    }
+  }
 
+  auto as_pos = get<C::Position>("Gamepad_action_selector", "position");
+  if (as_target != as_pos->value().y())
+  {
+    if (auto as_anim = request<C::GUI_position_animation>("Gamepad_action_selector", "animation"))
+      as_anim->update(Point(Config::world_width - 240, as_target));
+    else
+    {
+      double current_time = value<C::Double>(CLOCK__TIME);
       auto as_pos = get<C::Position>("Gamepad_action_selector", "position");
       set<C::GUI_position_animation> ("Gamepad_action_selector", "animation", current_time, current_time + Config::inventory_speed,
                                       as_pos, Point(Config::world_width - 240, as_target));
     }
   }
 
-  auto inventory = get<C::Inventory>("Game", "inventory");
-
   constexpr int inventory_margin = 100;
   constexpr int inventory_width = Config::world_width - inventory_margin * 2;
 
-  std::string active_object = value<C::String>("Interface", "active_object", "");
-  std::string source_object = value<C::String>("Interface", "source_object", "");
 
   std::size_t position = inventory->position();
   for (std::size_t i = 0; i < inventory->size(); ++ i)
