@@ -46,9 +46,9 @@ Dialog::GVertex Dialog::add_vertex (const std::string& character,
 }
 
 Dialog::GEdge Dialog::add_edge (Dialog::GVertex source, Dialog::GVertex target,
-                                bool once, const std::string& line)
+                                bool once, const std::string& line, bool displayed)
 {
-  return m_graph.add_edge (source, target, {(once ? ONCE : ALWAYS), line});
+  return m_graph.add_edge (source, target, {(once ? ONCE : ALWAYS), displayed, line});
 }
 
 bool Dialog::has_incident_edges (Dialog::GVertex v)
@@ -102,6 +102,21 @@ void Dialog::next (int choice)
       }
       ++ i;
     }
+}
+
+bool Dialog::is_displayed (int choice)
+{
+  int i = 0;
+  for (GEdge e : m_graph.incident_edges(m_current))
+    if (m_graph[e].status != DISABLED)
+    {
+      if (i == choice)
+      {
+        return m_graph[e].displayed;
+      }
+      ++ i;
+    }
+  return true;
 }
 
 bool Dialog::is_over() const

@@ -595,10 +595,13 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
   }
   else if (auto choice = request<C::Int>("Dialog", "choice"))
   {
-    action->add ("talk",
-    { get<C::Vector<std::string> >("Dialog", "choices")
-      ->value()[std::size_t(choice->value())] });
-    action->add ("wait", {});
+    if (dialog->is_displayed(choice->value()))
+    {
+      action->add ("talk",
+      { get<C::Vector<std::string> >("Dialog", "choices")
+        ->value()[std::size_t(choice->value())] });
+      action->add ("wait", {});
+    }
     dialog->next(choice->value());
     remove("Dialog", "choice");
   }

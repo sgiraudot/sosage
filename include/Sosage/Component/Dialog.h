@@ -47,6 +47,7 @@ class Dialog : public Base
   struct Edge
   {
     Edge_status status;
+    bool displayed;
     std::string line;
   };
 
@@ -71,7 +72,7 @@ public:
                       const std::string& line = "",
                       const std::string& signal = "");
   GEdge add_edge (GVertex source, GVertex target,
-                  bool once = false, const std::string& line = "");
+                  bool once = false, const std::string& line = "", bool displayed = true);
   bool has_incident_edges (GVertex v);
   GVertex current() const;
   GVertex vertex_in() const;
@@ -79,6 +80,7 @@ public:
   void init(GVertex current = Graph::null_vertex());
   void next();
   void next (int choice);
+  bool is_displayed (int choice);
   bool is_over() const;
   bool is_line() const;
   bool has_signal() const;
