@@ -406,8 +406,11 @@ bool Logic::function_move (const std::vector<std::string>& args)
 
       auto pos = get<C::Position>(target , "position");
 
-      auto anim = set<C::Tuple<Point, Point, double, double>>
-          (target , "move", pos->value(), Point(x,y), begin_time, end_time);
+      int current_z = get<C::Image>(target, "image")->z();
+
+      auto anim = set<C::Tuple<Point, Point, int, int, double, double>>
+          (target , "move", pos->value(), Point(x,y), current_z, z,
+           begin_time, end_time);
       m_current_action->schedule (end_time,  anim);
     }
     else

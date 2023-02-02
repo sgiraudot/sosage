@@ -260,16 +260,20 @@ void Animation::run_animation_frame()
 
   // Then check all other cases
   for (auto c : components("move"))
-    if (auto a = C::cast<C::Tuple<Point, Point, double, double>>(c))
+    if (auto a = C::cast<C::Tuple<Point, Point, int, int, double, double>>(c))
     {
       double ftime = frame_time(value<C::Double>(CLOCK__TIME));
-      double ratio = (ftime - a->get<2>()) / (a->get<3>() - a->get<2>());
+      double ratio = (ftime - a->get<4>()) / (a->get<5>() - a->get<4>());
 
       Point current = ratio * a->get<1>() + (1 - ratio) * a->get<0>();
       if (ratio > 1)
         current = a->get<1>();
+      int z = round(ratio * a->get<3>() + (1 - ratio) * a->get<2>());
+      if (ratio > 1)
+        z = a->get<3>();
 
       get<C::Position>(a->entity() , "position")->set (current);
+      get<C::Image>(a->entity(), "image")->z() = z;
     }
 
   for (auto c : components("rescale"))
