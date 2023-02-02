@@ -585,12 +585,18 @@ void File_IO::read_object (const std::string& id, const Core::File_IO::Node& inp
   {
     int lx = input["label"][0].integer();
     int ly = input["label"][1].integer();
-    set<C::Absolute_position>(id , "label", Point(lx,ly), false);
+    if (input["label"][0].is_relative())
+      set<C::Relative_position>(id, "label", pos, Vector (lx,ly));
+    else
+      set<C::Absolute_position>(id , "label", Point(lx,ly), false);
   }
 
   int vx = input["view"][0].integer();
   int vy = input["view"][1].integer();
-  set<C::Absolute_position>(id , "view", Point(vx,vy), false);
+  if (input["view"][0].is_relative())
+    set<C::Relative_position>(id , "view", pos, Vector(vx,vy));
+  else
+    set<C::Absolute_position>(id , "view", Point(vx,vy), false);
 
   if (input.has("reach_factor"))
     set<C::Double>(id, "reach_factor", input["reach_factor"].floating());
