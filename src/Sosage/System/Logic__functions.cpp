@@ -526,6 +526,17 @@ bool Logic::function_play (const std::vector<std::string>& args)
 }
 
 /*
+  - randomize: [STRING id, STRING state1, STRING state2, (...)] -> selects a random state for the object/scenery ID
+*/
+bool Logic::function_randomize (const std::vector<std::string>& args)
+{
+  check (args.size() > 1, "function_randomize takes more than 1 argument");
+  get<C::String>(args[0], "state")->set (args[std::size_t(random_int(1, args.size()))]);
+
+  return true;
+}
+
+/*
   - receive: [STRING signal, ID action_id]               -> receives a signal emitted from another room and triggers action if so
   - receive: [STRING signal, ID action_id, ID action_id] -> triggers action A if signal received, B otherwise
  */

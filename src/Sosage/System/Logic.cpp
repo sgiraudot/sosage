@@ -79,6 +79,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(move);
   INIT_DISPATCHER(move60fps);
   INIT_DISPATCHER(play);
+  INIT_DISPATCHER(randomize);
   INIT_DISPATCHER(receive);
   INIT_DISPATCHER(rescale);
   INIT_DISPATCHER(rescale60fps);
