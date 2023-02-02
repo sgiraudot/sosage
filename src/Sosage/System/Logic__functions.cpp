@@ -540,16 +540,24 @@ bool Logic::function_randomize (const std::vector<std::string>& args)
 }
 
 /*
+  - receive: [STRING signal]                             -> receives (and thus cancels) a signal emitted from another room
   - receive: [STRING signal, ID action_id]               -> receives a signal emitted from another room and triggers action if so
   - receive: [STRING signal, ID action_id, ID action_id] -> triggers action A if signal received, B otherwise
  */
 bool Logic::function_receive (const std::vector<std::string>& args)
 {
-  check (args.size() == 2 || args.size() == 3, "function_receive takes 2 or 3 argument");
+  check (args.size() < 4, "function_receive takes 1, 2 or 3 argument");
   if (receive (args[0], "signal"))
   {
-    debug << "Received " << args[0] << ", launching " << args[1] << std::endl;
-    get<C::Action>(args[1], "action")->launch();
+    if (args.size() == 2)
+    {
+      debug << "Received " << args[0] << ", launching " << args[1] << std::endl;
+      get<C::Action>(args[1], "action")->launch();
+    }
+    else
+    {
+      debug << "Received " << args[0] << std::endl;
+    }
   }
   else if (args.size() == 3)
   {
