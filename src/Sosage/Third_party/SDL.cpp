@@ -224,7 +224,7 @@ std::pair<SDL::Image, double> SDL::create_rectangle (int w, int h, int r, int g,
   check (text != nullptr, "Cannot create rectangle texture ("
          + std::string(SDL_GetError()) + ")");
 #else
-  SDL_Texture* text;
+  SDL_Texture* text = nullptr;
 #endif
 
   SDL_Texture* highlight = nullptr;
@@ -457,8 +457,8 @@ SDL::Image SDL::compose (const std::initializer_list<SDL::Image>& images)
 
   SDL_SetRenderTarget(m_renderer, nullptr);
 #else
-  SDL_Texture* texture;
-  SDL_Texture* highlight;
+  SDL_Texture* texture = nullptr;
+  SDL_Texture* highlight = nullptr;
 #endif
 
   return m_images.make_single (make_image, texture, highlight, total_width, total_height);
@@ -994,7 +994,7 @@ void SDL::end ()
 #ifndef SOSAGE_GUILESS
   SDL_RenderPresent (m_renderer);
 #else
-  SDL_Delay(20); // If no GUI, simulate GPU delay
+  SDL_Delay(17); // If no GUI, simulate GPU delay
 #endif
 }
 
