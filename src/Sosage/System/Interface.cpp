@@ -365,7 +365,10 @@ void Interface::update_action_selector()
       }
 
       if (inactive_time > 5)
+      {
         set_action_selector (GP_IDLE, value<C::String>("Interface", "active_object", ""));
+        remove ("Player", "not_moved_yet", true);
+      }
       else
         set_action_selector(NO_SEL);
     }
