@@ -105,6 +105,11 @@ std::string Yaml::Node::string (const std::string& folder, const std::string& su
   return folder + "/" + subfolder + "/" + value + "." + extension;
 }
 
+bool Yaml::Node::is_relative () const
+{
+  return value[0] == '+' || value[0] == '-';
+}
+
 int Yaml::Node::integer () const
 {
   return to_int(value);

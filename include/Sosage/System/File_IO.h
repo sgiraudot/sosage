@@ -46,6 +46,8 @@ private:
 
   using Function = std::function<void(const std::string&, const Core::File_IO::Node&)>;
   std::unordered_map<std::string, Function> m_dispatcher;
+  std::vector<std::string> m_global_codes;
+  std::vector<std::string> m_global_objects;
 
 public:
 

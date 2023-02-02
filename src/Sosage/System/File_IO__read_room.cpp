@@ -244,6 +244,24 @@ void File_IO::read_room (const std::string& file_name)
       }
   }
 
+  // Read global codes/objects
+  for (const std::string& id : m_global_codes)
+  {
+    Core::File_IO subfile ("data/codes/" + id + ".yaml");
+    bool okay = subfile.parse();
+    check(okay, "Can't open data/codes/" + id + ".yaml");
+    read_code (id, subfile.root());
+    callback->value()();
+  }
+  for (const std::string& id : m_global_objects)
+  {
+    Core::File_IO subfile ("data/objects/" + id + ".yaml");
+    bool okay = subfile.parse();
+    check(okay, "Can't open data/objects/" + id + ".yaml");
+    read_object (id, subfile.root());
+    callback->value()();
+  }
+
   // Special handling for inventory/numbers after reloading save (may need to
   // search in other rooms for the object)
   auto inventory = get<C::Inventory>("Game", "inventory");

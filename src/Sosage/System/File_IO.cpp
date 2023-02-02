@@ -605,6 +605,11 @@ void File_IO::read_init ()
     }
   }
 
+  for (std::size_t i = 0; i < input["codes"].size(); ++ i)
+    m_global_codes.push_back (input["codes"][i].string());
+  for (std::size_t i = 0; i < input["objects"].size(); ++ i)
+    m_global_objects.push_back (input["objects"][i].string());
+
   for (std::size_t i = 0; i < input["text"].size(); ++ i)
   {
     const Core::File_IO::Node& itext = input["text"][i];
