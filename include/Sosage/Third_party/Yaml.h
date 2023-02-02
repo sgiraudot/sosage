@@ -69,6 +69,7 @@ public:
                         const std::string& extension) const;
     std::string string (const std::string& folder, const std::string& subfolder,
                         const std::string& extension) const;
+    bool is_relative() const;
     int integer () const;
     double floating () const;
     bool boolean() const;
