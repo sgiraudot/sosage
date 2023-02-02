@@ -346,6 +346,12 @@ void Logic::run ()
   if (auto new_room_origin = request<C::String>("Game", "new_room_origin"))
   {
     get<C::Action>(new_room_origin->value() , "action")->launch();
+    if (new_room_origin->value() == "Saved_game")
+    {
+      auto room_name = value<C::String>("Game", "current_room");
+      if (auto action = request<C::Action>(room_name + "_save", "action"))
+        action->launch();
+    }
     remove ("Game", "new_room_origin");
   }
 
