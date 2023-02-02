@@ -27,8 +27,6 @@
 #include <Sosage/Config/config.h>
 #include <Sosage/Config/options.h>
 
-#ifdef SOSAGE_TEST_INPUT
-
 #include <Sosage/Component/Action.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Path.h>
@@ -45,11 +43,18 @@ namespace C = Component;
 
 Test_input::Test_input (Content& content)
   : Base (content)
-  , m_mode (new_mode())
+  , m_random_mode(false)
+  , m_mode (BIND(run_mouse))
   , m_randgen(std::random_device()())
 {
   set_fac<C::Simple<Vector>>(STICK__DIRECTION, "Stick", "direction", Vector(0, 0));
   get<C::Boolean>("Game", "debug")->set(true);
+}
+
+void Test_input::set_random_mode()
+{
+  m_random_mode = true;
+  m_mode = new_mode();
 }
 
 void Test_input::run()
@@ -74,7 +79,7 @@ void Test_input::run()
 //  ++ nb;
 //  return;
 
-  if (status()->is(IDLE, CUTSCENE) && ready("Test_change_mode", 10))
+  if (m_random_mode && status()->is(IDLE, CUTSCENE) && ready("Test_change_mode", 10))
   {
     debug << "[TEST INPUT] Change mode" << std::endl;
     m_mode = new_mode();
@@ -762,4 +767,3 @@ bool Test_input::ready (const std::string& key, double time)
 
 } // namespace Sosage::System
 
-#endif // SOSAGE_TEST_INPUT

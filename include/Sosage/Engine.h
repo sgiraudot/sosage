@@ -39,6 +39,9 @@ class Engine
   Content m_content;
   std::vector<System::Handle> m_systems;
 
+  enum Input_mode { NORMAL, TEST_MOUSE, TEST_RANDOM };
+  Input_mode m_input_mode = NORMAL;
+
 public:
 
   Engine (int argc, char** argv);

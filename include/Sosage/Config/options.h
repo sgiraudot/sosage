@@ -37,10 +37,6 @@
 #define SOSAGE_PROFILE_TO_FILE
 #endif
 
-#ifdef SOSAGE_CFG_TEST_INPUT
-#define SOSAGE_TEST_INPUT
-#endif
-
 #ifdef SOSAGE_CFG_GUILESS
 #define SOSAGE_GUILESS
 #endif

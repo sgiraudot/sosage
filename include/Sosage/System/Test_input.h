@@ -26,8 +26,6 @@
 
 #include <Sosage/Config/options.h>
 
-#ifdef SOSAGE_TEST_INPUT
-
 #ifndef SOSAGE_SYSTEM_TEST_INPUT_H
 #define SOSAGE_SYSTEM_TEST_INPUT_H
 
@@ -43,12 +41,14 @@ namespace Sosage::System
 class Test_input : public Base
 {
   Core::Input m_core;
+  bool m_random_mode;
   std::function<void(void)> m_mode;
   std::mt19937 m_randgen;
 
 public:
 
   Test_input (Content& content);
+  void set_random_mode();
 
   virtual void run();
 
@@ -70,4 +70,3 @@ private:
 
 #endif // SOSAGE_SYSTEM_TEST_INPUT_H
 
-#endif // SOSAGE_TEST_INPUT

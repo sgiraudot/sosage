@@ -670,10 +670,8 @@ void Interface::menu_clicked ()
 
   if (effect->value() == "Save_and_quit")
   {
-//#ifndef SOSAGE_TEST_INPUT // Avoid quitting when testing input
     emit ("Game", "save");
     emit ("Game", "exit");
-//#endif
   }
   else if (effect->value() == "New_game")
   {
@@ -682,31 +680,35 @@ void Interface::menu_clicked ()
       create_menu ("Wanna_restart");
     else
     {
-#ifndef SOSAGE_TEST_INPUT // Avoid restarting when testing input
-      set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
-      set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
-      emit ("Game", "reset");
-      remove("Game", "music");
-      emit ("Music", "stop");
-      status()->pop();
-      status()->push(LOCKED);
-#endif
+      // Avoid restarting when testing input
+      if (!request<C::Signal>("Game", "prevent_restart"))
+      {
+        set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
+        set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
+        emit ("Game", "reset");
+        remove("Game", "music", true);
+        emit ("Music", "stop");
+        status()->pop();
+        status()->push(LOCKED);
+      }
     }
   }
   else if (effect->value() == "Ok")
   {
     if (menu == "Wanna_restart")
     {
-#ifndef SOSAGE_TEST_INPUT // Avoid restarting when testing input
-      set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
-      set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
-      emit ("Game", "reset");
-      remove("Game", "music");
-      emit ("Music", "stop");
-      delete_menu("Wanna_restart");
-      status()->pop();
-      status()->push(LOCKED);
-#endif
+      // Avoid restarting when testing input
+      if (!request<C::Signal>("Game", "prevent_restart"))
+      {
+        set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
+        set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
+        emit ("Game", "reset");
+        remove("Game", "music");
+        emit ("Music", "stop");
+        delete_menu("Wanna_restart");
+        status()->pop();
+        status()->push(LOCKED);
+      }
     }
     else if (menu == "Credits" || menu == "Settings" || menu == "Phone" || menu == "Gps")
     {
@@ -786,10 +788,12 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
   }
   else if (setting == "Fullscreen")
   {
-#ifndef SOSAGE_TEST_INPUT // Avoid switching fullscreen when testing input
-    get<C::Boolean>("Window", "fullscreen")->set(v == "Yes");
-    emit ("Window", "toggle_fullscreen");
-#endif
+    // Avoid switching fullscreen when testing input
+    if (!request<C::Signal>("Game", "prevent_restart"))
+    {
+      get<C::Boolean>("Window", "fullscreen")->set(v == "Yes");
+      emit ("Window", "toggle_fullscreen");
+    }
   }
   else if (setting == "Text_size")
   {
@@ -809,15 +813,19 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
     else
       set<C::Int>("Dialog", "speed")->set(Config::FAST);
   }
-#ifndef SOSAGE_TEST_INPUT // Avoid changing volume when testing input
   else if (setting == "Music_volume")
   {
-    set<C::Int>("Music", "volume")->set(to_int(v) / 10);
-    emit("Music", "volume_changed");
+    if (!request<C::Signal>("Game", "prevent_restart"))
+    {
+      set<C::Int>("Music", "volume")->set(to_int(v) / 10);
+      emit("Music", "volume_changed");
+    }
   }
   else if (setting == "Sound_volume")
-    set<C::Int>("Sounds", "volume")->set(to_int(v) / 10);
-#endif
+  {
+    if (!request<C::Signal>("Game", "prevent_restart"))
+      set<C::Int>("Sounds", "volume")->set(to_int(v) / 10);
+  }
 }
 
 void Interface::update_phone_menu()

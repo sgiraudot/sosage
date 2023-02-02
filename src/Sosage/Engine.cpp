@@ -38,11 +38,8 @@
 #include <Sosage/System/Control.h>
 #include <Sosage/System/File_IO.h>
 #include <Sosage/System/Graphic.h>
-#ifdef SOSAGE_TEST_INPUT
 #include <Sosage/System/Test_input.h>
-#else
 #include <Sosage/System/Input.h>
-#endif
 #include <Sosage/System/Interface.h>
 #include <Sosage/System/Logic.h>
 #include <Sosage/System/Sound.h>
@@ -128,11 +125,15 @@ bool Engine::run (const std::string& folder_name)
 
   // Create all systems
   m_systems.push_back (file_io);
-#ifdef SOSAGE_TEST_INPUT
-  m_systems.push_back (System::make_handle<System::Test_input>(m_content));
-#else
-  m_systems.push_back (System::make_handle<System::Input>(m_content));
-#endif
+  if (m_input_mode == NORMAL)
+    m_systems.push_back (System::make_handle<System::Input>(m_content));
+  else
+  {
+    auto input = System::make_handle<System::Test_input>(m_content);
+    if (m_input_mode == TEST_RANDOM)
+      input->set_random_mode();
+    m_systems.push_back (input);
+  }
   m_systems.push_back (control);
   m_systems.push_back (interface);
   m_systems.push_back (System::make_handle<System::Logic>(m_content));
@@ -202,6 +203,17 @@ void Engine::handle_cmdline_args (int argc, char** argv)
         break;
       m_content.set<Component::String>("Cmdline", "locale", argv[i]);
     }
+#ifdef SOSAGE_DEBUG
+    else if (arg == "--mouse" || arg == "-m")
+    {
+       m_input_mode = TEST_MOUSE;
+       m_content.emit("Game", "prevent_restart");
+    }
+    else if (arg == "--test" || arg == "-t")
+    {
+       m_input_mode = TEST_RANDOM;
+       m_content.emit("Game", "prevent_restart");
+    }
     else if (arg == "--save" || arg == "-s")
     {
       ++ i;
@@ -209,7 +221,6 @@ void Engine::handle_cmdline_args (int argc, char** argv)
         break;
       m_content.set<Component::String>("Save", "suffix", argv[i]);
     }
-#ifdef SOSAGE_DEBUG
     else if (arg == "--room" || arg == "-r")
     {
       ++ i;
