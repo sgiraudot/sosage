@@ -163,7 +163,7 @@ void File_IO::read_config()
   int window_height = -1;
 #endif
 
-  Core::File_IO input ("config.yaml", true);
+  Core::File_IO input ("config" + value<C::String>("Save", "suffix", "") +  ".yaml", true);
   if (input.parse())
   {
     if (input.has("locale")) locale = input["locale"].string();
@@ -182,6 +182,14 @@ void File_IO::read_config()
       window_height = input["window"][1].integer();
     }
   }
+
+  // No sound for automatic tests
+  if (request<C::Signal>("Game", "prevent_restart"))
+  {
+    music_volume = 0;
+    sounds_volume = 0;
+  }
+
 
   set_fac<C::String>(GAME__CURRENT_LOCAL, "Game", "current_locale", locale);
   set<C::Boolean>("Window", "fullscreen", fullscreen);
@@ -204,7 +212,7 @@ void File_IO::read_config()
 
 void File_IO::write_config()
 {
-  Core::File_IO output ("config.yaml", true, true);
+  Core::File_IO output ("config" + value<C::String>("Save", "suffix", "") +  ".yaml", true, true);
 
   output.write ("locale", value<C::String>(GAME__CURRENT_LOCAL));
   output.write ("fullscreen", value<C::Boolean>("Window", "fullscreen"));
