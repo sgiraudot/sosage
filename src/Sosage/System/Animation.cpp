@@ -419,15 +419,13 @@ void Animation::place_and_scale_character(const std::string& id)
 
   abody->rescale (new_z);
   ahead->rescale (new_z);
-  ahead->z() += 1;
   amouth->rescale (new_z);
-  amouth->z() += 2;
 
   if (auto z = request<C::Int>(id , "z"))
   {
     abody->z() = z->value();
-    ahead->z() = z->value() + 1;
-    amouth->z() = z->value() + 2;
+    ahead->z() = z->value();
+    amouth->z() = z->value();
   }
 }
 

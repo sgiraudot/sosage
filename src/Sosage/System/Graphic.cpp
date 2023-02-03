@@ -141,6 +141,20 @@ void Graphic::run()
   std::sort (to_display.begin(), to_display.end(),
              [](const Image_with_info& a, const Image_with_info& b) -> bool
              {
+               if (std::get<0>(a)->z() == std::get<0>(b)->z())
+               {
+                 const std::string& aid = std::get<0>(a)->entity();
+                 const std::string& bid = std::get<0>(b)->entity();
+                 std::string acid = std::get<0>(a)->character_entity();
+                 if (aid == acid) // Not a character, just compare IDs
+                   return aid < bid;
+                 std::string bcid = std::get<0>(b)->character_entity();
+                 if (bid == bcid || acid != bcid) // Not a character or != characters, just compare IDs
+                   return aid < bid;
+
+                 // Else, for same character, sort _mouth > _head > _body
+                 return bid > aid;
+               }
                return (std::get<0>(a)->z() < std::get<0>(b)->z());
              });
 
