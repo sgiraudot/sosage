@@ -267,7 +267,7 @@ void Test_input::run_mouse()
     for (const std::string& id : ids)
     {
       Point target = cursor_target (id);
-      if (target == Point::invalid())
+      if (target.is_invalid())
         continue;
 
       debug << "[TEST MOUSE] Click on " << id << " at " << target << std::endl;
@@ -529,7 +529,7 @@ void Test_input::run_touchscreen()
     for (const std::string& id : ids)
     {
       Point target = cursor_target (id);
-      if (target == Point::invalid())
+      if (target.is_invalid())
         continue;
 
       debug << "[TEST TOUCH] Click on " << id << " at " << target << std::endl;
@@ -766,4 +766,3 @@ bool Test_input::ready (const std::string& key, double time)
 }
 
 } // namespace Sosage::System
-

@@ -141,7 +141,7 @@ void Logic::run ()
         {
           if (C::cast<C::Signal>(th.second))
             set (th.second);
-          else
+          else if (th.second->entity() != "wait")
             remove (th.second);
         }
       }

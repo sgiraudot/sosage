@@ -596,7 +596,7 @@ void Control::dialog_touchscreen()
 
 void Control::dialog_sub_click ()
 {
-  set<C::Int>("Dialog", "choice", value<C::Int>("Interface", "active_dialog_item"));
+  set<C::Int>("Dialog", "choice", value<C::Int>("Interface", "active_dialog_item", 0));
   emit("Dialog", "clean");
   remove ("Interface", "active_dialog_item", true);
   remove("Game", "current_dialog");
