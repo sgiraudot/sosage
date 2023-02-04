@@ -34,6 +34,8 @@
 #include <Sosage/Component/Simple.h>
 #include <Sosage/System/Base.h>
 
+#include <queue>
+
 namespace Sosage
 {
 
@@ -58,6 +60,7 @@ private:
   using Function = std::function<bool(const std::vector<std::string>&)>;
   std::unordered_map<std::string, Function> m_dispatcher;
   Component::Action_handle m_current_action;
+  std::queue<Component::Action_handle> m_todo;
 
 public:
 

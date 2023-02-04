@@ -859,6 +859,7 @@ bool Logic::function_trigger (const std::vector<std::string>& args)
   if (auto action = request<C::Action>(id , "action"))
   {
     action->launch();
+    m_todo.push(action);
 
     // If trigger is from the character action, then the new action
     // becomes the character action

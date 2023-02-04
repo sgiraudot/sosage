@@ -409,42 +409,44 @@ void Logic::run ()
 
   for (auto c : components("action"))
     if (auto a = C::cast<C::Action>(c))
-      if (c->entity() != "Character")
-      {
-        if (!a->on())
-          continue;
+      if (c->entity() != "Character" && a->on())
+          m_todo.push (a);
 
-        if (skip)
-        {
-          status()->pop();
-          a->stop();
-          const C::Action::Step& s = a->last_step();
-//          debug << m_current_time << ", applying " << s.to_string() << std::endl;
-          check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
-                 s.function() + " is not a valid function");
-          m_dispatcher[s.function()](s.args());
-          continue;
-        }
-        if (!a->ready())
-          continue;
-//        debug << "Applying steps of action " << a->id() << std::endl;
-        do
-        {
-          if (!apply_next_step (a))
-            break;
-        }
-        while (a->on());
+  while (!m_todo.empty())
+  {
+    auto a = m_todo.front();
+    m_todo.pop();
+    if (skip)
+    {
+      status()->pop();
+      a->stop();
+      const C::Action::Step& s = a->last_step();
+      //          debug << m_current_time << ", applying " << s.to_string() << std::endl;
+      check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
+             s.function() + " is not a valid function");
+      m_dispatcher[s.function()](s.args());
+      continue;
+    }
+    if (!a->ready())
+      continue;
+    //        debug << "Applying steps of action " << a->id() << std::endl;
+    do
+    {
+      if (!apply_next_step (a))
+        break;
+    }
+    while (a->on());
 
-        // Action might have changed state, let's transfer the scheduled
-        // steps if that happens
-        auto new_a = request<C::Action>(a->entity(), a->component());
-        if (new_a && new_a != a && !a->scheduled().empty())
-        {
-          for (const auto& th : a->scheduled())
-            new_a->schedule (th.first, th.second);
-          a->reset_scheduled();
-        }
-      }
+    // Action might have changed state, let's transfer the scheduled
+    // steps if that happens
+    auto new_a = request<C::Action>(a->entity(), a->component());
+    if (new_a && new_a != a && !a->scheduled().empty())
+    {
+      for (const auto& th : a->scheduled())
+        new_a->schedule (th.first, th.second);
+      a->reset_scheduled();
+    }
+  }
 
   SOSAGE_TIMER_STOP(System_Logic__run);
 }
@@ -622,7 +624,10 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
     status()->pop();
     if (dialog->line().first != "")
     {
-      set<C::Variable>("Character", "triggered_action", get<C::Action>(dialog->line().first , "action"));
+//      set<C::Variable>("Character", "triggered_action", get<C::Action>(dialog->line().first , "action"));
+      auto end_action = get<C::Action>(dialog->line().first , "action");
+      end_action->launch();
+      m_todo.push(end_action);
       return false;
     }
   }
