@@ -94,7 +94,7 @@ void Sound::run()
     remove("Music", "fade");
   }
 
-  if (receive("Music", "volume_changed") || volume_changed)
+  if ((receive("Music", "volume_changed") || volume_changed) && music)
     for (std::size_t i = 0; i < music->tracks(); ++ i)
       m_core.set_volume (music->core(i), i, volume * music->mix(i));
 
