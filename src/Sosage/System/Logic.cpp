@@ -399,7 +399,11 @@ void Logic::run ()
 
   bool skip = false;
   if (status()->is(CUTSCENE))
+  {
     skip = receive ("Game", "skip_cutscene");
+    if (skip)
+      status()->pop();
+  }
 
   // Quick'n'dirty workaround for the cutscene camera
   // bug. I should rework the full wait/schedule/etc.
@@ -418,14 +422,12 @@ void Logic::run ()
     m_todo.pop();
     if (skip)
     {
-      status()->pop();
-      a->stop();
-      const C::Action::Step& s = a->last_step();
-      //          debug << m_current_time << ", applying " << s.to_string() << std::endl;
-      check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
-             s.function() + " is not a valid function");
-      m_dispatcher[s.function()](s.args());
-      continue;
+      C::Action::Step s = a->next_step();
+      a->reset_scheduled();
+      while (s.function() != "unlock" && a->on())
+        s = a->next_step();
+      if (!a->on())
+        continue;
     }
     if (!a->ready())
       continue;
