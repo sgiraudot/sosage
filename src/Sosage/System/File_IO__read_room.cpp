@@ -127,6 +127,14 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   auto abody = set<C::Conditional>(id + "_body", "image", walking, awalk, aidle);
   group->add(abody);
 
+  int width = aidle->width();
+  int height = aidle->height() * 1.05;
+
+  auto amask = set<C::Image>(id, "image", width, height, 0, 0, 0, 0);
+  amask->z() = 0;
+  amask->set_relative_origin(0.5, 0.95);
+  group->add(amask);
+
   int hdx_right = input["head"]["dx_right"].integer();
   int hdx_left = input["head"]["dx_left"].integer();
   int hdy = input["head"]["dy"].integer();
@@ -172,7 +180,8 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
                                             (is_looking_right(id) ? "gap_right" : "gap_left")));
        }, id);
 
-  set<C::Variable>(id , "position", pbody);
+  set<C::Variable>(id, "position", pbody);
+  set<C::Variable>(id, "view", pbody);
 
   auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game", "new_characters");
   if (!new_char)
