@@ -18,16 +18,14 @@ clean_unused = False
 if len(sys.argv) > 2 and sys.argv[2] == '-c':
     clean_unused = True
 
-errors = []
 def error(string):
-    if exit_at_first_error:
-        print("[" + refname + "] " + string)
-        exit(0)
-    else:
-        errors.append([True, refname, string])
+    print("[Error in " + refname + "] " + string)
 
 def warning(string):
-    errors.append([False, refname, string])
+    print("[Warning in " + refname + "] " + string)
+
+def missing_translation(locale, string):
+    print("[Missing " + locale + " translation in " + refname + "] " + string)
 
 def load_yaml(filename):
     try:
@@ -51,11 +49,16 @@ def is_convertible_to_float(string):
     except ValueError:
         return False
 
+def is_convertible_to_bool(string):
+    return type(string) is bool or string == "true" or string == "false"
+
 def child(data, key):
     if is_convertible_to_int(key):
         idx = int(key)
         if idx < len(data):
             return data[idx]
+    if key == "":
+        return data
     if key in data:
         return data[key]
     return None
@@ -126,10 +129,11 @@ def file_exists(key, value, args):
     fname = args[0] + "/" + value + "." + args[1]
     if not os.path.exists(root_folder + "/" + fname):
         error(key + " refers to a non-existing file (" + fname + ")")
-    else:
-        accessed_files.add(root_folder + "/" + fname)
+        return False
+    accessed_files.add(root_folder + "/" + fname)
+    return True
 
-def test_id_unicity(ids, new_id, ref=None):
+def test_id_unicity(ids, ref, new_id):
     if new_id in ids:
         if ref is None:
             error("multiple definitions of " + new_id)
@@ -162,248 +166,259 @@ def check_line(line):
         warning("forbidden symbol ' ' (small NBSP) found in line " + line)
     for locale in locales:
         if line not in translation[locale]:
-            warning("missing " + locale + " translation of '" + line + "'")
+            missing_translation(locale, '"' + line + '"')
 
 def is_line(key, value):
     check_line(value)
 
-def test_step(key, action, args):
-    if action == "add":
-        if check_signature(key, action, args, ["string", "string"]):
-            id = args[0]
-            if is_convertible_to_int(args[1]):
-                if id not in integer_ids:
-                    error(key + " uses function add on non-existing integer " + id)
-            elif args[1] not in action_ids:
-                error(key + " uses function add on non-existing action " + args[1])
-
-    elif action == "camera":
-        if len(args) == 1:
-            check_signature(key, action, args, ["int"])
-        elif len(args) == 2:
-            check_signature(key, action, args, ["int", "int"])
-        elif len(args) == 3:
-            check_signature(key, action, args, ["int", "int", "float"])
-        else:
-            error(key + " uses function camera with unhandled #arg = " + str(len(args)))
-
-    elif action == "control":
-        if len(args) == 1:
-            id = args[0]
-            if id not in character_ids:
-                error(key + " uses function control on non-existing character " + id)
-        elif len(args) == 2:
-            for id in args:
-                if id not in character_ids:
-                    error(key + " uses function control on non-existing character " + id)
-        else:
-            error(key + " uses function control with " + str(len(args)) + " arguments")
-
-    elif action in {"cutscene", "exit", "lock", "loop", "unlock", "skip", "include" }:
-        if len(args) != 0:
-            error(key + " uses function exit with arguments " + str(args))
-
-    elif action == "fadein" or action == "fadeout":
-        check_signature(key, action, args, ["float"])
-
-    elif action == "goto":
-        if len(args) == 0:
-            pass
-        elif len(args) == 1:
-            id = args[0]
-            if id not in object_ids and id not in character_ids:
-                error(key + " uses function goto on non-existing (or non-reachable) id " + id)
-        elif len(args) == 2:
-            check_signature(key, action, args, ["int", "int"])
-        elif len(args) == 3:
-            if check_signature(key, action, args, ["string", "int", "int"]):
-                id = args[0]
-                if id not in character_ids:
-                    error(key + " uses function goto on non-existing character " + id)
-        else:
-            error(key + " uses function goto with unhandled #arg = " + str(len(args)))
-
-    elif action == "hide":
-        if check_signature(key, action, args, ["string"]):
-            id = args[0]
-            if id not in room_ids and id not in hints_ids:
-                error(key + " uses function hide on non-existing id " + id)
-
-    elif action == "load":
-        if check_signature(key, action, args, ["string", "string"]):
-            # TODO check entry point
-            pass
-
-    elif action == "look":
-        if len(args) == 0:
-            pass
-        elif len(args) == 1:
-            id = args[0]
-            if id not in object_ids and id not in character_ids:
-                error(key + " uses function look on non-existing (or non-reachable) id " + id)
-        elif len(args) == 2:
-            char_id = args[0]
-            if char_id not in character_ids:
-                error(key + " uses function look on non-existing (or non-reachable) character " + id)
-            id = args[1]
-            if id not in object_ids and id not in character_ids:
-                error(key + " uses function look on non-existing (or non-reachable) id " + id)
-        else:
-            error(key + " uses function look with unhandled #arg = " + str(len(args)))
-
-    elif action == "message":
-        check_signature(key, action, args, ["string"])
-        id = args[0]
-        if id not in text_ids:
-            error(key + " uses function message on non-existing (or non-reachable) id " + id)
-
-    elif action == "move":
-        if len(args) == 4:
-            id = args[0]
-            if id in character_ids:
-                check_signature(key, action, args, ["string", "int", "int", "bool"])
-            else:
-                check_signature(key, action, args, ["string", "int", "int", "int"])
-                if id not in object_ids and id not in scenery_ids:
-                    error(key + " uses function move on non-existing (or non-reachable) id " + id)
-        elif len(args) == 5:
-            id = args[0]
-            if id in character_ids:
-                check_signature(key, action, args, ["string", "int", "int", "int", "bool"])
-            else:
-                check_signature(key, action, args, ["string", "int", "int", "int", "float"])
-                if id not in object_ids and id not in scenery_ids and id not in animation_ids:
-                    error(key + " uses function move on non-existing (or non-reachable) id " + id)
-        else:
-            error(key + " uses function move with unhandled #arg = " + str(len(args)))
-
-    elif action == "move60fps":
-        check_signature(key, action, args, ["string", "int", "int", "int", "float"])
-        id = args[0]
-        if id not in object_ids and id not in scenery_ids and id not in animation_ids:
-            error(key + " uses function move on non-existing (or non-reachable) id " + id)
-
-    elif action == "play":
-        if len(args) == 1:
-            id = args[0]
-            if id not in animation_ids and id not in music_ids and id not in sound_ids:
-                error(key + " uses function play on non-existing animation/music/sound " + id)
-        elif len(args) == 2:
-            check_signature(key, action, args, ["string", "float"])
-            id = args[0]
-            # TODO check if valid animation of character?
-        else:
-            error(key + " uses function play with unhandled #arg = " + str(len(args)))
-
-    elif action == "rescale":
-        if len(args) == 2:
-            check_signature(key, action, args, ["string", "float"])
-            id = args[0]
-            if id not in room_ids:
-                error(key + " uses function rescale on non-existing (or non-reachable) id " + id)
-        else:
-            check_signature(key, action, args, ["string", "float", "float"])
-            id = args[0]
-            if id not in room_ids:
-                error(key + " uses function rescale on non-existing (or non-reachable) id " + id)
-
-    elif action == "rescale60fps":
-        check_signature(key, action, args, ["string", "float", "float"])
-        id = args[0]
-        if id not in room_ids:
-            error(key + " uses function rescale60fps on non-existing (or non-reachable) id " + id)
-
-    elif action == "set":
-        if len(args) == 2:
-            check_signature(key, action, args, ["string", "string"])
-            id = args[0]
-            state0 = args[1]
-            if id not in room_ids:
-                error(key + " uses function set on non-existing (or non-reachable) id " + id)
-            if state0 not in all_states[id]:
-                error(key + " uses function set on non-existing state " + state0 + " of " + id)
-        elif len(args) == 3:
-            id = args[0]
-            if id not in room_ids:
-                error(key + " uses function set on non-existing (or non-reachable) id " + id)
-            state0 = args[1]
-            state1 = args[2]
-            if state0 not in all_states[id]:
-                error(key + " uses function set on non-existing state " + state0 + " of " + id)
-            if state1 not in all_states[id]:
-                error(key + " uses function set on non-existing state " + state1 + " of " + id)
-        else:
-            error(key + " uses function set with unhandled #arg = " + str(len(args)))
-
-    elif action == "shake":
-        check_signature(key, action, args, ["float", "float"])
-
-    elif action == "show":
-        if check_signature(key, action, args, ["string"]):
-            id = args[0]
-            if id not in room_ids and id not in hints_ids and id not in text_ids:
-                error(key + " uses function show on non-existing id " + id)
-
-    elif action == "stop":
-        if check_signature(key, action, args, ["string"]):
-            id = args[0]
-            if id != "music" and id not in animation_ids:
-                error(key + " uses function stop on non-existing animation " + id)
-
-    elif action == "talk":
-        if len(args) == 1:
-            check_line(args[0])
-        elif len(args) == 2:
-            id = args[0]
-            if id not in character_ids and id != "superflu":
-                error(key + " uses function talk on non-existing character " + id)
-            check_line(args[1])
-        else:
-            check_signature(key, action, args, ["string", "string", "float"])
-            id = args[0]
-            if id not in character_ids and id != "superflu":
-                error(key + " uses function talk on non-existing character " + id)
-            check_line(args[1])
-
-    elif action == "timer":
-        check_signature(key, action, args, ["string"])
-
-    elif action == "trigger":
-        if check_signature(key, action, args, ["string"]):
-            id = args[0]
-            menus = { "End", "Exit" } # TODO really test menus
-            if id != "hints" and id not in action_ids and id not in dialog_ids and id not in menus:
-                # TODO check also menu existence
-                error(key + " uses function trigger on non-existing action/dialog/menu " + id)
-
-    elif action == "wait":
-        if len(args) == 0:
-            pass
-        elif len(args) == 1:
-            check_signature(key, action, args, ["float"])
-        else:
-            # TODO check timer
-            check_signature(key, action, args, ["string", "float"])
-
-    elif action == "zoom":
-        check_signature(key, action, args, ["float"])
-
+current_stated = ""
+current_room = ""
+current_music = ""
+is_num = False
+def is_action_id(tested_id):
+    return tested_id in items["actions"]
+def is_animation_id(tested_id):
+    return tested_id in items["animations"]
+def is_character_id(tested_id):
+    if is_num:
+        return True # Too complicated to test
+    elif inventory_step:
+        return tested_id in all_characters
     else:
-        error(key + " uses unknown function " + action)
+        return tested_id in items["characters"]
+def is_character_animation_id(tested_id):
+    return tested_id in { "action", "telephone" }
+def is_dialog_id(tested_id):
+    return tested_id in items["dialogs"]
+def is_hint_id(tested_id):
+    return tested_id in hints
+def is_hints(tested_id):
+    return tested_id == "hints"
+def is_integer_id(tested_id):
+    return tested_id in items["integers"]
+def is_string_line(tested):
+    if not isinstance(tested, str):
+        return False
+    check_line(tested)
+    return True
+def is_list_id(tested_id):
+    return tested_id == "phone_numbers"
+def is_lookable_id(tested_id):
+    if inventory_step:
+        return tested_id in items["objects"] or tested_id in all_characters
+    else:
+        return tested_id in items["objects"] or tested_id in items["characters"]
+def is_menu_id(tested_id):
+    return tested_id in { "End", "Exit" }
+def is_movable_id(tested_id):
+    return tested_id in set().union(items["objects"], items["scenery"], items["animations"])
+def is_music_id(tested_id):
+    global current_music
+    current_music = tested_id
+    return tested_id in items["musics"]
+def is_music(tested_id):
+    return tested_id == "music"
+def is_room_id(tested_id):
+    global current_room
+    current_room = tested_id
+    return True
+def queue_room(tested_id):
+    global todo
+    todo.append([current_room, tested_id])
+    return True
+def is_scalable_id(tested_id):
+    return tested_id in set().union(items["objects"], items["scenery"], items["animations"])
+received = {}
+sent = {}
+def is_received_signal_id(tested_id):
+    received[tested_id] = refname
+    return True
+def is_sent_signal_id(tested_id):
+    sent[tested_id] = refname
+    return True
+def is_showable_id(tested_id):
+    if inventory_step:
+        return tested_id in set().union(items["objects"], all_characters, items["scenery"], items["texts"], items["windows"], items["codes"])
+    else:
+        return tested_id in set().union(items["objects"], items["characters"], items["scenery"], items["texts"], items["windows"], items["codes"])
+def is_sound_id(tested_id):
+    return tested_id in items["sounds"]
+def is_source_id(tested_id):
+    return current_music in sources and tested_id in sources[current_music]
+def is_stated_id(tested_id):
+    if is_num:
+        return True # Too complicated to test
+    global current_stated
+    current_stated = tested_id
+    if inventory_step:
+        return tested_id in all_states
+    else:
+        return tested_id in states
+def is_state_id(tested_id):
+    if is_num:
+        return True # Too complicated to test
+    elif inventory_step:
+        return current_stated in all_states and tested_id in all_states[current_stated]
+    else:
+        return current_stated in states and tested_id in states[current_stated]
+def is_target_id(tested_id):
+    return tested_id in items["objects"] or tested_id in items["characters"]
+def is_text_id(tested_id):
+    return tested_id in items["texts"]
+current_timer = ""
+def register_timer_id(tested_id):
+    global current_timer
+    current_timer = tested_id
+    return True
+def is_timer_id(tested_id):
+    return tested_id == current_timer
 
-def test_action(key, value):
+possible_functions = [ [ "add", is_integer_id, is_convertible_to_int ],
+                       [ "add", is_list_id, is_action_id ],
+                       [ "camera", is_convertible_to_int ],
+                       [ "camera", is_convertible_to_int, is_convertible_to_int ],
+                       [ "camera", is_convertible_to_int, is_convertible_to_int, is_convertible_to_int ],
+                       [ "control", is_character_id ],
+                       [ "control", is_character_id, is_character_id ],
+                       [ "cutscene" ],
+                       [ "emit", is_sent_signal_id ],
+                       [ "exit" ],
+                       [ "fadein", is_convertible_to_float ],
+                       [ "fadeout", is_convertible_to_float ],
+                       [ "goto" ],
+                       [ "goto", is_target_id ],
+                       [ "goto", is_convertible_to_int, is_convertible_to_int ],
+                       [ "goto", is_character_id, is_target_id],
+                       [ "goto", is_character_id, is_convertible_to_int, is_convertible_to_int ],
+                       [ "hide", is_hint_id ],
+                       [ "hide", is_showable_id ],
+                       [ "hide", is_music_id, is_source_id ],
+                       [ "include" ],
+                       [ "load", is_room_id, queue_room ],
+                       [ "lock" ],
+                       [ "look" ],
+                       [ "look", is_lookable_id ],
+                       [ "look", is_character_id, is_lookable_id ],
+                       [ "loop" ],
+                       [ "message", is_text_id ],
+                       [ "move", is_character_id, is_convertible_to_int, is_convertible_to_int, is_convertible_to_bool ],
+                       [ "move", is_character_id, is_convertible_to_int, is_convertible_to_int, is_convertible_to_int, is_convertible_to_bool ],
+                       [ "move", is_movable_id, is_convertible_to_int, is_convertible_to_int, is_convertible_to_int ],
+                       [ "move", is_movable_id, is_convertible_to_int, is_convertible_to_int, is_convertible_to_int, is_convertible_to_float ],
+                       [ "move60fps", is_movable_id, is_convertible_to_int, is_convertible_to_int, is_convertible_to_int, is_convertible_to_float ],
+                       [ "play", is_animation_id ],
+                       [ "play", is_music_id ],
+                       [ "play", is_sound_id ],
+                       [ "play", is_music_id, is_convertible_to_float ],
+                       [ "play", is_character_animation_id, is_convertible_to_float ],
+                       [ "randomize", is_stated_id, is_state_id ],
+                       [ "randomize", is_stated_id, is_state_id, is_state_id ],
+                       [ "randomize", is_stated_id, is_state_id, is_state_id, is_state_id ],
+                       [ "randomize", is_stated_id, is_state_id, is_state_id, is_state_id, is_state_id ],
+                       [ "randomize", is_stated_id, is_state_id, is_state_id, is_state_id, is_state_id, is_state_id ],
+                       [ "randomize", is_stated_id, is_state_id, is_state_id, is_state_id, is_state_id, is_state_id, is_state_id ],
+                       [ "randomize", is_stated_id, is_state_id, is_state_id, is_state_id, is_state_id, is_state_id, is_state_id, is_state_id ],
+                       [ "receive", is_received_signal_id ],
+                       [ "receive", is_received_signal_id, is_action_id ],
+                       [ "receive", is_received_signal_id, is_action_id, is_action_id ],
+                       [ "rescale", is_scalable_id, is_convertible_to_float ],
+                       [ "rescale", is_scalable_id, is_convertible_to_float, is_convertible_to_float ],
+                       [ "rescale60fps", is_scalable_id, is_convertible_to_float, is_convertible_to_float ],
+                       [ "set", is_stated_id, is_state_id ],
+                       [ "set", is_stated_id, is_state_id, is_state_id ],
+                       [ "set", is_stated_id, is_state_id, is_state_id ],
+                       [ "shake", is_convertible_to_float, is_convertible_to_float ],
+                       [ "show", is_hint_id ],
+                       [ "show", is_showable_id ],
+                       [ "show", is_music_id, is_source_id ],
+                       [ "skip" ],
+                       [ "stop", is_music ],
+                       [ "stop", is_character_id ],
+                       [ "stop", is_animation_id ],
+                       [ "talk", is_string_line ],
+                       [ "talk", is_character_id, is_string_line ],
+                       [ "talk", is_character_id, is_string_line, is_convertible_to_float ],
+                       [ "timer", register_timer_id ],
+                       [ "trigger", is_action_id ],
+                       [ "trigger", is_action_id, is_convertible_to_bool ],
+                       [ "trigger", is_dialog_id ],
+                       [ "trigger", is_menu_id ],
+                       [ "trigger", is_hints ],
+                       [ "unlock" ],
+                       [ "wait" ],
+                       [ "wait", is_convertible_to_float ],
+                       [ "wait", is_timer_id, is_convertible_to_float ],
+                       [ "zoom", is_convertible_to_float ] ]
+
+
+def test_step(action, args):
+    found = False
+    candidates = []
+    for func in possible_functions:
+        if action != func[0]:
+            continue
+        if len(func) - 1 != len(args):
+            continue
+        candidates.append([func[0]])
+        okay = True
+        for a, t in zip(args, func[1:]):
+            if not t:
+                candidates[-1] += ["is_string(" + str(a) + ")"]
+            elif t(a):
+                candidates[-1] += [t.__name__ + "(" + str(a) + ")"]
+            else:
+                candidates[-1] += ["!" + t.__name__ + "(" + str(a) + ")"]
+                okay = False
+        if okay:
+            found = True
+            break
+
+    if not found:
+        if candidates:
+            err_msg = action + str(args) + " is invalid, candidates are:"
+            for c in candidates:
+                err_msg += "\n  " + c[0] + ": [" + ", ".join(c[1:]) + "]"
+        else:
+            err_msg = action + str(args) + " is invalid"
+        error(err_msg)
+
+inventory_step = False
+
+def test_action(init_value, has_inventory = False):
+    global inventory_step
+    inventory_step = has_inventory
+    value = []
+    for v in init_value:
+        action = next(iter(v))
+        args = v[action]
+        if action == "func":
+            for a in functions[args[0]]:
+                laction = next(iter(a))
+                largs = a[laction].copy()
+                for idx, val in enumerate(largs):
+                    if isinstance(val, str) and val.startswith("ARG"):
+                        largs[idx] = args[1 + int(val.split('ARG')[1])]
+                value.append({ laction: largs })
+        else:
+            value.append({ action: args })
+
     for v in value:
         action = next(iter(v))
         args = v[action]
         if not isinstance(args, list):
-            error(key + " uses ill-formed arguments: " + str(args))
+            error(action + " uses ill-formed arguments: " + str(args))
             continue
-        test_step(key, action, args)
+        test_step(action, args)
+
+    global current_timer
+    current_timer = ""
 
 
 data_folder = root_folder + "/data/"
 yaml_files = []
-skip_list = { "ba_fochougny.yaml" }
+skip_list = { "ba_fochougny.yaml", "test_rendu.yaml" }
+
+print("# LOADING YAML FILES")
 
 for root, directories, filenames in os.walk(data_folder):
     for filename in filenames:
@@ -418,17 +433,50 @@ for root, directories, filenames in os.walk(data_folder):
         if basename in skip_list:
             continue
         relname = fullname.split("data/")[-1]
+        refname = filename
+        current_id = filename.split('/', 1)[-1].split('.',1)[0]
+        data = load_yaml(data_folder + relname)
+        if not data:
+            error("invalid YAML input")
+            continue
         yaml_files.append(relname)
-
 
 yaml_files.sort()
 
+print("# TESTING ID UNICITY")
+
 all_ids = set()
 ref_ids = {}
-inventory_ids = set()
-all_states = {}
-hints_ids = set()
 
+sections = [ "musics", "actions", "animations", "characters", "codes", "dialogs", "integers",
+             "objects", "scenery", "sounds", "texts", "windows" ]
+
+def has_key(item, key):
+    return isinstance(item, dict) and key in item
+
+for filename in yaml_files:
+    refname = filename
+    current_id = filename.split('/', 1)[-1].split('.',1)[0]
+    all_ids, ref_ids = test_id_unicity(all_ids, ref_ids, current_id)
+
+    if not filename.startswith("rooms/"):
+        continue
+
+    data = load_yaml(data_folder + filename)
+
+    for s in sections:
+        if has_key(data, s):
+            for item in data[s]:
+                if has_key(item, "id"):
+                    all_ids, ref_ids = test_id_unicity(all_ids, ref_ids, item["id"])
+
+todo = []
+global_codes = set()
+global_objects = set()
+functions = {}
+
+
+print("# READING LOCALE")
 data = load_yaml(data_folder + "locale.yaml")
 locales = [ l["id"] for l in data["locales"] if l["id"] != 'fr_FR']
 
@@ -437,486 +485,438 @@ for line in data["lines"]:
     for locale in locales:
         translation[locale][line['fr_FR']] = line[locale]
 
+print("# READING HINTS")
 data = load_yaml(data_folder + "hints.yaml")
+hints = set()
 if test(data, "hints"):
     for h in data["hints"]:
         if test(h, "id"):
-            all_ids, hints_id = test_id_unicity(hints_ids, h["id"])
+            hints.add(h["id"])
         test(h, "question", is_line)
         test(h, "answer", is_line)
 
+print("# TESTING INIT")
+filename = "init.yaml"
+refname = filename
+current_id = filename.split('/', 1)[-1].split('.',1)[0]
+data = load_yaml(data_folder + filename)
+(data, "version")
+test(data, "locale", is_array)
+test(data, "name", is_line)
+test(data, "icon", file_exists, ["images/interface", "png"])
+test(data, "cursor/0", file_exists, ["images/interface", "png"])
+test(data, "cursor/1", file_exists, ["images/interface", "png"])
+test(data, "cursor/2", file_exists, ["images/interface", "png"])
+test(data, "cursor/3", file_exists, ["images/interface", "png"])
+test(data, "loading_spin/0", file_exists, ["images/interface", "png"])
+test(data, "loading_spin/1", is_int)
+test(data, "debug_font", file_exists, ["fonts", "ttf"])
+test(data, "interface_font", file_exists, ["fonts", "ttf"])
+test(data, "interface_light_font", file_exists, ["fonts", "ttf"])
+test(data, "dialog_font", file_exists, ["fonts", "ttf"])
+test(data, "inventory_arrows/0", file_exists, ["images/interface", "png"])
+test(data, "inventory_arrows/1", file_exists, ["images/interface", "png"])
+test(data, "inventory_chamfer", file_exists, ["images/interface", "png"])
+test(data, "click_sound", file_exists, ["sounds/effects", "ogg"])
+test(data, "step_sound", file_exists, ["sounds/effects", "ogg"])
+test(data, "circle/0", file_exists, ["images/interface", "png"])
+test(data, "circle/1", file_exists, ["images/interface", "png"])
+test(data, "circle/2", file_exists, ["images/interface", "png"])
+test(data, "menu_background", file_exists, ["images/interface", "png"])
+test(data, "menu_logo", file_exists, ["images/interface", "png"])
+test(data, "menu_arrows/0", file_exists, ["images/interface", "png"])
+test(data, "menu_arrows/1", file_exists, ["images/interface", "png"])
+test(data, "menu_buttons/0", file_exists, ["images/interface", "png"])
+test(data, "menu_buttons/1", file_exists, ["images/interface", "png"])
+test(data, "menu_oknotok/0", file_exists, ["images/interface", "png"])
+test(data, "menu_oknotok/1", file_exists, ["images/interface", "png"])
+if test(data, "load/0", file_exists, ["data/rooms", "yaml"]) and test(data, "load/1"):
+    todo.append(data["load"])
+if test(data, "functions", is_array):
+    for f in data["functions"]:
+        if test(f, "id") and test(f, "effect", is_array):
+            functions[f["id"]] = f["effect"]
+if test(data, "codes", is_array):
+    for c in data["codes"]:
+        global_codes.add(c)
+if test(data, "objects", is_array):
+    for o in data["objects"]:
+        global_objects.add(o)
+if test(data, "text", is_array):
+    for t in data["text"]:
+        test(t, "id")
+        test(t, "value", is_line)
+        if "icon" in t:
+            test(t, "icon", file_exists, ["images/interface", "png"])
 
-# First, get all states
+for act in ["look", "move", "take", "inventory_button", "inventory", "use",
+            "combine", "goto"]:
+    test(data, "default/" + act + "/label", is_line)
+    if "effect" in data["default"][act]:
+        for e in data["default"][act]["effect"]:
+            test(e, "talk/0", is_line)
+
+print("# GETTING INVENTORY OBJECTS")
+
 for filename in yaml_files:
     refname = filename
     current_id = filename.split('/', 1)[-1].split('.',1)[0]
-    data = load_yaml(data_folder + filename)
-    if not data:
-        error("invalid YAML input")
+    if not filename.startswith("objects/"):
         continue
-    if filename.startswith("codes/"):
-        if test(data, "states"):
-            all_states[current_id] = set()
-            for s in data["states"]:
-                if test(s, "id"):
-                    all_states[current_id].add(s["id"])
-    elif filename.startswith("objects/"):
-        if test(data, "states"):
-            all_states[current_id] = set()
-            for s in data["states"]:
-                if not test(s, "id"):
-                    continue
-                sid = s["id"]
-                all_states[current_id].add(sid)
-    elif filename.startswith("rooms/"):
-        if "actions" in data:
-            for a in data["actions"]:
-                refname = filename + ":actions"
-                if "states" in a and "id" in a:
-                    id = a["id"]
-                    all_states[id] = set()
-                    for s in a["states"]:
-                        if test(s, "id"):
-                            all_states[id].add(s["id"])
-                        if "states" in a:
-                            all_states[id] = set()
-                            for s in a["states"]:
-                                refname = fname + ":states"
-                                if test(s, "id"):
-                                    all_states[id].add(s["id"])
-                elif "id" not in a:
-                    fname = data_folder + "actions/" + a + ".yaml"
-                    if os.path.exists(fname):
-                        aid = a
-                        a = load_yaml(fname)
-                        if "states" in a:
-                            all_states[aid] = set()
-                            for s in a["states"]:
-                                refname = fname + ":states"
-                                if test(s, "id"):
-                                    all_states[aid].add(s["id"])
-                                    
-        if "musics" in data:
-            for m in data["musics"]:
-                refname = filename + ":musics"
-                if "states" in m:
-                    all_states[m["id"]] = set()
-                    for s in m["states"]:
-                        if test(s, "id"):
-                            all_states[m["id"]].add(s["id"])
-        if "scenery" in data:
-            for s in data["scenery"]:
-                refname = filename + ":scenery"
-                if test(s, "id"):
-                    if "states" in s:
-                        all_states[s["id"]] = set()
-                        for st in s["states"]:
-                            if test(st, "id"):
-                                all_states[s["id"]].add(st["id"])
-        
-iteration = 0
-for filename in yaml_files:
-    iteration += 1
-
-    refname = filename
-    current_id = filename.split('/', 1)[-1].split('.',1)[0]
-    all_ids, ref_ids = test_id_unicity(all_ids, current_id, ref_ids)
-
     data = load_yaml(data_folder + filename)
-    if not data:
-        continue
+    if test(data, "states", is_array):
+        for s in data["states"]:
+            if test(s, "id") and s["id"].startswith("inventory"):
+                global_objects.add(current_id)
+                break
 
-    if filename.startswith("characters/"):
-        test(data, "name", is_line)
-        test(data, "coordinates/0", is_int)
-        test(data, "coordinates/1", is_int)
-        test(data, "looking_right", is_bool)
-        test(data, "color", is_color)
-        test(data, "mouth/skin", file_exists, ["images/characters", "png"])
-        test(data, "mouth/dx_right", is_int)
-        test(data, "mouth/dx_left", is_int)
-        test(data, "mouth/dy", is_int)
-        test(data, "head/skin", file_exists, ["images/characters", "png"])
-        test(data, "head/dx_right", is_int)
-        test(data, "head/dx_left", is_int)
-        test(data, "head/dy", is_int)
-        test(data, "head/positions", is_array)
-        if "walk" in data:
-            test(data, "walk/skin", file_exists, ["images/characters", "png"])
-        test(data, "idle/skin", file_exists, ["images/characters", "png"])
-        test(data, "idle/positions", is_array)
-    elif filename.startswith("codes/"):
-        if test(data, "states"):
-            for s in data["states"]:
-                test(s, "skin/0", file_exists, ["images/windows", "png"])
-                test(s, "skin/1", file_exists, ["images/windows", "png"])
-        test(data, "button_sound", file_exists, ["sounds/effects", "ogg"])
-        test(data, "success_sound", file_exists, ["sounds/effects", "ogg"])
-        test(data, "failure_sound", file_exists, ["sounds/effects", "ogg"])
+print("# TESTING ALL ROOMS")
+done = set()
 
-        values = []
-        if test(data, "buttons"):
-            for b in data["buttons"]:
-                if test(b, "value"):
-                    values.append(b["value"])
-        if test(data, "answer"):
-            for a in data["answer"]:
-                if a not in values:
-                    error(str(a) + " is not a valid button")
-    elif filename.startswith("dialogs/"):
-        if test(data, "lines"):
-            ids = { "end" }
-            has_end = False
-            for l in data["lines"]:
-                if "target" in l:
-                    ids, _ = test_id_unicity(ids, l["target"])
-            for l in data["lines"]:
-                if "choices" in l:
-                    for c in l["choices"]:
-                        test(c, "line", is_line)
-                        test(c, "once", is_bool)
-                        if test(c, "goto"):
-                            if c["goto"] not in ids:
-                                error("goto refers to invalid id " + str(c["goto"]))
-                            if c["goto"] == "end":
-                                has_end = True
-                elif "line" in l:
-                    if test(l, "line", is_array, 2):
-                        test(l, "line/1", is_line)
-                elif "target" not in l:
-                    if test(l, "goto"):
-                        if l["goto"] not in ids:
+def test_actions(data, has_inventory = False):
+    global is_num
+    if "label" in data: # Special actions, maybe tested later
+        is_num = True
+    if "states" in data:
+        for s in data["states"]:
+            test(s, "id")
+            if test(s, "effect", is_array):
+                test_action(s["effect"], has_inventory)
+    else:
+        test_action(data["effect"], has_inventory)
+    is_num = False
+
+def test_animations(data):
+    test(data, "coordinates/0", is_int)
+    test(data, "coordinates/1", is_int)
+    test(data, "coordinates/2", is_int)
+    test(data, "skin", file_exists, ["images/animations", "png"])
+    if test(data, "length"):
+        if isinstance(data["length"], list):
+            test(data, "length/0", is_int)
+            test(data, "length/1", is_int)
+        else:
+            test(data, "length", is_int)
+    test(data, "loop", is_bool)
+    if "duration" in data:
+        test(data, "duration", is_int)
+    if "frames" in data:
+        test(data, "frames", is_array) # Test frames individually?
+
+def test_characters(data):
+    test(data, "name", is_line)
+    test(data, "coordinates/0", is_int)
+    test(data, "coordinates/1", is_int)
+    test(data, "looking_right", is_bool)
+    test(data, "color", is_color)
+    test(data, "mouth/skin", file_exists, ["images/characters", "png"])
+    test(data, "mouth/dx_right", is_int)
+    test(data, "mouth/dx_left", is_int)
+    test(data, "mouth/dy", is_int)
+    test(data, "head/skin", file_exists, ["images/characters", "png"])
+    test(data, "head/dx_right", is_int)
+    test(data, "head/dx_left", is_int)
+    test(data, "head/dy", is_int)
+    test(data, "head/positions", is_array)
+    if "walk" in data:
+        test(data, "walk/skin", file_exists, ["images/characters", "png"])
+    test(data, "idle/skin", file_exists, ["images/characters", "png"])
+    test(data, "idle/positions", is_array)
+
+
+def test_codes(data):
+    if test(data, "states"):
+        for s in data["states"]:
+            test(s, "skin/0", file_exists, ["images/windows", "png"])
+            test(s, "skin/1", file_exists, ["images/windows", "png"])
+    test(data, "button_sound", file_exists, ["sounds/effects", "ogg"])
+    test(data, "success_sound", file_exists, ["sounds/effects", "ogg"])
+    test(data, "failure_sound", file_exists, ["sounds/effects", "ogg"])
+
+    values = []
+    if test(data, "buttons"):
+        for b in data["buttons"]:
+            if test(b, "value"):
+                values.append(b["value"])
+    if test(data, "answer"):
+        for a in data["answer"]:
+            if a not in values:
+                error(str(a) + " is not a valid button")
+
+    if test(data, "on_success", is_array):
+        test_action(data["on_success"])
+
+def test_dialogs(data):
+    if "end" in data:
+        if data["end"] not in items["actions"]:
+            error("dialog ends on non-existing action " + data["end"])
+    if test(data, "lines"):
+        ids = { "end" }
+        has_end = False
+        for l in data["lines"]:
+            if "target" in l:
+                ids, _ = test_id_unicity(ids, None, l["target"])
+        for l in data["lines"]:
+            if "choices" in l:
+                for c in l["choices"]:
+                    test(c, "line", is_line)
+                    test(c, "once", is_bool)
+                    if test(c, "goto"):
+                        if c["goto"] not in ids:
                             error("goto refers to invalid id " + str(c["goto"]))
-                        if l["goto"] == "end":
+                        if c["goto"] == "end":
                             has_end = True
-            if not has_end:
-                error("dialog has no end")
+            elif "line" in l:
+                if test(l, "line", is_array):
+                    test(l, "line/1", is_line)
+                    if len(l["line"]) == 3:
+                        is_sent_signal_id(l["line"][2])
+            elif "target" not in l:
+                if test(l, "goto"):
+                    if l["goto"] not in ids:
+                        error("goto refers to invalid id " + str(c["goto"]))
+                    if l["goto"] == "end":
+                        has_end = True
+        if not has_end:
+            error("dialog has no end")
 
-    elif filename.startswith("objects/"):
-        test(data, "name", is_line)
+def test_integers(data):
+    test(data, "value", is_int)
+    if test(data, "triggers"):
+        for t in data["triggers"]:
+            test(t, "value")
+            if test(t, "effect", is_array):
+                test_action(t["effect"])
+
+possible_actions = { "look", "move", "take", "inventory", "use", "combine", "goto" }
+
+def test_object_action(data, has_inventory):
+    if isinstance(data, list):
+        for act in data:
+            test_object_action(act, has_inventory)
+        return
+    if "object" in data:
+        if data["object"] not in global_objects:
+            error("action using non-inventory object " + data["object"])
+    if "state" in data:
+        if data["state"] not in states[item_id]:
+            error("action using non-existing state " + data["state"])
+    if "right" in data:
+        test(data, "right", is_bool)
+    if "effect" in data:
+        test_action(data["effect"], has_inventory)
+
+def test_objects(data):
+    test(data, "name", is_line)
+    test(data, "coordinates/0", is_int)
+    test(data, "coordinates/1", is_int)
+    test(data, "coordinates/2", is_int)
+    test(data, "box_collision", is_bool)
+    test(data, "view/0", is_int)
+    test(data, "view/1", is_int)
+
+    has_inventory = False
+    inventory_only = True
+    if test(data, "states"):
+        for s in data["states"]:
+            if not test(s, "id"):
+                continue
+            sid = s["id"]
+            if "skin" in s:
+                if sid.startswith("inventory"):
+                    test(s, "skin", file_exists, ["images/inventory", "png"])
+                    has_inventory = True
+                else:
+                    inventory_only = False
+                    test(s, "skin", file_exists, ["images/objects", "png"])
+            elif "size" in s:
+                if not sid.startswith("inventory"):
+                    inventory_only = False
+                test(s, "size/0", is_int)
+                test(s, "size/1", is_int)
+            elif "mask" in s:
+                if not sid.startswith("inventory"):
+                    inventory_only = False
+                test(s, "mask", file_exists, ["images/masks", "png"])
+            if "frames" in s:
+                test(s, "frames", is_int)
+                test(s, "duration", is_int)
+
+    if not inventory_only:
+        test(data, "label/0", is_int)
+        test(data, "label/1", is_int)
+
+    for act in possible_actions:
+        if act in data:
+            test_object_action(data[act], has_inventory)
+
+sources = {}
+
+def test_musics(data):
+    sources[item_id] = set()
+    nb_tracks = 0
+    if test(data, "tracks", is_array):
+        for t in data["tracks"]:
+            test(t, "", file_exists, ["sounds/musics", "ogg"])
+            nb_tracks += 1
+    if test(data, "sources", is_array):
+        idx = 0
+        for s in data["sources"]:
+            if test(s, "id"):
+                sources[item_id].add(s["id"])
+            test(s, "mix", is_array, nb_tracks)
+
+def test_scenery(data):
+    if "states" in data:
+        for st in data["states"]:
+            if test(st, "id"):
+                if "skin" in st:
+                    test(st, "skin", file_exists, ["images/scenery", "png"])
+    else:
+        test(data, "skin", file_exists, ["images/scenery", "png"])
+
+def test_sounds(data):
+    test(data, "sound", file_exists, ["sounds/effects", "ogg"])
+
+def test_texts(data):
+    test(data, "text", is_line)
+    if "coordinates" in data:
         test(data, "coordinates/0", is_int)
         test(data, "coordinates/1", is_int)
         test(data, "coordinates/2", is_int)
-        test(data, "box_collision", is_bool)
-        test(data, "view/0", is_int)
-        test(data, "view/1", is_int)
 
-        inventory_only = True
-        if test(data, "states"):
-            for s in data["states"]:
-                if not test(s, "id"):
+def test_windows(data):
+    test(data, "skin", file_exists, ["images/windows", "png"])
+
+
+tests = {}
+for s in sections:
+    tests[s] = locals()["test_" + s]
+
+def get_item(section, item):
+    global refname
+    if has_key(item, "id"):
+        refname = filename + ":" + section + ":" + item["id"]
+        return item["id"], item
+    else:
+        rname = section + "/" + item + ".yaml"
+        fname = data_folder + rname
+        refname = rname
+        done.add(rname)
+        if not os.path.exists(fname):
+            error(fname + " does not exist")
+            return None, None
+        ldata = load_yaml(fname)
+        accessed_files.add(fname)
+        return item, ldata
+
+def add_states(states, item_id, data):
+    if "states" in data:
+        for st in data["states"]:
+            if test(st, "id"):
+                if item_id not in states:
+                    states[item_id] = set()
+                states[item_id].add(st["id"])
+    return states
+
+global_states = {}
+
+for c in global_codes:
+    accessed_files.add(data_folder + "codes/" + c + ".yaml")
+    global_states = add_states(global_states, c, load_yaml(data_folder + "codes/" + c + ".yaml"))
+for o in global_objects:
+    accessed_files.add(data_folder + "objects/" + o + ".yaml")
+    global_states = add_states(global_states, o, load_yaml(data_folder + "objects/" + o + ".yaml"))
+
+all_states = global_states.copy()
+all_characters = set()
+
+while todo:
+    filename = "rooms/" + todo[0][0] + ".yaml"
+    refname = filename
+    if not file_exists("load", todo[0][0], ["data/rooms", "yaml"]):
+        todo = todo[1:]
+        continue
+
+    filename = "rooms/" + todo[0][0] + ".yaml"
+    refname = filename
+    action = todo[0][1]
+    todo = todo[1:]
+
+    data = load_yaml(data_folder + filename)
+
+    action_found = False
+    if test(data, "actions", is_array):
+        for a in data["actions"]:
+            item_id, ldata = get_item("actions", a)
+            if not item_id:
+                continue
+            if item_id == action:
+                action_found = True
+                break
+    refname = filename
+
+    if not action_found:
+        error("room does not have action " + action)
+
+    if refname in done:
+        continue
+
+    done.add(refname)
+
+    test(data, "name", is_line)
+    if "background" in data:
+        test(data, "background", file_exists, ["images/backgrounds", "png"])
+    if "ground_map" in data:
+        test(data, "ground_map", file_exists, ["images/backgrounds", "png"])
+        test(data, "front_z", is_int)
+        test(data, "back_z", is_int)
+
+    items = {}
+    for s in sections:
+        items[s] = set()
+    items["codes"] = global_codes.copy()
+    items["objects"] = global_objects.copy()
+    states = global_states.copy()
+
+    for s in sections:
+        if has_key(data, s):
+            for item in data[s]:
+                item_id, ldata = get_item(s, item)
+                if not item_id:
                     continue
-                sid = s["id"]
-                if "skin" in s:
-                    if sid != "inventory":
-                        inventory_only = False
-                    if sid == "inventory":
-                        test(s, "skin", file_exists, ["images/inventory", "png"])
-                        inventory_ids.add(current_id)
-                    else:
-                        test(s, "skin", file_exists, ["images/objects", "png"])
-                elif "size" in s:
-                    if sid != "inventory":
-                        inventory_only = False
-                    test(s, "size/0", is_int)
-                    test(s, "size/1", is_int)
-                elif "mask" in s:
-                    if sid != "inventory":
-                        inventory_only = False
-                    test(s, "mask", file_exists, ["images/masks", "png"])
-                if "frames" in s:
-                    test(s, "frames", is_int)
-                    test(s, "duration", is_int)
+                items[s].add(item_id)
+                states = add_states(states, item_id, ldata)
+    all_characters = all_characters.union(items["characters"])
+    refname = filename
 
-        if not inventory_only:
-            test(data, "label/0", is_int)
-            test(data, "label/1", is_int)
+    all_states.update(states)
 
-    elif filename.startswith("rooms/"):
-        test(data, "name", is_line)
-        if "background" in data:
-            test(data, "background", file_exists, ["images/backgrounds", "png"])
-        if "ground_map" in data:
-            test(data, "ground_map", file_exists, ["images/backgrounds", "png"])
-            test(data, "front_z", is_int)
-            test(data, "back_z", is_int)
+    for s in sections:
+        if has_key(data, s):
+            for item in data[s]:
+                item_id, ldata = get_item(s, item)
+                if not item_id:
+                    continue
+                tests[s](ldata)
 
-        room_ids = inventory_ids.copy()
+for c in global_codes:
+    item_id = c
+    refname = data_folder + "codes/" + c + ".yaml"
+    tests["codes"](load_yaml(refname))
+for o in global_objects:
+    item_id = o
+    refname = data_folder + "objects/" + o + ".yaml"
+    tests["objects"](load_yaml(refname))
 
-        action_ids = set()
-        if "actions" in data:
-            for a in data["actions"]:
-                refname = filename + ":actions"
-                id = ''
-                if "id" in a:
-                    id = a["id"]
-                    refname = filename + ":" + a["id"]
-                    all_ids, ref_ids = test_id_unicity(all_ids, id, ref_ids)
-                else:
-                    fname = data_folder + "actions/" + a + ".yaml"
-                    if not os.path.exists(fname):
-                        error(fname + " does not exist")
-                        continue
-                    else:
-                        id = a
-                        a = load_yaml(fname)
-                action_ids.add(id)
-                room_ids.add(id)
-
-        animation_ids = set()
-        if "animations" in data:
-            for a in data["animations"]:
-                refname = filename + ":animations"
-                if test(a, "id"):
-                    refname = filename + ":" + a["id"]
-                    room_ids.add(a["id"])
-                    animation_ids.add(a["id"])
-                    all_ids, ref_ids = test_id_unicity(all_ids, a["id"], ref_ids)
-                test(a, "skin", file_exists, ["images/animations", "png"])
-                if test(a, "length"):
-                    if isinstance(a["length"], list):
-                        test(a, "length/0", is_int)
-                        test(a, "length/1", is_int)
-                    else:
-                        test(a, "length", is_int)
-                test(a, "coordinates/0", is_int)
-                test(a, "coordinates/1", is_int)
-                test(a, "coordinates/2", is_int)
-                test(a, "loop", is_bool)
-
-        character_ids = set()
-        if "characters" in data:
-            for c in data["characters"]:
-                refname = filename + ":" + c
-                room_ids.add(c)
-                character_ids.add(c)
-                fname = data_folder + "characters/" + c + ".yaml"
-                if not os.path.exists(fname):
-                    error(fname + " does not exist")
-
-        dialog_ids = set()
-        if "dialogs" in data:
-            for d in data["dialogs"]:
-                refname = filename + ":" + d
-                room_ids.add(d)
-                dialog_ids.add(d)
-                fname = data_folder + "dialogs/" + d + ".yaml"
-                if not os.path.exists(fname):
-                    error(fname + " does not exist")
-                else:
-                    subdata = load_yaml(fname)
-                    if test(subdata, "lines"):
-                        for l in subdata["lines"]:
-                            if "line" in l:
-                                if test(l, "line", is_array, 2):
-                                    if l["line"][0] not in character_ids:
-                                        error("non-existing character " + l["line"][0])
-
-        integer_ids = set()
-        if "integers" in data:
-            for i in data["integers"]:
-                refname = filename + ":integers"
-                if test(i, "id"):
-                    refname = filename + ":" + i["id"]
-                    room_ids.add(i["id"])
-                    integer_ids.add(i["id"])
-                    all_ids, ref_ids = test_id_unicity(all_ids, i["id"], ref_ids)
-                test(i, "value", is_int)
-
-        music_ids = set()
-        if "musics" in data:
-            for m in data["musics"]:
-                refname = filename + ":musics"
-                if test(m, "id"):
-                    refname = filename + ":" + m["id"]
-                    room_ids.add(m["id"])
-                    music_ids.add(m["id"])
-                    all_ids, ref_ids = test_id_unicity(all_ids, m["id"], ref_ids)
-                if "states" in m:
-                    for s in m["states"]:
-                        test(s, "sound", file_exists, ["sounds/musics", "ogg"])
-                else:
-                    test(m, "sound", file_exists, ["sounds/musics", "ogg"])
-
-        object_ids = inventory_ids.copy()
-        if "objects" in data:
-            for o in data["objects"]:
-                refname = filename + ":" + o
-                room_ids.add(o)
-                object_ids.add(o)
-                fname = data_folder + "objects/" + o + ".yaml"
-                if not os.path.exists(fname):
-                    error(fname + " does not exist")
-
-        scenery_ids = set()
-        if "scenery" in data:
-            for s in data["scenery"]:
-                refname = filename + ":scenery"
-                if test(s, "id"):
-                    refname = filename + ":" + s["id"]
-                    room_ids.add(s["id"])
-                    scenery_ids.add(s["id"])
-                    all_ids, ref_ids = test_id_unicity(all_ids, s["id"], ref_ids)
-                    if "states" in s:
-                        for st in s["states"]:
-                            if test(st, "id"):
-                                if "skin" in st:
-                                    test(st, "skin", file_exists, ["images/scenery", "png"])
-                    else:
-                        test(s, "skin", file_exists, ["images/scenery", "png"])
-                test(s, "coordinates/0", is_int)
-                test(s, "coordinates/1", is_int)
-                test(s, "coordinates/2", is_int)
-
-        sound_ids = set()
-        if "sounds" in data:
-            for s in data["sounds"]:
-                refname = filename + ":sounds"
-                if test(s, "id"):
-                    refname = filename + ":" + s["id"]
-                    room_ids.add(s["id"])
-                    sound_ids.add(s["id"])
-                    all_ids, ref_ids = test_id_unicity(all_ids, s["id"], ref_ids)
-                test(s, "sound", file_exists, ["sounds/effects", "ogg"])
-
-        text_ids = set()
-        if "texts" in data:
-            for t in data["texts"]:
-                if test(t, "id"):
-                    refname = filename + ":" + t["id"]
-                    room_ids.add(t["id"])
-                    text_ids.add(t["id"])
-                    all_ids, ref_ids = test_id_unicity(all_ids, t["id"], ref_ids)
-                test(t, "text", is_line)
-                if "coordinates" in t:
-                    test(t, "coordinates/0", is_int)
-                    test(t, "coordinates/1", is_int)
-                    test(t, "coordinates/2", is_int)
-
-        if "codes" in data:
-            for c in data["codes"]:
-                refname = filename + ":" + c
-                room_ids.add(c)
-                fname = data_folder + "codes/" + c + ".yaml"
-                if not os.path.exists(fname):
-                    error(fname + " does not exist")
-                else:
-                    subdata = load_yaml(fname)
-                    test(subdata, "on_success", test_action)
-
-        if "windows" in data:
-            for w in data["windows"]:
-                refname = filename + ":windows"
-                if test(w, "id"):
-                    refname = filename + ":" + w["id"]
-                    room_ids.add(w["id"])
-                    all_ids, ref_ids = test_id_unicity(all_ids, w["id"], ref_ids)
-                test(w, "skin", file_exists, ["images/windows", "png"])
-
-        if "integers" in data:
-            for i in data["integers"]:
-                refname = filename + ":integers"
-                if test(i, "id"):
-                    refname = filename + ":" + i["id"]
-                if "triggers" in i:
-                    if test(i, "triggers", is_array):
-                        for t in i["triggers"]:
-                            if test(t, "value"):
-                                if not is_convertible_to_int(t["value"]) and t["value"] != "default":
-                                    error("value is neither int nor default (" + t["value"] + ")")
-                            if "effect" in t:
-                                test(t, "effect", test_action)
-
-        if "actions" in data:
-            for a in data["actions"]:
-                refname = filename + ":actions"
-                if "id" in a:
-                    refname = filename + ":" + a["id"]
-                else:
-                    refname = filename + ":" + a
-                    fname = data_folder + "actions/" + a + ".yaml"
-                    a = load_yaml(fname)
-                if "states" in a:
-                    for s in a["states"]:
-                        test(s, "effect", test_action)
-                else:
-                    test(a, "effect", test_action)
-
-        for o in object_ids:
-            refname = filename + ":" + o
-            fname = data_folder + "objects/" + o + ".yaml"
-            subdata = load_yaml(fname)
-            if subdata:
-                for act in [ "look", "primary", "secondary", "inventory", "use"]:
-                    if act in subdata:
-                        a = subdata[act]
-                        if isinstance(a, list):
-                            for ai in a:
-                                if act == "inventory":
-                                    if test(ai, "object"):
-                                        if ai["object"] not in object_ids:
-                                            error(o + "/" + act + " refers to non-existing object " + ai["object"])
-                                else:
-                                    if test(ai, "state"):
-                                        if ai["state"] not in all_states[o]:
-                                            error(o + "/" + act + " refers to non-existing (or non-reachable) state " + ai["state"])
-                                if "effect" in ai:
-                                    test(ai, "effect", test_action)
-                        else:
-                            if "effect" in a:
-                                test(a, "effect", test_action)
-
-        if "hints" in data:
-            pass
-    elif filename == "init.yaml":
-        test(data, "version")
-        test(data, "locale", is_array)
-        test(data, "name", is_line)
-        test(data, "icon", file_exists, ["images/interface", "png"])
-        test(data, "cursor/0", file_exists, ["images/interface", "png"])
-        test(data, "cursor/1", file_exists, ["images/interface", "png"])
-        test(data, "cursor/2", file_exists, ["images/interface", "png"])
-        test(data, "cursor/3", file_exists, ["images/interface", "png"])
-        test(data, "loading_spin/0", file_exists, ["images/interface", "png"])
-        test(data, "loading_spin/1", is_int)
-        test(data, "debug_font", file_exists, ["fonts", "ttf"])
-        test(data, "interface_font", file_exists, ["fonts", "ttf"])
-        test(data, "interface_light_font", file_exists, ["fonts", "ttf"])
-        test(data, "dialog_font", file_exists, ["fonts", "ttf"])
-        test(data, "inventory_arrows/0", file_exists, ["images/interface", "png"])
-        test(data, "inventory_arrows/1", file_exists, ["images/interface", "png"])
-        test(data, "inventory_chamfer", file_exists, ["images/interface", "png"])
-        test(data, "click_sound", file_exists, ["sounds/effects", "ogg"])
-        test(data, "step_sound", file_exists, ["sounds/effects", "ogg"])
-        test(data, "circle/0", file_exists, ["images/interface", "png"])
-        test(data, "circle/1", file_exists, ["images/interface", "png"])
-        test(data, "circle/2", file_exists, ["images/interface", "png"])
-        test(data, "menu_background", file_exists, ["images/interface", "png"])
-        test(data, "menu_logo", file_exists, ["images/interface", "png"])
-        test(data, "menu_arrows/0", file_exists, ["images/interface", "png"])
-        test(data, "menu_arrows/1", file_exists, ["images/interface", "png"])
-        test(data, "menu_buttons/0", file_exists, ["images/interface", "png"])
-        test(data, "menu_buttons/1", file_exists, ["images/interface", "png"])
-        test(data, "menu_oknotok/0", file_exists, ["images/interface", "png"])
-        test(data, "menu_oknotok/1", file_exists, ["images/interface", "png"])
-        test(data, "load/0", file_exists, ["data/rooms", "yaml"])
-        test(data, "load/1") # TODO: check action
-        if test(data, "text", is_array):
-            for t in data["text"]:
-                test(t, "id")
-                test(t, "value", is_line)
-                if "icon" in t:
-                    test(t, "icon", file_exists, ["images/interface", "png"])
-
-        for act in ["look", "move", "take", "inventory_button", "inventory", "use",
-                    "combine", "goto"]:
-            test(data, "default/" + act + "/label", is_line)
-            if "effect" in data["default"][act]:
-                for e in data["default"][act]["effect"]:
-                    test(e, "talk/0", is_line)
-
-
-
+not_received = set(sent.keys()).difference(set(received.keys()))
+for signal in not_received:
+    refname = sent[signal]
+    warning("signal " + signal + " sent but never received")
+not_sent = set(received.keys()).difference(set(sent.keys()))
+for signal in not_sent:
+    refname = received[signal]
+    warning("signal " + signal + " received but never sent")
 
 to_clean = []
 for root, directories, filenames in os.walk(root_folder):
@@ -924,26 +924,19 @@ for root, directories, filenames in os.walk(root_folder):
         fullname = os.path.join(root, filename)
         basename = os.path.basename(fullname)
         name, ext = os.path.splitext(basename)
-        if ext == ".graph" or "en_US" in basename or ext == ".yaml":
+        if basename in skip_list:
+            continue
+        if basename in {"locale.yaml", "hints.yaml", "init.yaml"}:
+            continue
+        if ext == ".graph" or "en_US" in basename or ".backup." in basename:
             continue
         if fullname not in accessed_files:
             to_clean.append(fullname)
             refname = '/'.join(fullname.split('/')[-3:]);
             warning("unused file")
 
-if not errors:
-    print("Data is valid")
-else:
-    print("Data may be invalid:")
-    for e in errors:
-        if e[0]:
-            print("Error: [" + e[1] + "] " + e[2])
-        else:
-            print("Warning: [" + e[1] + "] " + e[2])
-
-
 safety = True
-            
+
 if clean_unused:
     if safety:
         print("Deactivate safety to remove files")
