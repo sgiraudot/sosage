@@ -658,14 +658,19 @@ def test_dialogs(data):
                 ids, _ = test_id_unicity(ids, None, l["target"])
         for l in data["lines"]:
             if "choices" in l:
+                has_permanent = False
                 for c in l["choices"]:
                     test(c, "line", is_line)
-                    test(c, "once", is_bool)
+                    if test(c, "once", is_bool):
+                        if not c["once"]:
+                            has_permanent = True
                     if test(c, "goto"):
                         if c["goto"] not in ids:
                             error("goto refers to invalid id " + str(c["goto"]))
                         if c["goto"] == "end":
                             has_end = True
+                if not has_permanent:
+                    error("dialog choice has no permanent option")
             elif "line" in l:
                 if test(l, "line", is_array):
                     test(l, "line/1", is_line)
