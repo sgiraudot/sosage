@@ -549,20 +549,24 @@ bool Logic::function_receive (const std::vector<std::string>& args)
   check (args.size() < 4, "function_receive takes 1, 2 or 3 argument");
   if (receive (args[0], "signal"))
   {
-    if (args.size() == 2)
+    if (args.size() == 1)
     {
-      debug << "Received " << args[0] << ", launching " << args[1] << std::endl;
-      get<C::Action>(args[1], "action")->launch();
+      debug << "Received " << args[0] << std::endl;
     }
     else
     {
-      debug << "Received " << args[0] << std::endl;
+      debug << "Received " << args[0] << ", launching " << args[1] << std::endl;
+      auto action = get<C::Action>(args[1], "action");
+      action->launch();
+      m_todo.push (action);
     }
   }
   else if (args.size() == 3)
   {
     debug << "Didn't receive " << args[0] << ", launching " << args[2] << std::endl;
-    get<C::Action>(args[2], "action")->launch();
+    auto action = get<C::Action>(args[2], "action");
+    action->launch();
+    m_todo.push (action);
   }
   return true;
 }
