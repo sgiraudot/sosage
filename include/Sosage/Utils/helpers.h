@@ -33,4 +33,7 @@
 #define is_walking_right(x) \
   (get<C::Animation>(x + "_body", "image")->frames().front().y != 2)
 
+#define is_character(id) \
+  request<C::String>((id), "color")
+
 #endif // SOSAGE_UTILS_HELPERS_H

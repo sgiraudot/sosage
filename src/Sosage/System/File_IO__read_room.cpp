@@ -65,8 +65,32 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   std::string color = input["color"].string();
   set<C::String> (id , "color", color);
 
-  if (input.has("head_move_radius"))
-    set<C::Int> (id, "head_move_radius", input["head_move_radius"].integer());
+  auto state_handle = get_or_set<C::String>(id , "state", "default");
+
+  for (std::string action : Config::possible_actions)
+      if (input.has(action))
+      {
+        if (action == "inventory")
+        {
+          for (std::size_t i = 0; i < input["inventory"].size(); ++ i)
+          {
+            auto act = read_object_action(id, action, input["inventory"][i]);
+            if (act.first) set(act.first);
+            if (act.second) set(act.second);
+          }
+        }
+        else
+        {
+          auto act = read_object_action(id, action, input[action]);
+          if (act.first) set(act.first);
+          if (act.second) set(act.second);
+        }
+      }
+
+  const Core::File_IO::Node& skin = input["skin"];
+
+  if (skin.has("head_move_radius"))
+    set<C::Int> (id, "head_move_radius", skin["head_move_radius"].integer());
 
   bool visible = value<C::Boolean>(id , "visible", true);
   remove(id , "visible", true);
@@ -75,7 +99,7 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
 
   auto group = set<C::Group>(id , "group");
 
-  std::string mouth = input["mouth"]["skin"].string("images", "characters", "png");
+  std::string mouth = skin["mouth"]["skin"].string("images", "characters", "png");
   auto amouth
     = set<C::Animation>(id + "_mouth", "image", mouth,
                         0, 11, 2, true);
@@ -84,12 +108,12 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   group->add(amouth);
 
   std::vector<std::string> hpositions;
-  for (std::size_t i = 0; i < input["head"]["positions"].size(); ++ i)
-    hpositions.push_back (input["head"]["positions"][i].string());
+  for (std::size_t i = 0; i < skin["head"]["positions"].size(); ++ i)
+    hpositions.push_back (skin["head"]["positions"][i].string());
 
   set<C::Vector<std::string> >(id + "_head", "values", hpositions);
 
-  std::string head = input["head"]["skin"].string("images", "characters", "png");
+  std::string head = skin["head"]["skin"].string("images", "characters", "png");
   int head_size = int(hpositions.size());
   auto ahead
     = set<C::Animation>(id + "_head", "image", head,
@@ -100,22 +124,22 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
 
   C::Animation_handle awalk;
 
-  if (input.has("walk"))
+  if (skin.has("walk"))
   {
     int steps = 8;
-    if (input["walk"].has("steps"))
-      steps = input["walk"]["steps"].integer();
-    std::string walk = input["walk"]["skin"].string("images", "characters", "png");
+    if (skin["walk"].has("steps"))
+      steps = skin["walk"]["steps"].integer();
+    std::string walk = skin["walk"]["skin"].string("images", "characters", "png");
     awalk = C::make_handle<C::Animation>(id + "_body", "image", walk,
                                          0, steps, 4, true);
     awalk->set_relative_origin(0.5, 0.95);
     awalk->on() = visible;
   }
 
-  std::string idle = input["idle"]["skin"].string("images", "characters", "png");
+  std::string idle = skin["idle"]["skin"].string("images", "characters", "png");
   std::vector<std::string> positions;
-  for (std::size_t i = 0; i < input["idle"]["positions"].size(); ++ i)
-    positions.push_back (input["idle"]["positions"][i].string());
+  for (std::size_t i = 0; i < skin["idle"]["positions"].size(); ++ i)
+    positions.push_back (skin["idle"]["positions"][i].string());
 
   set<C::Vector<std::string> >(id + "_idle", "values", positions);
 
@@ -135,15 +159,15 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   amask->set_relative_origin(0.5, 0.95);
   group->add(amask);
 
-  int hdx_right = input["head"]["dx_right"].integer();
-  int hdx_left = input["head"]["dx_left"].integer();
-  int hdy = input["head"]["dy"].integer();
+  int hdx_right = skin["head"]["dx_right"].integer();
+  int hdx_left = skin["head"]["dx_left"].integer();
+  int hdy = skin["head"]["dy"].integer();
   set<C::Simple<Vector>>(id + "_head", "gap_right", Vector(hdx_right, hdy));
   set<C::Simple<Vector>>(id + "_head", "gap_left", Vector(hdx_left, hdy));
 
-  int mdx_right = input["mouth"]["dx_right"].integer();
-  int mdx_left = input["mouth"]["dx_left"].integer();
-  int mdy = input["mouth"]["dy"].integer();
+  int mdx_right = skin["mouth"]["dx_right"].integer();
+  int mdx_left = skin["mouth"]["dx_left"].integer();
+  int mdy = skin["mouth"]["dy"].integer();
   set<C::Simple<Vector>>(id + "_mouth", "gap_right", Vector(mdx_right, mdy));
   set<C::Simple<Vector>>(id + "_mouth", "gap_left", Vector(mdx_left, mdy));
 
