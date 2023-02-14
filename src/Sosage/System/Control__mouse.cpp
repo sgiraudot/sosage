@@ -61,6 +61,13 @@ void Control::idle_mouse()
   {
     if (!request<C::String>(img->entity() , "name"))
       return false;
+
+    // This shouldn't happen except if user has light-speed cursor control
+    // Just in case: ignore inventory items while in idle mode
+    auto state = request<C::String>(img->entity(), "state");
+    if (state && startswith(state->value(), "inventory"))
+      return false;
+
     // Can't combine with a goto
     if (source)
       if (request<C::Boolean>(img->entity() + "_goto", "right"))
