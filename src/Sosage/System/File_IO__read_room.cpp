@@ -65,8 +65,6 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   std::string color = input["color"].string();
   set<C::String> (id , "color", color);
 
-  auto state_handle = get_or_set<C::String>(id , "state", "default");
-
   for (std::string action : Config::possible_actions)
       if (input.has(action))
       {
@@ -154,10 +152,25 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   int width = aidle->width();
   int height = aidle->height() * 1.05;
 
-  auto amask = set<C::Image>(id, "image", width, height, 0, 0, 0, 0);
+  auto amask = C::make_handle<C::Image>(id, "conditional_image",
+                                        width, height, 0, 0, 0, 0);
   amask->z() = 0;
   amask->set_relative_origin(0.5, 0.95);
-  group->add(amask);
+
+  auto state_handle = get_or_set<C::String>(id , "state", "default");
+  auto camask = set<C::String_conditional>(id , "image", state_handle);
+
+  if (input.has("states"))
+    for (std::size_t j = 0; j < input["states"].size(); ++ j)
+    {
+      const std::string& istate = input["states"][j].string();
+      camask->add(istate, amask);
+    }
+  else
+    camask->add("default", amask);
+
+  camask->add("player", nullptr); // No mask/interaction if character is player
+  group->add(camask);
 
   int hdx_right = skin["head"]["dx_right"].integer();
   int hdx_left = skin["head"]["dx_left"].integer();

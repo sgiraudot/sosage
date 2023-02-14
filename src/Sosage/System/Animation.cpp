@@ -411,7 +411,7 @@ void Animation::place_and_scale_character(const std::string& id)
   auto abody = get<C::Animation>(id + "_body", "image");
   auto ahead = get<C::Animation>(id + "_head", "image");
   auto amouth = get<C::Animation>(id + "_mouth", "image");
-  auto mask = get<C::Image>(id, "image");
+  auto mask = request<C::Image>(id, "image");
   auto pbody = get<C::Position>(id + "_body", "position");
 
   double new_z = Config::world_depth;
@@ -421,14 +421,16 @@ void Animation::place_and_scale_character(const std::string& id)
   abody->rescale (new_z);
   ahead->rescale (new_z);
   amouth->rescale (new_z);
-  mask->rescale (new_z + 1);
+  if (mask)
+    mask->rescale (new_z + 1);
 
   if (auto z = request<C::Int>(id , "z"))
   {
     abody->z() = z->value();
     ahead->z() = z->value();
     amouth->z() = z->value();
-    mask->z() = z->value() + 1;
+    if (mask)
+      mask->z() = z->value() + 1;
   }
 }
 

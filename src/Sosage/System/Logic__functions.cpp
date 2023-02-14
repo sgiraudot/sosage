@@ -131,7 +131,15 @@ bool Logic::function_control (const std::vector<std::string>& args)
 {
   check (args.size() == 1 or args.size() == 2, "function_load control takes 1 or 2 arguments");
   std::string leader = args[0];
-  set<C::String>("Player", "name", leader);
+  if (auto current = request<C::String>("Player", "name"))
+  {
+    // First deactivate current
+    get<C::String>(current->value(), "state")->set("default");
+    current->set (leader);
+  }
+  else
+    set<C::String>("Player", "name", leader);
+  get<C::String>(leader, "state")->set("player");
 
   if (args.size() == 2)
   {
