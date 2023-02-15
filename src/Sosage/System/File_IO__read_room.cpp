@@ -152,7 +152,7 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   auto abody = set<C::Conditional>(id + "_body", "image", walking, awalk, aidle);
   group->add(abody);
 
-  int width = aidle->width();
+  int width = aidle->width() * 0.5;
   int height = aidle->height() * 1.05;
 
   auto amask = C::make_handle<C::Image>(id, "conditional_image",
@@ -221,7 +221,15 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
        }, id);
 
   set<C::Variable>(id, "position", pbody);
-  set<C::Variable>(id, "view", pbody);
+
+  if (input.has("view"))
+  {
+    int view_x = input["view"][0].integer();
+    int view_y = input["view"][1].integer();
+    set<C::Absolute_position>(id, "view", Point (view_x, view_y), false);
+  }
+  else
+    set<C::Variable>(id, "view", pbody);
 
   auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game", "new_characters");
   if (!new_char)
