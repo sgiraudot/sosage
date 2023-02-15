@@ -609,20 +609,24 @@ def test_characters(data):
     test(data, "coordinates/1", is_int)
     test(data, "looking_right", is_bool)
     test(data, "color", is_color)
-    test(data, "mouth/skin", file_exists, ["images/characters", "png"])
-    test(data, "mouth/dx_right", is_int)
-    test(data, "mouth/dx_left", is_int)
-    test(data, "mouth/dy", is_int)
-    test(data, "head/skin", file_exists, ["images/characters", "png"])
-    test(data, "head/dx_right", is_int)
-    test(data, "head/dx_left", is_int)
-    test(data, "head/dy", is_int)
-    test(data, "head/positions", is_array)
-    if "walk" in data:
-        test(data, "walk/skin", file_exists, ["images/characters", "png"])
-    test(data, "idle/skin", file_exists, ["images/characters", "png"])
-    test(data, "idle/positions", is_array)
+    if "skin" in data:
+        test(data, "skin/mouth/skin", file_exists, ["images/characters", "png"])
+        test(data, "skin/mouth/dx_right", is_int)
+        test(data, "skin/mouth/dx_left", is_int)
+        test(data, "skin/mouth/dy", is_int)
+        test(data, "skin/head/skin", file_exists, ["images/characters", "png"])
+        test(data, "skin/head/dx_right", is_int)
+        test(data, "skin/head/dx_left", is_int)
+        test(data, "skin/head/dy", is_int)
+        test(data, "skin/head/positions", is_array)
+        if "walk" in data["skin"]:
+            test(data, "skin/walk/skin", file_exists, ["images/characters", "png"])
+        test(data, "skin/idle/skin", file_exists, ["images/characters", "png"])
+        test(data, "skin/idle/positions", is_array)
 
+    for act in possible_actions:
+        if act in data:
+            test_object_action(data[act], False)
 
 def test_codes(data):
     if test(data, "states"):
@@ -824,6 +828,16 @@ def add_states(states, item_id, data):
                 states[item_id].add(st["id"])
     return states
 
+def add_character_states(states, item_id, data):
+    if "states" in data:
+        for st in data["states"]:
+            if item_id not in states:
+                states[item_id] = set()
+            states[item_id].add(st)
+    else:
+        states[item_id] = {"default"}
+    return states
+
 global_states = {}
 
 for c in global_codes:
@@ -873,7 +887,11 @@ while todo:
     if "background" in data:
         test(data, "background", file_exists, ["images/backgrounds", "png"])
     if "ground_map" in data:
-        test(data, "ground_map", file_exists, ["images/backgrounds", "png"])
+        if isinstance(data["ground_map"], list):
+            test(data, "ground_map/0", file_exists, ["images/backgrounds", "png"])
+            test(data, "ground_map/1", file_exists, ["images/backgrounds", "png"])
+        else:
+            test(data, "ground_map", file_exists, ["images/backgrounds", "png"])
         test(data, "front_z", is_int)
         test(data, "back_z", is_int)
 
@@ -891,7 +909,10 @@ while todo:
                 if not item_id:
                     continue
                 items[s].add(item_id)
-                states = add_states(states, item_id, ldata)
+                if s == "characters":
+                    states = add_character_states(states, item_id, ldata)
+                else:
+                    states = add_states(states, item_id, ldata)
     all_characters = all_characters.union(items["characters"])
     refname = filename
 
