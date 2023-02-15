@@ -65,6 +65,9 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   std::string color = input["color"].string();
   set<C::String> (id , "color", color);
 
+  set<C::Boolean>(id, "uses_2nd_map", (input.has("uses_secondary_ground_map")
+                                       ? input["uses_secondary_ground_map"].boolean() : false));
+
   for (std::string action : Config::possible_actions)
       if (input.has(action))
       {
@@ -255,11 +258,23 @@ void File_IO::read_room (const std::string& file_name)
   }
   if (input.has("ground_map"))
   {
-    std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
     int front_z = input["front_z"].integer();
     int back_z = input["back_z"].integer();
-    set<C::Ground_map>("background", "ground_map", ground_map,
-                       front_z, back_z, callback->value());
+    if (input["ground_map"].size() == 0)
+    {
+      std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
+      set<C::Ground_map>("background", "ground_map", ground_map,
+                         front_z, back_z, callback->value());
+    }
+    else
+    {
+      std::string ground_map = input["ground_map"][0].string("images", "backgrounds", "png");
+      set<C::Ground_map>("background", "ground_map", ground_map,
+                         front_z, back_z, callback->value());
+      std::string sec_ground_map = input["ground_map"][1].string("images", "backgrounds", "png");
+      set<C::Ground_map>("background", "2nd_ground_map", sec_ground_map,
+                         front_z, back_z, callback->value());
+    }
   }
 
   callback->value()();

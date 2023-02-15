@@ -415,7 +415,7 @@ void Animation::place_and_scale_character(const std::string& id)
   auto pbody = get<C::Position>(id + "_body", "position");
 
   double new_z = Config::world_depth;
-  if (auto ground_map = request<C::Ground_map>("background", "ground_map"))
+  if (auto ground_map = get_ground_map(id))
     new_z = ground_map->z_at_point (pbody->value());
 
   abody->rescale (new_z);
@@ -453,7 +453,7 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
   if constexpr (Config::speed_factor != 1.0)
       to_walk *= Config::speed_factor;
 
-  if (auto ground_map = request<C::Ground_map>("background", "ground_map"))
+  if (auto ground_map = get_ground_map(id))
     to_walk *= ground_map->z_at_point (pos) / Config::world_depth;
 
   Vector direction (pos, (*path)[path->current()]);
@@ -809,5 +809,6 @@ void Animation::update_camera_target ()
   set<C::GUI_position_animation>("Camera", "animation", current_time, current_time + Config::camera_speed,
                                  position, Point (target, position->value().y()));
 }
+
 
 } // namespace Sosage::System

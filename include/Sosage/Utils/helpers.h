@@ -36,4 +36,9 @@
 #define is_character(id) \
   request<C::String>((id), "color")
 
+#define get_ground_map(id) \
+  (value<C::Boolean>(id, "uses_2nd_map", false) ? \
+  request<C::Ground_map>("background", "2nd_ground_map") : \
+  request<C::Ground_map>("background", "ground_map"))
+
 #endif // SOSAGE_UTILS_HELPERS_H

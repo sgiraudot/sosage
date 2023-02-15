@@ -456,12 +456,13 @@ void Logic::run ()
 bool Logic::compute_path_from_target (C::Position_handle target,
                                       std::string id)
 {
-  auto ground_map = request<C::Ground_map>("background", "ground_map");
+  if (id == "")
+    id = value<C::String>("Player", "name");
+
+  auto ground_map = get_ground_map(id);
   if (!ground_map)
     return false;
 
-  if (id == "")
-    id = value<C::String>("Player", "name");
   auto position = get<C::Position>(id + "_body", "position");
 
   Point origin = position->value();
@@ -488,11 +489,12 @@ bool Logic::compute_path_from_target (C::Position_handle target,
 
 bool Logic::compute_path_from_direction (const Vector& direction)
 {
-  auto ground_map = request<C::Ground_map>("background", "ground_map");
+  const std::string& id = value<C::String>("Player", "name");
+
+  auto ground_map = get_ground_map(id);
   if (!ground_map)
     return false;
 
-  const std::string& id = value<C::String>("Player", "name");
   auto position = get<C::Position>(id + "_body", "position");
   Point origin = position->value();
 
