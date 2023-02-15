@@ -203,8 +203,18 @@ void Logic::run ()
             else if (th.second->entity() != "wait")
             {
               debug << a->str() << " remove " << th.second->str() << std::endl;
-              // comments might already have been removed
-              remove (th.second, true);
+
+              // avoid removing new dialog with an outdated timed dialog
+              if (startswith(th.second->entity(), "Comment_"))
+              {
+                auto saved_dialog = C::cast<C::Image>(th.second);
+                auto current_dialog = request<C::Image>(saved_dialog->entity(),
+                                                        saved_dialog->component());
+                if (saved_dialog == current_dialog)
+                  remove (current_dialog);
+              }
+              else
+                remove (th.second, true);
             }
             return false;
           }

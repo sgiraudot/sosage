@@ -832,7 +832,6 @@ bool Logic::function_talk (const std::vector<std::string>& args)
     y += 80 * size_factor;
 
    m_current_action->schedule (m_current_time + std::max(1., nb_seconds_read), img);
-   m_current_action->schedule (m_current_time + std::max(1., nb_seconds_read), pos);
   }
 
   if (id != "Hinter")
