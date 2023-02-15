@@ -408,6 +408,10 @@ bool Animation::run_loading()
 
 void Animation::place_and_scale_character(const std::string& id)
 {
+  // If character has no skin ("fake" character), do nothing
+  if (!request<C::Group>(id, "group"))
+    return;
+
   auto abody = get<C::Animation>(id + "_body", "image");
   auto ahead = get<C::Animation>(id + "_head", "image");
   auto amouth = get<C::Animation>(id + "_mouth", "image");
@@ -568,6 +572,10 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
 
 void Animation::generate_random_idle_animation (const std::string& id, bool looking_right)
 {
+  // If character has no skin ("fake" character), do nothing
+  if (!request<C::Group>(id, "group"))
+    return;
+
   generate_random_idle_body_animation (id, looking_right);
   generate_random_idle_head_animation (id, looking_right);
 }
