@@ -231,13 +231,11 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
               * value<C::Simple<Vector>>(id + "_mouth",
                                          (is_looking_right(id) ? "gap_right" : "gap_left")));
     }, id);
+
+    set<C::Absolute_position>(id, "lookat",
+                              looking_right ? Point::right() : Point::left());
   }
 
-  auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game", "new_characters");
-  if (!new_char)
-    new_char = set<C::Vector<std::pair<std::string, bool> > >("Game", "new_characters");
-
-  new_char->push_back (std::make_pair (id, looking_right));
 }
 
 void File_IO::read_room (const std::string& file_name)

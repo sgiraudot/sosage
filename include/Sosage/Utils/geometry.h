@@ -87,6 +87,8 @@ public:
   Box box() const;
   bool is_invalid() const;
   static Point invalid();
+  static Point right();
+  static Point left();
 
   friend std::string to_string(const Point& p)
   {

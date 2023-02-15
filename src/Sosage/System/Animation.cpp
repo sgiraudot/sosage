@@ -170,22 +170,9 @@ void Animation::run_gui_frame()
 
 void Animation::run_animation_frame()
 {
-  if (auto new_char = request<C::Vector<std::pair<std::string, bool> > >("Game", "new_characters"))
+  bool in_new_room = receive ("Game", "in_new_room");
+  if (in_new_room)
   {
-    for (const auto& nc : new_char->value())
-    {
-      place_and_scale_character (nc.first);
-      generate_random_idle_animation (nc.first, nc.second);
-    }
-    remove("Game", "new_characters");
-  }
-
-  if (receive ("Game", "in_new_room"))
-  {
-    const std::string& player = value<C::String>("Player", "name");
-    bool looking_right = value<C::Boolean>(player , "looking_right");
-    place_and_scale_character (player);
-    generate_random_idle_animation (player, looking_right);
     emit("Music", "adjust_mix");
 
     // Relaunch animations
@@ -201,9 +188,15 @@ void Animation::run_animation_frame()
   // First check if some character should change looking direction
   for (auto c : components("lookat"))
   {
-    debug << "lookat" << std::endl;
     const std::string& id = c->entity();
     auto lookat = C::cast<C::Position>(c);
+    debug << "lookat " << lookat->str() << std::endl;
+    if (in_new_room)
+    {
+      debug << "Place and scale from " << get<C::Position>(id, "position")->str() << std::endl;
+      place_and_scale_character (id);
+    }
+
     auto abody = get<C::Animation>(id + "_body", "image");
     auto ahead = get<C::Animation>(id + "_head", "image");
     auto pbody = get<C::Position>(id + "_body", "position");
@@ -215,7 +208,7 @@ void Animation::run_animation_frame()
     Vector direction (pbody->value(), lookat->value());
     bool looking_right = (direction.x() > 0);
 
-    if (looking_right == is_looking_right(id))
+    if (!in_new_room && looking_right == is_looking_right(id))
       continue;
 
     generate_random_idle_animation (id, looking_right);
@@ -225,10 +218,11 @@ void Animation::run_animation_frame()
   for (auto c : components("stop_talking"))
   {
     const std::string& id = c->entity();
-    auto mhead = get<C::Position>(id + "_head_move", "position");
-    mhead->set (Point (0, 0));
-
-    generate_random_idle_head_animation (id, is_looking_right(id));
+    if (auto mhead = request<C::Position>(id + "_head_move", "position"))
+    {
+      mhead->set (Point (0, 0));
+      generate_random_idle_head_animation (id, is_looking_right(id));
+    }
     to_remove.push_back (c);
   }
 
@@ -713,7 +707,10 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
 
 void Animation::generate_random_mouth_animation (const std::string& id)
 {
-  auto image = get<C::Animation>(id + "_mouth", "image");
+  auto image = request<C::Animation>(id + "_mouth", "image");
+  if (!image)
+    return;
+
   // Reset all
   image->reset();
   image->frames().clear();

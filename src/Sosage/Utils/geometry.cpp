@@ -88,6 +88,16 @@ Point Point::invalid()
                 std::numeric_limits<double>::quiet_NaN());
 }
 
+Point Point::right()
+{
+  return Point (1e10, 0);
+}
+
+Point Point::left()
+{
+  return Point (-1e10, 0);
+}
+
 Vector::Vector (double x, double y)
   : Point (x, y)
 { }

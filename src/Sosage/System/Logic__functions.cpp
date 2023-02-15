@@ -232,7 +232,7 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
     if (compute_path_from_target
         (C::make_handle<C::Absolute_position>("Goto", "view", Point (to_int(args[0]), to_int(args[1]))),
          id))
-     m_current_action->schedule (0, get<C::Path>(id , "path"));
+      m_current_action->schedule (0, get<C::Path>(id , "path"));
   }
   else
   {
@@ -242,7 +242,7 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
 
     auto position = request<C::Position>(target , "view");
     if (compute_path_from_target(position, id))
-     m_current_action->schedule (0, get<C::Path>(id , "path"));
+      m_current_action->schedule (0, get<C::Path>(id , "path"));
   }
 
   return true;
@@ -397,7 +397,8 @@ bool Logic::function_move (const std::vector<std::string>& args)
     }
 
     get<C::Absolute_position>(target + "_body", "position")->set(Point(x, y));
-    set<C::Boolean>(target , "looking_right", looking_right);
+    set<C::Absolute_position>(target, "lookat",
+                              looking_right ? Point::right() : Point::left());
   }
   else
   {
