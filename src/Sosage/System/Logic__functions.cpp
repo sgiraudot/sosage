@@ -456,15 +456,16 @@ bool Logic::function_move60fps (const std::vector<std::string>& args)
 }
 
 /*
-  - play: [ID animation_id]                           -> starts animation
-  - play: [ID music_id]                               -> starts music
-  - play: [ID sound_id]                               -> plays sound
-  - play: [ID music_id, FLOAT duration]               -> fadein music
-  - play: [ID character_animation_id, FLOAT duration] -> plays animation of player character for the wanted duration
+  - play: [ID animation_id]                                            -> starts animation
+  - play: [ID music_id]                                                -> starts music
+  - play: [ID sound_id]                                                -> plays sound
+  - play: [ID music_id, FLOAT duration]                                -> fadein music
+  - play: [ID character_animation_id, FLOAT duration]                  -> plays animation of player character for the wanted duration
+  - play: [ID character_id, ID character_animation_id, FLOAT duration] -> plays animation of character for the wanted duration
  */
 bool Logic::function_play (const std::vector<std::string>& args)
 {
-  check (args.size() == 2 || args.size() == 1, "function_play takes 1 or 2 arguments");
+  check (1 <= args.size() && args.size() <= 3, "function_play takes 1, 2 or 3 arguments");
   std::string target = args[0];
 
   if (request<C::Base>(target , "sound"))
@@ -498,11 +499,15 @@ bool Logic::function_play (const std::vector<std::string>& args)
   }
 
   // else, animation
-  if (args.size() == 2) // Target is character
+  if (args.size() > 1) // Target is character
   {
-    const std::string& character = value<C::String>("Player", "name");
+    std::string character = target;
+    if (args.size() == 2)
+      character = value<C::String>("Player", "name");
+    else
+      target = args[1];
 
-    double duration = to_double(args[1]);
+    double duration = to_double(args.size() == 3 ? args[2] : args[1]);
     set<C::String>(character , "start_animation", target);
 
     if (duration > 0)
@@ -796,7 +801,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
         << nb_seconds_lips_moving << "s" << std::endl;
 
   Point position = value<C::Double>(CAMERA__ZOOM)
-                   * (value<C::Position>(id + "_body", "position") - value<C::Position>(CAMERA__POSITION));
+                   * (value<C::Position>(id, "position") - value<C::Position>(CAMERA__POSITION));
 
   int x = position.X();
 
