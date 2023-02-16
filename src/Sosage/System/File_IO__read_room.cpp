@@ -63,11 +63,37 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   if (!position)
     position = set<C::Absolute_position>(id, "position", Point(x, y), false);
 
+  if (input.has("label"))
+  {
+    int lx = input["label"][0].integer();
+    int ly = input["label"][1].integer();
+    if (input["label"][0].is_relative())
+      set<C::Relative_position>(id, "label", position, Vector (lx,ly));
+    else
+      set<C::Absolute_position>(id , "label", Point(lx,ly), false);
+  }
+
   if (input.has("view"))
   {
     int view_x = input["view"][0].integer();
     int view_y = input["view"][1].integer();
-    set<C::Absolute_position>(id, "view", Point (view_x, view_y), false);
+    if (input["view"][0].is_relative())
+    {
+      set<C::Absolute_position>(id, "relative_view", Point(view_x, view_y), false);
+      set<C::Functional_position>
+          (id, "view",
+           [&](const std::string& id) -> Point
+      {
+        const Point& position = value<C::Position>(id, "position");
+        Vector relative = value<C::Position>(id, "relative_view");
+        if (!is_looking_right(id))
+          relative = Vector(-relative.x(), relative.y());
+        return position + relative;
+      }, id);
+
+    }
+    else
+      set<C::Absolute_position>(id, "view", Point (view_x, view_y), false);
   }
   else
     set<C::Variable>(id, "view", position);
