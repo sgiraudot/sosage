@@ -105,14 +105,14 @@ void Logic::run ()
   m_current_time = value<C::Double> (CLOCK__TIME);
   update_debug_info (get<C::Debug>(GAME__DEBUG));
   if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU)
-      || request<C::Signal>("Game", "reset"))
+      || signal("Game", "reset"))
   {
     SOSAGE_TIMER_STOP(System_Logic__run);
     return;
   }
 
   bool in_new_room = false;
-  if (request<C::Signal>("Game", "in_new_room"))
+  if (signal("Game", "in_new_room"))
   {
     in_new_room = true;
     status()->pop();

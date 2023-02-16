@@ -72,7 +72,7 @@ void Animation::run()
   if (new_frame_id == m_frame_id)
   {
     // Force update when new room is loaded
-    if (request<C::Signal>("Game", "in_new_room"))
+    if (signal("Game", "in_new_room"))
       run_animation_frame();
     SOSAGE_TIMER_STOP(System_Animation__run);
     return;

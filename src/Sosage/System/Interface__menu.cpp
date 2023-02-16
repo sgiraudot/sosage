@@ -681,7 +681,7 @@ void Interface::menu_clicked ()
     else
     {
       // Avoid restarting when testing input
-      if (!request<C::Signal>("Game", "prevent_restart"))
+      if (!signal ("Game", "prevent_restart"))
       {
         set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
         set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
@@ -698,7 +698,7 @@ void Interface::menu_clicked ()
     if (menu == "Wanna_restart")
     {
       // Avoid restarting when testing input
-      if (!request<C::Signal>("Game", "prevent_restart"))
+      if (!signal ("Game", "prevent_restart"))
       {
         set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
         set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
@@ -789,7 +789,7 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
   else if (setting == "Fullscreen")
   {
     // Avoid switching fullscreen when testing input
-    if (!request<C::Signal>("Game", "prevent_restart"))
+    if (!signal ("Game", "prevent_restart"))
     {
       get<C::Boolean>("Window", "fullscreen")->set(v == "Yes");
       emit ("Window", "toggle_fullscreen");
@@ -815,7 +815,7 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
   }
   else if (setting == "Music_volume")
   {
-    if (!request<C::Signal>("Game", "prevent_restart"))
+    if (!signal ("Game", "prevent_restart"))
     {
       set<C::Int>("Music", "volume")->set(to_int(v) / 10);
       emit("Music", "volume_changed");
@@ -823,7 +823,7 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
   }
   else if (setting == "Sound_volume")
   {
-    if (!request<C::Signal>("Game", "prevent_restart"))
+    if (!signal ("Game", "prevent_restart"))
       set<C::Int>("Sounds", "volume")->set(to_int(v) / 10);
   }
 }

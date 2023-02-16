@@ -63,6 +63,11 @@ bool Base::receive (const std::string& entity, const std::string& component)
   return m_content.receive(entity, component);
 }
 
+bool Base::signal (const std::string& entity, const std::string& component)
+{
+  return m_content.signal(entity, component);
+}
+
 Component::Status_handle Base::status()
 {
   return get<Component::Status>(GAME__STATUS);

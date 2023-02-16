@@ -184,7 +184,7 @@ void File_IO::read_config()
   }
 
   // No sound for automatic tests
-  if (request<C::Signal>("Game", "prevent_restart"))
+  if (signal("Game", "prevent_restart"))
   {
     music_volume = 0;
     sounds_volume = 0;

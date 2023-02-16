@@ -44,7 +44,7 @@ void Control::idle_gamepad()
   if (receive("Game", "just_launched"))
     set<C::Double> ("First_idle", "time", value<C::Double>(CLOCK__TIME));
 
-  if (request<C::Signal>("Stick", "moved"))
+  if (signal("Stick", "moved"))
   {
     remove ("Player", "not_moved_yet", true);
     emit ("Cancel", "action");
@@ -604,7 +604,7 @@ void Control::flush_gamepad_keys()
 
 std::vector<std::string> Control::detect_active_objects()
 {
-  if (request<C::Signal>("Player", "not_moved_yet"))
+  if (signal("Player", "not_moved_yet"))
     return std::vector<std::string>();
 
   const std::string& id = value<C::String>("Player", "name", "");

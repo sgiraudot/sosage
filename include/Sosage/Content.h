@@ -153,6 +153,7 @@ public:
 
   void emit (const std::string& entity, const std::string& component);
   bool receive (const std::string& signal, const std::string& component);
+  bool signal (const std::string& entity, const std::string& component);
 
 private:
 

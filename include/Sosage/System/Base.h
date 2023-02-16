@@ -86,6 +86,7 @@ public:
   bool remove (Component::Handle handle, bool optional = false);
   void emit (const std::string& entity, const std::string& component);
   bool receive (const std::string& entity, const std::string& component);
+  bool signal (const std::string& entity, const std::string& component);
   Component::Status_handle status();
   const std::string& locale (const std::string& line);
   const std::string& locale_get (const std::string& entity, const std::string& component);

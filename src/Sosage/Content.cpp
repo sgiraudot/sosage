@@ -152,6 +152,11 @@ bool Content::receive (const std::string& entity, const std::string& component)
   return true;
 }
 
+bool Content::signal (const std::string& entity, const std::string& component)
+{
+  return bool(request<Component::Signal>(entity, component));
+}
+
 Component::Handle_map& Content::handle_map (const std::string& s)
 {
   auto iter = m_map_component.find(s);
