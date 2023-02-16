@@ -42,13 +42,13 @@ class Dialog : public Base
     std::string signal;
   };
 
-  enum Edge_status { ALWAYS, ONCE, DISABLED };
-
   struct Edge
   {
-    Edge_status status;
-    bool displayed;
     std::string line;
+    std::string condition;
+    bool unless;
+    bool displayed;
+    bool enabled;
   };
 
   using Graph = Sosage::Graph<Vertex, Edge, true>;
@@ -71,15 +71,15 @@ public:
   GVertex add_vertex (const std::string& character = "",
                       const std::string& line = "",
                       const std::string& signal = "");
-  GEdge add_edge (GVertex source, GVertex target,
-                  bool once = false, const std::string& line = "", bool displayed = true);
+  GEdge add_edge (GVertex source, GVertex target, const std::string& line = "",
+                  const std::string& condition = "", bool unless = false, bool displayed = true);
   bool has_incident_edges (GVertex v);
   GVertex current() const;
   GVertex vertex_in() const;
   GVertex vertex_out() const;
   void init(GVertex current = Graph::null_vertex());
   void next();
-  void next (int choice);
+  std::string next (int choice);
   bool is_displayed (int choice);
   bool is_over() const;
   bool is_line() const;
@@ -87,12 +87,23 @@ public:
   std::pair<std::string, std::string> line() const;
   const std::string& signal() const;
 
-  template <typename Container>
-  void get_choices (Container& choices)
+  template <typename Container, typename Content>
+  void get_choices (Container& choices, Content& content)
   {
     for (GEdge e : m_graph.incident_edges(m_current))
-      if (m_graph[e].status != DISABLED)
-        choices.push_back (m_graph[e].line);
+    {
+      if (m_graph[e].condition != "")
+      {
+        std::string condition = (m_graph[e].condition == "said"
+                                 ? entity() + std::to_string(std::size_t(e)) : m_graph[e].condition);
+        m_graph[e].enabled = (content.signal(condition, "signal") != m_graph[e].unless);
+      }
+
+      if (!m_graph[e].enabled)
+        continue;
+
+      choices.push_back (m_graph[e].line);
+    }
   }
 
   STR_NAME("Dialog");

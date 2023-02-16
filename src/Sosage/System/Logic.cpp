@@ -625,7 +625,12 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
         ->value()[std::size_t(choice->value())] });
       action->add ("wait", {});
     }
-    dialog->next(choice->value());
+    std::string sig = dialog->next(choice->value());
+    if (sig != "")
+    {
+      emit (sig, "signal");
+      debug << "Emit " << sig << ":signal" << std::endl;
+    }
     remove("Dialog", "choice");
   }
   else
@@ -668,7 +673,7 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
 
     status()->push(DIALOG_CHOICE);
     auto choices = set<C::Vector<std::string> >("Dialog", "choices");
-    dialog->get_choices (*choices);
+    dialog->get_choices (*choices, m_content);
     action->add ("trigger", { id, "continue" });
 
     // Keep track in case player saves and reload there
@@ -782,12 +787,12 @@ void Logic::create_hints()
   for (const std::string& h : get<C::Set<std::string>>("Hints", "list")->value())
   {
     auto va = dialog->add_vertex ("Hinter", value<C::String>(h , "answer"));
-    dialog->add_edge(choice, va, true, value<C::String>(h , "question"));
+    dialog->add_edge(choice, va, value<C::String>(h , "question"));
     dialog->add_edge(va, choice);
   }
 
   auto closing = dialog->add_vertex ("Hinter", value<C::String>("Hint_bye", "text"));
-  dialog->add_edge(choice, closing, false, value<C::String>("Hint_end", "text"));
+  dialog->add_edge(choice, closing, value<C::String>("Hint_end", "text"));
   dialog->add_edge(closing, dialog->vertex_out());
 
   emit(player , "stop_walking");

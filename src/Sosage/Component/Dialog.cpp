@@ -33,8 +33,8 @@ namespace Sosage::Component
 Dialog::Dialog (const std::string& entity, const std::string& component, const std::string& end)
   : Base(entity, component)
 {
-  m_vin = m_graph.add_vertex({"", "IN"});
-  m_vout = m_graph.add_vertex({end,"OUT"});
+  m_vin = m_graph.add_vertex({"", "IN", ""});
+  m_vout = m_graph.add_vertex({end,"OUT", ""});
 }
 
 Dialog::GVertex Dialog::add_vertex (const std::string& character,
@@ -45,10 +45,10 @@ Dialog::GVertex Dialog::add_vertex (const std::string& character,
   return out;
 }
 
-Dialog::GEdge Dialog::add_edge (Dialog::GVertex source, Dialog::GVertex target,
-                                bool once, const std::string& line, bool displayed)
+Dialog::GEdge Dialog::add_edge (GVertex source, GVertex target, const std::string& line,
+                                const std::string& condition, bool unless, bool displayed)
 {
-  return m_graph.add_edge (source, target, {(once ? ONCE : ALWAYS), displayed, line});
+  return m_graph.add_edge (source, target, {line, condition, unless, displayed, true});
 }
 
 bool Dialog::has_incident_edges (Dialog::GVertex v)
@@ -87,28 +87,30 @@ void Dialog::next()
   m_current = m_graph.incident_vertex(m_current, 0);
 }
 
-void Dialog::next (int choice)
+std::string Dialog::next (int choice)
 {
+  std::string out = "";
   int i = 0;
   for (GEdge e : m_graph.incident_edges(m_current))
-    if (m_graph[e].status != DISABLED)
+    if (m_graph[e].enabled)
     {
       if (i == choice)
       {
-        if (m_graph[e].status == ONCE)
-          m_graph[e].status = DISABLED;
+        if (m_graph[e].condition == "said")
+          out = entity() + std::to_string(std::size_t(e));
         m_current = m_graph.target(e);
-        return;
+        return out;
       }
       ++ i;
     }
+  return out;
 }
 
 bool Dialog::is_displayed (int choice)
 {
   int i = 0;
   for (GEdge e : m_graph.incident_edges(m_current))
-    if (m_graph[e].status != DISABLED)
+    if (m_graph[e].enabled)
     {
       if (i == choice)
       {

@@ -567,7 +567,7 @@ void File_IO::read_dialog (const std::string& id, const Core::File_IO::Node& inp
   std::unordered_map<std::string, C::Dialog::GVertex> targets;
   targets.insert (std::make_pair ("end", dialog->vertex_out()));
 
-  std::vector<std::tuple<int, std::string, bool, std::string, bool>> go_to;
+  std::vector<std::tuple<int, std::string, std::string, std::string, bool, bool>> go_to;
   std::string target = "";
 
   C::Dialog::GVertex latest_vertex = dialog->vertex_in();
@@ -581,13 +581,22 @@ void File_IO::read_dialog (const std::string& id, const Core::File_IO::Node& inp
       for (std::size_t j = 0; j < l["choices"].size(); ++ j)
       {
         const Core::File_IO::Node& c = l["choices"][j];
-        bool once = c["once"].boolean();
         std::string line = c["line"].string();
+        std::string condition = "";
+        bool unless = false;
+        if (c.has("if"))
+          condition = c["if"].string();
+        else if (c.has("unless"))
+        {
+          condition = c["unless"].string();
+          unless = true;
+        }
+
         const std::string& target = c["goto"].string();
         bool displayed = true;
         if (c.has("displayed") && !c["displayed"].boolean())
           displayed = false;
-        go_to.emplace_back (vertex, target, once, line, displayed);
+        go_to.emplace_back (vertex, target, line, condition, unless, displayed);
       }
 
       if (latest_vertex != C::Dialog::GVertex())
@@ -622,7 +631,7 @@ void File_IO::read_dialog (const std::string& id, const Core::File_IO::Node& inp
 
     if (l.has("goto"))
     {
-      go_to.emplace_back (latest_vertex, l["goto"].string(), false, "", true);
+      go_to.emplace_back (latest_vertex, l["goto"].string(), "", "", false, true);
       latest_vertex = C::Dialog::GVertex();
     }
   }
@@ -630,7 +639,7 @@ void File_IO::read_dialog (const std::string& id, const Core::File_IO::Node& inp
   // Then, add jump edges
   for (const auto& g : go_to)
     dialog->add_edge (std::get<0>(g), targets[std::get<1>(g)],
-        std::get<2>(g), std::get<3>(g), std::get<4>(g));
+        std::get<2>(g), std::get<3>(g), std::get<4>(g), std::get<5>(g));
 }
 
 void File_IO::read_integer (const std::string& id, const Core::File_IO::Node& node)
