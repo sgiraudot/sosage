@@ -95,6 +95,15 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(zoom);
 
   set<C::Action>("Logic", "action");
+
+  set<C::String>("Hinter", "color", "FFFFFF");
+  set<C::Functional_position>("Hinter", "position",
+                              [&](const std::string&) -> Point
+  {
+    const std::string& player = value<C::String>("Player", "name");
+    Vector diff ((is_looking_right(player) ? 50 : -50), 0);
+    return value<C::Position>(player, "position") + diff;
+  }, "");
 }
 
 void Logic::run ()
@@ -767,46 +776,5 @@ void Logic::create_dialog (const std::string& character,
   }
 
 }
-
-void Logic::create_hints()
-{
-  auto dialog = set<C::Dialog>("Hints", "dialog", "End_hints");
-  set<C::String>("Hinter", "color", "FFFFFF");
-  const std::string& player = value<C::String>("Player", "name");
-
-  Vector diff ((is_looking_right(player) ? 50 : -50), 0);
-  set<C::Relative_position>("Hinter_body", "position",
-                            get<C::Position>(player + "_body", "position"),
-                            diff);
-
-  auto first = dialog->add_vertex ("Hinter", value<C::String>("Hint_welcome", "text"));
-  auto choice = dialog->add_vertex();
-  dialog->add_edge(dialog->vertex_in(), first);
-  dialog->add_edge(first, choice);
-
-  for (const std::string& h : get<C::Set<std::string>>("Hints", "list")->value())
-  {
-    auto va = dialog->add_vertex ("Hinter", value<C::String>(h , "answer"));
-    dialog->add_edge(choice, va, value<C::String>(h , "question"));
-    dialog->add_edge(va, choice);
-  }
-
-  auto closing = dialog->add_vertex ("Hinter", value<C::String>("Hint_bye", "text"));
-  dialog->add_edge(choice, closing, value<C::String>("Hint_end", "text"));
-  dialog->add_edge(closing, dialog->vertex_out());
-
-  emit(player , "stop_walking");
-  remove(player , "path", true);
-  auto action = set<C::Action>("Hints", "action");
-  set<C::Variable>("Character", "triggered_action", action);
-  action->add("play", { "telephone", "-1" });
-  action->add("trigger", { "Hints" });
-
-  auto end = set<C::Action>("End_hints", "action");
-  end->add("stop", { player });
-
-  set<C::String>(player , "start_animation", "telephone");
-}
-
 
 } // namespace Sosage::System

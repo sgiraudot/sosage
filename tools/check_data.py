@@ -25,6 +25,7 @@ def warning(string):
     print("[Warning in " + refname + "] " + string)
 
 def missing_translation(locale, string):
+    return
     print("[Missing " + locale + " translation in " + refname + "] " + string)
 
 def load_yaml(filename):
@@ -190,10 +191,6 @@ def is_character_animation_id(tested_id):
     return tested_id in { "action", "telephone" }
 def is_dialog_id(tested_id):
     return tested_id in items["dialogs"]
-def is_hint_id(tested_id):
-    return tested_id in hints
-def is_hints(tested_id):
-    return tested_id == "hints"
 def is_integer_id(tested_id):
     return tested_id in items["integers"]
 def is_string_line(tested):
@@ -218,6 +215,8 @@ def is_music_id(tested_id):
     return tested_id in items["musics"]
 def is_music(tested_id):
     return tested_id == "music"
+def is_player(tested_id):
+    return tested_id == "Player"
 def is_room_id(tested_id):
     global current_room
     current_room = tested_id
@@ -290,7 +289,6 @@ possible_functions = [ [ "add", is_integer_id, is_convertible_to_int ],
                        [ "goto", is_convertible_to_int, is_convertible_to_int ],
                        [ "goto", is_character_id, is_target_id],
                        [ "goto", is_character_id, is_convertible_to_int, is_convertible_to_int ],
-                       [ "hide", is_hint_id ],
                        [ "hide", is_showable_id ],
                        [ "hide", is_music_id, is_source_id ],
                        [ "include" ],
@@ -329,12 +327,12 @@ possible_functions = [ [ "add", is_integer_id, is_convertible_to_int ],
                        [ "set", is_stated_id, is_state_id, is_state_id ],
                        [ "set", is_stated_id, is_state_id, is_state_id ],
                        [ "shake", is_convertible_to_float, is_convertible_to_float ],
-                       [ "show", is_hint_id ],
                        [ "show", is_showable_id ],
                        [ "show", is_music_id, is_source_id ],
                        [ "skip" ],
                        [ "stop", is_music ],
                        [ "stop", is_character_id ],
+                       [ "stop", is_player ],
                        [ "stop", is_animation_id ],
                        [ "talk", is_string_line ],
                        [ "talk", is_character_id, is_string_line ],
@@ -344,7 +342,6 @@ possible_functions = [ [ "add", is_integer_id, is_convertible_to_int ],
                        [ "trigger", is_action_id, is_convertible_to_bool ],
                        [ "trigger", is_dialog_id ],
                        [ "trigger", is_menu_id ],
-                       [ "trigger", is_hints ],
                        [ "unlock" ],
                        [ "wait" ],
                        [ "wait", is_convertible_to_float ],
@@ -485,16 +482,6 @@ translation = { l: {} for l in locales }
 for line in data["lines"]:
     for locale in locales:
         translation[locale][line['fr_FR']] = line[locale]
-
-print("# READING HINTS")
-data = load_yaml(data_folder + "hints.yaml")
-hints = set()
-if test(data, "hints"):
-    for h in data["hints"]:
-        if test(h, "id"):
-            hints.add(h["id"])
-        test(h, "question", is_line)
-        test(h, "answer", is_line)
 
 print("# TESTING INIT")
 filename = "init.yaml"
@@ -951,7 +938,7 @@ for root, directories, filenames in os.walk(root_folder):
         name, ext = os.path.splitext(basename)
         if basename in skip_list:
             continue
-        if basename in {"locale.yaml", "hints.yaml", "init.yaml"}:
+        if basename in {"locale.yaml", "init.yaml"}:
             continue
         if ext == ".graph" or "en_US" in basename or ".backup." in basename:
             continue

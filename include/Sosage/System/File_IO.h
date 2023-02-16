@@ -62,7 +62,6 @@ public:
 
   void read_init ();
   void read_locale ();
-  void read_hints ();
 
   bool read_savefile();
   void write_savefile();

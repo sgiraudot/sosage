@@ -249,7 +249,6 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
 }
 
 /*
-  - hide: [ID hint_id]                -> makes hint unavailable
   - hide: [ID target_id]              -> makes target_id invisible
   - hide: [ID music_id, ID source_id] -> disable music source
  */
@@ -259,9 +258,7 @@ bool Logic::function_hide (const std::vector<std::string>& args)
   std::string target = args[0];
   if (args.size() == 1)
   {
-    if (auto question = request<C::String>("Hint_" + target , "question"))
-      get<C::Set<std::string>>("Hints", "list")->erase("Hint_" + target);
-    else if (request<C::Group>(target , "group"))
+    if (request<C::Group>(target , "group"))
       emit (target , "set_hidden");
     else
       get<C::Image>(target , "image")->on() = false;
@@ -509,6 +506,8 @@ bool Logic::function_play (const std::vector<std::string>& args)
 
     double duration = to_double(args.size() == 3 ? args[2] : args[1]);
     set<C::String>(character , "start_animation", target);
+    emit(character, "stop_walking");
+    remove(character, "path", true);
 
     if (duration > 0)
       m_current_action->schedule (m_current_time + duration,
@@ -697,7 +696,6 @@ bool Logic::function_shake (const std::vector<std::string>& args)
 }
 
 /*
-  - show: [ID hint_id]                -> makes hint available
   - show: [ID target_id]              -> makes target visible
   - show: [ID music_id, ID source_id] -> enable music source
 */
@@ -709,8 +707,6 @@ bool Logic::function_show (const std::vector<std::string>& args)
   {
     if (auto group = request<C::Group>(target , "group")) // Character
       emit (target , "set_visible");
-    else if (auto question = request<C::String>("Hint_" + target , "question"))
-      get<C::Set<std::string>>("Hints", "list")->insert ("Hint_" + target);
     else
     {
       auto image = get<C::Image>(target , "image");
@@ -753,7 +749,11 @@ bool Logic::function_stop (const std::vector<std::string>& args)
   if (target == "music")
     emit ("Music", "stop");
   else
+  {
+    if (target == "Player")
+      target = value<C::String>("Player", "name");
     emit (target , "stop_animation");
+  }
   return true;
 }
 
@@ -834,14 +834,12 @@ bool Logic::function_talk (const std::vector<std::string>& args)
    m_current_action->schedule (m_current_time + std::max(1., nb_seconds_read), img);
   }
 
-  if (id != "Hinter")
-  {
-    emit (id , "start_talking");
+  emit (id , "start_talking");
 
-   m_current_action->schedule (m_current_time + nb_seconds_lips_moving,
-                                    C::make_handle<C::Signal>
-                                    (id , "stop_talking"));
-  }
+  m_current_action->schedule (m_current_time + nb_seconds_lips_moving,
+                              C::make_handle<C::Signal>
+                              (id , "stop_talking"));
+
   SOSAGE_TIMER_STOP(Logic__function_talk);
 
   return true;
@@ -862,7 +860,6 @@ bool Logic::function_timer (const std::vector<std::string>& args)
   - trigger: [ID action_id, false] -> triggers the wanted action (but does not replace Character:action) TODO: change by continue[]
   - trigger: [ID dialog_id] -> triggers the wanted dialog
   - trigger: [ID menu_id]   -> triggers the wanted menu
-  - trigger: ["hints"]      -> triggers hints
  */
 bool Logic::function_trigger (const std::vector<std::string>& args)
 {
@@ -883,13 +880,6 @@ bool Logic::function_trigger (const std::vector<std::string>& args)
     auto char_action = request<C::Action>("Character", "action");
     if (args.size() == 1 && m_current_action == char_action)
       set<C::Variable>("Character", "action", action);
-    return true;
-  }
-
-  // Hints
-  if (id == "hints")
-  {
-    create_hints();
     return true;
   }
 

@@ -153,7 +153,6 @@ void File_IO::read_config()
   int sounds_volume = 9;
 
   bool autosave = true;
-  bool hints = true;
 
 #ifdef SOSAGE_EMSCRIPTEN
   int window_width = 640;
@@ -175,7 +174,6 @@ void File_IO::read_config()
     if (input.has("music_volume")) music_volume = input["music_volume"].integer();
     if (input.has("sounds_volume")) sounds_volume = input["sounds_volume"].integer();
     if (input.has("autosave")) autosave = input["autosave"].boolean();
-    if (input.has("hints")) hints = input["hints"].boolean();
     if (input.has("window"))
     {
       window_width = input["window"][0].integer();
@@ -204,7 +202,6 @@ void File_IO::read_config()
   set<C::Int>("Sounds", "volume", sounds_volume);
 
   set<C::Boolean>("Game", "autosave", autosave);
-  set<C::Boolean>("Game", "hints_on", hints);
 
   set<C::Int>("Window", "width", window_width);
   set<C::Int>("Window", "height", window_height);
@@ -226,7 +223,6 @@ void File_IO::write_config()
   output.write ("sounds_volume", value<C::Int>("Sounds", "volume"));
 
   output.write ("autosave", value<C::Boolean>("Game", "autosave"));
-  output.write ("hints", value<C::Boolean>("Game", "hints_on"));
 
   output.write ("window", value<C::Int>("Window", "width"), value<C::Int>("Window", "height"));
 }
@@ -272,12 +268,6 @@ bool File_IO::read_savefile()
     for (std::size_t i = 0; i < input["music_disabled_sources"].size(); ++ i)
       action->add ("hide", { input["music"].string(), input["music_disabled_sources"][i].string() });
     action->add ("fadein", { "0.5" });
-  }
-
-  for (std::size_t i = 0; i < input["hints"].size(); ++ i)
-  {
-    const Core::File_IO::Node& ihint = input["hints"][i];
-    action->add ("show", { ihint.string() });
   }
 
   std::unordered_map<std::string, std::string> looking_right;
@@ -375,21 +365,9 @@ void File_IO::write_savefile()
 
   if (auto dialog = request<C::String>("Game", "current_dialog"))
   {
-    // Do not save hint dialog, as it's generated on the fly
-    if (dialog->value() != "Hints")
-    {
-      output.write("dialog", dialog->value());
-      output.write("dialog_position", value<C::Int>("Game", "dialog_position"));
-    }
+    output.write("dialog", dialog->value());
+    output.write("dialog_position", value<C::Int>("Game", "dialog_position"));
   }
-
-  output.start_section("hints");
-  {
-    auto hints = get<C::Set<std::string>>("Hints", "list");
-    for (const std::string& hint : hints->value())
-      output.write_list_item(std::string(hint.begin() + 5, hint.end()));
-  }
-  output.end_section();
 
   output.start_section("characters");
   for (C::Handle c : components("group"))
@@ -681,7 +659,6 @@ void File_IO::read_init ()
   }
 
   read_locale();
-  read_hints();
 }
 
 void File_IO::read_locale()
@@ -766,22 +743,6 @@ void File_IO::read_locale()
     }
     get<C::String>(GAME__CURRENT_LOCAL)->set(prefered);
   }
-}
-
-void File_IO::read_hints()
-{
-  Core::File_IO input ("data/hints.yaml");
-  input.parse();
-
-  for (std::size_t i = 0; i < input["hints"].size(); ++ i)
-  {
-    const Core::File_IO::Node& hint = input["hints"][i];
-    std::string id = hint["id"].string();
-    set<C::String>("Hint_" + id , "question", hint["question"].string());
-    set<C::String>("Hint_" + id , "answer", hint["answer"].string());
-  }
-
-  set<C::Set<std::string>>("Hints", "list");
 }
 
 void File_IO::parse_function (const std::vector<std::string>& args,
