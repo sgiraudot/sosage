@@ -841,7 +841,18 @@ C::Functional_position_handle Interface::wriggly_position (const std::string& id
   auto time = get<C::Double>(CLOCK__TIME);
   double tbegin = std::asin(-1) - time->value() / period - Config::inventory_speed;
   if (object_label)
-    tbegin = random_double(0, 2*M_PI);
+  {
+    // Get something close to random *but* unique per ID, to
+    // keep in sync when a same label changes size for example
+    tbegin = std::hash<std::string>{}(id) / double(std::numeric_limits<std::size_t>::max());
+    tbegin *= 2*M_PI;
+  }
+
+  const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+
+  // Keep action selector of gamepad always in sync
+  if (mode == GAMEPAD && !status()->is(ACTION_CHOICE))
+    tbegin = 0;
 
   auto out = C::make_handle<C::Functional_position>
       (id, cmp,
