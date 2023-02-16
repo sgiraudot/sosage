@@ -59,6 +59,10 @@ class Interface : public Base
 
   enum Selector_type { NO_SEL, GP_IDLE, OKNOTOK, OKCONTINUE, ACTION_SEL, INV_ACTION_SEL, GP_INV_ACTION_SEL };
   enum Animation_style { NONE, DEPLOY, FADE, FADE_LABEL_ONLY, ZOOM };
+  enum Label_type { PLAIN, LABEL_BUTTON, OPEN,
+                    CURSOR_LEFT, CURSOR_RIGHT,
+                    OPEN_LEFT, OPEN_RIGHT,
+                    GOTO_LEFT, GOTO_RIGHT };
 
   Selector_type m_selector_type;
   std::string m_selector_id;
@@ -85,14 +89,13 @@ private:
 
   // Implemented in Interface__labels.cpp
   void create_object_label (const std::string& id);
-  void create_label (bool is_button, const std::string& id, std::string name,
-                     bool open_left, bool open_right,
-                     const Collision_type& collision, double scale = 1.0, bool arrow = false);
+  void create_label (const std::string& id, std::string name,
+                     const Label_type& ltype, const Collision_type& collision,
+                     double scale = 1.0);
   void animate_label (const std::string& id, const Animation_style& style,
                       bool button = false, const Point& position = Point());
-  void update_label (const std::string& id,
-                     bool open_left, bool open_right, Component::Position_handle pos,
-                     double scale = 1.0);
+  void update_label (const std::string& id, const Label_type& ltype,
+                     Component::Position_handle pos, double scale = 1.0);
   void update_label_position (const std::string& id, double scale = 1.0);
   void delete_label (const std::string& id);
   void fade_action_selector (const std::string& id, bool fade_in);

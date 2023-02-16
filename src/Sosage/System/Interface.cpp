@@ -115,37 +115,37 @@ void Interface::init()
   set<C::Relative_position>("Right_arrow", "position", inventory_origin, Vector(Config::world_width - Config::inventory_margin, Config::inventory_height / 2));
 
   // Init object switchers
-  create_label (true, "Keyboard_switcher_left", "Tab", false, false, UNCLICKABLE);
+  create_label ("Keyboard_switcher_left", "Tab", LABEL_BUTTON, UNCLICKABLE);
   auto kb_left_pos = set<C::Absolute_position>("Keyboard_switcher_left", "global_position", Point(0,0));
-  update_label ("Keyboard_switcher_left", false, false, kb_left_pos);
+  update_label ("Keyboard_switcher_left", LABEL_BUTTON, kb_left_pos);
   kb_left_pos->set (Point (Config::label_height - value<C::Position>("Keyboard_switcher_left_back", "position").x(),
                         Config::world_height - Config::label_height));
 
-  create_label (true, "Gamepad_switcher_left", "L", false, false, UNCLICKABLE);
+  create_label ("Gamepad_switcher_left", "L", LABEL_BUTTON, UNCLICKABLE);
   auto left_pos = set<C::Absolute_position>("Gamepad_switcher_left", "global_position", Point(0,0));
-  update_label ("Gamepad_switcher_left", false, false, left_pos);
+  update_label ("Gamepad_switcher_left", LABEL_BUTTON, left_pos);
   left_pos->set (Point (Config::label_height - value<C::Position>("Gamepad_switcher_left_back", "position").x(),
                         Config::world_height - Config::label_height));
 
-  create_label (false, "Keyboard_switcher_label", locale_get("Switch_target", "text"), true, false, UNCLICKABLE);
+  create_label ("Keyboard_switcher_label", locale_get("Switch_target", "text"), OPEN_LEFT, UNCLICKABLE);
   auto kb_img = get<C::Image>("Keyboard_switcher_label_back", "image");
   auto kb_pos = set<C::Absolute_position>("Keyboard_switcher_label", "global_position", Point(0,0));
-  update_label ("Keyboard_switcher_label", true, false, kb_pos);
+  update_label ("Keyboard_switcher_label", OPEN_LEFT, kb_pos);
   kb_pos->set (Point (value<C::Position>("Keyboard_switcher_left_back", "position").x() + kb_img->width() / 2,
                       kb_left_pos->value().y()));
   get<C::Relative_position>("Keyboard_switcher_label", "position")->set(Vector(Config::label_margin,0));
   get<C::Relative_position>("Keyboard_switcher_label_back", "position")->set(Vector(0,0));
 
-  create_label (false, "Gamepad_switcher_label", locale_get("Switch_target", "text"), true, true, UNCLICKABLE);
+  create_label ("Gamepad_switcher_label", locale_get("Switch_target", "text"), OPEN, UNCLICKABLE);
   auto img = get<C::Image>("Gamepad_switcher_label_back", "image");
   auto pos = set<C::Absolute_position>("Gamepad_switcher_label", "global_position", Point(0,0));
-  update_label ("Gamepad_switcher_label", true, true, pos);
+  update_label ("Gamepad_switcher_label", OPEN, pos);
   pos->set (Point (value<C::Position>("Gamepad_switcher_left_back", "position").x() + img->width() / 2,
                    left_pos->value().y()));
 
-  create_label (true, "Gamepad_switcher_right", "R", false, false, UNCLICKABLE);
+  create_label ("Gamepad_switcher_right", "R", LABEL_BUTTON, UNCLICKABLE);
   auto right_pos = set<C::Absolute_position>("Gamepad_switcher_right", "global_position", Point(0,0));
-  update_label ("Gamepad_switcher_right", false, false, right_pos);
+  update_label ("Gamepad_switcher_right", LABEL_BUTTON, right_pos);
   right_pos->set (Point (pos->value().x() + img->width() / 2, left_pos->value().y()));
 
   auto kb_switcher = set<C::Group>("Keyboard_switcher", "group");

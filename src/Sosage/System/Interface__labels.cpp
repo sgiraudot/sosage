@@ -61,8 +61,8 @@ void Interface::create_object_label (const std::string& id)
                                          Vector(0, -Config::inventory_height / 2 - 2 * Config::inventory_margin));
 
     const std::string& name = value<C::String>(id , "name");
-    create_label (false, id + "_label", locale(name), false, false, UNCLICKABLE);
-    update_label(id + "_label", false, false, pos);
+    create_label (id + "_label", locale(name), PLAIN, UNCLICKABLE);
+    update_label(id + "_label", PLAIN, pos);
 
     double diff = value<C::Position>(id + "_label_back", "position").x()
                   - 0.5 * get<C::Image>(id + "_label_back", "image")->width()
@@ -82,47 +82,38 @@ void Interface::create_object_label (const std::string& id)
     if (!request<C::String>("Interface", "source_object"))
       force_right = value<C::Boolean>(id + "_goto", "right", false);
 
-    bool open_left = true;
-    bool open_right = false;
+    Label_type ltype = CURSOR_LEFT;
 
     if (auto right = request<C::Boolean>(id + "_goto", "right"))
-    {
-      open_left = !right->value();
-      open_right = right->value();
-    }
+      ltype = right->value() ? GOTO_RIGHT : GOTO_LEFT;
 
     const std::string& name = value<C::String>(id , "name");
-    create_label (false, id + "_label", locale(name), open_left, open_right, UNCLICKABLE, 1.0);
+    create_label (id + "_label", locale(name), ltype, UNCLICKABLE, 1.0);
 
     auto cursor = get<C::Position>(CURSOR__POSITION);
-    update_label(id + "_label", open_left, open_right, cursor, 1.0);
+    update_label(id + "_label", ltype, cursor, 1.0);
     if (force_right || value<C::Position>(id + "_label_back", "position").x()
         + get<C::Image>(id + "_label_back", "image")->width() / 2
         > Config::world_width - Config::label_height)
     {
-      open_left = false;
-      open_right = true;
-      create_label (false, id + "_label", locale(name), open_left, open_right, UNCLICKABLE, 1.0);
-      update_label(id + "_label", open_left, open_right, cursor, 1.0);
+      ltype = force_right ? GOTO_RIGHT : CURSOR_RIGHT;
+      create_label (id + "_label", locale(name), ltype, UNCLICKABLE, 1.0);
+      update_label(id + "_label", ltype, cursor, 1.0);
     }
   }
   else
   {
-    bool open_left = false;
-    bool open_right = false;
+    Label_type ltype = PLAIN;
 
     if (auto right = request<C::Boolean>(id + "_goto", "right"))
-    {
-      open_left = !right->value();
-      open_right = right->value();
-    }
+      ltype = right->value() ? GOTO_RIGHT : GOTO_LEFT;
 
     bool is_active = (mode == TOUCHSCREEN) || (m_active_object == id);
     double scale = (is_active ? 1.0 : 0.75);
 
     const std::string& name = value<C::String>(id , "name");
-    create_label (false, id + "_label", locale(name), open_left, open_right,
-                  (mode == TOUCHSCREEN) ? BOX : UNCLICKABLE, scale, true);
+    create_label (id + "_label", locale(name), ltype,
+                  (mode == TOUCHSCREEN) ? BOX : UNCLICKABLE, scale);
     if (!is_active)
       get<C::Image>(id + "_label", "image")->set_alpha(192);
 
@@ -131,17 +122,17 @@ void Interface::create_object_label (const std::string& id)
                      get<C::Position>(CAMERA__POSITION),
                      get<C::Position>(id , "label"), -1.);
     auto pos = wriggly_position (id + "_label", "global_position", base_pos, Vector(),
-                                 (open_right || open_left) ? RIGHT_BUTTON : UP, true, true);
+                                 (ltype != PLAIN) ? RIGHT_BUTTON : UP, true, true);
 
-    update_label(id + "_label", open_left, open_right, pos, scale);
+    update_label(id + "_label", ltype, pos, scale);
   }
 
   animate_label (id + "_label", FADE);
 }
 
-void Interface::create_label (bool is_button, const std::string& id, std::string name,
-                              bool open_left, bool open_right,
-                              const Collision_type& collision, double scale, bool arrow)
+void Interface::create_label (const std::string& id, std::string name,
+                              const Label_type& ltype,
+                              const Collision_type& collision, double scale)
 {
   SOSAGE_UPDATE_DBG_LOCATION("Interface::create_label()");
 
@@ -149,11 +140,11 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
   const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
   auto group = set<C::Group>(id , "group");
-  int depth = (is_button ? Config::action_button_depth : Config::label_depth);
+  int depth = (ltype == LABEL_BUTTON ? Config::action_button_depth : Config::label_depth);
   if (mode == GAMEPAD)
-    depth = (is_button ? Config::menu_text_depth : Config::menu_front_depth);
+    depth = (ltype == LABEL_BUTTON ? Config::menu_text_depth : Config::menu_front_depth);
 
-  unsigned char alpha = (is_button ? 255 : 100);
+  unsigned char alpha = (ltype == LABEL_BUTTON ? 255 : 100);
 
   C::Image_handle label, left, right, back;
   if (name != "")
@@ -169,23 +160,19 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
     label->set_alpha(scale * 255);
   }
 
-  if (open_left)
-  {
-    if (arrow && mode != MOUSE)
+  if (ltype == GOTO_LEFT && mode != MOUSE)
       left = C::make_handle<C::Image>(id + "_left_circle", "image", get<C::Image>("Goto_left", "image"));
-  }
-  else
+
+  if (ltype != GOTO_LEFT && ltype != OPEN && ltype != CURSOR_LEFT)
   {
     left = C::make_handle<C::Image>(id + "_left_circle", "image", get<C::Image>("Left_circle", "image"));
     left->set_alpha(alpha);
   }
 
-  if (open_right)
-  {
-    if (arrow && mode != MOUSE)
+  if (ltype == GOTO_RIGHT && mode != MOUSE)
       right = C::make_handle<C::Image>(id + "_right_circle", "image", get<C::Image>("Goto_right", "image"));
-  }
-  else
+
+  if (ltype != GOTO_RIGHT && ltype != OPEN && ltype != CURSOR_RIGHT)
   {
     right = C::make_handle<C::Image>(id + "_right_circle", "image", get<C::Image>("Right_circle", "image"));
     right->set_alpha(alpha);
@@ -194,15 +181,20 @@ void Interface::create_label (bool is_button, const std::string& id, std::string
   if (label)
   {
     int margin = Config::label_margin;
+    if (ltype == CURSOR_LEFT || ltype == CURSOR_RIGHT)
+      margin = 2 * Config::label_margin;
+    else if (ltype == OPEN)
+      margin = 3 * Config::label_margin;
+    else if (ltype == OPEN_LEFT || ltype == OPEN_RIGHT)
+      margin = 2 * Config::label_margin;
+    else if (ltype == GOTO_LEFT || ltype == GOTO_RIGHT)
+      margin = Config::label_margin;
+
     if (request<C::String>("Interface", "source_object"))
-      margin *= 2;
-    else if (open_left && open_right)
-      margin *= 3;
-    else if (!arrow && (open_left || open_right))
-      margin *= 2;
+      margin = 3 * Config::label_margin;
 
     int width = margin + label->width() / 2;
-    if (is_button || name.size() == 1)
+    if (ltype == LABEL_BUTTON || name.size() == 1)
       width = (name.size() - 1) * Config::label_margin;
     if (scale != 1.0)
     {
@@ -351,15 +343,15 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
   }
 }
 
-void Interface::update_label (const std::string& id,
-                              bool open_left, bool open_right, C::Position_handle pos,
-                              double scale)
+void Interface::update_label (const std::string& id, const Label_type& ltype,
+                              C::Position_handle pos, double scale)
 {
   SOSAGE_UPDATE_DBG_LOCATION("Interface::update_label()");
 
   auto label = request<C::Image>(id , "image");
   auto back = get<C::Image>(id + "_back", "image");
   int back_width = round (scale * back->width());
+  const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
   // If animation was happening, finalize it before updating so that scale is final
   for (const std::string& section : { "", "_back" })
@@ -374,28 +366,47 @@ void Interface::update_label (const std::string& id,
     label->set_scale(scale * 0.5);
   back->set_scale(scale);
 
-  if(open_left == open_right) // symmetric label
+  if(ltype == PLAIN || ltype == OPEN || ltype == LABEL_BUTTON) // symmetric label
   {
     set<C::Relative_position>(id , "position", pos);
     set<C::Relative_position>(id + "_back", "position", pos);
   }
-  else if (open_left)
+  else if (ltype == OPEN_LEFT || ltype == GOTO_LEFT || ltype == CURSOR_LEFT)
   {
     if (label)
     {
-      double label_pos = back_width - scale * Config::label_margin - round (label->scale() * label->width()) * 0.5;
+      double label_pos = 0.5 * back_width;
+      if (ltype == CURSOR_LEFT)
+        label_pos += 5;
+      else if (ltype == OPEN_LEFT)
+        label_pos -= 5;
+      else if (ltype == GOTO_LEFT && mode != MOUSE)
+        label_pos += 30 * scale;
       set<C::Relative_position>(id , "position", pos, Vector(label_pos, 0));
     }
-    set<C::Relative_position>(id + "_back", "position", pos, Vector(back_width / 2, 0));
+    if (ltype == OPEN_LEFT)
+      set<C::Relative_position>(id + "_back", "position", pos, Vector(back_width / 2 - 25, 0));
+    else
+      set<C::Relative_position>(id + "_back", "position", pos, Vector(back_width / 2, 0));
   }
-  else if (open_right)
+  else if (ltype == OPEN_RIGHT || ltype == GOTO_RIGHT || ltype == CURSOR_RIGHT)
   {
     if (label)
     {
-      double label_pos = - back_width + scale * Config::label_margin + round (label->scale() * label->width()) * 0.5;
+      double label_pos = -0.5 * back_width;
+      if (ltype == CURSOR_RIGHT)
+        label_pos -= 5;
+      else if (ltype == OPEN_RIGHT)
+        label_pos += 5;
+      else if (ltype == GOTO_RIGHT && mode != MOUSE)
+        label_pos -= 30 * scale;
+
       set<C::Relative_position>(id , "position", pos, Vector(label_pos, 0));
     }
-    set<C::Relative_position>(id + "_back", "position", pos, Vector(-back_width / 2, 0));
+    if (ltype == OPEN_RIGHT)
+      set<C::Relative_position>(id + "_back", "position", pos, Vector(-back_width / 2 + 25, 0));
+    else
+      set<C::Relative_position>(id + "_back", "position", pos, Vector(-back_width / 2, 0));
   }
 }
 
@@ -416,30 +427,26 @@ void Interface::update_label_position (const std::string& id, double scale)
       force_right = value<C::Boolean>(id + "_goto", "right", false);
 
     auto cursor = get<C::Position>(CURSOR__POSITION);
-    update_label(id + "_label", true, false, cursor, scale);
+    update_label(id + "_label", OPEN_LEFT, cursor, scale);
     if (force_right || value<C::Position>(id + "_label_back", "position").x() >
         Config::world_width - Config::label_height)
-      update_label(id + "_label", false, true, cursor, scale);
+      update_label(id + "_label", OPEN_RIGHT, cursor, scale);
   }
   else
   {
-    bool open_left = false;
-    bool open_right = false;
+    Label_type ltype = PLAIN;
 
     if (auto right = request<C::Boolean>(id + "_goto", "right"))
-    {
-      open_left = !right->value();
-      open_right = right->value();
-    }
+      ltype = right->value() ? GOTO_RIGHT : GOTO_LEFT;
 
     auto base_pos = set<C::Relative_position>
                     (id + "_label", "base_global_position",
                      get<C::Position>(CAMERA__POSITION),
                      value<C::Position>(id , "label"), -1.);
     auto pos = wriggly_position (id + "_label", "global_position", base_pos, Vector(),
-                                 (open_right || open_left) ? RIGHT_BUTTON : UP, true, true);
+                                 (ltype != PLAIN) ? RIGHT_BUTTON : UP, true, true);
 
-    update_label(id + "_label", open_left, open_right, pos, scale);
+    update_label(id + "_label", ltype, pos, scale);
   }
 }
 
@@ -668,7 +675,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   if (id == "Default" && action == "inventory")
     label = get<C::String>("Inventory", "label");
 
-  bool open_left = false, open_right = false;
+  Label_type ltype = PLAIN;
   Vector label_position;
   Vector button_position;
   Vector start_position;
@@ -688,7 +695,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     label_position = Vector(40, 0);
     button_position = Vector(40, 0);
     start_position = Vector(14, 0);
-    open_left = true;
+    ltype = OPEN_LEFT;
   }
   else if (orientation == DOWN)
   {
@@ -703,7 +710,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     label_position = Vector(-40, 0);
     button_position = Vector(-40, 0);
     start_position = Vector(-14, 0);
-    open_right = true;
+    ltype = OPEN_RIGHT;
   }
 
   // Side orientations
@@ -720,7 +727,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     label_position = Vector(50, 28.25);
     button_position = Vector(50, 28.25);
     start_position = Vector(14, 0);
-    open_left = true;
+    ltype = OPEN_LEFT;
   }
   else if (orientation == DOWN_LEFT)
   {
@@ -728,7 +735,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     label_position = Vector(-50, 28.25);
     button_position = Vector(-50, 28.25);
     start_position = Vector(14, 0);
-    open_right = true;
+    ltype = OPEN_RIGHT;
   }
   else if (orientation == DOWNER)
   {
@@ -743,7 +750,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     label_position = Vector(50, -28.25);
     button_position = Vector(50, -28.25);
     start_position = Vector(-14, 0);
-    open_left = true;
+    ltype = OPEN_LEFT;
   }
   else if (orientation == UP_LEFT)
   {
@@ -751,7 +758,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     label_position = Vector(-50, -28.25);
     button_position = Vector(-50, -28.25);
     start_position = Vector(-14, 0);
-    open_right = true;
+    ltype = OPEN_RIGHT;
   }
   m_action_selector[selector_idx] = id + "_" + action;
 
@@ -761,9 +768,9 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   if (id != "")
   {
     std::string label_id = id + "_" + action + "_label";
-    create_label (false, label_id, locale(label->value()), open_left, open_right, BOX);
+    create_label (label_id, locale(label->value()), ltype, BOX);
 
-    update_label (label_id, open_left, open_right,
+    update_label (label_id, ltype,
                   wriggly_position(label_id, "global_position",
                                    position, label_position, orientation));
 
@@ -796,8 +803,8 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   {
     m_action_selector[selector_idx] = "Default_" + action;
     button_id = "Default_" + action + "_button";
-    create_label (true, button_id, button, false, false, BOX);
-    update_label (button_id, false, false,
+    create_label (button_id, button, LABEL_BUTTON, BOX);
+    update_label (button_id, LABEL_BUTTON,
                   wriggly_position(button_id, "global_position",
                                    position, button_position, orientation));
     get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
@@ -810,8 +817,8 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   else
   {
     button_id = id + "_" + action + "_button";
-    create_label (true, button_id, button, false, false, BOX);
-    update_label (button_id, false, false,
+    create_label (button_id, button, LABEL_BUTTON, BOX);
+    update_label (button_id, LABEL_BUTTON,
                   wriggly_position(button_id, "global_position",
                                    position, button_position, orientation));
     get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
