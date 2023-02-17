@@ -85,10 +85,6 @@ void Graphic::run()
     m_core.update_view ();
   if (receive ("Window", "toggle_fullscreen"))
     m_core.toggle_fullscreen (value<C::Boolean>("Window", "fullscreen"));
-  if (receive ("Fake_touchscreen", "enable"))
-    m_core.toggle_cursor(true);
-  if (receive ("Fake_touchscreen", "disable"))
-    m_core.toggle_cursor(false);
 
   m_core.begin();
 

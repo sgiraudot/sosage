@@ -79,11 +79,11 @@ void Input::run()
     {
       if (m_fake_touchscreen)
       {
-        emit("Fake_touchscreen", "disable");
+        receive("Fake_touchscreen", "enabled");
         mouse_used = true;
       }
       else
-        emit("Fake_touchscreen", "enable");
+        emit("Fake_touchscreen", "enabled");
       m_fake_touchscreen = !m_fake_touchscreen;
     }
 
@@ -218,16 +218,18 @@ void Input::run()
       emit ("Window", "rescaled");
     }
 
-    // If locked/cutscene, ignore mouse events
+    if (ev.type() == MOUSE_MOVE
+        && (mode->value() == MOUSE
+            || (mode->value() == TOUCHSCREEN && m_fake_touchscreen)))
+      get<C::Position>
+          (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
+
+    // If locked/cutscene, ignore mouse clicks
     if (status()->is (LOCKED, CUTSCENE))
       continue;
 
     if (mode->value() == MOUSE)
     {
-      if (ev.type() == MOUSE_MOVE)
-        get<C::Position>
-            (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-
       if (ev == Event(MOUSE_DOWN, LEFT))
       {
         get<C::Position>

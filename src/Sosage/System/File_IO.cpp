@@ -463,22 +463,18 @@ void File_IO::read_init ()
   auto goto_right_copy = set<C::Image>("Goto_right", "image", goto_right_img);
   goto_right_copy->on() = false;
 
+  // For fake touchscreen
+  std::string hand = input["hand"].string("images", "interface", "png");
+  auto hand_img = C::make_handle<C::Image>("Cursor", "image", hand, Config::cursor_depth);
+  hand_img->set_relative_origin(0.28, 0.12);
+
   auto cursor_state = set<C::String>("Cursor", "state", "default");
-  auto cursor_img = C::make_handle<C::String_conditional>("Cursor", "image", cursor_state);
+  auto cursor_img = set<C::String_conditional>("Cursor", "image", cursor_state);
   cursor_img->add("default", cursor_default);
   cursor_img->add("object", cursor_object);
   cursor_img->add("goto_left", goto_left_img);
   cursor_img->add("goto_right", goto_right_img);
-
-  // Cursor displayed = mouse mode AND NOT paused
-  set<C::Conditional>
-      ("Cursor", "image"
-       "",
-       C::make_and
-       (C::make_simple_condition
-        (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE), MOUSE),
-        get<C::Condition>("Unlocked", "condition")),
-       cursor_img);
+  cursor_img->add("fake_touchscreen", hand_img);
 
   set_fac<C::Absolute_position> (CURSOR__POSITION, "Cursor", "position", Point(0,0));
 

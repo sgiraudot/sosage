@@ -808,9 +808,9 @@ void Interface::update_cursor()
 
   const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
+  auto state = get<C::String>("Cursor", "state");
   if (mode == MOUSE)
   {
-    auto state = get<C::String>("Cursor", "state");
     if (status()->is(IN_MENU))
       state->set("default");
     else if (auto source = request<C::String>("Interface", "source_object"))
@@ -851,7 +851,13 @@ void Interface::update_cursor()
     }
   }
   else
+  {
+    if (signal("Fake_touchscreen", "enabled"))
+      state->set("fake_touchscreen");
+    else
+      state->set("none");
     remove("Selected_object", "image", true);
+  }
 }
 
 } // namespace Sosage::System
