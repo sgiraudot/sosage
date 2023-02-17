@@ -170,8 +170,8 @@ void Interface::init()
   gamepad_switcher->apply<C::Image> ([&](auto img) { img->set_alpha(0); });
 
   // Init gamepad action selector position
-  set<C::Relative_position>("Gamepad_action_selector", "position",
-                            inventory_origin, Vector (Config::world_width - 250, -Config::inventory_active_zone - 130));
+  set<C::Absolute_position>("Gamepad_action_selector", "position",
+                            inventory_origin->value() + Vector (Config::world_width - 260, -Config::inventory_active_zone - 130));
 
   set<C::Variable>("Selected_object", "position", get<C::Position>(CURSOR__POSITION));
 
@@ -556,13 +556,13 @@ void Interface::update_inventory()
   if (as_target != as_pos->value().y())
   {
     if (auto as_anim = request<C::GUI_position_animation>("Gamepad_action_selector", "animation"))
-      as_anim->update(Point(Config::world_width - 240, as_target));
+      as_anim->update(Point(Config::world_width - 260, as_target));
     else
     {
       double current_time = value<C::Double>(CLOCK__TIME);
       auto as_pos = get<C::Position>("Gamepad_action_selector", "position");
       set<C::GUI_position_animation> ("Gamepad_action_selector", "animation", current_time, current_time + Config::inventory_speed,
-                                      as_pos, Point(Config::world_width - 240, as_target));
+                                      as_pos, Point(Config::world_width - 260, as_target));
     }
   }
 
