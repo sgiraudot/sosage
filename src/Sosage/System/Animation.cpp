@@ -629,12 +629,15 @@ void Animation::generate_random_idle_head_animation (const std::string& id, bool
 
     if (random_int(0,4) == 0)
     {
-      int new_pose;
-      do
+      int new_pose = 1;
+      if (head->width_subdiv() > 2)
       {
-        new_pose = random_int(1, head->width_subdiv());
+        do
+        {
+          new_pose = random_int(1, head->width_subdiv());
+        }
+        while (new_pose == pose);
       }
-      while (new_pose == pose);
       pose = new_pose;
     }
 
