@@ -65,7 +65,12 @@ enum Button_orientation
   DOWN_RIGHT,
   DOWNER,
   DOWN_LEFT,
-  UP_LEFT
+  UP_LEFT,
+
+  LEFTER,
+  RIGHTER,
+  LEFT_UP,
+  RIGHT_UP
 };
 
 

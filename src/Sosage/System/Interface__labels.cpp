@@ -559,56 +559,72 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     auto position = set<C::Absolute_position>("Action_selector", "position",
                                               value<C::Position>(CURSOR__POSITION));
 
+    Button_orientation take_orient = LEFT_BUTTON;
+    Button_orientation look_orient = RIGHT_BUTTON;
+    Button_orientation move_orient = UP;
+    Button_orientation inventory_orient = DOWN;
 
-    generate_action (id, "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), position, DEPLOY);
-    double overflow = value<C::Position>(id + "_take_label_back", "position").x()
-                      - Config::label_height - 0.5 * get<C::Image>(id + "_take_label_back", "image")->width();
-    if (overflow < 0)
+    generate_action (id, "take", take_orient, gamepad_label(gamepad, WEST), position, DEPLOY);
+    generate_action (id, "look", look_orient, gamepad_label(gamepad, EAST), position, DEPLOY);
+    generate_action (id, "move", move_orient, gamepad_label(gamepad, NORTH), position, DEPLOY);
+    generate_action (id, "inventory", inventory_orient, gamepad_label(gamepad, SOUTH), position, DEPLOY);
+
+    bool need_update = false;
+
+    double overflow_left = value<C::Position>(id + "_take_label_back", "position").x()
+                           - Config::label_height - 0.5 * get<C::Image>(id + "_take_label_back", "image")->width();
+    if (overflow_left < 0)
     {
+      need_update = true;
       if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
-      {
-        position->set(Point(position->value().x() - overflow, position->value().y()));
-        generate_action (id, "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), position, DEPLOY);
-        generate_action (id, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), position, DEPLOY);
-        generate_action (id, "move", UP, gamepad_label(gamepad, NORTH), position, DEPLOY);
-        generate_action (id, "inventory", DOWN, gamepad_label(gamepad, SOUTH), position, DEPLOY);
-      }
+        position->set(Point(position->value().x() - overflow_left, position->value().y()));
       else
       {
-        generate_action (id, "move", UPPER, "", position, DEPLOY);
-        generate_action (id, "take", UP_RIGHT, "", position, DEPLOY);
-        generate_action (id, "look", DOWN_RIGHT, "", position, DEPLOY);
-        generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
+        take_orient = UP_RIGHT;
+        look_orient = DOWN_RIGHT;
+        move_orient = UPPER;
+        inventory_orient = DOWNER;
       }
     }
-    else
+
+    double overflow_right = Config::world_width - Config::label_height - 0.5 * get<C::Image>(id + "_look_label_back", "image")->width()
+                            - value<C::Position>(id + "_look_label_back", "position").x();
+    if (overflow_right < 0)
     {
-      generate_action (id, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), position, DEPLOY);
-      double overflow = Config::world_width - Config::label_height - 0.5 * get<C::Image>(id + "_look_label_back", "image")->width()
-                        - value<C::Position>(id + "_look_label_back", "position").x();
-      if (overflow < 0)
-      {
-        if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
-        {
-          position->set(Point(position->value().x() + overflow, position->value().y()));
-          generate_action (id, "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), position, DEPLOY);
-          generate_action (id, "look", RIGHT_BUTTON, gamepad_label(gamepad, EAST), position, DEPLOY);
-          generate_action (id, "move", UP, gamepad_label(gamepad, NORTH), position, DEPLOY);
-          generate_action (id, "inventory", DOWN, gamepad_label(gamepad, SOUTH), position, DEPLOY);
-        }
-        else
-        {
-          generate_action (id, "move", UPPER, "", position, DEPLOY);
-          generate_action (id, "take", UP_LEFT, "", position, DEPLOY);
-          generate_action (id, "look", DOWN_LEFT, "", position, DEPLOY);
-          generate_action (id, "inventory", DOWNER, "", position, DEPLOY);
-        }
-      }
+      need_update = true;
+      if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+        position->set(Point(position->value().x() + overflow_right, position->value().y()));
       else
       {
-        generate_action (id, "move", UP, gamepad_label(gamepad, NORTH), position, DEPLOY);
-        generate_action (id, "inventory", DOWN, gamepad_label(gamepad, SOUTH), position, DEPLOY);
+        take_orient = UP_LEFT;
+        look_orient = DOWN_LEFT;
+        move_orient = UPPER;
+        inventory_orient = DOWNER;
       }
+    }
+
+    double overflow_down = Config::world_height - Config::label_height - 0.5 * get<C::Image>(id + "_inventory_label_back", "image")->height()
+                           - value<C::Position>(id + "_inventory_label_back", "position").y();
+    if (overflow_down < 0)
+    {
+      need_update = true;
+      if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+        position->set(Point(position->value().x(), position->value().y() + overflow_down));
+      else
+      {
+        take_orient = LEFTER;
+        look_orient = RIGHTER;
+        move_orient = LEFT_UP;
+        inventory_orient = RIGHT_UP;
+      }
+    }
+
+    if (need_update)
+    {
+      generate_action (id, "take", take_orient, gamepad_label(gamepad, WEST), position, DEPLOY);
+      generate_action (id, "look", look_orient, gamepad_label(gamepad, EAST), position, DEPLOY);
+      generate_action (id, "move", move_orient, gamepad_label(gamepad, NORTH), position, DEPLOY);
+      generate_action (id, "inventory", inventory_orient, gamepad_label(gamepad, SOUTH), position, DEPLOY);
     }
   }
   else if (type == INV_ACTION_SEL)
@@ -760,6 +776,36 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     start_position = Vector(-14, 0);
     ltype = OPEN_RIGHT;
   }
+  else if (orientation == LEFTER)
+  {
+    selector_idx = 3;
+    label_position = Vector(-60, 0);
+    button_position = Vector(-60, 0);
+    start_position = Vector(-14, 0);
+    ltype = OPEN_RIGHT;
+  }
+  else if (orientation == RIGHTER)
+  {
+    selector_idx = 1;
+    label_position = Vector(60, 0);
+    button_position = Vector(60, 0);
+    start_position = Vector(14, 0);
+    ltype = OPEN_LEFT;
+  }
+  else if (orientation == LEFT_UP)
+  {
+    selector_idx = 0;
+    label_position = Vector(-28.25, -90);
+    button_position = Vector(-28.25, -50);
+    start_position = Vector(0, -14);
+  }
+  else if (orientation == RIGHT_UP)
+  {
+    selector_idx = 2;
+    label_position = Vector(28.25, -90);
+    button_position = Vector(28.25, -50);
+    start_position = Vector(0, 14);
+  }
   m_action_selector[selector_idx] = id + "_" + action;
 
   if (style != DEPLOY)
@@ -793,6 +839,27 @@ void Interface::generate_action (const std::string& id, const std::string& actio
                               pos->value() - position->value() + Vector(diff, 0),
                               orientation, false)->function());
       }
+    }
+    // LEFT_UP and RIGHT_UP always need to be moved to not overlap
+    if (orientation == LEFT_UP)
+    {
+      auto pos = get<C::Position>(label_id + "_back", "position");
+      double diff = Config::label_margin - get<C::Image>(label_id + "_back", "image")->width() / 2;
+      get<C::Functional_position>(label_id, "global_position")->set
+          (wriggly_position(label_id, "global_position",
+                            position,
+                            pos->value() - position->value() + Vector(diff, 0),
+                            orientation, false)->function());
+    }
+    if (orientation == RIGHT_UP)
+    {
+      auto pos = get<C::Position>(label_id + "_back", "position");
+      double diff = -Config::label_margin + get<C::Image>(label_id + "_back", "image")->width() / 2;
+      get<C::Functional_position>(label_id, "global_position")->set
+          (wriggly_position(label_id, "global_position",
+                            position,
+                            pos->value() - position->value() + Vector(diff, 0),
+                            orientation, false)->function());
     }
 
     animate_label (label_id, style);
@@ -838,6 +905,9 @@ C::Functional_position_handle Interface::wriggly_position (const std::string& id
 {
   constexpr double range = 5;
   constexpr double period = 0.75;
+  constexpr double cos30 = 0.866025404;
+  constexpr double sin30 = 0.5;
+
   auto time = get<C::Double>(CLOCK__TIME);
   double tbegin = std::asin(-1) - time->value() / period - Config::inventory_speed;
   if (object_label)
@@ -873,10 +943,22 @@ C::Functional_position_handle Interface::wriggly_position (const std::string& id
         return origin->value() + diff + Vector (0, -range * sin_val);
       else if (orientation == DOWN || orientation == DOWNER)
         return origin->value() + diff + Vector (0, range * sin_val);
-      else if (orientation == RIGHT_BUTTON || orientation == UP_RIGHT || orientation == DOWN_RIGHT)
+      else if (orientation == RIGHT_BUTTON || orientation == RIGHTER)
         return origin->value() + diff + Vector (range * sin_val, 0);
-      else if (orientation == LEFT_BUTTON || orientation == UP_LEFT || orientation == DOWN_LEFT)
+      else if (orientation == LEFT_BUTTON || orientation == LEFTER)
         return origin->value() + diff + Vector (-range * sin_val, 0);
+      else if (orientation == DOWN_RIGHT)
+        return origin->value() + diff + Vector (range * cos30 * sin_val, range * sin30 * sin_val);
+      else if (orientation == DOWN_LEFT)
+        return origin->value() + diff + Vector (-range * cos30 * sin_val, range * sin30 * sin_val);
+      else if (orientation == UP_RIGHT)
+        return origin->value() + diff + Vector (range * cos30 * sin_val, -range * sin30 * sin_val);
+      else if (orientation == UP_LEFT)
+        return origin->value() + diff + Vector (-range * cos30 * sin_val, -range * sin30 * sin_val);
+      else if (orientation == RIGHT_UP)
+        return origin->value() + diff + Vector (range * sin30 * sin_val, -range * cos30 * sin_val);
+      else if (orientation == LEFT_UP)
+        return origin->value() + diff + Vector (-range * sin30 * sin_val, -range * cos30 * sin_val);
     }
     return origin->value() + diff;
   }, id, true);
