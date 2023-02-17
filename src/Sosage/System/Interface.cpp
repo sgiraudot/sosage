@@ -114,22 +114,32 @@ void Interface::init()
   set<C::Relative_position>("Left_arrow", "position", inventory_origin, Vector(Config::inventory_margin, Config::inventory_height / 2));
   set<C::Relative_position>("Right_arrow", "position", inventory_origin, Vector(Config::world_width - Config::inventory_margin, Config::inventory_height / 2));
 
+  auto switcher_pos = wriggly_position
+                      ("Switcher", "position",
+                       C::make_handle<C::Absolute_position>("Switcher", "position",
+                                                            Point(Config::label_height / 2,
+                                                                  Config::world_height -
+                                                                  Config::label_height / 2)),
+                      Vector(), UP, true, true);
+
   // Init object switchers
   create_label ("Keyboard_switcher_left", "Tab", LABEL_BUTTON, UNCLICKABLE);
-  auto kb_left_pos = set<C::Absolute_position>("Keyboard_switcher_left", "global_position", Point(0,0));
+  auto kb_left_pos = set<C::Relative_position>("Keyboard_switcher_left", "global_position", switcher_pos);
   update_label ("Keyboard_switcher_left", LABEL_BUTTON, kb_left_pos);
-  kb_left_pos->set (Point (Config::label_height - value<C::Position>("Keyboard_switcher_left_back", "position").x(),
-                        Config::world_height - Config::label_height));
+  auto kb_left_back = get<C::Image>("Keyboard_switcher_left_back", "image");
+  kb_left_pos->set (Point (switcher_pos->value().x() + kb_left_back->width() / 2,
+                           switcher_pos->value().y() - kb_left_back->height() / 2));
 
   create_label ("Gamepad_switcher_left", "L", LABEL_BUTTON, UNCLICKABLE);
-  auto left_pos = set<C::Absolute_position>("Gamepad_switcher_left", "global_position", Point(0,0));
+  auto left_pos = set<C::Relative_position>("Gamepad_switcher_left", "global_position", switcher_pos);
   update_label ("Gamepad_switcher_left", LABEL_BUTTON, left_pos);
-  left_pos->set (Point (Config::label_height - value<C::Position>("Gamepad_switcher_left_back", "position").x(),
-                        Config::world_height - Config::label_height));
+  auto left_back = get<C::Image>("Gamepad_switcher_left_back", "image");
+  left_pos->set (Point (switcher_pos->value().x() + left_back->width() / 2,
+                        switcher_pos->value().y() - left_back->height() / 2));
 
   create_label ("Keyboard_switcher_label", locale_get("Switch_target", "text"), OPEN_LEFT, UNCLICKABLE);
   auto kb_img = get<C::Image>("Keyboard_switcher_label_back", "image");
-  auto kb_pos = set<C::Absolute_position>("Keyboard_switcher_label", "global_position", Point(0,0));
+  auto kb_pos = set<C::Relative_position>("Keyboard_switcher_label", "global_position", switcher_pos);
   update_label ("Keyboard_switcher_label", OPEN_LEFT, kb_pos);
   kb_pos->set (Point (value<C::Position>("Keyboard_switcher_left_back", "position").x() + kb_img->width() / 2,
                       kb_left_pos->value().y()));
@@ -138,13 +148,13 @@ void Interface::init()
 
   create_label ("Gamepad_switcher_label", locale_get("Switch_target", "text"), OPEN, UNCLICKABLE);
   auto img = get<C::Image>("Gamepad_switcher_label_back", "image");
-  auto pos = set<C::Absolute_position>("Gamepad_switcher_label", "global_position", Point(0,0));
+  auto pos = set<C::Relative_position>("Gamepad_switcher_label", "global_position", switcher_pos);
   update_label ("Gamepad_switcher_label", OPEN, pos);
   pos->set (Point (value<C::Position>("Gamepad_switcher_left_back", "position").x() + img->width() / 2,
                    left_pos->value().y()));
 
   create_label ("Gamepad_switcher_right", "R", LABEL_BUTTON, UNCLICKABLE);
-  auto right_pos = set<C::Absolute_position>("Gamepad_switcher_right", "global_position", Point(0,0));
+  auto right_pos = set<C::Relative_position>("Gamepad_switcher_right", "global_position", switcher_pos);
   update_label ("Gamepad_switcher_right", LABEL_BUTTON, right_pos);
   right_pos->set (Point (pos->value().x() + img->width() / 2, left_pos->value().y()));
 
