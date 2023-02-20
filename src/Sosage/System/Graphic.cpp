@@ -86,9 +86,22 @@ void Graphic::run()
   if (receive ("Window", "toggle_fullscreen"))
     m_core.toggle_fullscreen (value<C::Boolean>("Window", "fullscreen"));
 
-  m_core.begin();
+  Point camera = value<C::Absolute_position>(CAMERA__POSITION);
+  double current_zoom = value<C::Double>(CAMERA__ZOOM);
+  if (!status()->is(CUTSCENE))
+  {
+    auto time = get<C::Double>(CLOCK__TIME);
+    constexpr double range = 0.02;
+    constexpr double period = 4;
+    current_zoom += range * (0.5 + 0.5 * std::sin(time->value() / period));
 
-  const Point& camera = value<C::Absolute_position>(CAMERA__POSITION);
+    camera = camera + Sosage::Vector(Config::world_width * range
+                                     * (0.25 + 0.25 * std::sin(time->value() / period)),
+                                     Config::world_height * range
+                                     * (0.25 + 0.25 * std::sin(time->value() / period)));
+  }
+
+  m_core.begin();
 
   using Image_with_info = std::tuple<C::Image_handle, double, double, double, double, double>;
   static std::vector<Image_with_info> to_display;
@@ -111,7 +124,7 @@ void Graphic::run()
       if (!position->is_interface())
       {
         p = p - camera;
-        zoom = value<C::Double>(CAMERA__ZOOM);
+        zoom = current_zoom;
       }
 
       int xmin = img->xmin();
