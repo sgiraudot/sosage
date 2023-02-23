@@ -477,8 +477,12 @@ void Logic::run ()
 bool Logic::compute_path_from_target (C::Position_handle target,
                                       std::string id)
 {
+  bool is_player = false;
   if (id == "")
+  {
     id = value<C::String>("Player", "name");
+    is_player = true;
+  }
 
   auto ground_map = get_ground_map(id);
   if (!ground_map)
@@ -507,13 +511,23 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   {
     if (distance((*previous_path)[previous_path->size()-1], path[path.size()-1]) < 5)
     {
-      if (auto speed_factor = request<C::Double>(id, "speed_factor"))
+      if (is_player)
       {
-        if (speed_factor->value() < 2.2)
-          speed_factor->set (speed_factor->value() + 0.25);
+        if (auto speed_factor = request<C::Double>(id, "speed_factor"))
+        {
+          if (speed_factor->value() < 2.2)
+            speed_factor->set (speed_factor->value() + 0.25);
+        }
+        else
+          set<C::Double>(id, "speed_factor", 1.25);
       }
       else
-        set<C::Double>(id, "speed_factor", 1.25);
+      {
+        // Follower follows slightly less fast
+        if (id == value<C::String>("Follower", "name", ""))
+          if (auto speed_factor = request<C::Double>(value<C::String>("Player", "name"), "speed_factor"))
+            set<C::Double>(id, "speed_factor", speed_factor->value() - 0.25);
+      }
       return true;
     }
   }
