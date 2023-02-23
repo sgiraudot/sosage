@@ -393,6 +393,7 @@ bool Logic::function_move (const std::vector<std::string>& args)
       set<C::Int>(target , "z", z);
     }
 
+
     get<C::Absolute_position>(target + "_body", "position")->set(Point(x, y));
     set<C::Absolute_position>(target, "lookat",
                               looking_right ? Point::right() : Point::left());
@@ -508,6 +509,7 @@ bool Logic::function_play (const std::vector<std::string>& args)
     set<C::String>(character , "start_animation", target);
     emit(character, "stop_walking");
     remove(character, "path", true);
+    remove(character, "speed_factor", true);
 
     if (duration > 0)
       m_current_action->schedule (m_current_time + duration,

@@ -159,6 +159,7 @@ void Logic::run ()
       remove("Character", "action");
       const std::string& id = value<C::String>("Player", "name");
       remove(id , "path", true);
+      remove(id, "speed_factor", true);
       emit(id, "stop_walking");
     }
   }
@@ -278,6 +279,7 @@ void Logic::run ()
     if (direction->value() == Vector(0,0))
     {
       remove(id , "path", true);
+      remove(id, "speed_factor", true);
       emit(id , "stop_walking");
     }
     else
@@ -492,6 +494,7 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   if (target->component() != "view" && !contains(target->entity(), "_body"))
     t = t + value<C::Absolute_position>(CAMERA__POSITION);
 
+
   //debug("Computing path from ", origin, " to ", t);
   std::vector<Point> path;
   ground_map->find_path (origin, t, path);
@@ -499,6 +502,23 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   // Check if character is already at target
   if (path.empty() || ((path.size() == 1) && (path[0] == origin)))
     return false;
+
+  if (auto previous_path = request<C::Path>(id, "path"))
+  {
+    if (distance((*previous_path)[previous_path->size()-1], path[path.size()-1]) < 5)
+    {
+      if (auto speed_factor = request<C::Double>(id, "speed_factor"))
+      {
+        if (speed_factor->value() < 2.2)
+          speed_factor->set (speed_factor->value() + 0.25);
+      }
+      else
+        set<C::Double>(id, "speed_factor", 1.25);
+      return true;
+    }
+  }
+  else
+    remove(id, "speed_factor", true);
 
   auto p = set<C::Path>(id , "path", path);
   if ((*p)[0] == origin)
@@ -560,6 +580,7 @@ void Logic::follow (const std::string& follower)
   else
   {
     remove(follower , "path", true);
+    remove(follower, "speed_factor", true);
     emit(follower , "stop_walking");
   }
 }

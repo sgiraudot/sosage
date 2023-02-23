@@ -122,6 +122,11 @@ int Animation::ymax() const
   return h * (m_frames[m_current].y + 1);
 }
 
+std::size_t Animation::current() const
+{
+  return m_current;
+}
+
 const Animation::Frame& Animation::current_frame() const
 {
  return m_frames[m_current];
@@ -132,7 +137,7 @@ bool Animation::next_frame()
   if (++ m_frames[m_current].ellapsed == m_frames[m_current].duration)
   {
     m_frames[m_current].ellapsed = 0;
-    if (++ m_current == m_frames.size())
+    if (++ m_current >= m_frames.size())
     {
       m_current = 0;
       if (!m_loop)

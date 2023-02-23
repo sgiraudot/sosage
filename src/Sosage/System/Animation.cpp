@@ -288,7 +288,11 @@ void Animation::run_animation_frame()
     if (auto path = C::cast<C::Path>(c))
     {
       if (path->entity() != "Debug" && !compute_movement_from_path(path))
+      {
         to_remove.push_back(c);
+        if (auto speed_factor = request<C::Double>(c->entity(), "speed_factor"))
+          to_remove.push_back(speed_factor);
+      }
       else if (path->entity() == value<C::String>("Player", "name"))
       {
         has_moved = true;
@@ -447,9 +451,7 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
 
   Point pos = pbody->value();
 
-  double to_walk = Config::character_speed;
-  if constexpr (Config::speed_factor != 1.0)
-      to_walk *= Config::speed_factor;
+  double to_walk = Config::character_speed * value<C::Double>(id, "speed_factor", 1.0);
 
   if (auto ground_map = get_ground_map(id))
     to_walk *= ground_map->z_at_point (pos) / Config::world_depth;
@@ -531,7 +533,7 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
   else
     row_index = 3; // up
 
-  if constexpr (Config::speed_factor != 1.0)
+  if (auto speed_factor = request<C::Double> (id, "speed_factor"))
   {
     image->frames().clear();
     int nb_images = image->width_subdiv();
@@ -548,7 +550,7 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
 
       ++ i;
       normal_id = i % nb_images;
-      fast_id = round(i * Config::speed_factor) % nb_images;
+      fast_id = round(i * speed_factor->value()) % nb_images;
     }
     while (normal_id != 0 && fast_id != 0);
   }
@@ -562,6 +564,7 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
       image->frames()[i].duration = 1;
     }
   }
+
 }
 
 void Animation::generate_random_idle_animation (const std::string& id, bool looking_right)
