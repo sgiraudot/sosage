@@ -78,6 +78,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(message);
   INIT_DISPATCHER(move);
   INIT_DISPATCHER(move60fps);
+  INIT_DISPATCHER(pause);
   INIT_DISPATCHER(play);
   INIT_DISPATCHER(randomize);
   INIT_DISPATCHER(receive);

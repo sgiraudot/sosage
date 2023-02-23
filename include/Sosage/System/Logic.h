@@ -102,6 +102,7 @@ private:
   bool function_message (const std::vector<std::string>& args);
   bool function_move (const std::vector<std::string>& args);
   bool function_move60fps (const std::vector<std::string>& args);
+  bool function_pause (const std::vector<std::string>& args);
   bool function_play (const std::vector<std::string>& args);
   bool function_randomize (const std::vector<std::string>& args);
   bool function_receive (const std::vector<std::string>& args);

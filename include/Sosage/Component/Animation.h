@@ -53,6 +53,7 @@ private:
   std::vector<Frame> m_frames;
   std::size_t m_current;
   bool m_loop;
+  bool m_playing;
 
 public:
 
@@ -66,6 +67,8 @@ public:
   std::vector<Frame>& frames();
   bool loop() const;
   bool animated() const;
+  const bool& playing() const;
+  bool& playing();
   int reset(bool all_frames = true, int duration = 1);
   virtual int xmin() const;
   virtual int xmax() const;

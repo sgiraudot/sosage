@@ -244,7 +244,14 @@ void Animation::run_animation_frame()
     if (request<C::Animation>(id + "_head", "image"))
       generate_random_idle_body_animation (id, is_looking_right(id));
     else
-      get<C::Image>(id , "image")->on() = false;
+      get<C::Animation>(id , "image")->on() = false;
+    to_remove.push_back (c);
+  }
+
+  for (auto c : components("pause"))
+  {
+    const std::string& id = c->entity();
+    get<C::Animation>(id, "image")->playing() = false;
     to_remove.push_back (c);
   }
 
@@ -312,7 +319,9 @@ void Animation::run_animation_frame()
     const std::string& id = c->entity();
     if (auto s = C::cast<C::Signal>(c))
     {
-      get<C::Animation>(id , "image")->on() = true;
+      auto anim = get<C::Animation>(id , "image");
+      anim->on() = true;
+      anim->playing() = true;
       just_started.insert (id);
       to_remove.push_back(c);
     }
@@ -346,7 +355,7 @@ void Animation::run_animation_frame()
 
   for (auto c : components("image"))
     if (auto anim = C::cast<C::Animation>(c))
-      if (anim->on())
+      if (anim->on() && anim->playing())
       {
         animations.push_back(anim);
 

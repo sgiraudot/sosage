@@ -48,6 +48,7 @@ Content::Content()
           "move60fps",
           "name",
           "path",
+          "pause",
           "play_sound",
           "position",
           "rescale",

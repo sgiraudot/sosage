@@ -44,7 +44,7 @@ try:
             iw = int(sys.argv[4])
             ih = int(sys.argv[5])
             ox = ix + iw // 2
-            oy = iy + round(0.05 * ih) if inkscape_updated else H - iy - round(0.05 * ih)
+            oy = iy + round(0.95 * ih) if inkscape_updated else H - iy - round(0.05 * ih)
             print("coordinates: [" + str(ox) + ", " + str(oy) + "]")
         else:
             raise Exception()

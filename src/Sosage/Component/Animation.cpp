@@ -38,6 +38,7 @@ Animation::Animation (const std::string& entity, const std::string& component,
   , m_height_subdiv (height_subdiv)
   , m_current(0)
   , m_loop(loop)
+  , m_playing(true)
 {
   reset();
 }
@@ -70,6 +71,16 @@ bool Animation::loop() const
 bool Animation::animated() const
 {
   return m_frames.size() > 1;
+}
+
+const bool& Animation::playing() const
+{
+  return m_playing;
+}
+
+bool& Animation::playing()
+{
+  return m_playing;
 }
 
 int Animation::reset (bool all_frames, int duration)

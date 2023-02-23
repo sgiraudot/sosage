@@ -454,6 +454,17 @@ bool Logic::function_move60fps (const std::vector<std::string>& args)
 }
 
 /*
+  - pause: [ID animation_id] -> pauses the animation
+ */
+bool Logic::function_pause (const std::vector<std::string>& args)
+{
+  check (args.size() == 1, "function_pause takes 1 argument");
+  std::string target = args[0];
+  emit (target, "pause");
+  return true;
+}
+
+/*
   - play: [ID animation_id]                                            -> starts animation
   - play: [ID music_id]                                                -> starts music
   - play: [ID sound_id]                                                -> plays sound
