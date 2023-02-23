@@ -416,23 +416,33 @@ void Animation::place_and_scale_character(const std::string& id)
   auto mask = request<C::Image>(id, "image");
   auto pbody = get<C::Position>(id + "_body", "position");
 
-  double new_z = Config::world_depth;
-  if (auto ground_map = get_ground_map(id))
-    new_z = ground_map->z_at_point (pbody->value());
-
-  abody->rescale (new_z);
-  ahead->rescale (new_z);
-  amouth->rescale (new_z);
-  if (mask)
-    mask->rescale (new_z + 1);
-
-  if (auto z = request<C::Int>(id , "z"))
+  auto ground_map = get_ground_map(id);
+  auto z = request<C::Int>(id , "z");
+  if (z || !ground_map)
   {
-    abody->z() = z->value();
-    ahead->z() = z->value();
-    amouth->z() = z->value();
+    abody->rescale (Config::world_depth);
+    ahead->rescale (Config::world_depth);
+    amouth->rescale (Config::world_depth);
     if (mask)
-      mask->z() = z->value() + 1;
+      mask->rescale (Config::world_depth + 1);
+
+    if (z)
+    {
+      abody->z() = z->value();
+      ahead->z() = z->value();
+      amouth->z() = z->value();
+      if (mask)
+        mask->z() = z->value() + 1;
+    }
+  }
+  else if (ground_map)
+  {
+    double new_z = ground_map->z_at_point (pbody->value());
+    abody->rescale (new_z);
+    ahead->rescale (new_z);
+    amouth->rescale (new_z);
+    if (mask)
+      mask->rescale (new_z + 1);
   }
 }
 
@@ -725,7 +735,7 @@ void Animation::generate_random_mouth_animation (const std::string& id)
   int row_index = (get<C::Animation>(id + "_head", "image")->frames().front().y);
 
   // Generate 50 poses
-  int pose = random_int(1,11);
+  int pose = random_int(1, image->width_subdiv());
   for (int i = 0; i < 50; ++ i)
   {
     image->frames().push_back ({pose, row_index, 1});
@@ -733,7 +743,7 @@ void Animation::generate_random_mouth_animation (const std::string& id)
     int new_pose;
     do
     {
-      new_pose = random_int(1, 11);
+      new_pose = random_int(1, image->width_subdiv());
     }
     while (new_pose == pose);
     pose = new_pose;

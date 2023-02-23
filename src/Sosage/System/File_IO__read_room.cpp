@@ -109,6 +109,13 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   set<C::Boolean>(id, "uses_2nd_map", (input.has("uses_secondary_ground_map")
                                        ? input["uses_secondary_ground_map"].boolean() : false));
 
+
+  std::string default_state = "default";
+  if (input.has("states"))
+    default_state = input["states"][0].string();
+
+  auto state_handle = get_or_set<C::String>(id , "state", default_state);
+
   for (std::string action : Config::possible_actions)
       if (input.has(action))
       {
@@ -143,10 +150,14 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
 
     auto group = set<C::Group>(id , "group");
 
+    int size = 11;
+    if (skin["mouth"].has("size"))
+      size = skin["mouth"]["size"].integer();
+
     std::string mouth = skin["mouth"]["skin"].string("images", "characters", "png");
     auto amouth
         = set<C::Animation>(id + "_mouth", "image", mouth,
-                            0, 11, 2, true);
+                            0, size, 2, true);
     amouth->set_relative_origin(0.5, 1.0);
     amouth->on() = visible;
     group->add(amouth);
@@ -203,7 +214,6 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
     amask->z() = 0;
     amask->set_relative_origin(0.5, 0.95);
 
-    auto state_handle = get_or_set<C::String>(id , "state", "default");
     auto camask = set<C::String_conditional>(id , "image", state_handle);
 
     if (input.has("states"))
@@ -213,7 +223,7 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
         camask->add(istate, amask);
       }
     else
-      camask->add("default", amask);
+      camask->add(default_state, amask);
 
     camask->add("player", nullptr); // No mask/interaction if character is player
     group->add(camask);
@@ -302,9 +312,12 @@ void File_IO::read_room (const std::string& file_name)
     }
     else
     {
-      std::string ground_map = input["ground_map"][0].string("images", "backgrounds", "png");
-      set<C::Ground_map>("background", "ground_map", ground_map,
-                         front_z, back_z, callback->value());
+      if (input["ground_map"][0].string() != "null")
+      {
+        std::string ground_map = input["ground_map"][0].string("images", "backgrounds", "png");
+        set<C::Ground_map>("background", "ground_map", ground_map,
+                           front_z, back_z, callback->value());
+      }
       std::string sec_ground_map = input["ground_map"][1].string("images", "backgrounds", "png");
       set<C::Ground_map>("background", "2nd_ground_map", sec_ground_map,
                          front_z, back_z, callback->value());
