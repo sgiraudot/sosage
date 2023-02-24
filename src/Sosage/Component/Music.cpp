@@ -125,7 +125,6 @@ bool Music::adjust_mix (const Point& position, const double& time)
     }
   }
 
-  gain = std::sqrt(gain);
   // Normalize
   debug << "Mix = ";
   for (double& m : m_mix)
