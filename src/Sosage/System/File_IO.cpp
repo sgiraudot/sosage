@@ -357,7 +357,7 @@ void File_IO::write_savefile()
     {
       auto music = get<C::Music>(music_id, "music");
       for (const auto& s : music->sources())
-        if (!s.second.on)
+        if (s.second.status == C::Music::OFF)
           output.write_list_item(s.first);
     }
     output.end_section();

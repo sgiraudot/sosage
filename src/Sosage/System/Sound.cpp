@@ -56,24 +56,26 @@ void Sound::run()
   if (!status()->is(CUTSCENE))
     volume *= 0.75;
 
+  double time = value<C::Double>(CLOCK__TIME);
+
   bool volume_changed = false;
   if (receive("Music", "adjust_mix") && music)
   {
     const std::string& player = value<C::String>("Player", "name");
-    music->adjust_mix(value<C::Position>(player + "_body", "position"));
+    if (music->adjust_mix(value<C::Position>(player + "_body", "position"), time))
+      emit("Music", "adjust_mix"); // if source still fading, update next time
     volume_changed = true;
   }
 
   if (receive("Music", "stop"))
   {
     for (std::size_t i = 0; i < music->tracks(); ++ i)
-      m_core.fade(music->core(i), i, 0.2, false);
+      m_core.fade(music->core(i), i, Config::default_sound_fade_time, false);
     music->on() = false;
   }
 
   if (receive("Music", "start"))
   {
-    debug << value<C::Double>(CLOCK__TIME) << ": music start" << std::endl;
     check (music, "No music to start");
     m_core.set_music_channels(music->tracks());
     for (std::size_t i = 0; i < music->tracks(); ++ i)

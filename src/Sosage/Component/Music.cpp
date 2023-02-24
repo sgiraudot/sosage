@@ -25,6 +25,7 @@
 */
 
 #include <Sosage/Component/Music.h>
+#include <Sosage/Config/config.h>
 
 namespace Sosage::Component
 {
@@ -43,7 +44,7 @@ void Music::init()
 {
   // Init with point at infinity, to just trigger general sources
   adjust_mix (Point (std::numeric_limits<double>::infinity(),
-                     std::numeric_limits<double>::infinity()));
+                     std::numeric_limits<double>::infinity()), 0.);
 }
 
 void Music::add_track (const std::string& file_name)
@@ -65,24 +66,47 @@ void Music::add_source (const std::string& id, const std::vector<double>& mix,
   source.mix = mix;
 }
 
-void Music::adjust_mix (const Point& position)
+bool Music::adjust_mix (const Point& position, const double& time)
 {
   for (double& m : m_mix)
     m = 0.;
 
+  bool still_fading = false;
+
   double gain = 0.;
-  for (const auto& s : m_sources)
+  for (auto& s : m_sources)
   {
-    const Source& source = s.second;
-    if (!source.on)
+    Source& source = s.second;
+    double fade_factor = 1.;
+    if (source.status == OFF)
       continue;
+    else if (source.status == FADING_OUT)
+    {
+      if (time - source.fade_origin > Config::default_sound_fade_time)
+      {
+        source.status = OFF;
+        continue;
+      }
+      still_fading = true;
+      fade_factor = 1. - ((time - source.fade_origin) / Config::default_sound_fade_time);
+    }
+    else if (source.status == FADING_IN)
+    {
+      if (time - source.fade_origin > Config::default_sound_fade_time)
+        source.status = ON;
+      else
+      {
+        still_fading = true;
+        fade_factor = (time - source.fade_origin) / Config::default_sound_fade_time;
+      }
+    }
 
     // General source, sound is 100% everywhere
     if (source.big_radius == 0)
     {
       for (std::size_t i = 0; i < m_mix.size(); ++ i)
-        m_mix[i] += source.mix[i];
-      gain += 1.;
+        m_mix[i] += source.mix[i] * fade_factor;
+      gain += fade_factor;
     }
     else
     {
@@ -95,8 +119,8 @@ void Music::adjust_mix (const Point& position)
           g = (dist - source.big_radius) / (source.small_radius - source.big_radius);
         debug << "GAIN = " << g << std::endl;
         for (std::size_t i = 0; i < m_mix.size(); ++ i)
-          m_mix[i] += g * source.mix[i];
-        gain += g;
+          m_mix[i] += g * source.mix[i] * fade_factor;
+        gain += g * fade_factor;
       }
     }
   }
@@ -110,6 +134,8 @@ void Music::adjust_mix (const Point& position)
     debug << m << " ";
   }
   debug << std::endl;
+
+  return still_fading;
 }
 
 std::size_t Music::tracks() const
@@ -137,14 +163,18 @@ bool& Music::on()
   return m_on;
 }
 
-void Music::disable_source (const std::string& id)
+void Music::disable_source (const std::string& id, double time)
 {
-  m_sources[id].on = false;
+  auto& source = m_sources[id];
+  source.status = FADING_OUT;
+  source.fade_origin = time;
 }
 
-void Music::enable_source (const std::string& id)
+void Music::enable_source (const std::string& id, double time)
 {
-  m_sources[id].on = true;
+  auto& source = m_sources[id];
+  source.status = FADING_IN;
+  source.fade_origin = time;
 }
 
 const std::unordered_map<std::string, Music::Source>& Music::sources() const

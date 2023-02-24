@@ -266,7 +266,8 @@ bool Logic::function_hide (const std::vector<std::string>& args)
   else
   {
     std::string id = args[1];
-    get<C::Music>(target, "music")->disable_source(id);
+    double time = value<C::Double>(CLOCK__TIME);
+    get<C::Music>(target, "music")->disable_source(id, time);
     emit("Music", "adjust_mix");
   }
   return true;
@@ -745,7 +746,8 @@ bool Logic::function_show (const std::vector<std::string>& args)
   else
   {
     std::string id = args[1];
-    get<C::Music>(target, "music")->enable_source(id);
+    double time = value<C::Double>(CLOCK__TIME);
+    get<C::Music>(target, "music")->enable_source(id, time);
     emit("Music", "adjust_mix");
   }
   return true;

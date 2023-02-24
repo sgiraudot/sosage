@@ -39,6 +39,9 @@ namespace Sosage::Component
 
 class Music : public Base
 {
+public:
+  enum Source_status { FADING_IN, ON, FADING_OUT, OFF };
+
 private:
 
   struct Source
@@ -47,7 +50,8 @@ private:
     double small_radius = 0;
     double big_radius = 0;
     std::vector<double> mix;
-    bool on = true;
+    double fade_origin = 0.;
+    Source_status status = ON;
   };
 
   std::vector<Core::Sound::Music> m_core;
@@ -64,14 +68,14 @@ public:
   void add_source (const std::string& id, const std::vector<double>& mix,
                    double x = 0, double y = 0,
                    double small_radius = 0, double big_radius = 0);
-  void adjust_mix (const Point& position);
+  bool adjust_mix (const Point& position, const double& time);
   std::size_t tracks() const;
   const Core::Sound::Music& core (std::size_t i) const;
   double mix (std::size_t i) const;
   const bool& on() const;
   bool& on();
-  void disable_source (const std::string& id);
-  void enable_source (const std::string& id);
+  void disable_source (const std::string& id, double time);
+  void enable_source (const std::string& id, double time);
   const std::unordered_map<std::string, Source>& sources() const;
 
   STR_NAME("Music");
