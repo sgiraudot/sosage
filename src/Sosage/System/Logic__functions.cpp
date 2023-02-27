@@ -382,7 +382,7 @@ bool Logic::function_move (const std::vector<std::string>& args)
   int x = to_int(args[1]);
   int y = to_int(args[2]);
 
-  if (request<C::Group>(target , "group")) // character
+  if (request<C::String>(target , "color")) // character
   {
     bool looking_right;
     if (args.size() == 4)
@@ -395,9 +395,11 @@ bool Logic::function_move (const std::vector<std::string>& args)
     }
 
 
-    get<C::Absolute_position>(target + "_body", "position")->set(Point(x, y));
-    set<C::Absolute_position>(target, "lookat",
-                              looking_right ? Point::right() : Point::left());
+    get<C::Absolute_position>(target, "position")->set(Point(x, y));
+
+    if (request<C::Group>(target , "group")) // not fake character with no skin
+      set<C::Absolute_position>(target, "lookat",
+                                looking_right ? Point::right() : Point::left());
   }
   else
   {
