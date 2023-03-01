@@ -596,6 +596,8 @@ def test_characters(data):
     test(data, "name", is_line)
     test(data, "coordinates/0", is_int)
     test(data, "coordinates/1", is_int)
+    test(data, "label/0", is_int)
+    test(data, "label/1", is_int)
     test(data, "looking_right", is_bool)
     test(data, "color", is_color)
     if "skin" in data:

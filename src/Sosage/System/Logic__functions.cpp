@@ -817,19 +817,8 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   debug << "Line displayed for " << nb_seconds_read << " s, lips moving for "
         << nb_seconds_lips_moving << "s" << std::endl;
 
-  Point position = value<C::Double>(CAMERA__ZOOM)
-                   * (value<C::Position>(id, "position") - value<C::Position>(CAMERA__POSITION));
-
-  int x = position.X();
-
-  double y_diff = value<C::Int>(id , "dialog_height", 770);
-  auto img = request<C::Image>(id + "_body", "image");
-  if (!img)
-    img = get<C::Image>(value<C::String>("Player", "name") + "_body", "image");
-
-  y_diff *= img->scale() * value<C::Double>(CAMERA__ZOOM);
-
-  int y = position.Y() - y_diff;
+  const Point& position = value<C::Position>(id, "label", value<C::Position>(value<C::String>("Player", "name"), "label"));
+  int x = position.x(), y = position.y();
   double size_factor = 0.75 * (value<C::Int>("Dialog", "size") / double(Config::MEDIUM));
 
   int height = 80 * size_factor * dialog.size();
@@ -838,10 +827,10 @@ bool Logic::function_talk (const std::vector<std::string>& args)
     y = 100;
 
   for (auto img : dialog)
-    if (x + size_factor * img->width() / 2 > int(0.95 * Config::world_width))
-      x = int(0.95 * Config::world_width - size_factor * img->width() / 2);
-    else if (x - size_factor * img->width() / 2 < int(0.1 * Config::world_width))
-      x = int(0.1 * Config::world_width + size_factor * img->width() / 2);
+    if (x + size_factor * img->width() / 2 > Config::world_width - 50)
+      x = int(Config::world_width - 50 - size_factor * img->width() / 2);
+    else if (x - size_factor * img->width() / 2 < 50)
+      x = int(50 + size_factor * img->width() / 2);
 
   for (auto img : dialog)
   {
