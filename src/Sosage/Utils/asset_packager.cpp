@@ -28,6 +28,7 @@
 
 #include <Sosage/Component/Ground_map.h>
 #include <Sosage/Third_party/LZ4.h>
+#include <Sosage/Third_party/SDL.h>
 #include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/asset_packager.h>
 #include <Sosage/Utils/conversions.h>
@@ -119,6 +120,7 @@ void write_file (std::ofstream& ofile, const std::string& filename)
 void write_image (std::ofstream& ofile, const std::string& filename, bool is_object)
 {
   SDL_Surface* input = IMG_Load (filename.c_str());
+  Third_party::SDL::fix_transparent_borders(input);
   SDL_PixelFormat* format = SDL_AllocFormat(surface_format);
   SDL_Surface *output = SDL_ConvertSurface(input, format, 0);
   SDL_FreeFormat(format);

@@ -121,6 +121,7 @@ public:
   static Image compose (const std::initializer_list<Image>& images);
   static Font load_font (const std::string& file_name, int size);
   static Bitmap_2 create_mask (SDL_Surface* surf);
+  static void fix_transparent_borders (SDL_Surface* image);
   static SDL_Color black();
   static SDL_Color color (const std::string& color_str);
   static Image create_text (const Font& font, const std::string& color_str,

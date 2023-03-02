@@ -78,4 +78,5 @@ std::vector<SDL_Surface*> split_image (SDL_Surface* image)
   return out;
 }
 
+
 } // namespace Sosage::Splitter

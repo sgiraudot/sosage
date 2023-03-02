@@ -35,6 +35,8 @@
 
 #include <SDL_image.h>
 
+#include <queue>
+#include <set>
 #include <sstream>
 
 namespace Sosage::Third_party
@@ -338,6 +340,11 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
                height = surf->h;
                width = surf->w;
 #ifndef SOSAGE_GUILESS
+
+               SOSAGE_TIMER_START(SDL_Image__fix_transparent_borders);
+               fix_transparent_borders(surf);
+               SOSAGE_TIMER_STOP(SDL_Image__fix_transparent_borders);
+
                SOSAGE_TIMER_START(SDL_Image__load_image_texture);
                texture = SDL_CreateTextureFromSurface(m_renderer, surf);
                check (texture != nullptr, "Cannot create texture from " + file_name
@@ -495,6 +502,58 @@ Bitmap_2 SDL::create_mask (SDL_Surface* surf)
   access.release();
 
   return out;
+}
+
+void SDL::fix_transparent_borders (SDL_Surface* image)
+{
+  Surface_access access(image);
+
+  std::vector<std::tuple<int, int, RGBA_color>> to_change;
+
+  for (std::size_t i = 0; i < access.width(); ++ i)
+    for (std::size_t j = 0; j < access.height(); ++ j)
+    {
+      RGBA_color color = access.get(i,j);
+      if (!is_transparent_black_or_white (color))
+        continue;
+
+      int r = 0;
+      int g = 0;
+      int b = 0;
+      int nb = 0;
+
+      for (int di = -1; di <= 1; ++ di)
+      {
+        int ii = i+di;
+        if (ii < 0 || std::size_t(ii) == access.width())
+          continue;
+        for (int dj = -1; dj <= 1; ++ dj)
+        {
+          int jj = j+dj;
+          if (jj < 0 || std::size_t(jj) == access.height())
+            continue;
+
+          RGBA_color dcolor = access.get(ii, jj);
+          if (is_transparent_black_or_white (dcolor))
+            continue;
+          r += dcolor[0];
+          g += dcolor[1];
+          b += dcolor[2];
+          ++ nb;
+        }
+      }
+
+      if (nb == 0)
+        continue;
+
+      to_change.push_back (std::make_tuple(i, j, RGBA_color({(unsigned char)(r / nb),
+                                                             (unsigned char)(g / nb),
+                                                             (unsigned char)(b / nb),
+                                                             (unsigned char)(0)})));
+    }
+  for (const auto& tc : to_change)
+    access.set(std::get<0>(tc), std::get<1>(tc), std::get<2>(tc));
+  access.release();
 }
 
 

@@ -37,6 +37,8 @@ using RGB_color = std::array<unsigned char, 3>;
 using RGBA_color = std::array<unsigned char, 4>;
 RGB_color color_from_string (const std::string& str);
 
+bool is_transparent_black_or_white (const RGBA_color& color);
+
 } // namespace Sosage
 
 #endif // SOSAGE_UTILS_COLOR_H

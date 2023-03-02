@@ -41,4 +41,13 @@ RGB_color color_from_string (const std::string& str)
            (unsigned char)(num % 0x100) };
 }
 
+bool is_transparent_black_or_white (const RGBA_color& color)
+{
+  if (color[3] != 0)
+    return false;
+
+  return (color[0] == 255 && color[1] == 255 && color[2] == 255)
+      || (color[0] == 0 && color[1] == 0 && color[2] == 0);
+}
+
 } // namespace Sosage
