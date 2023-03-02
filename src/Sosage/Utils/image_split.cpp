@@ -55,6 +55,7 @@ SDL_Rect rect (const Uint32& width, const Uint32& height,
 
 std::vector<SDL_Surface*> split_image (SDL_Surface* image)
 {
+  SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
   std::vector<SDL_Surface*> out;
   for (Uint32 x = 0; x < nb_sub(image->w); ++ x)
   {
