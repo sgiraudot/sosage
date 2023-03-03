@@ -53,6 +53,7 @@ Content::Content()
           "position",
           "rescale",
           "rescale60fps",
+          "set_state",
           "set_visible",
           "set_hidden",
           "signal",

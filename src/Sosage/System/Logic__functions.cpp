@@ -655,7 +655,7 @@ bool Logic::function_rescale60fps (const std::vector<std::string>& args)
 }
 
 /*
-  - set: [ID target_id, ID state_id]                      -> change state of tarfget to state_id
+  - set: [ID target_id, ID state_id]                      -> change state of target to state_id
   - set: [ID target_id, ID state_from_id, ID state_to_id] -> change state of target to state_to_id ONLY if current state is state_from_id
  */
 bool Logic::function_set (const std::vector<std::string>& args)
@@ -694,6 +694,18 @@ bool Logic::function_set (const std::vector<std::string>& args)
   if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
     emit("Action_selector", "force_update");
 
+  return true;
+}
+
+/*
+  - set: [ID target_id, ID state_id] -> change state of target to state_id, sync with animation FPS
+ */
+bool Logic::function_set12fps (const std::vector<std::string>& args)
+{
+  check (args.size() == 2, "function_set takes 2 or 3 arguments");
+  std::string target = args[0];
+  std::string state = args[1];
+  set<C::String>(target, "set_state", state);
   return true;
 }
 

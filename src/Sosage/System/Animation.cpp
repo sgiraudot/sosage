@@ -335,6 +335,14 @@ void Animation::run_animation_frame()
     }
   }
 
+  for (auto c : components("set_state"))
+  {
+    auto state = C::cast<C::String>(c);
+    debug << "Set state of " << state->entity() << " to " << state->value() << std::endl;
+    get<C::String>(state->entity(), "state")->set(state->value());
+    to_remove.push_back(c);
+  }
+
   for (auto c : components("set_hidden"))
   {
     debug << "Set " << c->str() << " hidden" << std::endl;
