@@ -68,10 +68,7 @@ public:
   {
     count_set_ptr();
     Component::Handle_map& hmap = handle_map(t->component());
-    Component::Handle_map::iterator iter = hmap.find(t->id());
-    if (iter != hmap.end())
-      hmap.erase(iter);
-    hmap.insert(std::make_pair (t->id(), t));
+    hmap.insert_or_assign (t->id(), t);
   }
 
   template <typename T, typename ... Args>
