@@ -68,7 +68,18 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
     int lx = input["label"][0].integer();
     int ly = input["label"][1].integer();
     if (input["label"][0].is_relative())
-      set<C::Relative_position>(id, "label", position, Vector (lx,ly));
+    {
+      set<C::Absolute_position>(id, "relative_label", Point(lx,ly), false);
+      set<C::Functional_position>
+          (id, "label",
+           [&](const std::string& id) -> Point
+      {
+        const Point& position = value<C::Position>(id, "position");
+        const Point& relative = value<C::Position>(id, "relative_label");
+        auto img = request<C::Image>(id + "_body", "image");
+        return position + (img ? img->scale() : 1.) * relative;
+      }, id);
+    }
     else
       set<C::Absolute_position>(id , "label", Point(lx,ly), false);
   }
