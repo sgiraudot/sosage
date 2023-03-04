@@ -86,6 +86,14 @@ public:
   const Step& last_step();
 
   STR_NAME("Action");
+
+  std::string str_value() const override
+  {
+    std::string out = "";
+    for (const Step& s : m_steps)
+      out += "\n * " + s.to_string();
+    return out;
+  }
 };
 
 using Action_handle = std::shared_ptr<Action>;

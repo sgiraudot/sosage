@@ -679,7 +679,7 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
     }
     remove("Dialog", "choice");
   }
-  else
+  else if (args[1] == "continue")
   {
     dialog->next();
   }
@@ -712,11 +712,16 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
     action->add ("trigger", { id, "continue" });
 
   }
+  else if (action->size() != 0)
+  {
+    // If two dialog choices are chained, let's first allow the system
+    // to display the first one before chosing the next one
+    action->add ("trigger", { id, "no_next_continue" });
+  }
   else
   {
     // Keep track in case player saves and reload there
     set<C::Int>("Game", "dialog_position", dialog->current());
-
     status()->push(DIALOG_CHOICE);
     auto choices = set<C::Vector<std::string> >("Dialog", "choices");
     dialog->get_choices (*choices, m_content);
