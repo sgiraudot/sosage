@@ -42,8 +42,10 @@ private:
   const Clock& m_clock;
   double m_start;
   double m_mean;
-  double m_nb;
+  int m_nb;
   double m_cpu;
+  double m_mean_cpu;
+  int m_mean_nb;
   
 public:
 

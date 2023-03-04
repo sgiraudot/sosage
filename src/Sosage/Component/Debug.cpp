@@ -41,7 +41,9 @@ Debug::Debug (const std::string& entity, const std::string& component, Content& 
 { }
 
 Debug::~Debug()
-{ }
+{
+  debug << "Mean CPU usage = " << int(std::round(100. * (m_mean_cpu / m_mean_nb))) << "%" << std::endl;
+}
 
 std::string Debug::debug_str()
 {
@@ -86,6 +88,9 @@ void Debug::end_loop()
     m_mean = 0.;
     m_nb = 0;
     m_cpu = std::min(1., time / (1000 / m_clock.fps()));
+
+    m_mean_cpu += m_cpu;
+    ++ m_mean_nb;
   }
 }
 
