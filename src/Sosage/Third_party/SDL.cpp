@@ -341,9 +341,9 @@ SDL::Image SDL::load_image (const std::string& file_name, bool with_mask, bool w
                width = surf->w;
 #ifndef SOSAGE_GUILESS
 
-               SOSAGE_TIMER_START(SDL_Image__fix_transparent_borders);
-               fix_transparent_borders(surf);
-               SOSAGE_TIMER_STOP(SDL_Image__fix_transparent_borders);
+               // SOSAGE_TIMER_START(SDL_Image__fix_transparent_borders);
+               // fix_transparent_borders(surf);
+               // SOSAGE_TIMER_STOP(SDL_Image__fix_transparent_borders);
 
                SOSAGE_TIMER_START(SDL_Image__load_image_texture);
                texture = SDL_CreateTextureFromSurface(m_renderer, surf);
