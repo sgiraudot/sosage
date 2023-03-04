@@ -834,7 +834,7 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   double size_factor = 0.75 * (value<C::Int>("Dialog", "size") / double(Config::MEDIUM));
 
   int height = 80 * size_factor * dialog.size();
-  y = y - (height / 2);
+  y = y - height;
   if (y < 100)
     y = 100;
 
