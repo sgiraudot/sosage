@@ -37,12 +37,16 @@ namespace Sosage::Component
 
 Debug::Debug (const std::string& entity, const std::string& component, Content& content, const Clock& clock)
   : Boolean(entity, component, false), m_content (content), m_clock (clock)
-  , m_start(0), m_mean(0), m_nb(0)
+  , m_start(0), m_mean(0), m_nb(0), m_mean_cpu(0), m_mean_nb(0)
 { }
 
 Debug::~Debug()
 {
+#ifdef SOSAGE_DEBUG
   debug << "Mean CPU usage = " << int(std::round(100. * (m_mean_cpu / m_mean_nb))) << "%" << std::endl;
+#else
+  std::cerr << "Mean CPU usage = " << int(std::round(100. * (m_mean_cpu / m_mean_nb))) << "%" << std::endl;
+#endif
 }
 
 std::string Debug::debug_str()
