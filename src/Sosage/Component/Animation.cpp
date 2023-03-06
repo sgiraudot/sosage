@@ -158,4 +158,10 @@ bool Animation::next_frame()
   return true;
 }
 
+bool Animation::is_last_frame() const
+{
+  return (m_current == m_frames.size() - 1)
+      && (m_frames[m_current].ellapsed == m_frames[m_current].duration - 1);
+}
+
 } // namespace Sosage::Component

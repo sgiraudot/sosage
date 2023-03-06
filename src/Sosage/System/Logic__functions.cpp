@@ -543,15 +543,7 @@ bool Logic::function_play (const std::vector<std::string>& args)
     }
     else
     {
-      // If animation does not loop, insert dummy timed Event
-      // so that sync waits for the end of the animation
-      int nb_frames = 0;
-      for (const auto& f : animation->frames())
-        nb_frames += f.duration;
-      double latest_frame_time = frame_time(m_current_time);
-      double end_time = latest_frame_time + (nb_frames + 0.5) / double(Config::animation_fps);
-
-      m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy", "event"));
+      m_current_action->schedule (0, animation);
     }
   }
   return true;

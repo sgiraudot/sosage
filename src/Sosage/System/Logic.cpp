@@ -141,7 +141,7 @@ void Logic::run ()
 
       for (const auto& th : action->scheduled())
       {
-        if (th.first == 0) // special case for Path
+        if (th.first == 0) // special case for Path and animations
         {
           remove (th.second->entity(), "nofollow", true);
           continue;
@@ -199,14 +199,21 @@ void Logic::run ()
         a->update_scheduled
             ([&](const C::Action::Timed_handle& th) -> bool
         {
-          if (th.first == 0) // special case for Path
+          if (th.first == 0) // special case for Path and animations
           {
-            auto saved_path = C::cast<C::Path>(th.second);
-            auto current_path = request<C::Path>(saved_path->entity(), saved_path->component());
-            if (saved_path == current_path)
-              return true;
-            remove (saved_path->entity(), "nofollow", true);
-            return false;
+            if (auto saved_path = C::cast<C::Path>(th.second))
+            {
+              auto current_path = request<C::Path>(saved_path->entity(), saved_path->component());
+              if (saved_path == current_path)
+                return true;
+              remove (saved_path->entity(), "nofollow", true);
+              return false;
+            }
+            // else
+            auto anim = C::cast<C::Animation>(th.second);
+            if (anim->is_last_frame())
+              return false;
+            return true;
           }
           if (th.first <= m_current_time)
           {

@@ -77,6 +77,7 @@ public:
   std::size_t current() const;
   const Frame& current_frame() const;
   bool next_frame();
+  bool is_last_frame() const;
 
   STR_NAME("Animation");
 };
