@@ -370,10 +370,11 @@ bool Logic::function_message (const std::vector<std::string>& args)
 }
 
 /*
-  - move: [ID character_id, INT x, INT y, BOOL looking_right]        -> immediately moves character to the coordinates (x,y), looking right/left
-  - move: [ID character_id, INT x, INT y, INT z, BOOL looking_right] -> immediately moves character to the coordinates (x,y,z), looking right/left
-  - move: [ID target_id, INT x, INT y, INT z]                        -> immediately moves target to the coordinates (x,y,z)
-  - move: [ID target_id, INT x, INT y, INT z, FLOAT duration]        -> smoothly moves target to coordinates (x,y,z) with wanted duration
+  - move: [ID character_id, INT x, INT y, BOOL looking_right]           -> immediately moves character to the coordinates (x,y), looking right/left
+  - move: [ID character_id, INT x, INT y, INT z, BOOL looking_right]    -> immediately moves character to the coordinates (x,y,z), looking right/left
+  - move: [ID character_id, INT x, INT y, RELINT z, BOOL looking_right] -> immediately moves and rescales character to the coordinates (x,y,z), looking right/left
+  - move: [ID target_id, INT x, INT y, INT z]                           -> immediately moves target to the coordinates (x,y,z)
+  - move: [ID target_id, INT x, INT y, INT z, FLOAT duration]           -> smoothly moves target to coordinates (x,y,z) with wanted duration
  */
 bool Logic::function_move (const std::vector<std::string>& args)
 {
@@ -390,6 +391,8 @@ bool Logic::function_move (const std::vector<std::string>& args)
     else
     {
       int z = to_int(args[3]);
+      if (is_relative (args[3]))
+        set<C::Base>(target, "z_rescaled");
       looking_right = to_bool(args[4]);
       set<C::Int>(target , "z", z);
     }

@@ -107,7 +107,7 @@ std::string Yaml::Node::string (const std::string& folder, const std::string& su
 
 bool Yaml::Node::is_relative () const
 {
-  return value[0] == '+' || value[0] == '-';
+  return Sosage::is_relative(value);
 }
 
 int Yaml::Node::integer () const

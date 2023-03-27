@@ -37,6 +37,11 @@ bool is_int (const std::string& str)
   return true;
 }
 
+bool is_relative (const std::string& str)
+{
+  return str[0] == '+' || str[0] == '-';
+}
+
 int to_int (const std::string& str)
 {
   return std::atoi (str.c_str());

@@ -35,6 +35,7 @@ namespace Sosage
 {
 
 bool is_int (const std::string& str);
+bool is_relative (const std::string& str);
 int to_int (const std::string& str);
 double to_double (const std::string& str);
 bool to_bool (const std::string& str);

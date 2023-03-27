@@ -425,11 +425,14 @@ void Animation::place_and_scale_character(const std::string& id)
   auto z = request<C::Int>(id , "z");
   if (z || !ground_map)
   {
-    abody->rescale (Config::world_depth);
-    ahead->rescale (Config::world_depth);
-    amouth->rescale (Config::world_depth);
+    int scale_z = (request<C::Base>(id, "z_rescaled")
+                   ? z->value() : Config::world_depth);
+
+    abody->rescale (scale_z);
+    ahead->rescale (scale_z);
+    amouth->rescale (scale_z);
     if (mask)
-      mask->rescale (Config::world_depth + 1);
+      mask->rescale (scale_z + 1);
 
     if (z)
     {
