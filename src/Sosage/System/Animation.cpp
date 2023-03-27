@@ -248,13 +248,6 @@ void Animation::run_animation_frame()
     to_remove.push_back (c);
   }
 
-  for (auto c : components("pause"))
-  {
-    const std::string& id = c->entity();
-    get<C::Animation>(id, "image")->playing() = false;
-    to_remove.push_back (c);
-  }
-
   bool has_moved = false;
 
   std::unordered_set<std::string> just_started;
@@ -333,6 +326,13 @@ void Animation::run_animation_frame()
       generate_animation (id, anim->value());
       to_remove.push_back (c);
     }
+  }
+
+  for (auto c : components("pause"))
+  {
+    const std::string& id = c->entity();
+    get<C::Animation>(id, "image")->playing() = false;
+    to_remove.push_back (c);
   }
 
   for (auto c : components("set_state"))
