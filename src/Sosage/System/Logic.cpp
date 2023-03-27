@@ -711,6 +711,9 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
     const std::string& player = value<C::String>("Player", "name");
     if (player != character && character != "Hinter")
       action->add ("look", { character });
+    if (auto follower = request<C::String>("Follower", "name"))
+      if (follower->value() != character && character != "Hinter")
+        action->add ("look", { follower->value(), character });
 
     action->add ("talk", { character, line });
     if (dialog->has_signal())
