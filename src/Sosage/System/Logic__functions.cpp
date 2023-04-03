@@ -824,7 +824,20 @@ bool Logic::function_talk (const std::vector<std::string>& args)
   debug << "Line displayed for " << nb_seconds_read << " s, lips moving for "
         << nb_seconds_lips_moving << "s" << std::endl;
 
-  const Point& position = value<C::Position>(id, "label", value<C::Position>(value<C::String>("Player", "name"), "label"));
+  Point position;
+  if (auto rel = request<C::Absolute_position>(id, "relative_label"))
+  {
+    const Point& init_position = value<C::Position>(id, "position");
+    const Point& relative = rel->value();
+    auto img = request<C::Image>(id + "_body", "image");
+    const Point& camera = value<C::Absolute_position>(CAMERA__POSITION);
+    double zoom = value<C::Double>(CAMERA__ZOOM);
+
+    position = zoom * (init_position + (img ? img->scale() : 1.) * relative - camera);
+  }
+  else
+    position = value<C::Position>(id, "label", value<C::Position>(value<C::String>("Player", "name"), "label"));
+
   int x = position.x(), y = position.y();
   double size_factor = 0.75 * (value<C::Int>("Dialog", "size") / double(Config::MEDIUM));
 
