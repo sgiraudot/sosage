@@ -40,6 +40,8 @@ Time::Time (Content& content)
   set_fac<C::Debug>(GAME__DEBUG, "Game", "debug", m_content, m_clock);
   set_fac<C::Double> (CLOCK__TIME, "Clock", "time", 0.);
   set_fac<C::Double> (CLOCK__LATEST_ACTIVE, "Clock", "latest_active", 0.);
+  set_fac<C::Double> (CLOCK__DISCOUNTED_TIME, "Clock", "discounted_time", 0);
+  set_fac<C::Double> (CLOCK__SAVED_TIME, "Clock", "saved_time", 0);
 }
 
 void Time::run()
@@ -49,6 +51,17 @@ void Time::run()
   m_clock.update(true);
   get<C::Double> (CLOCK__TIME)->set(m_clock.time());
   SOSAGE_TIMER_STOP(System_Time__run);
+
+  // Do not count time spent in menu for in-game time computation
+  if (!signal("Game", "save") &&
+      (status()->is(IN_MENU, PAUSED) || request<C::String>("Game", "new_room")))
+    get_or_set<C::Double>("Time", "in_menu_start", m_clock.time());
+  else if (auto start = request<C::Double>("Time", "in_menu_start"))
+  {
+    auto in_menu = get<C::Double> (CLOCK__DISCOUNTED_TIME);
+    in_menu->set (in_menu->value() + (m_clock.time() - start->value()));
+    remove (start);
+  }
 }
 
 } // namespace Sosage::System

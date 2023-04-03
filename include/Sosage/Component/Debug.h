@@ -57,6 +57,10 @@ public:
   void end_loop();
 
   STR_NAME("Debug");
+
+private:
+
+  std::string in_game_time();
 };
 
 using Debug_handle = std::shared_ptr<Debug>;

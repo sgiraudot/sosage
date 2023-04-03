@@ -52,6 +52,7 @@ Debug::~Debug()
 std::string Debug::debug_str()
 {
   std::string out = "[Debug info]\n";
+  out += "In game time = " + in_game_time() + "\n";
   out += "FPS = " + std::to_string(int(std::round(m_clock.fps()))) + "Hz\n";
   out += "CPU = " + std::to_string(int(std::round(100. * m_cpu))) + "%\n";
   out += m_content.get<Component::Status>(GAME__STATUS)->str() + "\n\n";
@@ -96,6 +97,20 @@ void Debug::end_loop()
     m_mean_cpu += m_cpu;
     ++ m_mean_nb;
   }
+}
+
+std::string Debug::in_game_time()
+{
+  int seconds = int(m_content.value<Component::Double>(CLOCK__SAVED_TIME)
+                    + m_clock.time()
+                    - m_content.value<Component::Double>(CLOCK__DISCOUNTED_TIME));
+
+  auto time_to_string = [](int val) -> std::string
+  { return (val < 10 ? "0" : "") + std::to_string(val); };
+
+  return time_to_string(seconds / 3600) + ":"
+      + time_to_string((seconds / 60) % 60) + ":"
+      + time_to_string(seconds % 60);
 }
 
 } // namespace Sosage::Component

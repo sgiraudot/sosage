@@ -236,6 +236,8 @@ bool File_IO::read_savefile()
     return false;
   }
 
+  get<C::Double>(CLOCK__SAVED_TIME)->set(input["time"].floating());
+
   set<C::String>("Game", "new_room", input["room"].string());
   set<C::String>("Game", "new_room_origin", "Saved_game");
 
@@ -340,6 +342,7 @@ void File_IO::write_savefile()
 {
   Core::File_IO output ("save" + value<C::String>("Save", "suffix", "") +  ".yaml", true, true);
 
+  output.write("time", value<C::Double>(CLOCK__SAVED_TIME) + value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__DISCOUNTED_TIME));
   output.write("room", value<C::String>("Game", "current_room"));
   output.write("player", value<C::String>("Player", "name"));
   if (auto follower = request<C::String>("Follower", "name"))
