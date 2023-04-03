@@ -635,7 +635,12 @@ std::vector<std::string> Control::detect_active_objects()
         continue;
 
       // Inactive object
-      if (!request<C::Image>(label->entity() , "image"))
+      auto img = request<C::Image>(label->entity() , "image");
+      if (!img)
+        continue;
+
+      // Hidden object
+      if (!img->on())
         continue;
 
       // Inventory objet
