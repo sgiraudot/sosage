@@ -140,12 +140,15 @@ void Input::run()
     if (ev == Event(WINDOW, EXIT))
       emit ("Game", "exit");
 
-    if (ev == Event(KEY_UP, SPACE))
+    // Some ways to skip dialogs
+    if (status()->is(LOCKED))
     {
-      if (status()->is(PAUSED))
-        status()->pop();
-      else
-        status()->push(PAUSED);
+      if (ev == Event(KEY_UP, SPACE)
+          || ev == Event(BUTTON_DOWN, EAST)
+          || ev == Event(BUTTON_DOWN, SOUTH)
+          || ev == Event(TOUCH_DOWN, LEFT)
+          || ev == Event(MOUSE_DOWN, RIGHT))
+        emit ("Game", "skip_dialog");
     }
 
     if (ev == Event(WINDOW, FOREGROUND)
