@@ -88,6 +88,8 @@ void Graphic::run()
 
   Point camera = value<C::Absolute_position>(CAMERA__POSITION);
   double current_zoom = value<C::Double>(CAMERA__ZOOM);
+#if 0 // Fun constant zoom for a "breathing" camera effect
+      // but it's maybe a bit too much
   if (!status()->is(CUTSCENE))
   {
     auto time = get<C::Double>(CLOCK__TIME);
@@ -100,7 +102,7 @@ void Graphic::run()
                                      Config::world_height * range
                                      * (0.25 + 0.25 * std::sin(time->value() / period)));
   }
-
+#endif
   m_core.begin();
 
   using Image_with_info = std::tuple<C::Image_handle, double, double, double, double, double>;
