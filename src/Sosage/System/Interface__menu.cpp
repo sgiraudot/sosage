@@ -37,7 +37,7 @@
 
 namespace Sosage::Config
 {
-constexpr int menu_margin = 85;
+constexpr int menu_margin = 95;
 constexpr int menu_small_margin = 35;
 constexpr int menu_oknotok_y = 858;
 constexpr int menu_ok_x = 120;
@@ -63,16 +63,16 @@ void Interface::init_menus()
   auto exit_menu = set<C::Menu>("Exit", "menu");
 
   if constexpr (Config::emscripten)
-    exit_menu->split(VERTICALLY, 7);
+    exit_menu->split(VERTICALLY, 6);
   else
-    exit_menu->split(VERTICALLY, 8);
+    exit_menu->split(VERTICALLY, 7);
 
   set<C::Relative_position>("Menu", "reference", get<C::Position>("Menu_background", "position"), Vector(-240, -420));
   make_exit_menu_item ((*exit_menu)[0], "Menu_logo", Config::exit_menu_logo);
 
   int y = Config::exit_menu_start;
   std::size_t idx = 1;
-  for (const std::string& id : { "New_game", "Settings", "Phone", "Gps", "Credits"
+  for (const std::string& id : { "New_game", "Settings", "Phone", "Credits"
 #ifndef SOSAGE_EMSCRIPTEN
        , "Save_and_quit"
 #endif
@@ -102,12 +102,6 @@ void Interface::init_menus()
   make_text_menu_title((*phone_menu)[0], "Phone");
   make_text_menu_text((*phone_menu)[1], "No_number_text");
   make_oknotok_item ((*phone_menu)[2], true);
-
-  auto gps_menu = set<C::Menu>("Gps", "menu");
-  gps_menu->split(VERTICALLY, 3);
-  make_text_menu_title((*gps_menu)[0], "Gps");
-  make_text_menu_text((*gps_menu)[1], "No_gps_text");
-  make_oknotok_item ((*gps_menu)[2], true);
 
   set<C::Menu>("Message", "menu");
 
@@ -710,7 +704,7 @@ void Interface::menu_clicked ()
         status()->push(LOCKED);
       }
     }
-    else if (menu == "Credits" || menu == "Settings" || menu == "Phone" || menu == "Gps")
+    else if (menu == "Credits" || menu == "Settings" || menu == "Phone")
     {
       delete_menu (menu);
       create_menu ("Exit");
@@ -727,7 +721,7 @@ void Interface::menu_clicked ()
     }
   }
   else if (effect->value() == "Credits" || effect->value() == "Settings"
-           || effect->value() == "Phone" || effect->value() == "Gps")
+           || effect->value() == "Phone")
   {
     delete_menu ("Exit");
     create_menu (effect->value());
@@ -766,7 +760,7 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
       }
 
     // Delete all menus
-    for (const std::string& id : { "Exit", "Wanna_restart", "Settings", "Credits", "Phone", "Gps" })
+    for (const std::string& id : { "Exit", "Wanna_restart", "Settings", "Credits", "Phone" })
     {
       auto menu = get<C::Menu>(id , "menu");
       menu->apply([&](C::Image_handle img)
