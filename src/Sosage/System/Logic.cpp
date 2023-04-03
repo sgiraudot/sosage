@@ -287,7 +287,8 @@ void Logic::run ()
     const std::string& id = value<C::String>("Player", "name");
     if (direction->value() == Vector(0,0))
     {
-      remove(id , "path", true);
+      remove("Player", "move_start_time", true);
+      remove(id, "path", true);
       remove(id, "speed_factor", true);
       emit(id , "stop_walking");
     }
@@ -299,6 +300,23 @@ void Logic::run ()
       Vector dir = direction->value();
       dir = Vector (dir.x() * 1.22, dir.y() / 1.41);
       compute_path_from_direction(dir);
+    }
+  }
+
+  if (auto move_start_time = request<C::Double>("Player", "move_start_time"))
+  {
+    // Increase speed every second
+    if (m_current_time - move_start_time->value() > 1.)
+    {
+      const std::string& player = value<C::String>("Player", "name");
+      if (auto speed_factor = request<C::Double>(player, "speed_factor"))
+      {
+        if (speed_factor->value() < 2.2)
+          speed_factor->set (speed_factor->value() + 0.25);
+      }
+      else
+        set<C::Double>(player, "speed_factor", 1.25);
+      move_start_time->set(m_current_time);
     }
   }
 
@@ -556,6 +574,10 @@ bool Logic::compute_path_from_direction (const Vector& direction)
   auto ground_map = get_ground_map(id);
   if (!ground_map)
     return false;
+
+  // Remember move start time
+  if (!request<C::Path>(id, "path"))
+    set<C::Double>("Player", "move_start_time", value<C::Double>(CLOCK__TIME));
 
   auto position = get<C::Position>(id + "_body", "position");
   Point origin = position->value();
