@@ -116,7 +116,7 @@ void Graphic::run()
     {
       if (!img->on())
         continue;
-      if (status()->is (LOCKED) &&
+      if (status()->is (LOCKED, CUTSCENE) &&
           img->entity() == "Cursor")
         continue;
 
