@@ -769,7 +769,7 @@ void File_IO::create_locale_dependent_text (const std::string& id, Component::Fo
                                             const std::string& color, const std::string& text)
 {
   auto available = value<C::Vector<std::string>>("Game", "available_locales");
-  if (available.size() == 1)
+  if (available.size() == 1 || startswith(id, "PLACEHOLDER"))
   {
     auto img = set<C::Image>(id , "image", font, color, text);
     img->set_scale(0.75);
