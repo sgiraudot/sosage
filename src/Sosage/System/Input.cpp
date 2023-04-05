@@ -24,7 +24,9 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
+#include <Sosage/Component/Action.h>
 #include <Sosage/Component/Condition.h>
+#include <Sosage/Component/GUI_animation.h>
 #include <Sosage/Component/Path.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Component/Status.h>
@@ -45,6 +47,8 @@ Input::Input (Content& content)
   , m_x(0)
   , m_y(0)
   , m_fake_touchscreen(false)
+  , m_demo_mode(false)
+  , m_randgen(std::random_device()())
 {
   set_fac<C::Simple<Vector>>(STICK__DIRECTION, "Stick", "direction", Vector(0, 0));
 }
@@ -87,7 +91,20 @@ void Input::run()
       m_fake_touchscreen = !m_fake_touchscreen;
     }
 
+    if (ev.type() == KEY_UP && ev.value() == A)
+      m_demo_mode = true;
+    else
+      m_demo_mode = false;
+
     m_current_events.emplace_back(ev);
+  }
+
+  if (m_demo_mode)
+  {
+    m_current_events.clear();
+    run_demo_mode();
+    SOSAGE_TIMER_STOP(System_Input__run);
+    return;
   }
 
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
@@ -374,6 +391,252 @@ typename std::vector<bool>::reference Input::key_on(const Event_value& value)
 {
   return m_keys_on[std::size_t(value)];
 }
+
+void Input::run_demo_mode()
+{
+  if (status()->is(LOCKED, CUTSCENE))
+    return;
+
+  auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
+  if (mode->value() != MOUSE)
+  {
+    mode->set (MOUSE);
+    gamepad->set (NO_LABEL);
+    emit("Input_mode", "changed");
+  }
+
+  // Let actions finish
+  if (auto action = request<C::Action>("Character", "action"))
+    if (action->on())
+        return;
+
+  const std::string& player = value<C::String>("Player", "name");
+
+  // Let path finish
+  if (request<C::Path>(player, "path"))
+    return;
+
+  double current_time = value<C::Double>(CLOCK__TIME);
+
+  // Let current demo input finish
+  if (auto wakeup = request<C::Double>("Demo", "wake_up_time"))
+    if (wakeup->value() > current_time)
+      return;
+
+  // Click after moving
+  if (receive("Demo", "cursor_moved"))
+  {
+    emit ("Cursor", "clicked");
+    set<C::Boolean>("Click", "left", true);
+    set<C::Double>("Demo", "wake_up_time", current_time + 0.1);
+    return;
+  }
+
+  Point target = Point::invalid();
+
+  // Generate random click in 5% of cases
+#if 1
+  if (!status()->is(LOCKED, CUTSCENE) && (random_chance(0.05)))
+      target = Point (random_int(50, Config::world_width - 50),
+                      random_int(50, Config::world_height - 50));
+  else
+#endif
+  {
+    static std::vector<std::string> ids;
+    if (status()->is(IDLE))
+    {
+      for (C::Handle c : components("name"))
+      {
+        auto img = request<C::Image>(c->entity(), "image");
+        if (!img || !img->on())
+          continue;
+        ids.emplace_back (c->entity());
+      }
+
+    }
+    else if (status()->is(IN_INVENTORY))
+    {
+      for (C::Handle c : components("name"))
+      {
+        auto img = request<C::Image>(c->entity(), "image");
+        if (!img || !img->on())
+          continue;
+        if (!img->on())
+          continue;
+
+        std::string id = c->entity();
+
+        auto state = request<C::String>(id , "state");
+        if (!state)
+          continue;
+        if (auto source = request<C::String>("Interface", "source_object"))
+          if (source->value() == id)
+            continue;
+
+        if (!startswith(state->value(), "inventory"))
+          continue;
+
+        ids.emplace_back (id);
+      }
+    }
+    else if (status()->is(ACTION_CHOICE, INVENTORY_ACTION_CHOICE))
+    {
+      for (C::Handle c : components("image"))
+        if (auto img = C::cast<C::Image>(c))
+        {
+          if (!img->on())
+            continue;
+          if (!contains(img->entity(), "_label") && !contains(img->entity(), "_button"))
+            continue;
+          ids.emplace_back (c->entity());
+        }
+    }
+    else if (status()->is(OBJECT_CHOICE))
+    {
+      for (C::Handle c : components("name"))
+      {
+        auto img = request<C::Image>(c->entity(), "image");
+        if (!img || !img->on())
+          continue;
+        if (!img->on())
+          continue;
+
+        std::string id = c->entity();
+
+        auto state = request<C::String>(id , "state");
+        if (!state)
+          continue;
+
+        if (!startswith(state->value(), "inventory"))
+          continue;
+        ids.emplace_back (id);
+      }
+    }
+    else if (status()->is(IN_WINDOW))
+    {
+      ids.emplace_back("background");
+    }
+    else if (status()->is(IN_CODE))
+    {
+      if (get<C::Action>("Logic", "action")->scheduled().empty())
+      {
+        debug << "[TEST MOUSE] Cheat code" << std::endl;
+        emit("code", "cheat"); // We could maybe test keys also
+      }
+      else
+      {
+        debug << "[TEST MOUSE] Waiting end of code" << std::endl;
+      }
+    }
+    else if (status()->is(IN_MENU))
+    {
+      for (C::Handle c : components("image"))
+        if (auto img = C::cast<C::Image>(c))
+        {
+          if (!img->on())
+            continue;
+          if (!contains(img->entity(), "_button") && !contains(img->entity(), "_arrow"))
+            continue;
+
+          // Do not change settings or quit
+          if (startswith(img->entity(), "Settings")
+              || startswith(img->entity(), "Save_and_quit"))
+            continue;
+
+          ids.emplace_back (c->entity());
+        }
+    }
+    else if (status()->is(DIALOG_CHOICE))
+    {
+      for (C::Handle c : components("image"))
+        if (auto img = C::cast<C::Image>(c))
+        {
+          if (!img->on())
+            continue;
+          if (!contains(img->entity(), "Dialog_choice_") && !contains(img->entity(), "background"))
+            continue;
+          ids.emplace_back (c->entity());
+        }
+    }
+
+    if (!ids.empty())
+    {
+      std::shuffle (ids.begin(), ids.end(), m_randgen);
+      for (const std::string& id : ids)
+      {
+        target = cursor_target (id);
+        debug << "Trying target " << id << " -> " << target << std::endl;
+        if (!target.is_invalid())
+        {
+          debug << " -> ok " << std::endl;
+          break;
+        }
+      }
+      ids.clear();
+    }
+    else
+    {
+      debug << "No target available" << std::endl;
+    }
+  }
+
+  if (target.is_invalid())
+    target = Point (random_int(50, Config::world_width - 50),
+                    random_int(50, Config::world_height - 50));
+
+  auto cursor_pos = get<C::Position>(CURSOR__POSITION);
+  set<C::GUI_position_animation>("Cursor", "animation", current_time, current_time + 1,
+                                 cursor_pos, target);
+  set<C::Double>("Demo", "wake_up_time", current_time + 1.1);
+  emit("Demo", "cursor_moved");
+}
+
+// Copy-pasted from Test_input, should be factorized
+Point Input::cursor_target (const std::string& id)
+{
+  const Point& camera = value<C::Absolute_position>(CAMERA__POSITION);
+  double limit = 20;
+  double limit_width = Config::world_width - 50;
+  double limit_height = Config::world_height - 50;
+
+  auto img = get<C::Image>(id, "image");
+  auto position = get<C::Position>(id, "position");
+
+  Point p = position->value();
+  double zoom = 1.;
+  if (!position->is_interface())
+  {
+    p = p - camera;
+    zoom = value<C::Double>(CAMERA__ZOOM);
+  }
+
+  int xmin = img->xmin();
+  int ymin = img->ymin();
+  int xmax = img->xmax();
+  int ymax = img->ymax();
+
+  Point screen_position = p - img->scale() * Vector(img->origin());
+
+  double xmin_target = zoom * screen_position.x();
+  double ymin_target = zoom * screen_position.y();
+  double xmax_target = zoom * (screen_position.x() + img->scale() * (xmax - xmin));
+  double ymax_target = zoom * (screen_position.y() + img->scale() * (ymax - ymin));
+
+  // Skip out of boundaries images
+  if (xmax_target < limit || xmin_target > limit_width
+      || ymax_target < limit || ymin_target > limit_height)
+    return Point::invalid();
+
+  xmin_target = std::max(xmin_target, limit);
+  ymin_target = std::max(ymin_target, limit);
+  xmax_target = std::min(xmax_target, limit_width);
+  ymax_target = std::min(ymax_target, limit_height);
+
+  return Point(0.5 * (xmin_target + xmax_target),
+               0.5 * (ymin_target + ymax_target));
+}
+
 
 
 } // namespace Sosage::System

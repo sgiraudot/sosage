@@ -31,6 +31,8 @@
 #include <Sosage/Core/Input.h>
 #include <Sosage/System/Base.h>
 
+#include <random>
+
 namespace Sosage
 {
 
@@ -51,6 +53,11 @@ class Input : public Base
   double m_y;
   bool m_fake_touchscreen;
 
+  // For demo mode
+  bool m_demo_mode;
+  std::mt19937 m_randgen;
+
+
 public:
 
   Input (Content& content);
@@ -60,6 +67,8 @@ public:
 private:
 
   typename std::vector<bool>::reference key_on(const Event_value& value);
+  void run_demo_mode();
+  Point cursor_target (const std::string& id);
 };
 
 } // namespace System
