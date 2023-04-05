@@ -677,8 +677,19 @@ void Interface::menu_clicked ()
       // Avoid restarting when testing input
       if (!signal ("Game", "prevent_restart"))
       {
-        set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
-        set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
+        if (auto force = request<C::String>("Force_load", "room"))
+        {
+          set<C::Variable>("Game", "new_room", force);
+          if (auto orig = request<C::String>("Force_load", "origin"))
+            set<C::Variable>("Game", "new_room_origin", orig);
+          else
+            set<C::String>("Game", "new_room_origin", force->value() + "_test");
+        }
+        else
+        {
+          set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
+          set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
+        }
         emit ("Game", "reset");
         emit ("Music", "stop");
         status()->pop();
@@ -693,8 +704,19 @@ void Interface::menu_clicked ()
       // Avoid restarting when testing input
       if (!signal ("Game", "prevent_restart"))
       {
-        set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
-        set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
+        if (auto force = request<C::String>("Force_load", "room"))
+        {
+          set<C::Variable>("Game", "new_room", force);
+          if (auto orig = request<C::String>("Force_load", "origin"))
+            set<C::Variable>("Game", "new_room_origin", orig);
+          else
+            set<C::String>("Game", "new_room_origin", force->value() + "_test");
+        }
+        else
+        {
+          set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
+          set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
+        }
         emit ("Game", "reset");
         emit ("Music", "stop");
         delete_menu("Wanna_restart");
