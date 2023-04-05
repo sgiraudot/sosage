@@ -341,7 +341,6 @@ void File_IO::read_room (const std::string& file_name)
 
   callback->value()();
 
-  std::unordered_set<std::string> objects_read;
   for (const auto& d : m_dispatcher)
   {
     const std::string& section = d.first;
@@ -361,24 +360,6 @@ void File_IO::read_room (const std::string& file_name)
         }
         callback->value()();
       }
-  }
-
-  // Read global codes/objects
-  for (const std::string& id : m_global_codes)
-  {
-    Core::File_IO subfile ("data/codes/" + id + ".yaml");
-    bool okay = subfile.parse();
-    check(okay, "Can't open data/codes/" + id + ".yaml");
-    read_code (id, subfile.root());
-    callback->value()();
-  }
-  for (const std::string& id : m_global_objects)
-  {
-    Core::File_IO subfile ("data/objects/" + id + ".yaml");
-    bool okay = subfile.parse();
-    check(okay, "Can't open data/objects/" + id + ".yaml");
-    read_object (id, subfile.root());
-    callback->value()();
   }
 
   // Special handling for inventory/numbers after reloading save (may need to

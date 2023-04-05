@@ -122,6 +122,10 @@ void File_IO::clean_content()
          if (contains(force_keep, c->entity()))
            return false;
 
+         // keep global objects
+         if (signal(c->entity(), "is_global"))
+           return false;
+
          // keep states, positions and signals
          if (c->component() == "state" || c->component() == "position" || c->component() == "signal")
            return false;
@@ -134,6 +138,32 @@ void File_IO::clean_content()
        // Keep system components
        return !c->is_system();
      });
+
+  if (full_reset)
+  {
+    // Remove player/follower
+    remove("Player", "name", true);
+    remove("Follower", "name", true);
+
+    // Reload global objects when restarting the game
+    Core::File_IO input ("data/init.yaml");
+    input.parse();
+    for (const auto& d : m_dispatcher)
+    {
+      const std::string& section = d.first;
+      const Function& func = d.second;
+      if (input.has(section))
+        for (std::size_t i = 0; i < input[section].size(); ++ i)
+        {
+          const Core::File_IO::Node& s = input[section][i];
+          Core::File_IO subfile ("data/" + section + "/" + s.string() + ".yaml");
+          bool okay = subfile.parse();
+          check(okay, "Can't open data/" + section + "/" + s.string() + ".yaml");
+          func (s.string(), subfile.root());
+          emit (s.string(), "is_global");
+        }
+    }
+  }
 
   emit("Game", "clear_managers");
 }
@@ -588,10 +618,21 @@ void File_IO::read_init ()
     }
   }
 
-  for (std::size_t i = 0; i < input["codes"].size(); ++ i)
-    m_global_codes.push_back (input["codes"][i].string());
-  for (std::size_t i = 0; i < input["objects"].size(); ++ i)
-    m_global_objects.push_back (input["objects"][i].string());
+  for (const auto& d : m_dispatcher)
+  {
+    const std::string& section = d.first;
+    const Function& func = d.second;
+    if (input.has(section))
+      for (std::size_t i = 0; i < input[section].size(); ++ i)
+      {
+        const Core::File_IO::Node& s = input[section][i];
+        Core::File_IO subfile ("data/" + section + "/" + s.string() + ".yaml");
+        bool okay = subfile.parse();
+        check(okay, "Can't open data/" + section + "/" + s.string() + ".yaml");
+        func (s.string(), subfile.root());
+        emit (s.string(), "is_global");
+      }
+  }
 
   for (std::size_t i = 0; i < input["text"].size(); ++ i)
   {
