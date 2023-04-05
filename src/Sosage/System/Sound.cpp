@@ -59,7 +59,7 @@ void Sound::run()
   double time = value<C::Double>(CLOCK__TIME);
 
   bool volume_changed = false;
-  if (receive("Music", "adjust_mix") && music)
+  if (music && receive("Music", "adjust_mix"))
   {
     const std::string& player = value<C::String>("Player", "name");
     if (music->adjust_mix(value<C::Position>(player + "_body", "position"), time))
@@ -67,14 +67,14 @@ void Sound::run()
     volume_changed = true;
   }
 
-  if (receive("Music", "stop"))
+  if (music && receive("Music", "stop"))
   {
     for (std::size_t i = 0; i < music->tracks(); ++ i)
       m_core.fade(music->core(i), i, Config::default_sound_fade_time, false);
     music->on() = false;
   }
 
-  if (receive("Music", "start"))
+  if (music && receive("Music", "start"))
   {
     check (music, "No music to start");
     m_core.set_music_channels(music->tracks());

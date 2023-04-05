@@ -680,7 +680,6 @@ void Interface::menu_clicked ()
         set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
         set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
         emit ("Game", "reset");
-        remove("Game", "music", true);
         emit ("Music", "stop");
         status()->pop();
         status()->push(LOCKED);
@@ -697,7 +696,6 @@ void Interface::menu_clicked ()
         set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
         set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
         emit ("Game", "reset");
-        remove("Game", "music");
         emit ("Music", "stop");
         delete_menu("Wanna_restart");
         status()->pop();
