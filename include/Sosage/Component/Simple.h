@@ -29,6 +29,7 @@
 
 #include <Sosage/Component/Base.h>
 
+#include <algorithm>
 #include <array>
 #include <tuple>
 #include <unordered_set>
@@ -114,6 +115,12 @@ public:
     : Base(entity, component, value) { }
 
   void push_back (const T& t) { this->m_value.push_back (t); }
+  void remove (const T& t)
+  {
+    auto position = std::find(this->m_value.begin(), this->m_value.end(), t);
+    if (position != this->m_value.end())
+      this->m_value.erase(position);
+  }
   STR_NAME("Vector<" + type_name((T*)(nullptr)) + ">");
 };
 

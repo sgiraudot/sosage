@@ -106,6 +106,7 @@ private:
   bool function_play (const std::vector<std::string>& args);
   bool function_randomize (const std::vector<std::string>& args);
   bool function_receive (const std::vector<std::string>& args);
+  bool function_remove (const std::vector<std::string>& args);
   bool function_rescale (const std::vector<std::string>& args);
   bool function_rescale60fps (const std::vector<std::string>& args);
   bool function_set (const std::vector<std::string>& args);
