@@ -163,6 +163,9 @@ void Logic::run ()
       const std::string& id = value<C::String>("Player", "name");
       remove(id , "path", true);
       remove(id, "speed_factor", true);
+      if (auto follower = request<C::String>("Follower", "name"))
+        remove(follower->value(), "speed_factor", true);
+
       emit(id, "stop_walking");
     }
   }
@@ -291,6 +294,8 @@ void Logic::run ()
       remove("Player", "move_start_time", true);
       remove(id, "path", true);
       remove(id, "speed_factor", true);
+      if (auto follower = request<C::String>("Follower", "name"))
+        remove(follower->value(), "speed_factor", true);
       emit(id , "stop_walking");
     }
     else
@@ -314,6 +319,8 @@ void Logic::run ()
       {
         if (speed_factor->value() < 2.2)
           speed_factor->set (speed_factor->value() + 0.25);
+        if (auto follower = request<C::String>("Follower", "name"))
+          set<C::Double>(follower->value(), "speed_factor", speed_factor->value() - 0.25);
       }
       else
         set<C::Double>(player, "speed_factor", 1.25);
@@ -390,7 +397,16 @@ void Logic::run ()
   if (!in_new_room)
     if (auto follower = request<C::String>("Follower", "name"))
       if (!request<C::Base>(follower->value(), "nofollow"))
-        follow (follower->value());
+      {
+        // Only recompute following every second
+        auto latest_recomputation = get_or_set<C::Double>("Following", "latest_recompuation",
+                                                          m_current_time);
+        if (m_current_time - latest_recomputation->value() > 1.)
+        {
+          follow (follower->value());
+          latest_recomputation->set(m_current_time);
+        }
+      }
 
   if (auto new_room_origin = request<C::String>("Game", "new_room_origin"))
   {
@@ -506,7 +522,15 @@ bool Logic::compute_path_from_target (C::Position_handle target,
                                       std::string id)
 {
   bool is_player = false;
-  if (id == "")
+  bool is_follow = false;
+  if (id != "")
+  {
+    const std::string& player = value<C::String>("Player", "name");
+    std::string follower = value<C::String>("Follower", "name", "");
+    if (follower != "" && id == follower && target->entity() == player)
+      is_follow = true;
+  }
+  else
   {
     id = value<C::String>("Player", "name");
     is_player = true;
@@ -521,11 +545,8 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   Point origin = position->value();
   Point t = target->value();
 
-  //debug("Target = ", t);
-
-  if (target->component() != "view" && !contains(target->entity(), "_body"))
+  if (!is_follow && target->component() != "view" && !contains(target->entity(), "_body"))
     t = t + value<C::Absolute_position>(CAMERA__POSITION);
-
 
   //debug("Computing path from ", origin, " to ", t);
   std::vector<Point> path;
@@ -545,22 +566,21 @@ bool Logic::compute_path_from_target (C::Position_handle target,
         {
           if (speed_factor->value() < 2.2)
             speed_factor->set (speed_factor->value() + 0.25);
+          if (auto follower = request<C::String>("Follower", "name"))
+            set<C::Double>(follower->value(), "speed_factor", speed_factor->value() - 0.25);
         }
         else
           set<C::Double>(id, "speed_factor", 1.25);
-      }
-      else
-      {
-        // Follower follows slightly less fast
-        if (id == value<C::String>("Follower", "name", ""))
-          if (auto speed_factor = request<C::Double>(value<C::String>("Player", "name"), "speed_factor"))
-            set<C::Double>(id, "speed_factor", speed_factor->value() - 0.25);
       }
       return true;
     }
   }
   else
+  {
     remove(id, "speed_factor", true);
+    if (auto follower = request<C::String>("Follower", "name"))
+      remove(follower->value(), "speed_factor", true);
+  }
 
   auto p = set<C::Path>(id , "path", path);
   if ((*p)[0] == origin)
@@ -617,12 +637,15 @@ void Logic::follow (const std::string& follower)
   if (!is_moving)
     reach_hysteresis = Config::object_reach_hysteresis * z / Config::follow_factor;
 
-  //std::cerr << reach_x << " " << reach_y << " " << reach_hysteresis << std::endl;
-
   // Object out of reach
   if (dx > reach_x + reach_hysteresis ||
       dy > reach_y + reach_hysteresis)
+  {
+    std::cerr << reach_x << " " << reach_y << " " << reach_hysteresis << std::endl;
+    std::cerr << dx << " " << dy << std::endl;
+    debug << follower << " FOLLOWS " << player << std::endl;
     compute_path_from_target (pos_player, follower);
+  }
   else
   {
     remove(follower , "path", true);
