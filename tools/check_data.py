@@ -181,6 +181,8 @@ def is_action_id(tested_id):
 def is_animation_id(tested_id):
     return tested_id in items["animations"]
 def is_character_id(tested_id):
+    if tested_id == "Hinter":
+        return True
     if is_num:
         return True # Too complicated to test
     elif inventory_step:
@@ -188,7 +190,8 @@ def is_character_id(tested_id):
     else:
         return tested_id in items["characters"]
 def is_character_animation_id(tested_id):
-    return tested_id in { "action", "telephone" }
+    # Shouldn't be hardcoded...
+    return tested_id in { "action", "telephone", "melange1", "melange2", "photo", "hareng" }
 def is_dialog_id(tested_id):
     return tested_id in items["dialogs"]
 def is_integer_id(tested_id):
@@ -204,11 +207,11 @@ def is_lookable_id(tested_id):
     if inventory_step:
         return tested_id in items["objects"] or tested_id in all_characters
     else:
-        return tested_id in items["objects"] or tested_id in items["characters"]
+        return tested_id in set().union(items["objects"], items["characters"], items["animations"])
 def is_menu_id(tested_id):
     return tested_id in { "End", "Exit" }
 def is_movable_id(tested_id):
-    return tested_id in set().union(items["objects"], items["scenery"], items["animations"])
+    return tested_id in set().union(items["objects"], items["scenery"], items["animations"], items["characters"])
 def is_music_id(tested_id):
     global current_music
     current_music = tested_id
@@ -327,6 +330,7 @@ possible_functions = [ [ "add", is_integer_id, is_convertible_to_int ],
                        [ "set", is_stated_id, is_state_id ],
                        [ "set", is_stated_id, is_state_id, is_state_id ],
                        [ "set", is_stated_id, is_state_id, is_state_id ],
+                       [ "set12fps", is_stated_id, is_state_id ],
                        [ "shake", is_convertible_to_float, is_convertible_to_float ],
                        [ "show", is_showable_id ],
                        [ "show", is_music_id, is_source_id ],
@@ -470,8 +474,6 @@ for filename in yaml_files:
                     all_ids, ref_ids = test_id_unicity(all_ids, ref_ids, item["id"])
 
 todo = []
-global_codes = set()
-global_objects = set()
 functions = {}
 
 
@@ -525,12 +527,6 @@ if test(data, "functions", is_array):
     for f in data["functions"]:
         if test(f, "id") and test(f, "effect", is_array):
             functions[f["id"]] = f["effect"]
-if test(data, "codes", is_array):
-    for c in data["codes"]:
-        global_codes.add(c)
-if test(data, "objects", is_array):
-    for o in data["objects"]:
-        global_objects.add(o)
 if test(data, "text", is_array):
     for t in data["text"]:
         test(t, "id")
@@ -545,8 +541,21 @@ for act in ["look", "move", "take", "inventory_button", "inventory", "use",
         for e in data["default"][act]["effect"]:
             test(e, "talk/0", is_line)
 
+print("# GETTING GLOBAL ITEMS")
+global_items = {}
+global_states = {}
+for s in sections:
+    global_items[s] = set()
+    if has_key(data, s):
+        if test(data, s, is_array):
+            for item in data[s]:
+                global_items[s].add(item)
+
+
+
 print("# GETTING INVENTORY OBJECTS")
 
+inventory_objects = set()
 for filename in yaml_files:
     refname = filename
     current_id = filename.split('/', 1)[-1].split('.',1)[0]
@@ -556,7 +565,8 @@ for filename in yaml_files:
     if test(data, "states", is_array):
         for s in data["states"]:
             if test(s, "id") and s["id"].startswith("inventory"):
-                global_objects.add(current_id)
+                inventory_objects.add(current_id)
+                global_items["objects"].add(current_id)
                 break
 
 print("# TESTING ALL ROOMS")
@@ -596,8 +606,9 @@ def test_characters(data):
     test(data, "name", is_line)
     test(data, "coordinates/0", is_int)
     test(data, "coordinates/1", is_int)
-    test(data, "label/0", is_int)
-    test(data, "label/1", is_int)
+    if has_key(data, "label"):
+        test(data, "label/0", is_int)
+        test(data, "label/1", is_int)
     test(data, "looking_right", is_bool)
     test(data, "color", is_color)
     if "skin" in data:
@@ -694,7 +705,7 @@ def test_object_action(data, has_inventory):
             test_object_action(act, has_inventory)
         return
     if "object" in data:
-        if data["object"] not in global_objects:
+        if data["object"] not in inventory_objects:
             error("action using non-inventory object " + data["object"])
     if "state" in data:
         if data["state"] not in states[item_id]:
@@ -827,16 +838,15 @@ def add_character_states(states, item_id, data):
         states[item_id] = {"default"}
     return states
 
-global_states = {}
 
-for c in global_codes:
-    accessed_files.add(data_folder + "codes/" + c + ".yaml")
-    global_states = add_states(global_states, c, load_yaml(data_folder + "codes/" + c + ".yaml"))
-for o in global_objects:
-    accessed_files.add(data_folder + "objects/" + o + ".yaml")
-    global_states = add_states(global_states, o, load_yaml(data_folder + "objects/" + o + ".yaml"))
+global_states = {}
+for section, items in global_items.items():
+    for item in items:
+        accessed_files.add(data_folder + section + "/" + item + ".yaml")
+        global_states = add_states(global_states, item, load_yaml(data_folder + section + "/" + item + ".yaml"))
 
 all_states = global_states.copy()
+
 all_characters = set()
 
 while todo:
@@ -870,6 +880,8 @@ while todo:
     if refname in done:
         continue
 
+    print("## TESTING ROOM " + refname)
+
     done.add(refname)
 
     test(data, "name", is_line)
@@ -877,18 +889,18 @@ while todo:
         test(data, "background", file_exists, ["images/backgrounds", "png"])
     if "ground_map" in data:
         if isinstance(data["ground_map"], list):
-            test(data, "ground_map/0", file_exists, ["images/backgrounds", "png"])
-            test(data, "ground_map/1", file_exists, ["images/backgrounds", "png"])
+            ground_map = data["ground_map"]
+            if ground_map[0]:
+                test(ground_map, "0", file_exists, ["images/backgrounds", "png"])
+            test(ground_map, "1", file_exists, ["images/backgrounds", "png"])
         else:
             test(data, "ground_map", file_exists, ["images/backgrounds", "png"])
         test(data, "front_z", is_int)
         test(data, "back_z", is_int)
 
     items = {}
-    for s in sections:
-        items[s] = set()
-    items["codes"] = global_codes.copy()
-    items["objects"] = global_objects.copy()
+    for section, it in global_items.items():
+        items[section] = it.copy()
     states = global_states.copy()
 
     for s in sections:
@@ -915,14 +927,10 @@ while todo:
                     continue
                 tests[s](ldata)
 
-for c in global_codes:
-    item_id = c
-    refname = data_folder + "codes/" + c + ".yaml"
-    tests["codes"](load_yaml(refname))
-for o in global_objects:
-    item_id = o
-    refname = data_folder + "objects/" + o + ".yaml"
-    tests["objects"](load_yaml(refname))
+for section, it in global_items.items():
+    for item_id in it:
+        refname = data_folder + section + "/" + item_id + ".yaml"
+        tests[section](load_yaml(refname))
 
 not_received = set(sent.keys()).difference(set(received.keys()))
 for signal in not_received:
