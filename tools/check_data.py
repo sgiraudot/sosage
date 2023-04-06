@@ -232,11 +232,21 @@ def is_scalable_id(tested_id):
     return tested_id in set().union(items["objects"], items["scenery"], items["animations"])
 received = {}
 sent = {}
+read = {}
 def is_received_signal_id(tested_id):
-    received[tested_id] = refname
+    if tested_id not in received:
+        received[tested_id] = set()
+    received[tested_id].add(refname)
+    return True
+def is_read_signal_id(tested_id):
+    if tested_id not in read:
+        read[tested_id] = set()
+    read[tested_id].add(refname)
     return True
 def is_sent_signal_id(tested_id):
-    sent[tested_id] = refname
+    if tested_id not in sent:
+        sent[tested_id] = set()
+    sent[tested_id].add(refname)
     return True
 def is_showable_id(tested_id):
     if inventory_step:
@@ -668,9 +678,9 @@ def test_dialogs(data):
                 for c in l["choices"]:
                     test(c, "line", is_line)
                     if "if" in c:
-                        is_received_signal_id(c["if"])
+                        is_read_signal_id(c["if"])
                     if "unless" in c and c["unless"] != "said":
-                        is_received_signal_id(c["unless"])
+                        is_read_signal_id(c["unless"])
                     if test(c, "goto"):
                         if c["goto"] not in ids:
                             error("goto refers to invalid id " + str(c["goto"]))
@@ -930,17 +940,43 @@ while todo:
 
 for section, it in global_items.items():
     for item_id in it:
-        refname = data_folder + section + "/" + item_id + ".yaml"
-        tests[section](load_yaml(refname))
+        refname = section + "/" + item_id + ".yaml"
+        tests[section](load_yaml(data_folder + refname))
 
-not_received = set(sent.keys()).difference(set(received.keys()))
+received_or_read = set().union(set(received.keys()), set(sent.keys()))
+not_received = set(sent.keys()).difference(received_or_read)
 for signal in not_received:
-    refname = sent[signal]
+    refname = next(iter(sent[signal]))
     warning("signal " + signal + " sent but never received")
-not_sent = set(received.keys()).difference(set(sent.keys()))
+not_sent = received_or_read.difference(set(sent.keys()))
 for signal in not_sent:
-    refname = received[signal]
+    if signal in received:
+        refname = next(iter(received[signal]))
+    else:
+        refname = next(iter(read[signal]))
     warning("signal " + signal + " received but never sent")
+
+all_signals = sorted(list(set().union(received_or_read, set(sent.keys()))))
+display_signals = True
+osignals = open('signals_sumup.log', 'w')
+for signal in all_signals:
+    if signal in not_received:
+        osignals.write("*NOT RECEIVED SIGNAL " + signal + '\n')
+    elif signal in not_sent:
+        osignals.write("*NOT SENT SIGNAL " + signal + '\n')
+    else:
+        osignals.write("SIGNAL " + signal + '\n')
+    if signal in sent:
+        for ref in sent[signal]:
+            osignals.write("  >> Sent from   " + ref + '\n')
+    if signal in read:
+        for ref in read[signal]:
+            osignals.write("  == Read in     " + ref + '\n')
+    if signal in received:
+        for ref in received[signal]:
+            osignals.write("  << Received in " + ref + '\n')
+    osignals.write('\n')
+osignals.close()
 
 to_clean = []
 for root, directories, filenames in os.walk(root_folder):
