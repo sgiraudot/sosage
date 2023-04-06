@@ -596,6 +596,22 @@ bool Logic::function_receive (const std::vector<std::string>& args)
 }
 
 /*
+  - remove: [ID list_id, ID action_id] -> removes action_id fromlist_id
+ */
+bool Logic::function_remove (const std::vector<std::string>& args)
+{
+  check (args.size() == 2, "function_remove takes 2 3 arguments");
+  std::string id = args[0];
+
+  auto list = request<C::Vector<std::string>>(id , "list");
+  if (!list)
+    list = set<C::Vector<std::string>>(id , "list");
+
+  list->remove (args[1]);
+  return true;
+}
+
+/*
   - rescale: [ID target_id, FLOAT scale]                 -> rescales immediately target to the wanted scale
   - rescale: [ID target_id, FLOAT scale, FLOAT duration] -> rescales smoothly target to the wanted scale with the wanted duration
  */
