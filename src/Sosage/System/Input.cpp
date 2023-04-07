@@ -79,6 +79,7 @@ void Input::run()
              ev.type() == BUTTON_UP || ev.type() == STICK_MOVE)
       gamepad_used = true;
 
+#ifndef SOSAGE_RELEASE
     if (ev.type() == KEY_DOWN && ev.value() == T)
     {
       if (m_fake_touchscreen)
@@ -95,6 +96,7 @@ void Input::run()
       m_demo_mode = true;
     else
       m_demo_mode = false;
+#endif
 
     m_current_events.emplace_back(ev);
   }
@@ -181,8 +183,10 @@ void Input::run()
     if (ev == Event(KEY_UP, D))
       get<C::Boolean>("Game", "debug")->toggle();
 
+#ifndef SOSAGE_RELEASE
     if (ev == Event(KEY_UP, T))
       emit("Game", "test");
+#endif
 
 #ifdef SOSAGE_PROFILE
     if (ev == Event(KEY_UP, P))

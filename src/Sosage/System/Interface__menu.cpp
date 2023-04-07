@@ -664,8 +664,12 @@ void Interface::menu_clicked ()
 
   if (effect->value() == "Save_and_quit")
   {
-    emit ("Game", "save");
-    emit ("Game", "exit");
+    // Avoid exiting when testing input
+    if (!signal ("Game", "prevent_exit"))
+    {
+      emit ("Game", "save");
+      emit ("Game", "exit");
+    }
   }
   else if (effect->value() == "New_game")
   {

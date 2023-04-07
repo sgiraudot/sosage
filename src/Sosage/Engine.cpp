@@ -203,17 +203,15 @@ void Engine::handle_cmdline_args (int argc, char** argv)
         break;
       m_content.set<Component::String>("Cmdline", "locale", argv[i]);
     }
-#ifdef SOSAGE_DEBUG
+#ifndef SOSAGE_RELEASE
+    else if (arg == "--no-exit" || arg == "-e")
+      m_content.emit("Game", "prevent_exit");
+    else if (arg == "--no-restart" || arg == "-n")
+      m_content.emit("Game", "prevent_restart");
     else if (arg == "--mouse" || arg == "-m")
-    {
        m_input_mode = TEST_MOUSE;
-       m_content.emit("Game", "prevent_restart");
-    }
     else if (arg == "--test" || arg == "-t")
-    {
        m_input_mode = TEST_RANDOM;
-       m_content.emit("Game", "prevent_restart");
-    }
     else if (arg == "--save" || arg == "-s")
     {
       ++ i;
@@ -221,7 +219,6 @@ void Engine::handle_cmdline_args (int argc, char** argv)
         break;
       m_content.set<Component::String>("Save", "suffix", argv[i]);
     }
-#endif
     else if (arg == "--room" || arg == "-r")
     {
       ++ i;
@@ -236,6 +233,7 @@ void Engine::handle_cmdline_args (int argc, char** argv)
       else
         m_content.set<Component::String>("Force_load", "origin", argv[i]);
     }
+#endif
   }
 }
 
