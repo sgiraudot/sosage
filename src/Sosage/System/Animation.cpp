@@ -242,7 +242,11 @@ void Animation::run_animation_frame()
     const std::string& id = c->entity();
     debug << "stop_animation" << std::endl;
     if (request<C::Animation>(id + "_head", "image"))
+    {
       generate_random_idle_body_animation (id, is_looking_right(id));
+      // For savegames
+      remove (id, "animation", true);
+    }
     else
     {
       auto anim = get<C::Animation>(id , "image");
@@ -330,6 +334,9 @@ void Animation::run_animation_frame()
       debug << "start_animation" << std::endl;
       generate_animation (id, anim->value());
       to_remove.push_back (c);
+
+      // For savegames
+      set<C::String>(id, "animation", anim->value());
     }
   }
 

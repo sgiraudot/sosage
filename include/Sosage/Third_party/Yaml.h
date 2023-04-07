@@ -28,6 +28,7 @@
 #define SOSAGE_THIRD_YAML_H
 
 #include <Sosage/Utils/Asset_manager.h>
+#include <Sosage/Utils/conversions.h>
 
 #include <map>
 #include <memory>
@@ -125,6 +126,9 @@ public:
                         const std::string& key2, const std::string& value2);
   void write_list_item (const std::string& key1, const std::string& value1,
                         const std::string& key2, const bool& value2);
+  void write_list_item (const std::string& key1, const std::string& value1,
+                        const std::string& key2, const bool& value2,
+                        const std::string& key3, const std::string& value3);
 
   template <typename T>
   void write_list_item (const std::string& key1, const std::string& value1,
@@ -136,24 +140,7 @@ public:
     std::size_t idx = 0;
     for (const T& t : value2)
     {
-      m_file.write (std::to_string(t));
-      if (++ idx != value2.size())
-        m_file.write (", ");
-    }
-    m_file.write ("] }\n");
-  }
-
-  template <typename T>
-  void write_list_item (const std::string& key1, const std::string& value1,
-                        const std::string& key2, const std::vector<T>& value2)
-  {
-    indent();
-    m_file.write ("- { " + key1 + ": \"" + value1 + "\", "
-                   + key2 + ": [");
-    std::size_t idx = 0;
-    for (const T& t : value2)
-    {
-      m_file.write (std::to_string(t));
+      m_file.write (to_string(t));
       if (++ idx != value2.size())
         m_file.write (", ");
     }

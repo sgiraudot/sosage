@@ -312,10 +312,13 @@ bool File_IO::read_savefile()
   }
 
   std::unordered_map<std::string, std::string> looking_right;
+  std::unordered_map<std::string, std::string> char_anims;
   for (std::size_t i = 0; i < input["characters"].size(); ++ i)
   {
     const Core::File_IO::Node& ichar = input["characters"][i];
     looking_right.insert (std::make_pair(ichar["id"].string(), ichar["value"].string()));
+    if (ichar.has("animation"))
+      char_anims.insert (std::make_pair (ichar["id"].string(), ichar["animation"].string()));
   }
 
   for (std::size_t i = 0; i < input["states"].size(); ++ i)
@@ -341,21 +344,20 @@ bool File_IO::read_savefile()
     auto pos = set<C::Absolute_position>(id, "position", point, false);
     pos->mark_as_altered();
 
-    if (values.size() > 2)
-      set<C::Int>(id, "z", values[2].integer());
-    if (values.size() > 3)
-      set<C::Int>(id, "z_rescaled", values[3].integer());
-
     auto iter = looking_right.find (id);
     if (iter != looking_right.end())
     {
       if (values.size() > 2)
         action->add ("move", { id, values[0].string(),
-                               values[1].string(), values[2].string(), iter->second });
+                               values[1].string(), values[2].string(),
+                               iter->second });
       else
         action->add ("move", { id, values[0].string(),
                                values[1].string(), iter->second });
     }
+    auto anim = char_anims.find (id);
+    if (anim != char_anims.end())
+      action->add ("play", { id, anim->second, "-1" });
   }
 
   for (std::size_t i = 0; i < input["integers"].size(); ++ i)
@@ -423,7 +425,12 @@ void File_IO::write_savefile()
   for (C::Handle c : components("group"))
     if (!c->is_system())
       if (auto lr = request<C::Animation>(c->entity() + "_head", "image"))
-        output.write_list_item ("id", c->entity(), "value", is_looking_right(c->entity()));
+      {
+        if (auto anim = request<C::String>(c->entity(), "animation"))
+          output.write_list_item ("id", c->entity(), "value", is_looking_right(c->entity()), "animation", anim->value());
+        else
+          output.write_list_item ("id", c->entity(), "value", is_looking_right(c->entity()));
+      }
   output.end_section();
 
   output.start_section("states");
@@ -445,15 +452,19 @@ void File_IO::write_savefile()
     if (!c->is_system() && c->was_altered())
       if (auto pos = C::cast<C::Position>(c))
       {
-        std::vector<int> values = { pos->value().X(), pos->value().Y() };
         if (auto z = request<C::Int>(pos->entity(), "z"))
         {
-          values.push_back (z->value());
-          if (auto zr = request<C::Int>(pos->entity(), "z_rescaled"))
-            values.push_back (zr->value());
+          std::string zstr = std::to_string(z->value());
+          if (request<C::Base>(pos->entity(), "z_rescaled"))
+            zstr = "+" + zstr;
+          output.write_list_item ("id", c->entity(), "value",
+                                  { std::to_string(pos->value().X()),
+                                    std::to_string(pos->value().Y()),
+                                    zstr });
         }
-
-        output.write_list_item ("id", c->entity(), "value", values);
+        else
+          output.write_list_item ("id", c->entity(), "value",
+                                  { pos->value().X(), pos->value().Y() });
       }
 
   output.end_section();

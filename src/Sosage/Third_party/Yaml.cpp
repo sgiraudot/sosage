@@ -403,4 +403,14 @@ void Yaml::write_list_item (const std::string& key1, const std::string& value1,
                  + key2 + ": \"" + (value2 ? "true" : "false") + "\" }\n");
 }
 
+void Yaml::write_list_item (const std::string& key1, const std::string& value1,
+                            const std::string& key2, const bool& value2,
+                            const std::string& key3, const std::string& value3)
+{
+  indent();
+  m_file.write ("- { " + key1 + ": \"" + value1 + "\", "
+                + key2 + ": \"" + (value2 ? "true" : "false") + "\", "
+                + key3 + ": \"" + value3 + "\" }\n");
+}
+
 } // namespace Sosage::Third_party
