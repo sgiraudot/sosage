@@ -561,6 +561,14 @@ void File_IO::read_code (const std::string& id, const Core::File_IO::Node& input
     std::string function = input["on_success"][j].nstring();
     action->add (function, input["on_success"][j][function].string_array());
   }
+
+  // If code is global, so are the sounds/buttons
+  if (signal (id, "is_global"))
+  {
+    emit(id + "_failure", "is_global");
+    emit(id + "_success", "is_global");
+    emit(id + "_button", "is_global");
+  }
 }
 
 void File_IO::read_dialog (const std::string& id, const Core::File_IO::Node& input)
@@ -958,6 +966,13 @@ File_IO::read_object_action (const std::string& id, const std::string& action,
     act->add (state, out.second);
     out.first = label;
     out.second = act;
+  }
+
+  // If object is global, actions are too
+  if (signal(id, "is_global"))
+  {
+    emit (id + "_" + full_action, "is_global");
+    emit (id + "_" + action, "is_global");
   }
 
   return out;

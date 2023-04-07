@@ -135,6 +135,11 @@ void File_IO::clean_content()
            return false;
        }
 
+       if (!c->is_system())
+       {
+         debug << "Cleaning/deleting " << c->str() << std::endl;
+       }
+
        // Keep system components
        return !c->is_system();
      });
@@ -312,7 +317,8 @@ bool File_IO::read_savefile()
   for (std::size_t i = 0; i < input["states"].size(); ++ i)
   {
     const Core::File_IO::Node& istate = input["states"][i];
-    auto state = set<C::String>(istate["id"].string() , "state", istate["value"].string());
+    auto state = get_or_set<C::String>(istate["id"].string() , "state");
+    state->set (istate["value"].string());
     state->mark_as_altered();
   }
 
@@ -629,8 +635,8 @@ void File_IO::read_init ()
         Core::File_IO subfile ("data/" + section + "/" + s.string() + ".yaml");
         bool okay = subfile.parse();
         check(okay, "Can't open data/" + section + "/" + s.string() + ".yaml");
-        func (s.string(), subfile.root());
         emit (s.string(), "is_global");
+        func (s.string(), subfile.root());
       }
   }
 
