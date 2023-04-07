@@ -142,6 +142,8 @@ def test_id_unicity(ids, ref, new_id):
             error(new_id + " already used in " + ref[new_id])
     else:
         ids.add(new_id)
+        if not refname.startswith("dialogs/") and new_id[0].isupper():
+            error(new_id + " has uppercase first letter, reserved for system IDs")
         if ref is not None:
             ref[new_id] = filename
     return ids, ref
