@@ -387,7 +387,11 @@ bool Logic::function_move (const std::vector<std::string>& args)
   {
     bool looking_right;
     if (args.size() == 4)
+    {
       looking_right = to_bool(args[3]);
+      remove (target, "z", true);
+      remove (target, "z_rescaled", true);
+    }
     else
     {
       int z = to_int(args[3]);
@@ -396,7 +400,6 @@ bool Logic::function_move (const std::vector<std::string>& args)
       looking_right = to_bool(args[4]);
       set<C::Int>(target , "z", z);
     }
-
 
     get<C::Absolute_position>(target, "position")->set(Point(x, y));
 

@@ -332,20 +332,25 @@ bool File_IO::read_savefile()
   {
     const Core::File_IO::Node& iposition = input["positions"][i];
     std::string id = iposition["id"].string();
-    Point point (iposition["value"][0].floating(), iposition["value"][1].floating());
+    const auto& values = iposition["value"];
+    Point point (values[0].floating(), values[1].floating());
     auto pos = set<C::Absolute_position>(id, "position", point, false);
     pos->mark_as_altered();
 
-    if (endswith(id, "_body"))
+    if (values.size() > 2)
+      set<C::Int>(id, "z", values[2].integer());
+    if (values.size() > 3)
+      set<C::Int>(id, "z_rescaled", values[3].integer());
+
+    auto iter = looking_right.find (id);
+    if (iter != looking_right.end())
     {
-      id.resize (id.size() - 5);
-      auto iter = looking_right.find (id);
-      if (iter != looking_right.end())
-      {
-        debug << "FOUND " << id << std::endl;
-        action->add ("move", { id, iposition["value"][0].string(),
-                               iposition["value"][1].string(), iter->second });
-      }
+      if (values.size() > 2)
+        action->add ("move", { id, values[0].string(),
+                               values[1].string(), values[2].string(), iter->second });
+      else
+        action->add ("move", { id, values[0].string(),
+                               values[1].string(), iter->second });
     }
   }
 
@@ -435,8 +440,17 @@ void File_IO::write_savefile()
   for (C::Handle c : components("position"))
     if (!c->is_system() && c->was_altered())
       if (auto pos = C::cast<C::Position>(c))
-        output.write_list_item ("id", c->entity(), "value",
-                                { pos->value().X(), pos->value().Y() });
+      {
+        std::vector<int> values = { pos->value().X(), pos->value().Y() };
+        if (auto z = request<C::Int>(pos->entity(), "z"))
+        {
+          values.push_back (z->value());
+          if (auto zr = request<C::Int>(pos->entity(), "z_rescaled"))
+            values.push_back (zr->value());
+        }
+
+        output.write_list_item ("id", c->entity(), "value", values);
+      }
 
   output.end_section();
 
