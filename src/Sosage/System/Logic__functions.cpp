@@ -781,6 +781,7 @@ bool Logic::function_show (const std::vector<std::string>& args)
 /*
   - stop: ["music"]         -> stops the music
   - stop: [ID character_id] -> stops the character's current animation
+  - stop: [ID animation_id] -> stops the looped animation
  */
 bool Logic::function_stop (const std::vector<std::string>& args)
 {

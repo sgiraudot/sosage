@@ -244,7 +244,12 @@ void Animation::run_animation_frame()
     if (request<C::Animation>(id + "_head", "image"))
       generate_random_idle_body_animation (id, is_looking_right(id));
     else
-      get<C::Animation>(id , "image")->on() = false;
+    {
+      auto anim = get<C::Animation>(id , "image");
+      anim->on() = false;
+      // Remove fake state that keeps animation running from room to room
+      remove (id, "state", true);
+    }
     to_remove.push_back (c);
   }
 
