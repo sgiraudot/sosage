@@ -391,15 +391,17 @@ void File_IO::write_savefile()
   if (auto music = request<C::Music>("Game", "music"))
   {
     std::string music_id = music->entity();
-    output.write("music", music_id);
-    output.start_section("music_disabled_sources");
+    if (auto music = request<C::Music>(music_id, "music"))
     {
-      auto music = get<C::Music>(music_id, "music");
-      for (const auto& s : music->sources())
-        if (s.second.status == C::Music::OFF)
-          output.write_list_item(s.first);
+      output.write("music", music_id);
+      output.start_section("music_disabled_sources");
+      {
+        for (const auto& s : music->sources())
+          if (s.second.status == C::Music::OFF)
+            output.write_list_item(s.first);
+      }
+      output.end_section();
     }
-    output.end_section();
   }
 
   if (auto dialog = request<C::String>("Game", "current_dialog"))
