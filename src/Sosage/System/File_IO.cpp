@@ -140,6 +140,10 @@ void File_IO::clean_content()
          debug << "Cleaning/deleting " << c->str() << std::endl;
        }
 
+       // Force remove comments
+       if (startswith(c->entity(), "Comment"))
+         return true;
+
        // Keep system components
        return !c->is_system();
      });
