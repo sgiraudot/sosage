@@ -333,9 +333,9 @@ bool Logic::function_look (const std::vector<std::string>& args)
   }
   else if (!request<C::Position>(target , "position"))
   {
-    set<C::Absolute_position>(id , "lookat",
-                              value<C::Position>(CURSOR__POSITION));
-    debug << get<C::Action>("Character", "action")->target_entity() << std::endl;
+    const Point& cursor = value<C::Position>(CURSOR__POSITION);
+    const Point& camera = value<C::Absolute_position>(CAMERA__POSITION);
+    set<C::Absolute_position>(id , "lookat", cursor + camera);
   }
   else
   {
