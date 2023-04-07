@@ -413,10 +413,9 @@ bool Logic::function_move (const std::vector<std::string>& args)
     if (args.size() == 5) // Smooth move
     {
       double duration = to_double(args[4]);
-      int nb_frames = round (duration * Config::animation_fps);
 
       double begin_time = frame_time(m_current_time);
-      double end_time = begin_time + (nb_frames + 0.5) / double(Config::animation_fps);
+      double end_time = begin_time + duration;
 
       m_current_action->schedule (end_time, C::make_handle<C::Signal>("Dummy", "event"));
 
@@ -427,7 +426,7 @@ bool Logic::function_move (const std::vector<std::string>& args)
       auto anim = set<C::Tuple<Point, Point, int, int, double, double>>
           (target , "move", pos->value(), Point(x,y), current_z, z,
            begin_time, end_time);
-      m_current_action->schedule (end_time,  anim);
+      m_current_action->schedule (end_time + 1. / Config::animation_fps,  anim);
     }
     else
     {
