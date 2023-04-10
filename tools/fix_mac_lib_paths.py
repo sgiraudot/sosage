@@ -13,9 +13,10 @@ def run_cmd(cmd):
                 out = subprocess.run(cmd, shell=True, check=True)
             else:
                 out = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, check=True)
-        except:
+        except Exception as e:
             print("The following command raised an exception:")
             print("  " + cmd)
+            print("  " + str(e))
             exit()
         else:
             if out.returncode != 0:

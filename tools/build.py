@@ -17,7 +17,7 @@ for line in open(data["folder"] + '/config.cmake').readlines():
     if 'SOSAGE_EXE_NAME "' in line:
         gamename = line.split('SOSAGE_EXE_NAME "')[1].split('"')[0]
     if 'SOSAGE_NAME "' in line:
-        fullname = re.escape(line.split('SOSAGE_NAME "')[1].split('"')[0])
+        fullname = line.split('SOSAGE_NAME "')[1].split('"')[0]
 
 if gamename == '':
     print("Couldn't find SOSAGE_EXE_NAME in " + data["folder"] + "/config.cmake")
@@ -210,8 +210,8 @@ if data["mac"]:
                 + " -DCMAKE_INSTALL_PREFIX=./install ..")
         run_cmd("make -j " + str(data["threads"]))
         run_cmd("make install")
-        run_cmd("python3 ../tools/fix_mac_lib_paths.py install/" + fullname + ".app/Contents/libs/*.dylib")
-        run_cmd("python3 ../tools/fix_mac_lib_paths.py install/" + fullname + ".app/Contents/MacOS/" + gamename)
+        run_cmd('python3 ../tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/libs/*.dylib')
+        run_cmd('python3 ../tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/MacOS/' + gamename)
         run_cmd("cp -r install " + steam_dir + "/mac")
         run_cmd("genisoimage -V " + gamename + ".app -D -R -apple -no-pad -o " + gamename + ".dmg install")
         run_cmd("cp " + gamename + ".dmg " + output_dir + "/" + appname + "-macos.dmg")
