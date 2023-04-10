@@ -782,42 +782,56 @@ void File_IO::read_locale()
 
   if (value<C::String>(GAME__CURRENT_LOCAL) == "")
   {
+    std::vector<std::string> user_locales = get_locales();
+
     std::string prefered = "";
-    std::string user_locale = get_locale();
-    if (user_locale.size() > 5)
-      user_locale.resize(5);
 
-    user_locale = value<C::String>("Cmdline", "locale", user_locale);
-
-    for (const std::string& l : available->value())
-      if (user_locale == l)
-      {
-        debug << "Locale exactly detected as " << l << std::endl;
-        prefered = l;
-        break;
-      }
-    if (prefered == "")
+    for (const std::string& user : user_locales)
     {
-      std::string reduced_locale = user_locale;
-      if (reduced_locale.size() > 2)
-        reduced_locale.resize(2);
-      for (const std::string& l : available->value())
+      for (const std::string& available : available->value())
       {
-        std::string reduced = l;
-        reduced.resize(2);
-        if (reduced_locale == reduced)
+        if (user == available)
         {
-          debug << "Locale partly detected as " << l << " (instead of " << user_locale << ")" << std::endl;
-          prefered = l;
+          debug << "Best available locale is " << user << std::endl;
+          prefered = user;
           break;
         }
       }
+      if (prefered != "")
+        break;
     }
+
     if (prefered == "")
     {
-      debug << "Locale " << user_locale << " not available, fallback to en_US" << std::endl;
+      for (const std::string& user : user_locales)
+      {
+        for (std::string available : available->value())
+        {
+          available.resize(2);
+          if (user == available)
+          {
+            debug << "Best available locale is " << available << std::endl;
+            prefered = user;
+            break;
+          }
+        }
+        if (prefered != "")
+          break;
+      }
+    }
+
+    if (prefered == "")
+    {
+      debug << "No prefered locale available, fallback to en_US" << std::endl;
       prefered = "en_US";
     }
+
+    if (auto cmd = request<C::String>("Cmdline", "locale"))
+    {
+      debug << "User forces " << cmd->value() << " locale" << std::endl;
+      prefered = cmd->value();
+    }
+
     get<C::String>(GAME__CURRENT_LOCAL)->set(prefered);
   }
 }

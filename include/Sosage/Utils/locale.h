@@ -28,11 +28,12 @@
 #define SOSAGE_UTILS_LOCALE_H
 
 #include <string>
+#include <vector>
 
 namespace Sosage
 {
 
-std::string get_locale();
+std::vector<std::string> get_locales();
 
 } // namespace Sosage
 
