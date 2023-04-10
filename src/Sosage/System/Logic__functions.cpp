@@ -670,6 +670,7 @@ bool Logic::function_rescale60fps (const std::vector<std::string>& args)
 /*
   - set: [ID target_id, ID state_id]                      -> change state of target to state_id
   - set: [ID target_id, ID state_from_id, ID state_to_id] -> change state of target to state_to_id ONLY if current state is state_from_id
+  - set: [ID integer_id, INT value]                       -> sets integer to value
  */
 bool Logic::function_set (const std::vector<std::string>& args)
 {
@@ -677,6 +678,13 @@ bool Logic::function_set (const std::vector<std::string>& args)
   std::string target = args[0];
   auto current_state = get<C::String>(target , "state");
   std::string state = args[1];
+
+  // Special case for integers
+  if (auto integer = request<C::Int>(target, "value"))
+  {
+    integer->set(to_int(state));
+    return true;
+  }
 
   if (args.size() == 3)
   {
