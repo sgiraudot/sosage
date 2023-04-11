@@ -219,13 +219,16 @@ if data["mac"]:
         run_cmd("rm -rf " + mac_buildir)
         run_cmd("mkdir " + mac_buildir)
         chdir(mac_buildir)
-        run_cmd(cmake_cmd + " -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-osxcross.cmake"
+        cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
+        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_osxcross/lib/libSDL2_mixer_ext.a'
+        run_cmd(cfg_cmd + " -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-osxcross.cmake"
                 + " -DSDL2_INCLUDE_DIR=" + data["mac_sdl_folder"]
                 + " -DCMAKE_INSTALL_PREFIX=./install ..")
         run_cmd("make -j " + str(data["threads"]))
         run_cmd("make install")
         run_cmd('python3 ../tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/libs/*.dylib')
         run_cmd('python3 ../tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/MacOS/' + gamename)
+        run_cmd("rm -rf " + steam_dir + "/mac")
         run_cmd("cp -r install " + steam_dir + "/mac")
         run_cmd("genisoimage -V " + gamename + ".app -D -R -apple -no-pad -o " + gamename + ".dmg install")
         run_cmd("cp " + gamename + ".dmg " + output_dir + "/" + appname + "-macos.dmg")
@@ -253,6 +256,7 @@ if data["windows"]:
         run_cmd("mkdir install")
         run_cmd("make -j " + str(data["threads"]))
         run_cmd("make install")
+        run_cmd("rm -rf " + steam_dir + "/windows")
         run_cmd("cp -r install " + steam_dir + "/windows")
         chdir("..")
         run_cmd("rm -rf " + windows_buildir)
@@ -285,7 +289,7 @@ if data["androidapk"] or data["androidaab"]:
             run_cmd("./gradlew bundleRelease --parallel --max-workers=" + str(data["threads"]))
             run_cmd("cp app/build/outputs/bundle/release/*.aab " + output_dir + "/" + appname + "-android.aab")
         chdir("../..")
-#        run_cmd("rm -rf " + android_buildir)
+        run_cmd("rm -rf " + android_buildir)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
     except:
