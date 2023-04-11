@@ -87,6 +87,10 @@ void File_IO::run()
     read_room (new_room->value());
     remove ("Game", "new_room");
   }
+
+  if (receive("Game", "save"))
+    write_savefile();
+
   SOSAGE_TIMER_STOP(System_File_IO__run);
 }
 

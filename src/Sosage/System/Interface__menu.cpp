@@ -666,10 +666,13 @@ void Interface::menu_clicked ()
   {
     // Avoid exiting when testing input
     if (!signal ("Game", "prevent_exit"))
-    {
-      emit ("Game", "save");
       emit ("Game", "exit");
+    else
+    {
+      delete_menu(menu);
+      status()->pop();
     }
+    emit ("Game", "save");
   }
   else if (effect->value() == "New_game")
   {
