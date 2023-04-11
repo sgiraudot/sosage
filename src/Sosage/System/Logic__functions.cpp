@@ -689,15 +689,16 @@ bool Logic::function_set (const std::vector<std::string>& args)
 {
   check (args.size() == 2 || args.size() == 3, "function_set takes 2 or 3 arguments");
   std::string target = args[0];
-  auto current_state = get<C::String>(target , "state");
-  std::string state = args[1];
 
   // Special case for integers
   if (auto integer = request<C::Int>(target, "value"))
   {
-    integer->set(to_int(state));
+    integer->set(to_int(args[1]));
     return true;
   }
+
+  auto current_state = get<C::String>(target , "state");
+  std::string state = args[1];
 
   if (args.size() == 3)
   {
