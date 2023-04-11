@@ -51,6 +51,8 @@ private:
     double big_radius = 0;
     std::vector<double> mix;
     double fade_origin = 0.;
+    double fade_duration = 0.;
+    double fade_strength = 0.;
     Source_status status = ON;
   };
 
@@ -74,8 +76,8 @@ public:
   double mix (std::size_t i) const;
   const bool& on() const;
   bool& on();
-  void disable_source (const std::string& id, double time);
-  void enable_source (const std::string& id, double time);
+  void disable_source (const std::string& id, double time, double duration);
+  void enable_source (const std::string& id, double time, double duration);
   const std::unordered_map<std::string, Source>& sources() const;
 
   STR_NAME("Music");

@@ -180,20 +180,44 @@ bool Logic::function_exit (const std::vector<std::string>&)
 }
 
 /*
-  - fadein: [FLOAT duration] -> camera fades in with the wanted duration
+  - fadein: [FLOAT duration]                            -> camera fades in with the wanted duration
+  - fadein: [ID music_id, ID source_id, FLOAT duration] -> fades in music source
  */
 bool Logic::function_fadein (const std::vector<std::string>& args)
 {
-  check (args.size() == 1, "function_fadein takes 1 argument");
+  check (args.size() == 1 || args.size() == 3, "function_fadein takes 1 or 3 arguments");
+  if (args.size() == 3)
+  {
+    std::string target = args[0];
+    std::string id = args[1];
+    double time = value<C::Double>(CLOCK__TIME);
+    double duration = to_double(args[2]);
+    get<C::Music>(target, "music")->enable_source(id, time, duration);
+    emit("Music", "adjust_mix");
+    return true;
+  }
+  // else
   return subfunction_fade (true, to_double(args[0]));
 }
 
 /*
-  - fadeout: [FLOAT duration] -> camera fades out with the wanted duration
+  - fadeout: [FLOAT duration]                            -> camera fades out with the wanted duration
+  - fadeout: [ID music_id, ID source_id, FLOAT duration] -> fades out music source
  */
 bool Logic::function_fadeout (const std::vector<std::string>& args)
 {
-  check (args.size() == 1, "function_fadein takes 1 argument");
+  check (args.size() == 1 || args.size() == 3, "function_fadeout takes 1 or 3 arguments");
+  if (args.size() == 3)
+  {
+    std::string target = args[0];
+    std::string id = args[1];
+    double time = value<C::Double>(CLOCK__TIME);
+    double duration = to_double(args[2]);
+    get<C::Music>(target, "music")->disable_source(id, time, duration);
+    emit("Music", "adjust_mix");
+    return true;
+  }
+  // else
   return subfunction_fade (false, to_double(args[0]));
 }
 
@@ -250,26 +274,15 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
 
 /*
   - hide: [ID target_id]              -> makes target_id invisible
-  - hide: [ID music_id, ID source_id] -> disable music source
  */
 bool Logic::function_hide (const std::vector<std::string>& args)
 {
-  check (args.size() == 1 || args.size() == 2, "function_hide takes 1 or 2 arguments");
+  check (args.size() == 1, "function_hide takes 1 argument");
   std::string target = args[0];
-  if (args.size() == 1)
-  {
-    if (request<C::Group>(target , "group"))
-      emit (target , "set_hidden");
-    else
-      get<C::Image>(target , "image")->on() = false;
-  }
+  if (request<C::Group>(target , "group"))
+    emit (target , "set_hidden");
   else
-  {
-    std::string id = args[1];
-    double time = value<C::Double>(CLOCK__TIME);
-    get<C::Music>(target, "music")->disable_source(id, time);
-    emit("Music", "adjust_mix");
-  }
+    get<C::Image>(target , "image")->on() = false;
   return true;
 }
 
@@ -746,44 +759,33 @@ bool Logic::function_shake (const std::vector<std::string>& args)
 
 /*
   - show: [ID target_id]              -> makes target visible
-  - show: [ID music_id, ID source_id] -> enable music source
 */
 bool Logic::function_show (const std::vector<std::string>& args)
 {
-  check (args.size() == 1 || args.size() == 2, "function_show takes 1 or 2 arguments");
+  check (args.size() == 1, "function_show takes 1 argument");
   std::string target = args[0];
-  if (args.size() == 1)
-  {
-    if (auto group = request<C::Group>(target , "group")) // Character
-      emit (target , "set_visible");
-    else
-    {
-      auto image = get<C::Image>(target , "image");
-      if (image->z() == Config::interface_depth) // window
-      {
-        set<C::Variable>("Game", "window", image);
-        emit ("Interface", "show_window");
-
-        auto code = request<C::Code>(target , "code");
-        if (code)
-        {
-          status()->push (IN_CODE);
-          set<C::Variable>("Game", "code", code);
-        }
-        else
-          status()->push (IN_WINDOW);
-      }
-      else
-        image->on() = true;
-
-    }
-  }
+  if (auto group = request<C::Group>(target , "group")) // Character
+    emit (target , "set_visible");
   else
   {
-    std::string id = args[1];
-    double time = value<C::Double>(CLOCK__TIME);
-    get<C::Music>(target, "music")->enable_source(id, time);
-    emit("Music", "adjust_mix");
+    auto image = get<C::Image>(target , "image");
+    if (image->z() == Config::interface_depth) // window
+    {
+      set<C::Variable>("Game", "window", image);
+      emit ("Interface", "show_window");
+
+      auto code = request<C::Code>(target , "code");
+      if (code)
+      {
+        status()->push (IN_CODE);
+        set<C::Variable>("Game", "code", code);
+      }
+      else
+        status()->push (IN_WINDOW);
+    }
+    else
+      image->on() = true;
+
   }
   return true;
 }

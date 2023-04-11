@@ -73,63 +73,111 @@ bool Music::adjust_mix (const Point& position, const double& time)
 
   bool still_fading = false;
 
-  double gain = 0.;
+  static std::vector<Source*> general_sources;
+  Source* circle_source = nullptr;
+
   for (auto& s : m_sources)
   {
     Source& source = s.second;
-    double fade_factor = 1.;
     if (source.status == OFF)
       continue;
-    else if (source.status == FADING_OUT)
+
+    if (source.big_radius != 0)
     {
-      if (time - source.fade_origin > Config::default_sound_fade_time)
+      double dist = distance (source.position, position);
+      if (source.status == FADING_OUT || dist < source.big_radius)
+        circle_source = &source;
+      continue;
+    }
+
+    if (source.status == FADING_OUT)
+    {
+      if (time - source.fade_origin > source.fade_duration)
       {
         source.status = OFF;
         continue;
       }
-      still_fading = true;
-      fade_factor = 1. - ((time - source.fade_origin) / Config::default_sound_fade_time);
     }
-    else if (source.status == FADING_IN)
+
+    general_sources.push_back (&source);
+  }
+
+  double circle_strength = 0;
+  if (circle_source)
+  {
+    circle_strength = 1.;
+
+    if (circle_source->status == FADING_OUT)
     {
-      if (time - source.fade_origin > Config::default_sound_fade_time)
-        source.status = ON;
+      if (time - circle_source->fade_origin > circle_source->fade_duration)
+        circle_source->status = OFF;
       else
       {
         still_fading = true;
-        fade_factor = (time - source.fade_origin) / Config::default_sound_fade_time;
+        circle_strength = (time - circle_source->fade_origin) / circle_source->fade_duration;
+      }
+      still_fading = true;
+      circle_strength = 1. - ((time - circle_source->fade_origin) / circle_source->fade_duration);
+    }
+    else if (circle_source->status == FADING_IN)
+    {
+      if (time - circle_source->fade_origin > circle_source->fade_duration)
+        circle_source->status = ON;
+      else
+      {
+        still_fading = true;
+        circle_strength = (time - circle_source->fade_origin) / circle_source->fade_duration;
       }
     }
 
-    // General source, sound is 100% everywhere
-    if (source.big_radius == 0)
-    {
-      for (std::size_t i = 0; i < m_mix.size(); ++ i)
-        m_mix[i] += source.mix[i] * fade_factor;
-      gain += fade_factor;
-    }
-    else
+    // Always remember latest strength to avoid jumps in sound
+    // when changing room and coordinates may change abruplty
+    if (circle_source->status == ON)
     {
       // Source becomes louder as we get close to the center
-      double dist = distance (source.position, position);
-      if (dist < source.big_radius)
-      {
-        double g = 1.;
-        if (dist > source.small_radius)
-          g = (dist - source.big_radius) / (source.small_radius - source.big_radius);
-        debug << "GAIN = " << g << std::endl;
-        for (std::size_t i = 0; i < m_mix.size(); ++ i)
-          m_mix[i] += g * source.mix[i] * fade_factor;
-        gain += g * fade_factor;
-      }
+      double dist = distance (circle_source->position, position);
+      if (dist > circle_source->small_radius)
+        circle_strength *= (dist - circle_source->big_radius) /
+                           (circle_source->small_radius - circle_source->big_radius);
+      circle_source->fade_strength = circle_strength;
     }
+    else
+      circle_strength *= circle_source->fade_strength;
+
+    for (std::size_t i = 0; i < m_mix.size(); ++ i)
+      m_mix[i] += circle_strength * circle_source->mix[i];
   }
 
-  // Normalize
+  if (circle_strength != 1.)
+    for (auto s : general_sources)
+    {
+      Source& source = *s;
+      double fade_factor = 1.;
+      if (source.status == FADING_OUT)
+      {
+        still_fading = true;
+        fade_factor = 1. - ((time - source.fade_origin) / source.fade_duration);
+      }
+      else if (source.status == FADING_IN)
+      {
+        if (time - source.fade_origin > source.fade_duration)
+          source.status = ON;
+        else
+        {
+          still_fading = true;
+          fade_factor = (time - source.fade_origin) / source.fade_duration;
+        }
+      }
+
+      for (std::size_t i = 0; i < m_mix.size(); ++ i)
+        m_mix[i] += source.mix[i] * fade_factor * (1. - circle_strength);
+    }
+
+  general_sources.clear();
+
   debug << "Mix = ";
   for (double& m : m_mix)
   {
-    m /= gain;
     debug << m << " ";
   }
   debug << std::endl;
@@ -162,18 +210,30 @@ bool& Music::on()
   return m_on;
 }
 
-void Music::disable_source (const std::string& id, double time)
+void Music::disable_source (const std::string& id, double time, double duration)
 {
   auto& source = m_sources[id];
-  source.status = FADING_OUT;
-  source.fade_origin = time;
+  if (duration != 0 && m_on && source.status == ON)
+  {
+    source.status = FADING_OUT;
+    source.fade_origin = time;
+    source.fade_duration = duration;
+  }
+  else
+    source.status = OFF;
 }
 
-void Music::enable_source (const std::string& id, double time)
+void Music::enable_source (const std::string& id, double time, double duration)
 {
   auto& source = m_sources[id];
-  source.status = FADING_IN;
-  source.fade_origin = time;
+  if (duration != 0 && m_on && source.status == OFF)
+  {
+    source.status = FADING_IN;
+    source.fade_origin = time;
+    source.fade_duration = duration;
+  }
+  else
+    source.status = ON;
 }
 
 const std::unordered_map<std::string, Music::Source>& Music::sources() const

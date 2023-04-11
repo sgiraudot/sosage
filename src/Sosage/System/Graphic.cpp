@@ -266,12 +266,20 @@ void Graphic::run()
     {
       for (const auto& source : music->sources())
       {
+        if (source.second.status == C::Music::OFF)
+          continue;
        if (source.second.small_radius != 0)
-         m_core.draw_circle (source.second.position.X(), source.second.position.Y(),
+       {
+         Point p = source.second.position - camera;
+         m_core.draw_circle (p.X(), p.Y(),
                              source.second.small_radius, 0, 0, 128, 128);
+       }
        if (source.second.big_radius != 0)
-         m_core.draw_circle (source.second.position.X(), source.second.position.Y(),
+       {
+         Point p = source.second.position - camera;
+         m_core.draw_circle (p.X(), p.Y(),
                              source.second.big_radius, 0, 0, 128, 128);
+       }
       }
     }
   }

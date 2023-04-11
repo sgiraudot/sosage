@@ -305,11 +305,11 @@ bool File_IO::read_savefile()
 
   if (input.has("music"))
   {
-    action->add ("play", { input["music"].string() });
     for (std::size_t i = 0; i < input["music_disabled_sources"].size(); ++ i)
-      action->add ("hide", { input["music"].string(), input["music_disabled_sources"][i].string() });
-    action->add ("fadein", { "0.5" });
+      action->add ("fadeout", { input["music"].string(), input["music_disabled_sources"][i].string(), "0" });
+    action->add ("play", { input["music"].string(), "0.5" });
   }
+  action->add ("fadein", { "0.5" });
 
   std::unordered_map<std::string, std::string> looking_right;
   std::unordered_map<std::string, std::string> char_anims;

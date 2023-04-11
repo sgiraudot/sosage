@@ -875,9 +875,11 @@ void File_IO::read_music(const std::string& id, const Core::File_IO::Node& node)
   if (auto current = request<C::Music>("Game", "music"))
     if (current->entity() == id)
     {
+      debug << "DO NOT RELOAD MUSIC" << std::endl;
       set(current);
       return;
     }
+  debug << "RELOAD MUSIC" << std::endl;
   SOSAGE_TIMER_START(File_IO__read_music);
   auto music = set<C::Music>(id, "music");
 
