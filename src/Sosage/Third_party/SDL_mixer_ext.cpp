@@ -39,6 +39,7 @@ std::array<bool, Config::sound_channels> SDL_mixer_ext::m_available_channels;
 
 SDL_mixer_ext::SDL_mixer_ext()
 {
+  debug << "Using SDL Mixer Ext" << std::endl;
   int init = Mix_OpenAudio (44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048);
   check (init != -1, "Cannot initialized SDL Mixer (" + std::string(Mix_GetError() )+ ")");
   Mix_AllocateChannels (Config::sound_channels);

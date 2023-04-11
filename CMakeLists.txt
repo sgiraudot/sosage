@@ -254,11 +254,20 @@ if (SOSAGE_CONFIG_ANDROID)
 
   set(SDL2_SOURCE_PATH "" CACHE PATH "Source of the SDL library")
   set(SDL2_IMAGE_SOURCE_PATH "" CACHE PATH "Source of the SDL Image library")
-  set(SDL2_MIXER_SOURCE_PATH "" CACHE PATH "Source of the SDL Mixer library")
+  set(SDL2_MIXER_SOURCE_PATH "" CACHE PATH "Source of the SDL Mixer (or SDL Mixer EXT) library")
   set(SDL2_TTF_SOURCE_PATH "" CACHE PATH "Source of the SDL TTF library")
   set(YAML_SOURCE_PATH "" CACHE PATH "Source of the YAML library")
   set(LZ4_SOURCE_PATH "" CACHE PATH "Source of the LZ4 library")
   set(HACK_VARIANT_NAME "\$\{variant.name.capitalize()\}")
+
+  if (SOSAGE_CFG_USE_SDL_MIXER_EXT)
+    set(SDL2_MIXER_ANDROID_MK "${CMAKE_BINARY_DIR}/android/app/jni/SDL_mixer_ext/Android.mk")
+    set(CMAKE_ANDROID_FLAGS "${CMAKE_ANDROID_FLAGS} -DSOSAGE_LINKED_WITH_SDL_MIXER_EXT")
+  else()
+    set(SDL2_MIXER_ANDROID_MK "${SDL2_MIXER_SOURCE_PATH}/Android.mk")
+    set(CMAKE_ANDROID_FLAGS "${CMAKE_ANDROID_FLAGS} -DSOSAGE_LINKED_WITH_SDL_MIXER")
+  endif()
+
 
   file(COPY "${CMAKE_SOURCE_DIR}/platform/android/" DESTINATION "${CMAKE_BINARY_DIR}/android/")
 
@@ -297,6 +306,8 @@ if (SOSAGE_CONFIG_ANDROID)
     "${CMAKE_BINARY_DIR}/android/app/jni/Android.mk")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_LZ4_Android.mk.in"
     "${CMAKE_BINARY_DIR}/android/app/jni/LZ4/Android.mk")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_SDL_mixer_ext_Android.mk.in"
+    "${CMAKE_BINARY_DIR}/android/app/jni/SDL_mixer_ext/Android.mk")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_src_Android.mk.in"
     "${CMAKE_BINARY_DIR}/android/app/jni/src/Android.mk")
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_yaml_Android.mk.in"

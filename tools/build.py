@@ -51,7 +51,8 @@ cmake_cmd = "cmake -DCMAKE_BUILD_TYPE=" + data["build"] + " -DSOSAGE_CFG_DISPLAY
 if data["testinput"]:
     cmake_cmd += " -DSOSAGE_CFG_TEST_INPUT:BOOL=True"
     appname += "-testinput"
-
+if data["use_sdl_mixer_ext"]:
+    cmake_cmd += " -DSOSAGE_CFG_USE_SDL_MIXER_EXT:BOOL=True"
 
 def todo(key):
     return len(packages_to_do) == 0 or key in packages_to_do
@@ -145,7 +146,10 @@ if data["linux"]:
         run_cmd("rm -rf " + linux_buildir)
         run_cmd("mkdir " + linux_buildir)
         chdir(linux_buildir)
-        run_cmd(cmake_cmd + " ..")
+        # Use static SDL2 mixer ext for simplicity
+        cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
+        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_steam/lib/libSDL2_mixer_ext.a'
+        run_cmd(cfg_cmd + " ..")
         run_cmd("make -j " + str(data["threads"]))
         run_cmd("cpack")
         run_cmd("cp *.deb " + output_dir + "/" + appname + "-gnunux.deb")
@@ -166,9 +170,16 @@ if data["steam"]:
         run_cmd("mkdir " + linux_buildir)
         chdir(linux_buildir)
         run_cmd("mkdir install")
-        run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "CC=/usr/bin/gcc-9 CXX=/usr/bin/g++-9 ' + cmake_cmd + ' -DYAML_INCLUDE_DIR=' + data["libyaml_source_path"] + '/include/ -DLZ4_INCLUDE_DIR=' + data["lz4_source_path"] + '/lib/ -DCMAKE_INSTALL_PREFIX=./install .."')
+        # Use static SDL2 mixer ext for simplicity
+        cfg_cmd = cmake_cmd + ' -DYAML_INCLUDE_DIR=' + data["libyaml_source_path"] + '/include/'
+        cfg_cmd += ' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
+        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_steam/lib/libSDL2_mixer_ext.a'
+        cfg_cmd += ' -DLZ4_INCLUDE_DIR=' + data["lz4_source_path"] + '/lib/'
+        cfg_cmd += ' -DCMAKE_INSTALL_PREFIX=./install ..'
+        run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "' + cfg_cmd + '"')
         run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "make -j ' + str(data["threads"]) + '"')
         run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "make install"')
+        run_cmd("rm -rf " + steam_dir + "/linux")
         run_cmd("cp -r install " + steam_dir + "/linux")
         chdir("..")
         run_cmd("rm -rf " + linux_buildir)
@@ -185,7 +196,10 @@ if data["appimage"]:
         run_cmd("rm -rf " + appimg_buildir)
         run_cmd("mkdir " + appimg_buildir)
         chdir(appimg_buildir)
-        run_cmd(cmake_cmd + " -DCMAKE_INSTALL_PREFIX=/usr ..")
+        # Use static SDL2 mixer ext for simplicity
+        cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
+        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_steam/lib/libSDL2_mixer_ext.a'
+        run_cmd(cfg_cmd + " -DCMAKE_INSTALL_PREFIX=/usr ..")
         run_cmd("make -j " + str(data["threads"]))
         run_cmd("make install DESTDIR=install_dir")
         run_cmd(data["linuxdeploy"] + " --appdir install_dir -e install_dir/usr/bin/" + gamename + " --output appimage")
@@ -258,7 +272,7 @@ if data["androidapk"] or data["androidaab"]:
         run_cmd(cmake_cmd + " -DSOSAGE_CONFIG_ANDROID:BOOL=True"
                 + " -DSDL2_SOURCE_PATH:PATH=" + data["sdl2_source_path"]
                 + " -DSDL2_IMAGE_SOURCE_PATH:PATH=" + data["sdl2_image_source_path"]
-                + " -DSDL2_MIXER_SOURCE_PATH:PATH=" + data["sdl2_mixer_source_path"]
+                + " -DSDL2_MIXER_SOURCE_PATH:PATH=" + (data["sdl2_mixer_ext_source_path"] if data["use_sdl_mixer_ext"] else data["sdl2_mixer_source_path"])
                 + " -DSDL2_TTF_SOURCE_PATH:PATH=" + data["sdl2_ttf_source_path"]
                 + " -DYAML_SOURCE_PATH:PATH=" + data["libyaml_source_path"]
                 + " -DLZ4_SOURCE_PATH:PATH=" + data["lz4_source_path"] + " ..")
