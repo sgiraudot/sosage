@@ -148,7 +148,7 @@ if data["linux"]:
         chdir(linux_buildir)
         # Use static SDL2 mixer ext for simplicity
         cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
-        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_steam/lib/libSDL2_mixer_ext.a'
+        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build/lib/libSDL2_mixer_ext.a'
         run_cmd(cfg_cmd + " ..")
         run_cmd("make -j " + str(data["threads"]))
         run_cmd("cpack")
@@ -198,7 +198,7 @@ if data["appimage"]:
         chdir(appimg_buildir)
         # Use static SDL2 mixer ext for simplicity
         cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
-        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_steam/lib/libSDL2_mixer_ext.a'
+        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build/lib/libSDL2_mixer_ext.a'
         run_cmd(cfg_cmd + " -DCMAKE_INSTALL_PREFIX=/usr ..")
         run_cmd("make -j " + str(data["threads"]))
         run_cmd("make install DESTDIR=install_dir")
