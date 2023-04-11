@@ -697,6 +697,7 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
 {
   std::string id = args[0];
   bool is_continue = (args.size() > 1);
+  bool is_next_continue = (is_continue ? (args[1] == "continue") : false);
   auto dialog = get<C::Dialog>(id , "dialog");
 
   auto action = get<C::Action>("Logic", "action");
@@ -732,10 +733,8 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
     }
     remove("Dialog", "choice");
   }
-  else if (args[1] == "continue")
-  {
+  else if (is_next_continue)
     dialog->next();
-  }
 
   if (dialog->is_over())
   {
