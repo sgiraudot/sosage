@@ -92,13 +92,16 @@ enum Gamepad_type
 {
   NO_LABEL,
   JAPAN,
-  USA,
-  KEYBOARD
+  USA
+#ifdef SOSAGE_DEV
+  , KEYBOARD
+#endif
 };
 
 enum Event_type
 {
   EMPTY,
+  UNUSED,
 
   WINDOW,
 

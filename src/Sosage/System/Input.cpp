@@ -44,8 +44,6 @@ Input::Input (Content& content)
   : Base (content)
   , m_core()
   , m_keys_on(NUMBER_OF_EVENT_VALUES, false)
-  , m_x(0)
-  , m_y(0)
 #ifdef SOSAGE_DEV
   , m_fake_touchscreen(false)
   , m_demo_mode(false)
@@ -60,20 +58,25 @@ void Input::run()
   SOSAGE_TIMER_START(System_Input__run);
   SOSAGE_UPDATE_DBG_LOCATION("Input::run()");
 
+#ifdef SOSAGE_DEV
   bool keyboard_used = false;
+#endif
   bool mouse_used = false;
   bool touchscreen_used = false;
   bool gamepad_used = false;
 
   while (Event ev = m_core.next_event ())
   {
+#ifdef SOSAGE_DEV
     if ((ev.type() == KEY_DOWN || ev.type() == KEY_UP)
         && (ev.value() == UP_ARROW || ev.value() == RIGHT_ARROW ||
             ev.value() == LEFT_ARROW || ev.value() == DOWN_ARROW ||
             ev.value() == TAB || ev.value() == I || ev.value() == J ||
             ev.value() == K ||ev.value() == L))
       keyboard_used = true;
-    else if (ev.type() == MOUSE_DOWN || ev.type() == MOUSE_UP)
+    else
+#endif
+    if (ev.type() == MOUSE_DOWN || ev.type() == MOUSE_UP)
       mouse_used = true;
     else if (ev.type() == TOUCH_DOWN || ev.type() == TOUCH_MOVE || ev.type() == TOUCH_UP)
       touchscreen_used = true;
@@ -100,7 +103,8 @@ void Input::run()
       m_demo_mode = false;
 #endif
 
-    m_current_events.emplace_back(ev);
+    if (ev.type() != UNUSED)
+      m_current_events.emplace_back(ev);
   }
 
 #ifdef SOSAGE_DEV
@@ -135,15 +139,18 @@ void Input::run()
       mode->set (MOUSE);
       gamepad->set (NO_LABEL);
     }
+#ifdef SOSAGE_DEV
     else if (keyboard_used)
     {
       mode->set (GAMEPAD);
       gamepad->set (KEYBOARD);
     }
+#endif
     else if (gamepad_used)
     {
       mode->set (GAMEPAD);
-      gamepad->set (m_core.gamepad_type());
+      if (previous_mode != GAMEPAD)
+        gamepad->set (m_core.gamepad_type());
     }
 
     if (previous_mode != mode->value() || previous_type != gamepad->value())
@@ -152,7 +159,11 @@ void Input::run()
 
   if (mode->value() == GAMEPAD)
   {
-    if (gamepad_used || keyboard_used || value<C::Simple<Vector>>(STICK__DIRECTION) != Vector(0,0))
+    if (gamepad_used
+#ifdef SOSAGE_DEV
+        || keyboard_used
+#endif
+        || value<C::Simple<Vector>>(STICK__DIRECTION) != Vector(0,0))
       get<C::Double>(CLOCK__LATEST_ACTIVE)->set(value<C::Double>(CLOCK__TIME));
   }
 
@@ -310,8 +321,7 @@ void Input::run()
     }
     else // if (mode->value() == GAMEPAD)
     {
-      Vector previous_stick = value<C::Simple<Vector>>(STICK__DIRECTION);
-
+#ifdef SOSAGE_DEV
       if (gamepad->value() == KEYBOARD)
       {
         if (ev.type() == KEY_DOWN)
@@ -344,13 +354,14 @@ void Input::run()
         get<C::Simple<Vector>>(STICK__DIRECTION)->set(vec);
       }
       else // Real gamepad (no keyboard)
+#endif
       {
         if (ev == Event (STICK_MOVE, LEFT))
         {
           if (ev.y() == Config::no_value)
-            m_x = (ev.x() + 0.5) / Config::stick_max;
+            m_x = ev.x() / Config::stick_max;
           if (ev.x() == Config::no_value)
-            m_y = (ev.y() + 0.5) / Config::stick_max;
+            m_y = ev.y() / Config::stick_max;
         }
         else if (ev.type() == BUTTON_DOWN)
         {
@@ -370,36 +381,39 @@ void Input::run()
         }
         else if (ev.type() == BUTTON_UP)
           key_on(ev.value()) = false;
-
-        Vector vec (m_x, m_y);
-        if (vec.length() > 1.0)
-          vec.normalize();
-        else
-          vec = Vector(0,0);
-
-        if ((ev.value() == UP_ARROW || ev.value() == DOWN_ARROW ||
-             ev.value() == RIGHT_ARROW || ev.value() == LEFT_ARROW))
-        {
-          m_x = 0;
-          m_y = 0;
-
-          // Use DPAD if stick is not used only
-          if (key_on(UP_ARROW)) m_y = -1.;
-          if (key_on(DOWN_ARROW)) m_y = 1.;
-          if (key_on(LEFT_ARROW)) m_x = -1.;
-          if (key_on(RIGHT_ARROW)) m_x = 1.;
-          vec = Vector (m_x, m_y);
-          if (vec.length() > 0.99)
-            vec.normalize();
-          else
-            vec = Vector(0,0);
-        }
-
-        get<C::Simple<Vector>>(STICK__DIRECTION)->set(vec);
       }
 
-      if (previous_stick != value<C::Simple<Vector>>(STICK__DIRECTION))
-        emit("Stick", "moved");
+    }
+  }
+
+  if (mode->value() == GAMEPAD)
+  {
+    // If D-PAD is used, ignore stick
+    if (key_on(UP_ARROW) || key_on(DOWN_ARROW) || key_on(LEFT_ARROW) || key_on(RIGHT_ARROW))
+    {
+      m_x = 0;
+      m_y = 0;
+
+      // Use DPAD if stick is not used only
+      if (key_on(UP_ARROW)) m_y = -1.;
+      if (key_on(DOWN_ARROW)) m_y = 1.;
+      if (key_on(LEFT_ARROW)) m_x = -1.;
+      if (key_on(RIGHT_ARROW)) m_x = 1.;
+    }
+
+    Vector vec (m_x, m_y);
+    if (vec.length() > 0.5)
+      vec.normalize();
+    else // deadzone
+      vec = Vector(0,0);
+
+    auto stick_direction = get<C::Simple<Vector>>(STICK__DIRECTION);
+    if (vec != stick_direction->value())
+    {
+      stick_direction->set(vec);
+      debug << " Stick moved to " << vec << std::endl;
+      debug << m_x << " " << m_y << std::endl;
+      emit("Stick", "moved");
     }
   }
 

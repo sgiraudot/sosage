@@ -37,12 +37,16 @@ std::string gamepad_label (const Gamepad_type& type, const Event_value& value)
       japan = { {NORTH, "X"}, {EAST, "A"}, {SOUTH, "B"}, {WEST, "Y"} };
   static std::unordered_map<Event_value, std::string>
       usa = { {NORTH, "Y"}, {EAST, "B"}, {SOUTH, "A"}, {WEST, "X"} };
+#ifdef SOSAGE_DEV
   static std::unordered_map<Event_value, std::string>
       keyboard = { {NORTH, "I"}, {EAST, "L"}, {SOUTH, "K"}, {WEST, "J"} };
+#endif
 
   if (type == JAPAN) return japan[value];
   if (type == USA) return usa[value];
+#ifdef SOSAGE_DEV
   if (type == KEYBOARD) return keyboard[value];
+#endif
 
   // no label
   return "";

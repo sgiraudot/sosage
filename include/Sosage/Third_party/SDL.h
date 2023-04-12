@@ -149,7 +149,6 @@ public:
   void update_view();
   void toggle_fullscreen(bool fullscreen);
   void toggle_cursor(bool visible);
-  void get_window_size (int& w, int& h);
   void begin();
   void draw (const Image& image, unsigned char alpha,
              unsigned char highlight_alpha,

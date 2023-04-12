@@ -39,6 +39,7 @@ namespace Sosage
 namespace Config
 {
 constexpr int no_value = std::numeric_limits<int>::max();
+constexpr int deadzone = 6000;
 } // namespace Config
 
 namespace Third_party

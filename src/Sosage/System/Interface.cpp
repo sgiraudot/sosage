@@ -429,7 +429,9 @@ void Interface::update_object_switcher()
 {
   SOSAGE_UPDATE_DBG_LOCATION("Interface::update_object_switcher()");
 
+#ifdef SOSAGE_DEV
   bool keyboard_on = false;
+#endif
   bool gamepad_on = false;
 
   double inactive_time = value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__LATEST_ACTIVE);
@@ -449,8 +451,12 @@ void Interface::update_object_switcher()
       if (auto active_objects = request<C::Vector<std::string>>("Interface", "active_objects"))
         if (active_objects->value().size() > 1)
         {
+#ifdef SOSAGE_DEV
           keyboard_on = (value<C::Simple<Gamepad_type>>(GAMEPAD__TYPE) == KEYBOARD);
           gamepad_on = !keyboard_on;
+#else
+          gamepad_on = true;
+#endif
         }
   }
 
@@ -458,6 +464,7 @@ void Interface::update_object_switcher()
   std::swap(keyboard_on, gamepad_on);
 #endif
 
+#ifdef SOSAGE_DEV
   if (keyboard_on)
   {
     auto img = get<C::Image>("Keyboard_switcher_left", "image");
@@ -467,6 +474,7 @@ void Interface::update_object_switcher()
       fade_action_selector ("Keyboard_switcher", true);
     }
   }
+#endif
   if (gamepad_on)
   {
     auto img = get<C::Image>("Gamepad_switcher_left", "image");
@@ -476,6 +484,7 @@ void Interface::update_object_switcher()
       fade_action_selector ("Gamepad_switcher", true);
     }
   }
+#ifdef SOSAGE_DEV
   if (!keyboard_on)
   {
     auto img = get<C::Image>("Keyboard_switcher_left", "image");
@@ -484,6 +493,7 @@ void Interface::update_object_switcher()
     else
       img->on() = false;
   }
+#endif
   if (!gamepad_on)
   {
     auto img = get<C::Image>("Gamepad_switcher_left", "image");

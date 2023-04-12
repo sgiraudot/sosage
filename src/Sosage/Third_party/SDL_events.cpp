@@ -77,7 +77,7 @@ Event SDL_events::next_event ()
 
   auto iter = m_type_map.find(SDL_EventType(ev.type));
   if (iter == m_type_map.end())
-    return Event();
+    return Event(UNUSED);
 
   Event_type type = iter->second;
   if (type == KEY_DOWN || type == KEY_UP)
@@ -89,7 +89,7 @@ Event SDL_events::next_event ()
   if (type == BUTTON_DOWN || type == BUTTON_UP || type == STICK_MOVE)
     return gamepad_event(type, ev);
 
-  return Event();
+  return Event(UNUSED);
 }
 
 Gamepad_type SDL_events::gamepad_type() const
@@ -100,17 +100,16 @@ Gamepad_type SDL_events::gamepad_type() const
       SDL_GameController* controller = SDL_GameControllerOpen(i);
       if (controller)
       {
-        const char* name_str = SDL_GameControllerName(controller);
-        if (name_str)
-        {
-          std::string name = name_str;
-//          std::cerr << "CONTROLLER NAME = " << name << std::endl;
-          if (contains (name, "Nintendo"))
-            return JAPAN;
-          if (contains (name, "Steam") || contains (name, "X-Box"))
-            return USA;
-        }
-        break;
+        SDL_GameControllerType type = SDL_GameControllerGetType(controller);
+        if (type == SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO)
+          return JAPAN;
+        if (type == SDL_CONTROLLER_TYPE_XBOX360 ||
+            type == SDL_CONTROLLER_TYPE_XBOXONE ||
+            type == SDL_CONTROLLER_TYPE_AMAZON_LUNA ||
+            type == SDL_CONTROLLER_TYPE_GOOGLE_STADIA)
+          return USA;
+        // else
+        return NO_LABEL;
       }
   }
 
@@ -161,7 +160,7 @@ Event SDL_events::keyboard_event (const Event_type& type, const SDL_Event& ev) c
     return Event (type, Event::Value(A + (ev.key.keysym.sym - SDLK_a)));
   if (SDLK_F1 <= ev.key.keysym.sym && ev.key.keysym.sym <= SDLK_F12)
     return Event (type, Event::Value(F1 + (ev.key.keysym.sym - SDLK_F1)));
-  return Event();
+  return Event(UNUSED);
 }
 Event SDL_events::touch_event (const Event_type& type, const SDL_Event& ev) const
 {
@@ -213,7 +212,8 @@ Event SDL_events::gamepad_event (const Event_type& type, const SDL_Event& ev) co
     if (ev.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)
       return Event (type, SELECT);
   }
-  return Event();
+
+  return Event(UNUSED);
 }
 
 } // namespace Sosage::Third_party
