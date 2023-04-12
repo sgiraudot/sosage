@@ -51,12 +51,14 @@ class Input : public Base
   std::vector<bool> m_keys_on;
   double m_x;
   double m_y;
+
+#ifdef SOSAGE_DEV
   bool m_fake_touchscreen;
 
   // For demo mode
   bool m_demo_mode;
   std::mt19937 m_randgen;
-
+#endif
 
 public:
 
@@ -67,8 +69,10 @@ public:
 private:
 
   typename std::vector<bool>::reference key_on(const Event_value& value);
+#ifdef SOSAGE_DEV
   void run_demo_mode();
   Point cursor_target (const std::string& id);
+#endif
 };
 
 } // namespace System

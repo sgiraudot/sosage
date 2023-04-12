@@ -85,7 +85,18 @@ sosage_option(SOSAGE_CFG_USE_SDL_MIXER_EXT "Use more advanced fork of SDL_Mixer"
 sosage_option(SOSAGE_CFG_GUILESS "Do not instanciate window/renderer, for testing purposes" OFF)
 sosage_option(SOSAGE_COMPILE_SCAP "Compile Sosage Compressed Data Packager" OFF)
 sosage_option(SOSAGE_CONFIG_ANDROID "Configure Sosage for Android" OFF)
-sosage_option(SOSAGE_CFG_RELEASE "Generate the version for public release" OFF)
+set(SOSAGE_BUILD_TYPE "Release" CACHE PATH "Is sosage built for Release/Beta/Dev (this is different from CMAKE_BUILD_TYPE)")
+if (SOSAGE_BUILD_TYPE STREQUAL "Release")
+  add_definitions(-DSOSAGE_RELEASE)
+elseif (SOSAGE_BUILD_TYPE STREQUAL "Beta")
+  add_definitions(-DSOSAGE_BETA)
+elseif (SOSAGE_BUILD_TYPE STREQUAL "Dev")
+  add_definitions(-DSOSAGE_DEV)
+else()
+  message(STATUS "Unknown SOSAGE_BUILD_TYPE ${SOSAGE_BUILD_TYPE}, possible values are Release, Beta or Dev")
+  return()
+endif()
+
 
 ## Check all dependencies
 

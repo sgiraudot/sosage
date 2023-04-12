@@ -38,7 +38,9 @@
 #include <Sosage/System/Control.h>
 #include <Sosage/System/File_IO.h>
 #include <Sosage/System/Graphic.h>
+#ifdef SOSAGE_DEV
 #include <Sosage/System/Test_input.h>
+#endif
 #include <Sosage/System/Input.h>
 #include <Sosage/System/Interface.h>
 #include <Sosage/System/Logic.h>
@@ -125,8 +127,11 @@ bool Engine::run (const std::string& folder_name)
 
   // Create all systems
   m_systems.push_back (file_io);
+#ifdef SOSAGE_DEV
   if (m_input_mode == NORMAL)
+#endif
     m_systems.push_back (System::make_handle<System::Input>(m_content));
+#ifdef SOSAGE_DEV
   else
   {
     auto input = System::make_handle<System::Test_input>(m_content);
@@ -134,6 +139,8 @@ bool Engine::run (const std::string& folder_name)
       input->set_random_mode();
     m_systems.push_back (input);
   }
+#endif
+
   m_systems.push_back (control);
   m_systems.push_back (interface);
   m_systems.push_back (System::make_handle<System::Logic>(m_content));
@@ -203,7 +210,7 @@ void Engine::handle_cmdline_args (int argc, char** argv)
         break;
       m_content.set<Component::String>("Cmdline", "locale", argv[i]);
     }
-#ifndef SOSAGE_RELEASE
+#ifdef SOSAGE_DEV
     else if (arg == "--no-exit" || arg == "-e")
       m_content.emit("Game", "prevent_exit");
     else if (arg == "--no-restart" || arg == "-n")

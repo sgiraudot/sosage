@@ -24,10 +24,10 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#include <Sosage/Config/options.h>
-
 #ifndef SOSAGE_SYSTEM_TEST_INPUT_H
 #define SOSAGE_SYSTEM_TEST_INPUT_H
+
+#ifdef SOSAGE_DEV
 
 #include <Sosage/Core/Input.h>
 #include <Sosage/System/Base.h>
@@ -68,5 +68,6 @@ private:
 
 } // namespace Sosage::System
 
-#endif // SOSAGE_SYSTEM_TEST_INPUT_H
+#endif // SOSAGE_DEV
 
+#endif // SOSAGE_SYSTEM_TEST_INPUT_H

@@ -24,6 +24,8 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
+#ifdef SOSAGE_DEV
+
 #include <Sosage/Config/config.h>
 #include <Sosage/Config/options.h>
 
@@ -766,3 +768,5 @@ bool Test_input::ready (const std::string& key, double time)
 }
 
 } // namespace Sosage::System
+
+#endif

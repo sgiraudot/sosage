@@ -47,7 +47,11 @@ emscripten_buildir = "TMP_build_emscripten"
 output_dir = data["output"] + "/release-v" + version
 steam_dir = output_dir + "/steam"
 appname = gamename + "-" + version
-cmake_cmd = "cmake -DCMAKE_BUILD_TYPE=" + data["build"] + " -DSOSAGE_CFG_DISPLAY_DEBUG_INFO:BOOL=" + str(data["debug"]) + " -DSOSAGE_DATA_FOLDER=" + data_folder
+
+cmake_cmd = "cmake -DCMAKE_BUILD_TYPE=" + data["build"]
+cmake_cmd += " -DSOSAGE_BUILD_TYPE=" + data["buildtype"]
+cmake_cmd += " -DSOSAGE_CFG_DISPLAY_DEBUG_INFO:BOOL=" + str(data["debug"])
+cmake_cmd += " -DSOSAGE_DATA_FOLDER=" + data_folder
 if data["testinput"]:
     cmake_cmd += " -DSOSAGE_CFG_TEST_INPUT:BOOL=True"
     appname += "-testinput"

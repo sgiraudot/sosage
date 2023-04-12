@@ -46,9 +46,11 @@ Input::Input (Content& content)
   , m_keys_on(NUMBER_OF_EVENT_VALUES, false)
   , m_x(0)
   , m_y(0)
+#ifdef SOSAGE_DEV
   , m_fake_touchscreen(false)
   , m_demo_mode(false)
   , m_randgen(std::random_device()())
+#endif
 {
   set_fac<C::Simple<Vector>>(STICK__DIRECTION, "Stick", "direction", Vector(0, 0));
 }
@@ -79,7 +81,7 @@ void Input::run()
              ev.type() == BUTTON_UP || ev.type() == STICK_MOVE)
       gamepad_used = true;
 
-#ifndef SOSAGE_RELEASE
+#ifdef SOSAGE_DEV
     if (ev.type() == KEY_DOWN && ev.value() == T)
     {
       if (m_fake_touchscreen)
@@ -101,6 +103,7 @@ void Input::run()
     m_current_events.emplace_back(ev);
   }
 
+#ifdef SOSAGE_DEV
   if (m_demo_mode)
   {
     m_current_events.clear();
@@ -108,6 +111,7 @@ void Input::run()
     SOSAGE_TIMER_STOP(System_Input__run);
     return;
   }
+#endif
 
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
@@ -117,7 +121,11 @@ void Input::run()
   {
     Input_mode previous_mode = mode->value();
     Gamepad_type previous_type = gamepad->value();
-    if (touchscreen_used || m_fake_touchscreen)
+    if (touchscreen_used
+#ifdef SOSAGE_DEV
+        || m_fake_touchscreen
+#endif
+        )
     {
       mode->set (TOUCHSCREEN);
       gamepad->set (NO_LABEL);
@@ -180,10 +188,12 @@ void Input::run()
     if (status()->is (PAUSED))
       continue;
 
+#ifndef SOSAGE_RELEASE
     if (ev == Event(KEY_UP, D))
       get<C::Boolean>("Game", "debug")->toggle();
+#endif
 
-#ifndef SOSAGE_RELEASE
+#ifdef SOSAGE_DEV
     if (ev == Event(KEY_UP, T))
       emit("Game", "test");
 #endif
@@ -244,7 +254,11 @@ void Input::run()
 
     if (ev.type() == MOUSE_MOVE
         && (mode->value() == MOUSE
-            || (mode->value() == TOUCHSCREEN && m_fake_touchscreen)))
+            || (mode->value() == TOUCHSCREEN
+#ifdef SOSAGE_DEV
+                && m_fake_touchscreen
+#endif
+                )))
       get<C::Position>
           (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
 
@@ -271,6 +285,7 @@ void Input::run()
     }
     else if (mode->value() == TOUCHSCREEN)
     {
+#ifdef SOSAGE_DEV
       if (m_fake_touchscreen) // Simulate touchscreen with mouse for testing
       {
         if (ev == Event(MOUSE_DOWN, LEFT))
@@ -282,6 +297,7 @@ void Input::run()
         }
       }
       else // Real touchscreen
+#endif
       {
         if (ev == Event(TOUCH_DOWN, LEFT))
         {
@@ -396,6 +412,7 @@ typename std::vector<bool>::reference Input::key_on(const Event_value& value)
   return m_keys_on[std::size_t(value)];
 }
 
+#ifdef SOSAGE_DEV
 void Input::run_demo_mode()
 {
   if (status()->is(LOCKED, CUTSCENE))
@@ -640,7 +657,7 @@ Point Input::cursor_target (const std::string& id)
   return Point(0.5 * (xmin_target + xmax_target),
                0.5 * (ymin_target + ymax_target));
 }
-
+#endif
 
 
 } // namespace Sosage::System
