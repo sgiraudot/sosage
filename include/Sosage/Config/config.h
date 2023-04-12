@@ -49,7 +49,7 @@ constexpr int animation_fps = 12;
 
 constexpr auto possible_actions = { "look", "move", "take", "inventory", "use", "combine", "goto" };
 
-constexpr double default_sound_fade_time = 0.5;
+constexpr double default_sound_fade_time = 0.2;
 
 enum Depth
 {
