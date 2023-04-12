@@ -188,7 +188,7 @@ def is_character_id(tested_id):
     if is_num:
         return True # Too complicated to test
     elif inventory_step:
-        return tested_id in all_characters
+        return tested_id in all_items["characters"]
     else:
         return tested_id in items["characters"]
 def is_character_animation_id(tested_id):
@@ -207,7 +207,7 @@ def is_list_id(tested_id):
     return tested_id == "phone_numbers"
 def is_lookable_id(tested_id):
     if inventory_step:
-        return tested_id in items["objects"] or tested_id in all_characters
+        return tested_id in all_items["characters"] or tested_id in all_items["objects"]
     else:
         return tested_id in set().union(items["objects"], items["characters"], items["animations"])
 def is_menu_id(tested_id):
@@ -252,7 +252,7 @@ def is_sent_signal_id(tested_id):
     return True
 def is_showable_id(tested_id):
     if inventory_step:
-        return tested_id in set().union(items["objects"], all_characters, items["scenery"], items["texts"], items["windows"], items["codes"])
+        return tested_id in set().union(items["objects"], all_items["characters"], items["scenery"], items["texts"], items["windows"], items["codes"])
     else:
         return tested_id in set().union(items["objects"], items["characters"], items["scenery"], items["texts"], items["windows"], items["codes"])
 def is_sound_id(tested_id):
@@ -567,7 +567,7 @@ for s in sections:
 
 
 
-print("# GETTING INVENTORY OBJECTS")
+print("# TESTING INVENTORY OBJECTS")
 
 inventory_objects = set()
 for filename in yaml_files:
@@ -583,6 +583,60 @@ for filename in yaml_files:
                 global_items["objects"].add(current_id)
                 break
 
+print("# GETTING ALL STATES")
+
+def add_states(states, item_id, data):
+    if "states" in data:
+        for st in data["states"]:
+            if test(st, "id"):
+                if item_id not in states:
+                    states[item_id] = set()
+                states[item_id].add(st["id"])
+    return states
+
+def add_character_states(states, item_id, data):
+    if "states" in data:
+        for st in data["states"]:
+            if item_id not in states:
+                states[item_id] = set()
+            states[item_id].add(st)
+    else:
+        states[item_id] = {"default"}
+    return states
+
+all_states = {}
+all_items = {}
+for s in sections:
+    all_states[s] = set()
+    all_items[s] = set()
+    
+for filename in yaml_files:
+    if '/' not in filename:
+        continue
+    refname = filename
+    section, current_id = filename.split('/', 1)
+    current_id = current_id.split('.',1)[0]
+    ldata = load_yaml(data_folder + filename)
+    
+    if section == "rooms":
+        for s in sections:
+            if has_key(ldata, s):
+                for item in ldata[s]:
+                    if not has_key(item, "id"):
+                        continue
+                    item_id = item["id"]
+                    all_items[s].add(item_id)
+                    if s == "characters":
+                        all_states = add_character_states(all_states, item_id, item)
+                    else:
+                        all_states = add_states(all_states, item_id, item)
+    else:
+        all_items[section].add(current_id)
+        if section == "characters":
+            all_states = add_character_states(all_states, current_id, ldata)
+        else:
+            all_states = add_states(all_states, current_id, ldata)
+    
 print("# TESTING ALL ROOMS")
 done = set()
 
@@ -642,7 +696,7 @@ def test_characters(data):
 
     for act in possible_actions:
         if act in data:
-            test_object_action(data[act], False)
+            test_object_action(data[act], True)
 
 def test_codes(data):
     if test(data, "states"):
@@ -833,35 +887,11 @@ def get_item(section, item):
         accessed_files.add(fname)
         return item, ldata
 
-def add_states(states, item_id, data):
-    if "states" in data:
-        for st in data["states"]:
-            if test(st, "id"):
-                if item_id not in states:
-                    states[item_id] = set()
-                states[item_id].add(st["id"])
-    return states
-
-def add_character_states(states, item_id, data):
-    if "states" in data:
-        for st in data["states"]:
-            if item_id not in states:
-                states[item_id] = set()
-            states[item_id].add(st)
-    else:
-        states[item_id] = {"default"}
-    return states
-
-
 global_states = {}
 for section, items in global_items.items():
     for item in items:
         accessed_files.add(data_folder + section + "/" + item + ".yaml")
         global_states = add_states(global_states, item, load_yaml(data_folder + section + "/" + item + ".yaml"))
-
-all_states = global_states.copy()
-
-all_characters = set()
 
 while todo:
     filename = "rooms/" + todo[0][0] + ".yaml"
@@ -928,10 +958,7 @@ while todo:
                     states = add_character_states(states, item_id, ldata)
                 else:
                     states = add_states(states, item_id, ldata)
-    all_characters = all_characters.union(items["characters"])
     refname = filename
-
-    all_states.update(states)
 
     for s in sections:
         if has_key(data, s):
