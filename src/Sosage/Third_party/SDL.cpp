@@ -804,6 +804,10 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
 
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
 
+  // Separate touch and mouse events
+  SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+  SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+
   // Render black screen while the rest is loading
   SDL_SetRenderDrawColor (m_renderer, 0, 0, 0, 255);
   SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);

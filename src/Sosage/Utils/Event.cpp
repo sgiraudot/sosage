@@ -34,18 +34,20 @@ namespace Sosage
 std::ostream& operator<< (std::ostream& os, const Event_type& type)
 {
   if (type == EMPTY) os << "EMPTY";
+  else if (type == UNUSED) os << "UNUSED";
   else if (type == WINDOW) os << "WINDOW";
   else if (type == MOUSE_DOWN) os << "MOUSE_DOWN";
   else if (type == MOUSE_MOVE) os << "MOUSE_MOVE";
   else if (type == MOUSE_UP) os << "MOUSE_UP";
   else if (type == TOUCH_DOWN) os << "TOUCH_DOWN";
+  else if (type == TOUCH_MOVE) os << "TOUCH_MOVE";
   else if (type == TOUCH_UP) os << "TOUCH_UP";
   else if (type == KEY_DOWN) os << "KEY_DOWN";
   else if (type == KEY_UP) os << "KEY_UP";
+  else if (type == NEW_GAMEPAD) os << "NEW_GAMEPAD";
   else if (type == BUTTON_DOWN) os << "BUTTON_DOWN";
   else if (type == BUTTON_UP) os << "BUTTON_UP";
   else if (type == STICK_MOVE) os << "STICK_MOVE";
-  else if (type == NEW_GAMEPAD) os << "NEW_GAMEPAD";
   else os << "WTF";
   return os;
 }
