@@ -2,7 +2,7 @@
 
 ## Dependencies
 
- - SDL2 (>= 2.0.10)
+ - SDL2 (>= 2.0.14)
  - SDL2_Image
  - SDL2_TTF
  - SDL2_Mixer

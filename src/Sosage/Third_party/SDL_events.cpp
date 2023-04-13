@@ -103,10 +103,13 @@ Gamepad_type SDL_events::gamepad_type() const
         SDL_GameControllerType type = SDL_GameControllerGetType(controller);
         if (type == SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO)
           return JAPAN;
-        if (type == SDL_CONTROLLER_TYPE_XBOX360 ||
-            type == SDL_CONTROLLER_TYPE_XBOXONE ||
-            type == SDL_CONTROLLER_TYPE_AMAZON_LUNA ||
-            type == SDL_CONTROLLER_TYPE_GOOGLE_STADIA)
+        if (type == SDL_CONTROLLER_TYPE_XBOX360
+            || type == SDL_CONTROLLER_TYPE_XBOXONE
+#if 0 // Might add it later, requires a more recent SDL version than 2.0.14
+            || type == SDL_CONTROLLER_TYPE_AMAZON_LUNA
+            || type == SDL_CONTROLLER_TYPE_GOOGLE_STADIA
+#endif
+            )
           return USA;
         // else
         return NO_LABEL;

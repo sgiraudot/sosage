@@ -47,6 +47,7 @@ emscripten_buildir = "TMP_build_emscripten"
 output_dir = data["output"] + "/release-v" + version
 steam_dir = output_dir + "/steam"
 appname = gamename + "-" + version
+use_schroot = True
 
 cmake_cmd = "cmake -DCMAKE_BUILD_TYPE=" + data["build"]
 cmake_cmd += " -DSOSAGE_BUILD_TYPE=" + data["buildtype"]
@@ -129,10 +130,9 @@ if data["data"]:
         run_cmd("rm -rf " + copy_data_dir)
         run_cmd("mkdir " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/resources " + copy_data_dir)
-        run_cmd("cp -r " + raw_data_folder + "/data " + copy_data_dir)
+        run_cmd("cp -r " + data_folder + "/data " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/config.cmake " + copy_data_dir)
-        run_cmd("cp -r " + raw_data_folder + "/build.yaml " + copy_data_dir)
-        run_cmd("cp -r " + raw_data_folder + "/LICENSE.md " + copy_data_dir)
+#        run_cmd("cp -r " + data_folder + "/LICENSE.md " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/README.md " + copy_data_dir)
         run_cmd("zip -r " + output_dir + "/" + appname + "-data.zip " + copy_data_dir)
         chdir("..")
@@ -150,12 +150,22 @@ if data["linux"]:
         run_cmd("rm -rf " + linux_buildir)
         run_cmd("mkdir " + linux_buildir)
         chdir(linux_buildir)
-        # Use static SDL2 mixer ext for simplicity
-        cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
-        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build/lib/libSDL2_mixer_ext.a'
-        run_cmd(cfg_cmd + " ..")
-        run_cmd("make -j " + str(data["threads"]))
-        run_cmd("cpack")
+
+        if use_schroot:
+            cfg_cmd = cmake_cmd + ' -DYAML_INCLUDE_DIR=' + data["libyaml_source_path"] + '/include/'
+            cfg_cmd += ' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
+            cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_bullseye/lib/libSDL2_mixer_ext.a'
+            cfg_cmd += ' -DLZ4_INCLUDE_DIR=' + data["lz4_source_path"] + '/lib/ ..'
+            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "' + cfg_cmd + '"')
+            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "make -j ' + str(data["threads"]) + '"')
+            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "cpack"')
+        else:
+            # Use static SDL2 mixer ext for simplicity
+            cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
+            cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build/lib/libSDL2_mixer_ext.a'
+            run_cmd(cfg_cmd + " ..")
+            run_cmd("make -j " + str(data["threads"]))
+            run_cmd("cpack")
         run_cmd("cp *.deb " + output_dir + "/" + appname + "-gnunux.deb")
         run_cmd("cp *.rpm " + output_dir + "/" + appname + "-gnunux.rpm")
         chdir("..")
@@ -200,13 +210,24 @@ if data["appimage"]:
         run_cmd("rm -rf " + appimg_buildir)
         run_cmd("mkdir " + appimg_buildir)
         chdir(appimg_buildir)
-        # Use static SDL2 mixer ext for simplicity
-        cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
-        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build/lib/libSDL2_mixer_ext.a'
-        run_cmd(cfg_cmd + " -DCMAKE_INSTALL_PREFIX=/usr ..")
-        run_cmd("make -j " + str(data["threads"]))
-        run_cmd("make install DESTDIR=install_dir")
-        run_cmd(data["linuxdeploy"] + " --appdir install_dir -e install_dir/usr/bin/" + gamename + " --output appimage")
+        if use_schroot:
+            cfg_cmd = cmake_cmd + ' -DYAML_INCLUDE_DIR=' + data["libyaml_source_path"] + '/include/'
+            cfg_cmd += ' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
+            cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_bullseye/lib/libSDL2_mixer_ext.a'
+            cfg_cmd += ' -DLZ4_INCLUDE_DIR=' + data["lz4_source_path"] + '/lib/'
+            cfg_cmd += ' -DCMAKE_INSTALL_PREFIX=/usr ..'
+            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "' + cfg_cmd + '"')
+            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "make -j ' + str(data["threads"]) + '"')
+            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "make install DESTDIR=install_dir"')
+            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "' + data["linuxdeploy"] + ' --appdir install_dir -e install_dir/usr/bin/' + gamename + ' --output appimage"')
+        else:
+            # Use static SDL2 mixer ext for simplicity
+            cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
+            cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build/lib/libSDL2_mixer_ext.a'
+            run_cmd(cfg_cmd + " ..")
+            run_cmd("make -j " + str(data["threads"]))
+            run_cmd("make install DESTDIR=install_dir")
+            run_cmd(data["linuxdeploy"] + " --appdir install_dir -e install_dir/usr/bin/" + gamename + " --output appimage")
         run_cmd("cp *.AppImage " + output_dir + "/" + appname + "-gnunux.AppImage")
         chdir("..")
         run_cmd("rm -rf " + appimg_buildir)

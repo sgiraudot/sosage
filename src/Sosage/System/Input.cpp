@@ -236,7 +236,7 @@ void Input::run()
         }
 #endif
 
-#ifdef SOSAGE_DEBUG
+#ifdef SOSAGE_DEV
       debug << "> " << std::endl;
       std::string text_input;
       std::getline (std::cin, text_input);
