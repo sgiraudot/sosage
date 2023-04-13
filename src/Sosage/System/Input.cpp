@@ -96,7 +96,9 @@ void Input::run()
         emit("Fake_touchscreen", "enabled");
       m_fake_touchscreen = !m_fake_touchscreen;
     }
+#endif
 
+#if defined(SOSAGE_DEV) || defined(SOSAGE_DEMO)
     if (ev.type() == KEY_UP && ev.value() == A)
       m_demo_mode = true;
     else
@@ -107,7 +109,7 @@ void Input::run()
       m_current_events.emplace_back(ev);
   }
 
-#ifdef SOSAGE_DEV
+#if defined(SOSAGE_DEV) || defined(SOSAGE_DEMO)
   if (m_demo_mode)
   {
     m_current_events.clear();
@@ -426,7 +428,7 @@ typename std::vector<bool>::reference Input::key_on(const Event_value& value)
   return m_keys_on[std::size_t(value)];
 }
 
-#ifdef SOSAGE_DEV
+#if defined(SOSAGE_DEV) || defined(SOSAGE_DEMO)
 void Input::run_demo_mode()
 {
   if (status()->is(LOCKED, CUTSCENE))

@@ -54,8 +54,10 @@ class Input : public Base
 
 #ifdef SOSAGE_DEV
   bool m_fake_touchscreen;
+#endif
 
   // For demo mode
+#if defined(SOSAGE_DEV) || defined(SOSAGE_DEMO)
   bool m_demo_mode;
   std::mt19937 m_randgen;
 #endif
@@ -69,7 +71,7 @@ public:
 private:
 
   typename std::vector<bool>::reference key_on(const Event_value& value);
-#ifdef SOSAGE_DEV
+#if defined(SOSAGE_DEV) || defined(SOSAGE_DEMO)
   void run_demo_mode();
   Point cursor_target (const std::string& id);
 #endif
