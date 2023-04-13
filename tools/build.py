@@ -9,6 +9,7 @@ if len(sys.argv) != 2:
     print("Usage: " + sys.argv[0] + "[build.yaml]")
 
 yaml_file = open(sys.argv[1], 'r')
+cwd = os.getcwd()
 data = yaml.safe_load(yaml_file)
 
 gamename = ''
@@ -37,17 +38,19 @@ print("## BUILDING " + id + "\n")
 
 raw_data_folder = data["folder"]
 data_folder = data["folder"] + "/compressed_data"
-data_dir = "TMP_data"
-linux_buildir = "TMP_build_linux"
-appimg_buildir = "TMP_build_appimg"
-android_buildir = "TMP_build_android"
-mac_buildir = "TMP_build_mac"
-windows_buildir = "TMP_build_windows"
-emscripten_buildir = "TMP_build_emscripten"
+data_dir = "/tmp/sosage_build/data"
+linux_buildir = "/tmp/sosage_build/linux"
+steam_buildir = "/tmp/sosage_build/steamos"
+appimg_buildir = "/tmp/sosage_build/appimg"
+android_buildir = "/tmp/sosage_build/android"
+mac_buildir = "/tmp/sosage_build/mac"
+windows_buildir = "/tmp/sosage_build/windows"
+emscripten_buildir = "/tmp/sosage_build/emscripten"
 output_dir = data["output"] + "/release-v" + version
 steam_dir = output_dir + "/steam"
 appname = gamename + "-" + version
 use_schroot = True
+configure_only = data["configure_only"]
 
 cmake_cmd = "cmake -DCMAKE_BUILD_TYPE=" + data["build"]
 cmake_cmd += " -DSOSAGE_BUILD_TYPE=" + data["buildtype"]
@@ -87,13 +90,14 @@ def chdir(folder):
     else:
         os.chdir(folder)
 
+        
 all_begin = time.perf_counter()
 
 print("### INIT")
 begin = time.perf_counter()
 if not os.path.isdir(output_dir):
-    run_cmd("mkdir " + output_dir)
-    run_cmd("mkdir " + steam_dir)
+    run_cmd("mkdir -p " + output_dir)
+    run_cmd("mkdir -p " + steam_dir)
 end = time.perf_counter()
 print("  -> done in " + str(int(end - begin)) + "s\n")
 
@@ -101,9 +105,9 @@ if data["compress_data"]:
     print("### COMPILING DATA PACKAGER")
     begin = time.perf_counter()
     run_cmd("rm -rf " + linux_buildir)
-    run_cmd("mkdir " + linux_buildir)
+    run_cmd("mkdir -p " + linux_buildir)
     chdir(linux_buildir)
-    run_cmd("cmake -DCMAKE_BUILD_TYPE=" + data["build"] + " -DSOSAGE_COMPILE_SCAP:BOOL=True -DSOSAGE_DATA_FOLDER=" + raw_data_folder + " ..")
+    run_cmd("cmake -DCMAKE_BUILD_TYPE=" + data["build"] + " -DSOSAGE_COMPILE_SCAP:BOOL=True -DSOSAGE_DATA_FOLDER=" + raw_data_folder + " " + cwd)
     run_cmd("make -j " + str(data["threads"]) + " SCAP")
     end = time.perf_counter()
     print("  -> done in " + str(int(end - begin)) + "s\n")
@@ -111,10 +115,9 @@ if data["compress_data"]:
     print("### PACKAGING DATA")
     begin = time.perf_counter()
     run_cmd("rm -rf " + data_folder)
-    run_cmd("mkdir " + data_folder)
+    run_cmd("mkdir -p " + data_folder)
     run_cmd("./SCAP " + raw_data_folder + " " + data_folder)
-    chdir("..")
-    run_cmd("rm -rf " + linux_buildir)
+    chdir(cwd)
     end = time.perf_counter()
     print("  -> done in " + str(int(end - begin)) + "s\n")
 
@@ -124,23 +127,22 @@ if data["data"]:
         begin = time.perf_counter()
         run_cmd("rm -rf " + output_dir + "/" + appname + "-data.zip")
         run_cmd("rm -rf " + data_dir)
-        run_cmd("mkdir " + data_dir)
+        run_cmd("mkdir -p " + data_dir)
         chdir(data_dir)
         copy_data_dir = appname + "-data"
         run_cmd("rm -rf " + copy_data_dir)
-        run_cmd("mkdir " + copy_data_dir)
+        run_cmd("mkdir -p " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/resources " + copy_data_dir)
         run_cmd("cp -r " + data_folder + "/data " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/config.cmake " + copy_data_dir)
 #        run_cmd("cp -r " + data_folder + "/LICENSE.md " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/README.md " + copy_data_dir)
         run_cmd("zip -r " + output_dir + "/" + appname + "-data.zip " + copy_data_dir)
-        chdir("..")
-        run_cmd("rm -rf " + data_dir)
+        chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
     except:
-        chdir("..")
+        chdir(cwd)
         print("  -> failed")
 
 if data["linux"]:
@@ -148,59 +150,61 @@ if data["linux"]:
         print("### BUILDING LINUX DEB/RPM")
         begin = time.perf_counter()
         run_cmd("rm -rf " + linux_buildir)
-        run_cmd("mkdir " + linux_buildir)
+        run_cmd("mkdir -p " + linux_buildir)
         chdir(linux_buildir)
 
         if use_schroot:
             cfg_cmd = cmake_cmd + ' -DYAML_INCLUDE_DIR=' + data["libyaml_source_path"] + '/include/'
             cfg_cmd += ' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
             cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_bullseye/lib/libSDL2_mixer_ext.a'
-            cfg_cmd += ' -DLZ4_INCLUDE_DIR=' + data["lz4_source_path"] + '/lib/ ..'
+            cfg_cmd += ' -DLZ4_INCLUDE_DIR=' + data["lz4_source_path"] + '/lib/ ' + cwd
             run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "' + cfg_cmd + '"')
-            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "make -j ' + str(data["threads"]) + '"')
-            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "cpack"')
+            if not configure_only:
+                run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "make -j ' + str(data["threads"]) + '"')
+                run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "cpack"')
         else:
             # Use static SDL2 mixer ext for simplicity
             cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
             cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build/lib/libSDL2_mixer_ext.a'
-            run_cmd(cfg_cmd + " ..")
-            run_cmd("make -j " + str(data["threads"]))
-            run_cmd("cpack")
-        run_cmd("cp *.deb " + output_dir + "/" + appname + "-gnunux.deb")
-        run_cmd("cp *.rpm " + output_dir + "/" + appname + "-gnunux.rpm")
-        chdir("..")
-        run_cmd("rm -rf " + linux_buildir)
+            run_cmd(cfg_cmd + " " + cwd)
+            if not configure_only:
+                run_cmd("make -j " + str(data["threads"]))
+                run_cmd("cpack")
+        if not configure_only:
+            run_cmd("cp *.deb " + output_dir + "/" + appname + "-gnunux.deb")
+            run_cmd("cp *.rpm " + output_dir + "/" + appname + "-gnunux.rpm")
+        chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
     except:
-        chdir("..")
+        chdir(cwd)
         print("  -> failed")
 
 if data["steam"]:
     try:
         print("### BUILDING LINUX/STEAMOS")
         begin = time.perf_counter()
-        run_cmd("rm -rf " + linux_buildir)
-        run_cmd("mkdir " + linux_buildir)
-        chdir(linux_buildir)
-        run_cmd("mkdir install")
+        run_cmd("rm -rf " + steam_buildir)
+        run_cmd("mkdir -p " + steam_buildir)
+        chdir(steam_buildir)
+        run_cmd("mkdir -p install")
         # Use static SDL2 mixer ext for simplicity
         cfg_cmd = cmake_cmd + ' -DYAML_INCLUDE_DIR=' + data["libyaml_source_path"] + '/include/'
         cfg_cmd += ' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
         cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_steam/lib/libSDL2_mixer_ext.a'
         cfg_cmd += ' -DLZ4_INCLUDE_DIR=' + data["lz4_source_path"] + '/lib/'
-        cfg_cmd += ' -DCMAKE_INSTALL_PREFIX=./install ..'
+        cfg_cmd += ' -DCMAKE_INSTALL_PREFIX=./install ' + cwd
         run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "' + cfg_cmd + '"')
-        run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "make -j ' + str(data["threads"]) + '"')
-        run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "make install"')
-        run_cmd("rm -rf " + steam_dir + "/linux")
-        run_cmd("cp -r install " + steam_dir + "/linux")
-        chdir("..")
-        run_cmd("rm -rf " + linux_buildir)
+        if not configure_only:
+            run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "make -j ' + str(data["threads"]) + '"')
+            run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "make install"')
+            run_cmd("rm -rf " + steam_dir + "/linux")
+            run_cmd("cp -r install " + steam_dir + "/linux")
+        chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
     except:
-        chdir("..")
+        chdir(cwd)
         print("  -> failed")
 
 if data["appimage"]:
@@ -208,33 +212,35 @@ if data["appimage"]:
         print("### BUILDING LINUX APPIMAGE")
         begin = time.perf_counter()
         run_cmd("rm -rf " + appimg_buildir)
-        run_cmd("mkdir " + appimg_buildir)
+        run_cmd("mkdir -p " + appimg_buildir)
         chdir(appimg_buildir)
         if use_schroot:
             cfg_cmd = cmake_cmd + ' -DYAML_INCLUDE_DIR=' + data["libyaml_source_path"] + '/include/'
             cfg_cmd += ' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
             cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_bullseye/lib/libSDL2_mixer_ext.a'
             cfg_cmd += ' -DLZ4_INCLUDE_DIR=' + data["lz4_source_path"] + '/lib/'
-            cfg_cmd += ' -DCMAKE_INSTALL_PREFIX=/usr ..'
+            cfg_cmd += ' -DCMAKE_INSTALL_PREFIX=/usr ' + cwd
             run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "' + cfg_cmd + '"')
-            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "make -j ' + str(data["threads"]) + '"')
-            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "make install DESTDIR=install_dir"')
-            run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "' + data["linuxdeploy"] + ' --appdir install_dir -e install_dir/usr/bin/' + gamename + ' --output appimage"')
+            if not configure_only:
+                run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "make -j ' + str(data["threads"]) + '"')
+                run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "make install DESTDIR=install_dir"')
+                run_cmd('schroot --chroot debian_bullseye_64 -- sh -c "' + data["linuxdeploy"] + ' --appdir install_dir -e install_dir/usr/bin/' + gamename + ' --output appimage"')
         else:
             # Use static SDL2 mixer ext for simplicity
             cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
             cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build/lib/libSDL2_mixer_ext.a'
-            run_cmd(cfg_cmd + " ..")
-            run_cmd("make -j " + str(data["threads"]))
-            run_cmd("make install DESTDIR=install_dir")
-            run_cmd(data["linuxdeploy"] + " --appdir install_dir -e install_dir/usr/bin/" + gamename + " --output appimage")
-        run_cmd("cp *.AppImage " + output_dir + "/" + appname + "-gnunux.AppImage")
-        chdir("..")
-        run_cmd("rm -rf " + appimg_buildir)
+            run_cmd(cfg_cmd + " " + cwd)
+            if not configure_only:
+                run_cmd("make -j " + str(data["threads"]))
+                run_cmd("make install DESTDIR=install_dir")
+                run_cmd(data["linuxdeploy"] + " --appdir install_dir -e install_dir/usr/bin/" + gamename + " --output appimage")
+        if not configure_only:
+            run_cmd("cp *.AppImage " + output_dir + "/" + appname + "-gnunux.AppImage")
+        chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
     except:
-        chdir("..")
+        chdir(cwd)
         print("  -> failed")
 
 if data["mac"]:
@@ -242,27 +248,27 @@ if data["mac"]:
         print("### BUILDING MAC")
         begin = time.perf_counter()
         run_cmd("rm -rf " + mac_buildir)
-        run_cmd("mkdir " + mac_buildir)
+        run_cmd("mkdir -p " + mac_buildir)
         chdir(mac_buildir)
         cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
         cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_osxcross/lib/libSDL2_mixer_ext.a'
-        run_cmd(cfg_cmd + " -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-osxcross.cmake"
+        run_cmd(cfg_cmd + " -DCMAKE_TOOLCHAIN_FILE=" + cwd + "/cmake/Toolchain-osxcross.cmake"
                 + " -DSDL2_INCLUDE_DIR=" + data["mac_sdl_folder"]
-                + " -DCMAKE_INSTALL_PREFIX=./install ..")
-        run_cmd("make -j " + str(data["threads"]))
-        run_cmd("make install")
-        run_cmd('python3 ../tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/libs/*.dylib')
-        run_cmd('python3 ../tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/MacOS/' + gamename)
-        run_cmd("rm -rf " + steam_dir + "/mac")
-        run_cmd("cp -r install " + steam_dir + "/mac")
-        run_cmd("genisoimage -V " + gamename + ".app -D -R -apple -no-pad -o " + gamename + ".dmg install")
-        run_cmd("cp " + gamename + ".dmg " + output_dir + "/" + appname + "-macos.dmg")
-        chdir("..")
-        run_cmd("rm -rf " + mac_buildir)
+                + " -DCMAKE_INSTALL_PREFIX=./install " + cwd)
+        if not configure_only:
+            run_cmd("make -j " + str(data["threads"]))
+            run_cmd("make install")
+            run_cmd('python3 ' + cwd + '/tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/libs/*.dylib')
+            run_cmd('python3 ' + cwd + '/tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/MacOS/' + gamename)
+            run_cmd("rm -rf " + steam_dir + "/mac")
+            run_cmd("cp -r install " + steam_dir + "/mac")
+            run_cmd("genisoimage -V " + gamename + ".app -D -R -apple -no-pad -o " + gamename + ".dmg install")
+            run_cmd("cp " + gamename + ".dmg " + output_dir + "/" + appname + "-macos.dmg")
+        chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
     except:
-        chdir("..")
+        chdir(cwd)
         print("  -> failed")
 
 if data["windows"]:
@@ -270,25 +276,25 @@ if data["windows"]:
         print("### BUILDING WINDOWS")
         begin = time.perf_counter()
         run_cmd("rm -rf " + windows_buildir)
-        run_cmd("mkdir " + windows_buildir)
+        run_cmd("mkdir -p " + windows_buildir)
         chdir(windows_buildir)
-        run_cmd(cmake_cmd + " -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-mingw32.cmake "
-                + "-DSDL2_INCLUDE_DIR=" + data["windows_sdl_folder"] + " ..")
-        run_cmd("make -j " + str(data["threads"]) + "")
-        run_cmd("cpack")
-        run_cmd("cp *-win32.exe " + output_dir + "/" + appname + "-windows.exe")
-        run_cmd("cmake -DCMAKE_INSTALL_PREFIX=./install .")
-        run_cmd("mkdir install")
-        run_cmd("make -j " + str(data["threads"]))
-        run_cmd("make install")
-        run_cmd("rm -rf " + steam_dir + "/windows")
-        run_cmd("cp -r install " + steam_dir + "/windows")
-        chdir("..")
-        run_cmd("rm -rf " + windows_buildir)
+        run_cmd(cmake_cmd + " -DCMAKE_TOOLCHAIN_FILE=" + cwd + "/cmake/Toolchain-mingw32.cmake "
+                + "-DSDL2_INCLUDE_DIR=" + data["windows_sdl_folder"] + " " + cwd)
+        if not configure_only:
+            run_cmd("make -j " + str(data["threads"]) + "")
+            run_cmd("cpack")
+            run_cmd("cp *-win32.exe " + output_dir + "/" + appname + "-windows.exe")
+            run_cmd("cmake -DCMAKE_INSTALL_PREFIX=./install .")
+            run_cmd("mkdir -p install")
+            run_cmd("make -j " + str(data["threads"]))
+            run_cmd("make install")
+            run_cmd("rm -rf " + steam_dir + "/windows")
+            run_cmd("cp -r install " + steam_dir + "/windows")
+        chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
     except:
-        chdir("..")
+        chdir(cwd)
         print("  -> failed")
 
 if data["androidapk"] or data["androidaab"]:
@@ -296,7 +302,7 @@ if data["androidapk"] or data["androidaab"]:
         print("### BUILDING ANDROID")
         begin = time.perf_counter()
         run_cmd("rm -rf " + android_buildir)
-        run_cmd("mkdir " + android_buildir)
+        run_cmd("mkdir -p " + android_buildir)
         chdir(android_buildir)
         run_cmd(cmake_cmd + " -DSOSAGE_CONFIG_ANDROID:BOOL=True"
                 + " -DSDL2_SOURCE_PATH:PATH=" + data["sdl2_source_path"]
@@ -304,21 +310,21 @@ if data["androidapk"] or data["androidaab"]:
                 + " -DSDL2_MIXER_SOURCE_PATH:PATH=" + (data["sdl2_mixer_ext_source_path"] if data["use_sdl_mixer_ext"] else data["sdl2_mixer_source_path"])
                 + " -DSDL2_TTF_SOURCE_PATH:PATH=" + data["sdl2_ttf_source_path"]
                 + " -DYAML_SOURCE_PATH:PATH=" + data["libyaml_source_path"]
-                + " -DLZ4_SOURCE_PATH:PATH=" + data["lz4_source_path"] + " ..")
+                + " -DLZ4_SOURCE_PATH:PATH=" + data["lz4_source_path"] + " " + cwd)
         chdir("android")
-        if data["androidapk"]:
-            run_cmd("./gradlew assembleDebug --parallel --max-workers=" + str(data["threads"]))
-            run_cmd("cp app/build/outputs/apk/debug/*.apk " + output_dir + "/" + appname + "-android.apk")
-        if data["androidaab"]:
-            run_cmd("cp " + raw_data_folder + "/*.keystore app/")
-            run_cmd("./gradlew bundleRelease --parallel --max-workers=" + str(data["threads"]))
-            run_cmd("cp app/build/outputs/bundle/release/*.aab " + output_dir + "/" + appname + "-android.aab")
-        chdir("../..")
-        run_cmd("rm -rf " + android_buildir)
+        if not configure_only:
+            if data["androidapk"]:
+                run_cmd("./gradlew assembleDebug --parallel --max-workers=" + str(data["threads"]))
+                run_cmd("cp app/build/outputs/apk/debug/*.apk " + output_dir + "/" + appname + "-android.apk")
+            if data["androidaab"]:
+                run_cmd("cp " + raw_data_folder + "/*.keystore app/")
+                run_cmd("./gradlew bundleRelease --parallel --max-workers=" + str(data["threads"]))
+                run_cmd("cp app/build/outputs/bundle/release/*.aab " + output_dir + "/" + appname + "-android.aab")
+        chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
     except:
-        chdir("../..")
+        chdir(cwd)
         print("  -> failed")
 
 if data["browser"]:
@@ -326,22 +332,22 @@ if data["browser"]:
         print("### BUILDING EMSCRIPTEN")
         begin = time.perf_counter()
         run_cmd("rm -rf " + emscripten_buildir)
-        run_cmd("mkdir " + emscripten_buildir)
+        run_cmd("mkdir -p " + emscripten_buildir)
         chdir(emscripten_buildir)
         run_cmd("emcmake cmake -DCMAKE_BUILD_TYPE=" + data["build"] + " -DSOSAGE_DATA_FOLDER=" + data_folder
                 + " -DYAML_SOURCE_PATH:PATH=" + data["libyaml_source_path"]
-                + " -DLZ4_SOURCE_PATH:PATH=" + data["lz4_source_path"] + " ..")
-        run_cmd("make -j " + str(data["threads"]))
-        run_cmd("rm -rf " + output_dir + "/" + appname + "-web/")
-        run_cmd("mkdir " + output_dir + "/" + appname + "-web/")
-        run_cmd("cp -r data " + output_dir + "/" + appname + "-web/")
-        run_cmd("cp *.data *.js *.wasm " + output_dir + "/" + appname + "-web/")
-        chdir("..")
-        run_cmd("rm -rf " + emscripten_buildir)
+                + " -DLZ4_SOURCE_PATH:PATH=" + data["lz4_source_path"] + " " + cwd)
+        if not configure_only:
+            run_cmd("make -j " + str(data["threads"]))
+            run_cmd("rm -rf " + output_dir + "/" + appname + "-web/")
+            run_cmd("mkdir -p " + output_dir + "/" + appname + "-web/")
+            run_cmd("cp -r data " + output_dir + "/" + appname + "-web/")
+            run_cmd("cp *.data *.js *.wasm " + output_dir + "/" + appname + "-web/")
+        chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
     except:
-        chdir("..")
+        chdir(cwd)
         print("  -> failed")
 
 all_end = time.perf_counter()
