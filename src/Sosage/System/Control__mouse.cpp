@@ -267,6 +267,9 @@ void Control::object_choice_mouse()
   std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
   {
     std::string id = img->entity();
+    if (id == "Left_arrow" || id == "Right_arrow")
+      return true;
+
     if (!request<C::String>(id , "name"))
       return false;
     auto state = request<C::String>(id , "state");
@@ -275,6 +278,19 @@ void Control::object_choice_mouse()
 
     return startswith(state->value(), "inventory");
   });
+
+  if (collision == "Left_arrow")
+  {
+    if (receive("Cursor", "clicked"))
+      get<C::Inventory>("Game", "inventory")->prev();
+    return;
+  }
+  else if (collision == "Right_arrow")
+  {
+    if (receive("Cursor", "clicked"))
+      get<C::Inventory>("Game", "inventory")->next();
+    return;
+  }
 
   if (collision != "")
     set<C::String>("Interface", "active_object", collision);
@@ -305,6 +321,9 @@ void Control::object_choice_touchscreen()
     std::string collision = first_collision(cursor, [&](const C::Image_handle img) -> bool
     {
       std::string id = img->entity();
+      if (id == "Left_arrow" || id == "Right_arrow")
+        return true;
+
       if (!request<C::String>(id , "name"))
         return false;
       auto state = request<C::String>(id , "state");
@@ -313,6 +332,17 @@ void Control::object_choice_touchscreen()
 
       return startswith(state->value(), "inventory");
     });
+
+    if (collision == "Left_arrow")
+    {
+      get<C::Inventory>("Game", "inventory")->prev();
+      return;
+    }
+    else if (collision == "Right_arrow")
+    {
+      get<C::Inventory>("Game", "inventory")->next();
+      return;
+    }
 
     if (collision != "")
       set<C::String>("Interface", "active_object", collision);
