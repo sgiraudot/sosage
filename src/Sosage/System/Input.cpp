@@ -169,6 +169,7 @@ void Input::run()
       get<C::Double>(CLOCK__LATEST_ACTIVE)->set(value<C::Double>(CLOCK__TIME));
   }
 
+  bool arrow_released = false;
   for (const Event& ev : m_current_events)
   {
     if (ev == Event(KEY_UP, ESCAPE) ||
@@ -341,19 +342,14 @@ void Input::run()
             emit("Action", "inventory");
         }
         else if (ev.type() == KEY_UP)
+        {
           key_on(ev.value()) = false;
-
-        m_x = 0.;
-        m_y = 0.;
-        if (key_on(UP_ARROW)) m_y -= 1.;
-        if (key_on(DOWN_ARROW)) m_y += 1.;
-        if (key_on(LEFT_ARROW)) m_x -= 1.;
-        if (key_on(RIGHT_ARROW)) m_x += 1.;
-        Vector vec (m_x, m_y);
-        if (vec.length() > 1.0)
-          vec.normalize();
-
-        get<C::Simple<Vector>>(STICK__DIRECTION)->set(vec);
+          if (ev.value() == UP_ARROW
+              || ev.value() == DOWN_ARROW
+              || ev.value() == LEFT_ARROW
+              || ev.value() == RIGHT_ARROW)
+            arrow_released = true;
+        }
       }
       else // Real gamepad (no keyboard)
 #endif
@@ -391,7 +387,9 @@ void Input::run()
   if (mode->value() == GAMEPAD)
   {
     // If D-PAD is used, ignore stick
-    if (key_on(UP_ARROW) || key_on(DOWN_ARROW) || key_on(LEFT_ARROW) || key_on(RIGHT_ARROW))
+    if (arrow_released || key_on(UP_ARROW)
+        || key_on(DOWN_ARROW) || key_on(LEFT_ARROW)
+        || key_on(RIGHT_ARROW))
     {
       m_x = 0;
       m_y = 0;
