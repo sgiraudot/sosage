@@ -313,6 +313,7 @@ void File_IO::read_room (const std::string& file_name)
   }
   if (input.has("ground_map"))
   {
+    emit ("Player", "not_moved_yet");
     int front_z = input["front_z"].integer();
     int back_z = input["back_z"].integer();
     if (input["ground_map"].size() == 0)
@@ -334,6 +335,9 @@ void File_IO::read_room (const std::string& file_name)
                          front_z, back_z, callback->value());
     }
   }
+  else
+    // Just in case a garbage signal remains...
+    receive("Player", "not_moved_yet");
 
   callback->value()();
 
@@ -385,7 +389,6 @@ void File_IO::read_room (const std::string& file_name)
 
   emit ("Game", "in_new_room");
   emit ("Game", "loading_done");
-  emit ("Player", "not_moved_yet");
   emit ("Window", "rescaled");
 
 #ifdef SOSAGE_DEBUG
