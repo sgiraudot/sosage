@@ -72,7 +72,7 @@ void Interface::init_menus()
 
   int y = Config::exit_menu_start;
   std::size_t idx = 1;
-  for (const std::string& id : { "New_game", "Settings", "Phone", "Credits"
+  for (const std::string& id : {  "Phone", "Settings", "New_game", "Credits"
 #ifndef SOSAGE_EMSCRIPTEN
        , "Save_and_quit"
 #endif
