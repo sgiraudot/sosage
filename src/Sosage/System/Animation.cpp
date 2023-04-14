@@ -191,7 +191,7 @@ void Animation::run_animation_frame()
     const std::string& id = c->entity();
     auto lookat = C::cast<C::Position>(c);
     debug << "lookat " << lookat->str() << std::endl;
-    if (in_new_room)
+    if (receive(id, "needs_rescale") || in_new_room)
     {
       debug << "Place and scale from " << get<C::Position>(id, "position")->str() << std::endl;
       place_and_scale_character (id);

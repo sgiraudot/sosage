@@ -404,6 +404,7 @@ bool Logic::function_move (const std::vector<std::string>& args)
       looking_right = to_bool(args[3]);
       remove (target, "z", true);
       remove (target, "z_rescaled", true);
+      emit(target, "needs_rescale");
     }
     else
     {
