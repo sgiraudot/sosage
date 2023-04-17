@@ -103,7 +103,21 @@ void File_IO::clean_content()
   std::unordered_set<std::string> force_keep;
   auto inventory = get<C::Inventory>("Game", "inventory");
 
-  if (!full_reset)
+  if (full_reset)
+  {
+    // Reset camera, zoom, etc.
+    get<C::Absolute_position>(CAMERA__POSITION)->set (Point(0,0));
+    get<C::Double>(CAMERA__ZOOM)->set(1.);
+    get<C::Status>(GAME__STATUS)->reset();
+    get<C::Action>("Logic", "action")->clear();
+    remove ("Character", "action", true);
+    remove ("Character", "triggered_action", true);
+
+    for (const std::string& entity : *inventory)
+      get<C::Image>(entity , "image")->on() = false;
+    inventory->clear();
+  }
+  else
   {
     if (auto phone_numbers = request<C::Vector<std::string>>("phone_numbers", "list"))
     {
@@ -111,12 +125,6 @@ void File_IO::clean_content()
       for (const std::string& entity : phone_numbers->value())
         force_keep.insert (entity);
     }
-  }
-  else
-  {
-    for (const std::string& entity : *inventory)
-      get<C::Image>(entity , "image")->on() = false;
-    inventory->clear();
   }
 
   m_content.clear

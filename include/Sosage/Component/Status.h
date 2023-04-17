@@ -45,6 +45,7 @@ private:
 public:
 
   Status (const std::string& entity, const std::string& component);
+  void reset();
   void push (const Sosage::Status& v);
   void pop();
   virtual Sosage::Status value() const;

@@ -32,6 +32,13 @@ namespace Sosage::Component
 Status::Status (const std::string& entity, const std::string& component)
   : Base(entity, component)
 {
+  reset();
+}
+
+void Status::reset()
+{
+  while (!m_value.empty())
+    m_value.pop();
   m_value.push(IDLE);
   m_value.push(LOCKED); // start game locked
 }
