@@ -192,6 +192,15 @@ void Input::run()
         emit ("Game", "skip_dialog");
     }
 
+    // Some ways to skip notifications
+    if (ev == Event(KEY_UP, SPACE)
+        || ev == Event(BUTTON_DOWN, EAST)
+        || ev == Event(BUTTON_DOWN, SOUTH)
+        || ev == Event(TOUCH_DOWN, LEFT)
+        || ev == Event(MOUSE_DOWN, RIGHT))
+      emit ("Game", "clear_notifications");
+
+
     if (ev == Event(WINDOW, FOREGROUND)
         && status()->is(PAUSED))
       status()->pop();
@@ -287,14 +296,6 @@ void Input::run()
         get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
         emit ("Cursor", "clicked");
-        set<C::Boolean>("Click", "left", true);
-      }
-      if (ev == Event(MOUSE_DOWN, RIGHT))
-      {
-        get<C::Position>
-            (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-        emit ("Cursor", "clicked");
-        set<C::Boolean>("Click", "left", false);
       }
     }
     else if (mode->value() == TOUCHSCREEN)
@@ -307,7 +308,6 @@ void Input::run()
           get<C::Position>
               (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
           emit ("Cursor", "clicked");
-          set<C::Boolean>("Click", "left", true);
         }
       }
       else // Real touchscreen
@@ -318,7 +318,6 @@ void Input::run()
           get<C::Position>
             (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
           emit ("Cursor", "clicked");
-          set<C::Boolean>("Click", "left", true);
         }
       }
     }
@@ -463,7 +462,6 @@ void Input::run_demo_mode()
   if (receive("Demo", "cursor_moved"))
   {
     emit ("Cursor", "clicked");
-    set<C::Boolean>("Click", "left", true);
     set<C::Double>("Demo", "wake_up_time", current_time + 0.1);
     return;
   }
