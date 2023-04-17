@@ -126,7 +126,6 @@ void Input::run()
   if (status()->is(IDLE, CUTSCENE))
   {
     Input_mode previous_mode = mode->value();
-    Gamepad_type previous_type = gamepad->value();
     if (touchscreen_used
 #ifdef SOSAGE_DEV
         || m_fake_touchscreen
@@ -155,7 +154,7 @@ void Input::run()
         gamepad->set (m_core.gamepad_type());
     }
 
-    if (previous_mode != mode->value() || previous_type != gamepad->value())
+    if (previous_mode != mode->value())
       emit("Input_mode", "changed");
   }
 

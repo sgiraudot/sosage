@@ -183,10 +183,20 @@ Event SDL_events::gamepad_event (const Event_type& type, const SDL_Event& ev) co
       return Event (type, RIGHT, ev.caxis.value, Config::no_value);
     if (ev.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTY)
       return Event (type, RIGHT, Config::no_value, ev.caxis.value);
-    if (ev.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT && ev.caxis.value > 0)
-      return Event (BUTTON_DOWN, LEFT_SHOULDER);
-    if (ev.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT && ev.caxis.value > 0)
-      return Event (BUTTON_DOWN, RIGHT_SHOULDER);
+    if (ev.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
+    {
+      if (ev.caxis.value > Config::deadzone)
+        return Event (BUTTON_DOWN, LEFT_SHOULDER);
+      else
+        return Event (BUTTON_UP, LEFT_SHOULDER);
+    }
+    if (ev.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
+    {
+      if (ev.caxis.value > Config::deadzone)
+        return Event (BUTTON_DOWN, RIGHT_SHOULDER);
+      else
+        return Event (BUTTON_UP, RIGHT_SHOULDER);
+    }
   }
   else
   {

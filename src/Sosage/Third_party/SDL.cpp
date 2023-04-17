@@ -816,12 +816,13 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
   SDL_ShowCursor(SDL_DISABLE);
 #endif
 
-#if 1
+  Asset db = Asset_manager::open ("data/gamecontrollerdb.txt");
+  SDL_GameControllerAddMappingsFromRW (db.base(), 1);
+
   SDL_GameController *controller = NULL;
   for (int i = 0; i < SDL_NumJoysticks(); ++i) {
       if (SDL_IsGameController(i)) {
           controller = SDL_GameControllerOpen(i);
-          debug << "Opening controller " << SDL_GameControllerName(controller) << std::endl;
           if (controller) {
               break;
           } else {
@@ -829,7 +830,6 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
           }
       }
   }
-#endif
 }
 
 SDL::~SDL ()

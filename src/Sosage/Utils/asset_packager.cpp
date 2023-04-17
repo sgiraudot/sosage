@@ -285,7 +285,7 @@ void compile_package (const std::string& input_folder, const std::string& output
                    contains(path, "images/interface") || contains(path, "images/inventory") || contains(path, "images/masks"));
     else
     {
-      if (extension != "yaml" && extension != "ogg" && extension != "ttf")
+      if (extension != "yaml" && extension != "ogg" && extension != "ttf" && extension != "txt")
         std::cerr << "Warning: unknown extension " << extension << std::endl;
       write_file (*file, abs_path);
     }
