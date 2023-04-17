@@ -66,6 +66,11 @@ void Time::run()
                   + Config::speedup_factor * (m_clock.time()
                                               - begin_speedup->value());
 
+    // Avoid messing with the game time (sped up time doesn't count double)
+    double real_time = m_clock.time();
+    auto dtime = get<C::Double> (CLOCK__DISCOUNTED_TIME);
+    dtime->set (dtime->value() + (time - real_time));
+
     m_clock.set (time);
     remove (begin_speedup);
     get<C::Double> (CLOCK__TIME)->set(time);
@@ -74,7 +79,15 @@ void Time::run()
   // Do not count time spent in menu for in-game time computation
   if (!signal("Game", "save") &&
       (status()->is(IN_MENU, PAUSED) || request<C::String>("Game", "new_room")))
+  {
+    if (signal("Game", "reset"))
+    {
+      get<C::Double>(CLOCK__DISCOUNTED_TIME)->set(m_clock.time());
+      get<C::Double>(CLOCK__SAVED_TIME)->set(0);
+    }
+
     get_or_set<C::Double>("Time", "in_menu_start", m_clock.time());
+  }
   else if (auto start = request<C::Double>("Time", "in_menu_start"))
   {
     auto in_menu = get<C::Double> (CLOCK__DISCOUNTED_TIME);
