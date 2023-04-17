@@ -592,6 +592,12 @@ void File_IO::read_init ()
 
   cursor_img->add("selected", big_circle_img);
 
+  std::string white_left_circle = input["circle"][3].string("images", "interface", "png");
+  auto white_left_circle_img = set<C::Image>("White_left_circle", "image", white_left_circle, 1, BOX, true);
+  white_left_circle_img->on() = false;
+  std::string white_right_circle = input["circle"][4].string("images", "interface", "png");
+  auto white_right_circle_img = set<C::Image>("White_right_circle", "image", white_right_circle, 1, BOX, true);
+  white_right_circle_img->on() = false;
 
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
   set<C::Font> ("Debug", "font", debug_font, 40);

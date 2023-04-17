@@ -81,6 +81,7 @@ private:
   void update_active_objects();
   void update_action_selector();
   void update_object_switcher();
+  void update_notifications();
   void update_inventory();
   void update_code_hover();
   void update_dialog_choices();

@@ -30,6 +30,7 @@
 #include <Sosage/Component/Cropped.h>
 #include <Sosage/Component/Dialog.h>
 #include <Sosage/Component/Ground_map.h>
+#include <Sosage/Component/Group.h>
 #include <Sosage/Component/Font.h>
 #include <Sosage/Component/Image.h>
 #include <Sosage/Component/Music.h>
@@ -78,6 +79,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(message);
   INIT_DISPATCHER(move);
   INIT_DISPATCHER(move60fps);
+  INIT_DISPATCHER(notify);
   INIT_DISPATCHER(pause);
   INIT_DISPATCHER(play);
   INIT_DISPATCHER(randomize);
@@ -98,6 +100,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(zoom);
 
   set<C::Action>("Logic", "action");
+  set<C::Action>("Notifications", "action");
 
   set<C::String>("Hinter", "color", "FFFFFF");
   set<C::Functional_position>("Hinter", "position",
@@ -116,6 +119,14 @@ void Logic::run ()
 
   m_current_time = value<C::Double> (CLOCK__TIME);
   update_debug_info (get<C::Debug>(GAME__DEBUG));
+
+  if (receive ("Game", "clear_notifications"))
+  {
+    auto action = get<C::Action>("Notifications", "action");
+    for (const auto& th : action->scheduled())
+      emit (th.second->entity(), "end_notification");
+  }
+
   if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU)
       || signal("Game", "reset"))
   {
@@ -223,6 +234,8 @@ void Logic::run ()
           {
             if (C::cast<C::Signal>(th.second))
               set (th.second);
+            else if (th.second->component() == "notification")
+              emit (th.second->entity(), "end_notification");
             else if (th.second->entity() != "wait")
             {
               debug << a->str() << " remove " << th.second->str() << std::endl;
@@ -265,6 +278,7 @@ void Logic::run ()
 
   if (receive ("Game", "test"))
   {
+    push_notification("Test de notif", 1);
 
 #if 0 // Uncomment to quickly test paths
     Point p (-0.5, 970);
@@ -872,6 +886,23 @@ void Logic::create_dialog (const std::string& character,
     }
   }
 
+}
+
+void Logic::push_notification (const std::string& text, double duration)
+{
+  int number = 0;
+  while (request<C::String>("Notification_" + to_string(number), "notification"))
+    ++ number;
+  debug << "Number " << number << std::endl;
+
+  std::string id = "Notification_" + to_string(number);
+  auto notif = set<C::String>(id, "notification", text);
+
+  double begin_time = m_current_time;
+  double end_time = begin_time + duration;
+
+  auto action = get<C::Action>("Notifications", "action");
+  action->schedule (end_time, notif);
 }
 
 } // namespace Sosage::System

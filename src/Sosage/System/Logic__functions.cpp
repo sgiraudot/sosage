@@ -476,6 +476,18 @@ bool Logic::function_move60fps (const std::vector<std::string>& args)
 }
 
 /*
+  - notify: [STRING text, FLOAT duration] -> Emit a notification with text content for the wanted duration
+ */
+bool Logic::function_notify (const std::vector<std::string>& args)
+{
+  check (args.size() == 2, "function_notify takes 2 arguments");
+  std::string text = locale(args[0]);
+  double duration = to_double (args[1]);
+  push_notification(text, duration);
+  return true;
+}
+
+/*
   - pause: [ID animation_id] -> pauses the animation
  */
 bool Logic::function_pause (const std::vector<std::string>& args)
@@ -723,6 +735,9 @@ bool Logic::function_set (const std::vector<std::string>& args)
     img->set_relative_origin(0.5, 0.5);
     img->z() = Config::inventory_depth;
     img->on() = false;
+    if (!signal("Game", "in_new_room"))
+      push_notification (locale_get("You_got", "text") + " "
+                         + locale_get(target, "name") + ".", 3);
   }
 
   // Changing the state an object might change the labels of its

@@ -83,6 +83,7 @@ private:
   void create_dialog (const std::string& character,
                       const std::string& text,
                       std::vector<Component::Image_handle>& dialog);
+  void push_notification (const std::string& text, double duration);
 
   // Implemented in Logic__functions.cpp
   bool function_add (const std::vector<std::string>& args);
@@ -102,6 +103,7 @@ private:
   bool function_message (const std::vector<std::string>& args);
   bool function_move (const std::vector<std::string>& args);
   bool function_move60fps (const std::vector<std::string>& args);
+  bool function_notify (const std::vector<std::string>& args);
   bool function_pause (const std::vector<std::string>& args);
   bool function_play (const std::vector<std::string>& args);
   bool function_randomize (const std::vector<std::string>& args);

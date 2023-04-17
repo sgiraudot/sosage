@@ -60,6 +60,7 @@ void Interface::run()
   update_inventory();
   update_active_objects();
   update_action_selector();
+  update_notifications();
   update_object_switcher();
   update_code_hover();
   update_dialog_choices();
@@ -502,6 +503,76 @@ void Interface::update_object_switcher()
     else
       img->on() = false;
   }
+}
+
+void Interface::update_notifications()
+{
+  std::vector<C::Handle> to_remove;
+  for (auto c : components("notification"))
+  {
+    const std::string& id = c->entity();
+
+    if (receive (id, "end_notification"))
+    {
+      delete_label(id);
+      to_remove.push_back (c);
+      continue;
+    }
+
+    // If notification was already created, ignore
+    if (request<C::Image>(id, "image"))
+      continue;
+
+    auto group = set<C::Group>(id, "group");
+    std::string text = C::cast<C::String>(c)->value();
+
+    int number = to_int(std::string(id.begin() + id.find('_') + 1, id.end()));
+
+    int depth = Config::notification_depth;
+    unsigned int alpha = 170;
+
+    auto label = set<C::Image>(id, "image", get<C::Font>("Interface", "font"),
+                               "000000", text);
+    label->set_relative_origin(0.5, 0.5);
+    label->set_alpha(alpha);
+    label->set_scale(0.5);
+    label->z() = depth+1;
+    label->set_collision(UNCLICKABLE);
+    group->add(label);
+
+    auto left = C::make_handle<C::Image>(id + "_left_circle", "image",
+                                         get<C::Image>("White_left_circle", "image"));
+    auto right = C::make_handle<C::Image>(id + "_right_circle", "image",
+                                          get<C::Image>("White_right_circle", "image"));
+
+    int width = label->width() / 2;
+    auto back = C::make_handle<C::Image>(id + "_back", "image", width,
+                              Config::label_height,
+                              255, 255, 255);
+    left->compose_with (back);
+    back = left;
+    back->compose_with (right);
+
+    back->set_relative_origin(0, 0);
+    back->z() = depth;
+    back->set_collision(UNCLICKABLE);
+    back->set_alpha(alpha);
+    back->on() = true;
+    back = set<C::Image>(id + "_back", "image", back);
+    group->add(back);
+
+    int y = Config::label_margin + number * (Config::label_margin + Config::label_height);
+
+    set<C::Absolute_position>(id + "_back", "position",
+                              Point (Config::label_margin, y));
+    set<C::Absolute_position>(id, "position",
+                              Point (Config::label_margin + back->width() / 2,
+                                     y + back->height() / 2));
+    animate_label(id, FADE);
+  }
+
+  for (auto tr : to_remove)
+    remove(tr);
 }
 
 void Interface::update_inventory()

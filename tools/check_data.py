@@ -323,6 +323,7 @@ possible_functions = [ [ "add", is_integer_id, is_convertible_to_int ],
                        [ "move", is_movable_id, is_convertible_to_int, is_convertible_to_int, is_convertible_to_int ],
                        [ "move", is_movable_id, is_convertible_to_int, is_convertible_to_int, is_convertible_to_int, is_convertible_to_float ],
                        [ "move60fps", is_movable_id, is_convertible_to_int, is_convertible_to_int, is_convertible_to_int, is_convertible_to_float ],
+                       [ "notify", is_string_line, is_convertible_to_float ],
                        [ "pause", is_animation_id ],
                        [ "play", is_animation_id ],
                        [ "play", is_music_id ],
@@ -658,7 +659,6 @@ def test_actions(data, has_inventory = False):
             if test(m, "id"):
                 if m["id"] not in { "Mouse", "Touchscreen", "Gamepad" }:
                     error("Invalid mode " + m["id"])
-                    exit()
             if test(m, "effect", is_array):
                 test_action(m["effect"], has_inventory)
     else:

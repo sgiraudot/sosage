@@ -46,6 +46,7 @@ Content::Content()
           "lookat",
           "move",
           "move60fps",
+          "notification",
           "name",
           "path",
           "pause",

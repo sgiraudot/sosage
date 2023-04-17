@@ -78,6 +78,7 @@ public:
   using const_iterator = iterator;
 
   Handle_set (Handle_map& map) : m_map (map) { }
+  void clear() { m_map.clear(); }
   iterator begin() { return iterator(m_map.begin()); }
   iterator end() { return iterator(m_map.end()); }
   const_iterator begin() const { return iterator(m_map.begin()); }

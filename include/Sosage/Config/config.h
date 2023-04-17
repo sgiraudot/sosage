@@ -63,6 +63,7 @@ enum Depth
   menu_button_depth,
   menu_text_depth,
   cursor_depth,
+  notification_depth,
   loading_depth
 };
 

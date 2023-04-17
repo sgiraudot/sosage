@@ -208,7 +208,7 @@ void Input::run()
 #endif
 
 #ifdef SOSAGE_DEV
-    if (ev == Event(KEY_UP, T))
+    if (ev == Event(KEY_UP, N))
       emit("Game", "test");
 #endif
 

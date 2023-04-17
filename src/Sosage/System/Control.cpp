@@ -114,6 +114,9 @@ void Control::init()
 
 void Control::update_exit()
 {
+  if (signal("Game", "escape"))
+    emit("Game", "clear_notifications");
+
   if (status()->is (LOCKED))
   {
     if (receive("Game", "escape"))
