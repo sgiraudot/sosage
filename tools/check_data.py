@@ -125,13 +125,16 @@ def is_time(key, value):
         error(key + " is not a valid time (" + value + ")")
 
 accessed_files = set()
+register_access = True
 
 def file_exists(key, value, args):
     fname = args[0] + "/" + value + "." + args[1]
     if not os.path.exists(root_folder + "/" + fname):
         error(key + " refers to a non-existing file (" + fname + ")")
         return False
-    accessed_files.add(root_folder + "/" + fname)
+    if register_access:
+#        print("Register " + fname)
+        accessed_files.add(root_folder + "/" + fname)
     return True
 
 def test_id_unicity(ids, ref, new_id):
@@ -489,7 +492,6 @@ for filename in yaml_files:
 todo = []
 functions = {}
 
-
 print("# READING LOCALE")
 data = load_yaml(data_folder + "locale.yaml")
 locales = [ l["id"] for l in data["locales"] if l["id"] != 'fr_FR']
@@ -555,6 +557,7 @@ for act in ["look", "move", "take", "inventory_button", "inventory", "use",
         for e in data["default"][act]["effect"]:
             test(e, "talk/0", is_line)
 
+
 print("# GETTING GLOBAL ITEMS")
 global_items = {}
 global_states = {}
@@ -565,6 +568,7 @@ for s in sections:
             for item in data[s]:
                 global_items[s].add(item)
 
+register_access = False
 
 
 print("# TESTING INVENTORY OBJECTS")
@@ -609,7 +613,7 @@ all_items = {}
 for s in sections:
     all_states[s] = set()
     all_items[s] = set()
-    
+
 for filename in yaml_files:
     if '/' not in filename:
         continue
@@ -617,7 +621,7 @@ for filename in yaml_files:
     section, current_id = filename.split('/', 1)
     current_id = current_id.split('.',1)[0]
     ldata = load_yaml(data_folder + filename)
-    
+
     if section == "rooms":
         for s in sections:
             if has_key(ldata, s):
@@ -636,7 +640,7 @@ for filename in yaml_files:
             all_states = add_character_states(all_states, current_id, ldata)
         else:
             all_states = add_states(all_states, current_id, ldata)
-    
+
 print("# TESTING ALL ROOMS")
 done = set()
 
@@ -884,14 +888,20 @@ def get_item(section, item):
             error(fname + " does not exist")
             return None, None
         ldata = load_yaml(fname)
-        accessed_files.add(fname)
+        if register_access:
+#            print("Register " + fname)
+            accessed_files.add(fname)
         return item, ldata
 
 global_states = {}
 for section, items in global_items.items():
     for item in items:
-        accessed_files.add(data_folder + section + "/" + item + ".yaml")
+        if register_access:
+#            print("Register " + fname)
+            accessed_files.add(data_folder + section + "/" + item + ".yaml")
         global_states = add_states(global_states, item, load_yaml(data_folder + section + "/" + item + ".yaml"))
+
+register_access = True
 
 while todo:
     filename = "rooms/" + todo[0][0] + ".yaml"
@@ -967,6 +977,8 @@ while todo:
                 if not item_id:
                     continue
                 tests[s](ldata)
+
+register_access = False
 
 for section, it in global_items.items():
     for item_id in it:
