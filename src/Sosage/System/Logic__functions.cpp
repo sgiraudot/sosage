@@ -720,24 +720,29 @@ bool Logic::function_set (const std::vector<std::string>& args)
     state = args[2];
   }
 
-  if (startswith(current_state->value(), "inventory"))
-  {
+  bool was_in_inventory = startswith(current_state->value(), "inventory");
+  bool is_in_inventory = startswith (state, "inventory");
+
+  if (was_in_inventory && !is_in_inventory)
     get<C::Inventory>("Game", "inventory")->remove(target);
-    //get<C::Absolute_position>(target , "position")->absolute() = false;
-  }
 
   current_state->set (state);
-  if (startswith (state, "inventory"))
+
+  if (is_in_inventory)
   {
-    get<C::Inventory>("Game", "inventory")->add(target);
+    if (!was_in_inventory)
+    {
+      get<C::Inventory>("Game", "inventory")->add(target);
+      if (!signal("Game", "in_new_room"))
+        push_notification (locale_get("You_got", "text") + " "
+                           + locale_get(target, "name") + ".", 3);
+    }
+
     auto img
         = get<C::Image>(target , "image");
     img->set_relative_origin(0.5, 0.5);
     img->z() = Config::inventory_depth;
     img->on() = false;
-    if (!signal("Game", "in_new_room"))
-      push_notification (locale_get("You_got", "text") + " "
-                         + locale_get(target, "name") + ".", 3);
   }
 
   // Changing the state an object might change the labels of its

@@ -87,6 +87,7 @@ void File_IO::run()
     receive ("Time", "speedup");
     read_room (new_room->value());
     remove ("Game", "new_room");
+    emit ("Game", "clear_notifications");
   }
 
   if (receive("Game", "save"))
