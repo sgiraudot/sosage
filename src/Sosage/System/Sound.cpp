@@ -148,10 +148,9 @@ void Sound::run()
   {
     auto stime = C::cast<C::Double>(ev);
     double start_time = stime->value();
-    double speed_factor = value<C::Double>(ev->entity(), "speed_factor", 1.0);
     double current_time = value<C::Double>(CLOCK__TIME);
 
-    double period = (4. / Config::animation_fps) / speed_factor;
+    double period = (4. / Config::animation_fps);
 
     if (current_time - start_time >= period || start_time == current_time)
     {

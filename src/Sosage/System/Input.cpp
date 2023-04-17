@@ -200,6 +200,14 @@ void Input::run()
         || ev == Event(MOUSE_DOWN, RIGHT))
       emit ("Game", "clear_notifications");
 
+    // Speeding up game
+    if (ev == Event(MOUSE_DOWN, RIGHT) or ev == Event(KEY_DOWN, SPACE))
+      emit ("Time", "begin_speedup");
+    else if (ev == Event(MOUSE_UP, RIGHT) or ev == Event(KEY_UP, SPACE))
+    {
+      if (request<C::Double>("Speedup", "begin"))
+        emit ("Time", "end_speedup");
+    }
 
     if (ev == Event(WINDOW, FOREGROUND)
         && status()->is(PAUSED))
@@ -377,7 +385,12 @@ void Input::run()
             emit("Action", "inventory");
         }
         else if (ev.type() == BUTTON_UP)
+        {
           key_on(ev.value()) = false;
+          if (ev.value() == LEFT_SHOULDER || ev.value() == RIGHT_SHOULDER)
+            if (request<C::Double>("Speedup", "begin"))
+              emit ("Time", "end_speedup");
+        }
       }
 
     }
@@ -385,6 +398,11 @@ void Input::run()
 
   if (mode->value() == GAMEPAD)
   {
+    // Speed-up
+    if (key_on(RIGHT_SHOULDER) && key_on(LEFT_SHOULDER))
+      if (!request<C::Double>("Speedup", "begin"))
+        emit ("Time", "begin_speedup");
+
     // If D-PAD is used, ignore stick
     if (arrow_released || key_on(UP_ARROW)
         || key_on(DOWN_ARROW) || key_on(LEFT_ARROW)

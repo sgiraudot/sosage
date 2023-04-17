@@ -173,10 +173,6 @@ void Logic::run ()
       remove("Character", "action");
       const std::string& id = value<C::String>("Player", "name");
       remove(id , "path", true);
-      remove(id, "speed_factor", true);
-      if (auto follower = request<C::String>("Follower", "name"))
-        remove(follower->value(), "speed_factor", true);
-
       emit(id, "stop_walking");
     }
   }
@@ -307,9 +303,6 @@ void Logic::run ()
     {
       remove("Player", "move_start_time", true);
       remove(id, "path", true);
-      remove(id, "speed_factor", true);
-      if (auto follower = request<C::String>("Follower", "name"))
-        remove(follower->value(), "speed_factor", true);
       emit(id , "stop_walking");
     }
     else
@@ -320,25 +313,6 @@ void Logic::run ()
       Vector dir = direction->value();
       dir = Vector (dir.x() * 1.22, dir.y() / 1.41);
       compute_path_from_direction(dir);
-    }
-  }
-
-  if (auto move_start_time = request<C::Double>("Player", "move_start_time"))
-  {
-    // Increase speed every second
-    if (m_current_time - move_start_time->value() > 1.)
-    {
-      const std::string& player = value<C::String>("Player", "name");
-      if (auto speed_factor = request<C::Double>(player, "speed_factor"))
-      {
-        if (speed_factor->value() < 2.2)
-          speed_factor->set (speed_factor->value() + 0.25);
-        if (auto follower = request<C::String>("Follower", "name"))
-          set<C::Double>(follower->value(), "speed_factor", speed_factor->value() - 0.25);
-      }
-      else
-        set<C::Double>(player, "speed_factor", 1.25);
-      move_start_time->set(m_current_time);
     }
   }
 
@@ -570,31 +544,10 @@ bool Logic::compute_path_from_target (C::Position_handle target,
   if (path.empty() || ((path.size() == 1) && (path[0] == origin)))
     return false;
 
+  // Do not recompute if path is close to previous one
   if (auto previous_path = request<C::Path>(id, "path"))
-  {
     if (distance((*previous_path)[previous_path->size()-1], path[path.size()-1]) < 5)
-    {
-      if (is_player)
-      {
-        if (auto speed_factor = request<C::Double>(id, "speed_factor"))
-        {
-          if (speed_factor->value() < 2.2)
-            speed_factor->set (speed_factor->value() + 0.25);
-          if (auto follower = request<C::String>("Follower", "name"))
-            set<C::Double>(follower->value(), "speed_factor", speed_factor->value() - 0.25);
-        }
-        else
-          set<C::Double>(id, "speed_factor", 1.25);
-      }
       return true;
-    }
-  }
-  else
-  {
-    remove(id, "speed_factor", true);
-    if (auto follower = request<C::String>("Follower", "name"))
-      remove(follower->value(), "speed_factor", true);
-  }
 
   auto p = set<C::Path>(id , "path", path);
   if ((*p)[0] == origin)
@@ -663,7 +616,6 @@ void Logic::follow (const std::string& follower)
   else
   {
     remove(follower , "path", true);
-    remove(follower, "speed_factor", true);
     emit(follower , "stop_walking");
   }
 }

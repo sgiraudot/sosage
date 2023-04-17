@@ -48,9 +48,26 @@ void Time::run()
 {
   SOSAGE_TIMER_START(System_Time__run);
   SOSAGE_UPDATE_DBG_LOCATION("Time::run()");
+
   m_clock.update(true);
   get<C::Double> (CLOCK__TIME)->set(m_clock.time());
-  SOSAGE_TIMER_STOP(System_Time__run);
+
+  if (auto begin_speedup = request<C::Double>("Speedup", "begin"))
+  {
+    double time = begin_speedup->value()
+                  + Config::speedup_factor * (m_clock.time()
+                                              - begin_speedup->value());
+    get<C::Double> (CLOCK__TIME)->set(time);
+
+    if (status()->is(CUTSCENE) || receive ("Time", "end_speedup"))
+    {
+      m_clock.set (time);
+      remove (begin_speedup);
+    }
+  }
+
+  if (receive ("Time", "begin_speedup") && !status()->is(CUTSCENE))
+    set<C::Double>("Speedup", "begin", m_clock.time());
 
   // Do not count time spent in menu for in-game time computation
   if (!signal("Game", "save") &&
@@ -62,6 +79,7 @@ void Time::run()
     in_menu->set (in_menu->value() + (m_clock.time() - start->value()));
     remove (start);
   }
+  SOSAGE_TIMER_STOP(System_Time__run);
 }
 
 } // namespace Sosage::System

@@ -67,7 +67,6 @@ void Control::idle_gamepad()
     emit ("Cancel", "action");
     const std::string& id = value<C::String>("Player", "name");
     remove(id , "path", true);
-    remove(id, "speed_factor", true);
     emit(id, "stop_walking");
   }
   else if (receive("Action", "look"))
@@ -75,7 +74,6 @@ void Control::idle_gamepad()
     emit ("Cancel", "action");
     const std::string& id = value<C::String>("Player", "name");
     remove(id , "path", true);
-    remove(id, "speed_factor", true);
     emit(id, "stop_walking");
     if (auto active_object = request<C::String>("Interface", "active_object"))
     {

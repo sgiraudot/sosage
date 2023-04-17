@@ -816,7 +816,7 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
   SDL_ShowCursor(SDL_DISABLE);
 #endif
 
-#if 0
+#if 1
   SDL_GameController *controller = NULL;
   for (int i = 0; i < SDL_NumJoysticks(); ++i) {
       if (SDL_IsGameController(i)) {

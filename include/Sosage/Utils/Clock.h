@@ -49,6 +49,7 @@ public:
 
   Clock();
   double get() const;
+  void set (double time);
   void update(bool verbose = false);
   double fps() const;
   double time() const;

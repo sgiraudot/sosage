@@ -73,7 +73,6 @@ std::string Debug::debug_str()
              + ", " + std::to_string(pos->value().y()) + ", " + std::to_string(img->z()) + "]\n";
       out += "Player scale = " + std::to_string(img->scale()) + "\n";
     }
-    out += "Player speed = " + std::to_string(m_content.value<Double>(player, "speed_factor", 1.0)) + "\n";
   }
   return out;
 }

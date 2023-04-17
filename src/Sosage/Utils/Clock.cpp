@@ -47,6 +47,12 @@ double Clock::get() const
   return Time::now();
 }
 
+void Clock::set (double time)
+{
+  // After a speedup, resync time with nexw origin
+  m_start = m_latest - round(time * 1000.);
+}
+
 void Clock::update(bool verbose)
 {
   Time::Unit now = Time::now();

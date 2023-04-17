@@ -31,7 +31,15 @@
 #include <Sosage/System/Base.h>
 #include <Sosage/Utils/Clock.h>
 
-namespace Sosage::System
+namespace Sosage
+{
+
+namespace Config
+{
+constexpr double speedup_factor = 2.;
+}
+
+namespace System
 {
 
 class Time : public Base
@@ -45,6 +53,8 @@ public:
   virtual void run();
 };
 
-} // namespace Sosage::System
+} // namespace System
+} // namespace Sosage
+
 
 #endif // SOSAGE_SYSTEM_TIME_H

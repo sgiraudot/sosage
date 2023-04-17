@@ -297,11 +297,7 @@ void Animation::run_animation_frame()
     if (auto path = C::cast<C::Path>(c))
     {
       if (path->entity() != "Debug" && !compute_movement_from_path(path))
-      {
         to_remove.push_back(c);
-        if (auto speed_factor = request<C::Double>(c->entity(), "speed_factor"))
-          to_remove.push_back(speed_factor);
-      }
       else if (path->entity() == value<C::String>("Player", "name"))
       {
         has_moved = true;
@@ -481,7 +477,7 @@ bool Animation::compute_movement_from_path (C::Path_handle path)
 
   Point pos = pbody->value();
 
-  double to_walk = Config::character_speed * value<C::Double>(id, "speed_factor", 1.0);
+  double to_walk = Config::character_speed;
 
   if (auto ground_map = get_ground_map(id))
     to_walk *= ground_map->z_at_point (pos) / Config::world_depth;
@@ -564,38 +560,13 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
   else
     row_index = 3; // up
 
-  if (auto speed_factor = request<C::Double> (id, "speed_factor"))
+  image->frames().resize(image->width_subdiv());
+  for (std::size_t i = 0; i < std::size_t(image->width_subdiv()); ++ i)
   {
-    image->frames().clear();
-    int nb_images = image->width_subdiv();
-    int normal_id = 0;
-    int fast_id = 0;
-    int i = 0;
-    do
-    {
-      image->frames().emplace_back();
-
-      image->frames().back().x = int(fast_id);
-      image->frames().back().y = row_index;
-      image->frames().back().duration = 1;
-
-      ++ i;
-      normal_id = i % nb_images;
-      fast_id = round(i * speed_factor->value()) % nb_images;
-    }
-    while (normal_id != 0 && fast_id != 0);
+    image->frames()[i].x = int(i);
+    image->frames()[i].y = row_index;
+    image->frames()[i].duration = 1;
   }
-  else
-  {
-    image->frames().resize(image->width_subdiv());
-    for (std::size_t i = 0; i < std::size_t(image->width_subdiv()); ++ i)
-    {
-      image->frames()[i].x = int(i);
-      image->frames()[i].y = row_index;
-      image->frames()[i].duration = 1;
-    }
-  }
-
 }
 
 void Animation::generate_random_idle_animation (const std::string& id, bool looking_right)
