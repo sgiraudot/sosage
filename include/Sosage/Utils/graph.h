@@ -44,13 +44,13 @@ public:
   template <typename T>
   struct Typed_int
   {
-    int value;
+    std::size_t value;
     
-    Typed_int (const Typed_int& ti) : value (static_cast<int>(ti)) { }
-    Typed_int (const std::size_t& value) : value (static_cast<int>(value)) { }
-    Typed_int () : value (static_cast<int>(-1)) { }
+    Typed_int (const Typed_int& ti) : value (static_cast<std::size_t>(ti)) { }
+    Typed_int (const std::size_t& value) : value (value) { }
+    Typed_int () : value (static_cast<std::size_t>(-1)) { }
     Typed_int operator= (const Typed_int& ti) { value = ti.value; return *this; }
-    operator std::size_t() const { return static_cast<std::size_t>(value); }
+    operator std::size_t() const { return value; }
     bool operator== (const Typed_int& ti) const { return value == ti.value; }
     bool operator!= (const Typed_int& ti) const { return value != ti.value; }
     bool operator<  (const Typed_int& ti) const { return value < ti.value; }
@@ -150,8 +150,8 @@ public:
 
 public:
 
-  static Vertex null_vertex() { return Vertex(-1); }
-  static Edge null_edge() { return Edge(-1); }
+  static Vertex null_vertex() { return Vertex(); }
+  static Edge null_edge() { return Edge(); }
 
   VertexType& operator[] (const Vertex& v) { return m_vertices[v].base; }
   const VertexType& operator[] (const Vertex& v) const { return m_vertices[v].base; }

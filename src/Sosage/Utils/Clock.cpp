@@ -29,6 +29,8 @@
 #include <Sosage/Utils/error.h>
 #include <Sosage/Utils/profiling.h>
 
+#include <cmath>
+
 namespace Sosage
 {
 
@@ -50,7 +52,7 @@ double Clock::get() const
 void Clock::set (double time)
 {
   // After a speedup, resync time with nexw origin
-  m_start = m_latest - round(time * 1000.);
+  m_start = m_latest - std::lround(time * 1000.);
 }
 
 void Clock::update(bool verbose)
