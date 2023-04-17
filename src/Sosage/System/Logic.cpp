@@ -484,7 +484,12 @@ void Logic::run ()
     }
     if (!a->ready())
       continue;
-    //        debug << "Applying steps of action " << a->id() << std::endl;
+
+    C::Action_handle saved_character_action;
+    if (auto ca = request<C::Action>("Character", "action"))
+      if (ca == a)
+        saved_character_action = a;
+
     do
     {
       if (!apply_next_step (a))
@@ -492,15 +497,12 @@ void Logic::run ()
     }
     while (a->on());
 
-    // Action might have changed state, let's transfer the scheduled
-    // steps if that happens
-    auto new_a = request<C::Action>(a->entity(), a->component());
-    if (new_a && new_a != a && !a->scheduled().empty())
-    {
-      for (const auto& th : a->scheduled())
-        new_a->schedule (th.first, th.second);
-      a->reset_scheduled();
-    }
+    // If character action has changed state, let's save the
+    // previous stated action so it can finish safely
+    if (saved_character_action)
+      if (request<C::Action>(a->entity(), a->component())
+          != saved_character_action)
+        set<C::Variable>("Finishing", "action", saved_character_action);
   }
 
   SOSAGE_TIMER_STOP(System_Logic__run);
