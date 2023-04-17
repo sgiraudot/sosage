@@ -857,6 +857,41 @@ void File_IO::read_action (const std::string& id, const Core::File_IO::Node& nod
       conditional_handle->add(state, action);
     }
   }
+  else if (node.has("modes"))
+  {
+    auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+    auto conditional_handle = set<C::Simple_conditional<Input_mode>>(id , "action", mode);
+
+    for (std::size_t i = 0; i < node["modes"].size(); ++ i)
+    {
+      const Core::File_IO::Node& imode = node["modes"][i];
+      std::string mode_id = imode["id"].string();
+
+      Input_mode mode;
+      if (mode_id == "Mouse")
+        mode = MOUSE;
+      else if (mode_id == "Touchscreen")
+        mode = TOUCHSCREEN;
+      else if (mode_id == "Gamepad")
+        mode = GAMEPAD;
+      else
+      {
+        check (false, "Invalid mode " + mode_id);
+      }
+
+      auto action = C::make_handle<C::Action>(id , "action");
+
+      for (std::size_t k = 0; k < imode["effect"].size(); ++ k)
+      {
+        std::string function = imode["effect"][k].nstring();
+        if (function == "func")
+          parse_function (imode["effect"][k][function].string_array(), action);
+        else
+          action->add (function, imode["effect"][k][function].string_array());
+      }
+      conditional_handle->add(mode, action);
+    }
+  }
   else
   {
     auto action = set<C::Action>(id , "action");

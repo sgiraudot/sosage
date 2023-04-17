@@ -653,6 +653,14 @@ def test_actions(data, has_inventory = False):
             test(s, "id")
             if test(s, "effect", is_array):
                 test_action(s["effect"], has_inventory)
+    elif "modes" in data:
+        for m in data["modes"]:
+            if test(m, "id"):
+                if m["id"] not in { "Mouse", "Touchscreen", "Gamepad" }:
+                    error("Invalid mode " + m["id"])
+                    exit()
+            if test(m, "effect", is_array):
+                test_action(m["effect"], has_inventory)
     else:
         test_action(data["effect"], has_inventory)
     is_num = False

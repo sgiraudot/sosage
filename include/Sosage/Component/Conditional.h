@@ -50,7 +50,7 @@ class Conditional : public Conditional_base
   Condition_handle m_condition;
   Handle m_if_true;
   Handle m_if_false;
-  
+
 public:
 
   Conditional (const std::string& entity, const std::string& component,
@@ -68,27 +68,58 @@ public:
 
 using Conditional_handle = std::shared_ptr<Conditional>;
 
-class String_conditional : public Conditional_base
+template <typename T>
+class Simple_conditional : public Conditional_base
 {
-  String_handle m_state;
-  std::unordered_map<std::string, Handle> m_handles;
-  
+  Simple_handle<T> m_simple;
+  std::unordered_map<T, Handle> m_handles;
+
 public:
 
-  String_conditional (const std::string& entity, const std::string& component,
-                      String_handle state);
-  virtual ~String_conditional();
-  void add (const std::string& state, Handle h);
-  void set (const std::string& state, Handle h);
-  virtual Handle get() const;
+  Simple_conditional (const std::string& entity, const std::string& component,
+                      Simple_handle<T> simple)
+    : Conditional_base(entity, component)
+    , m_simple (simple)
+  { }
+
+  virtual ~Simple_conditional()
+  {
+    m_simple = Simple_handle<T>();
+    m_handles.clear();
+  }
+
+  void add (const T& s, Handle h)
+  {
+    m_handles.insert (std::make_pair (s, h));
+  }
+
+  void set (const T& s, Handle h)
+  {
+    auto iter = m_handles.find(s);
+    dbg_check(iter != m_handles.end(), "Value " + to_string(s) + " not found in conditional " + str());
+    iter->second = h;
+  }
+
+  virtual Handle get() const
+  {
+    auto iter
+      = m_handles.find(m_simple->value());
+    if (iter == m_handles.end())
+      return Handle();
+    return iter->second;
+  }
 };
 
+template <typename T>
+using Simple_conditional_handle = std::shared_ptr<Simple_conditional<T>>;
+
+using String_conditional = Simple_conditional<std::string>;
 using String_conditional_handle = std::shared_ptr<String_conditional>;
 
 class Random_conditional : public Conditional_base
 {
   std::vector<Handle> m_handles;
-  
+
 public:
 
   Random_conditional (const std::string& entity, const std::string& component);

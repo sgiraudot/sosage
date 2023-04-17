@@ -57,40 +57,6 @@ Handle Conditional::get() const
   return (m_condition->value() ? m_if_true : m_if_false);
 }
 
-String_conditional::String_conditional (const std::string& entity, const std::string& component,
-                                        String_handle state)
-  : Conditional_base(entity, component)
-  , m_state (state)
-{ }
-
-String_conditional::~String_conditional()
-{
-  m_state = String_handle();
-  m_handles.clear();
-}
-
-void String_conditional::add (const std::string& state, Handle h)
-{
-  m_handles.insert (std::make_pair (state, h));
-}
-  
-void String_conditional::set (const std::string& state, Handle h)
-{
-  auto iter = m_handles.find(state);
-  dbg_check(iter != m_handles.end(), "State " + state + " not found in string conditional " + str());
-  iter->second = h;
-}
-
-Handle String_conditional::get() const
-{
-  auto iter
-    = m_handles.find(m_state->value());
-  if (iter == m_handles.end())
-    return Handle();
-//  check (iter != m_handles.end(), "Cannot find state " + m_state->value() + " in " + id());
-  return iter->second;
-}
-
 Random_conditional::Random_conditional (const std::string& entity, const std::string& component)
   : Conditional_base(entity, component)
 { }
@@ -104,7 +70,7 @@ void Random_conditional::add (Handle h)
 {
   m_handles.emplace_back(h);
 }
-  
+
 Handle Random_conditional::get() const
 {
   return random_choice(m_handles);
