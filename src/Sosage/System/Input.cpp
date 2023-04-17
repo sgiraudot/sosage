@@ -58,6 +58,14 @@ void Input::run()
   SOSAGE_TIMER_START(System_Input__run);
   SOSAGE_UPDATE_DBG_LOCATION("Input::run()");
 
+  // Reset key status after loading, as some events
+  // might get lost while loading
+  if (signal ("Game", "in_new_room"))
+  {
+    m_keys_on.clear();
+    m_keys_on.resize (NUMBER_OF_EVENT_VALUES, false);
+  }
+
 #ifdef SOSAGE_DEV
   bool keyboard_used = false;
 #endif
@@ -201,12 +209,9 @@ void Input::run()
 
     // Speeding up game
     if (ev == Event(MOUSE_DOWN, RIGHT) or ev == Event(KEY_DOWN, SPACE))
-      emit ("Time", "begin_speedup");
+      emit ("Time", "speedup");
     else if (ev == Event(MOUSE_UP, RIGHT) or ev == Event(KEY_UP, SPACE))
-    {
-      if (request<C::Double>("Speedup", "begin"))
-        emit ("Time", "end_speedup");
-    }
+      receive ("Time", "speedup");
 
     if (ev == Event(WINDOW, FOREGROUND)
         && status()->is(PAUSED))
@@ -315,7 +320,7 @@ void Input::run()
       {
         // Very specific case of fast forward
         if (ev.x() > Config::world_width - 150 && ev.y() < 150)
-          emit ("Time", "begin_speedup");
+          emit ("Time", "speedup");
         else
         {
           get<C::Position>
@@ -329,8 +334,7 @@ void Input::run()
 #endif
                )
       {
-        if (request<C::Double>("Speedup", "begin"))
-          emit ("Time", "end_speedup");
+        receive ("Time", "speedup");
       }
     }
     else // if (mode->value() == GAMEPAD)
@@ -389,14 +393,8 @@ void Input::run()
             emit("Action", "inventory");
         }
         else if (ev.type() == BUTTON_UP)
-        {
           key_on(ev.value()) = false;
-          if (ev.value() == LEFT_SHOULDER || ev.value() == RIGHT_SHOULDER)
-            if (request<C::Double>("Speedup", "begin"))
-              emit ("Time", "end_speedup");
-        }
       }
-
     }
   }
 
@@ -404,8 +402,12 @@ void Input::run()
   {
     // Speed-up
     if (key_on(RIGHT_SHOULDER) && key_on(LEFT_SHOULDER))
-      if (!request<C::Double>("Speedup", "begin"))
-        emit ("Time", "begin_speedup");
+    {
+      debug << "KEY ON" << std::endl;
+      emit ("Time", "speedup");
+    }
+    else
+      receive ("Time", "speedup");
 
     // If D-PAD is used, ignore stick
     if (arrow_released || key_on(UP_ARROW)

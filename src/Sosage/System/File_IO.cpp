@@ -84,6 +84,7 @@ void File_IO::run()
 
   if (auto new_room = request<C::String>("Game", "new_room"))
   {
+    receive ("Time", "speedup");
     read_room (new_room->value());
     remove ("Game", "new_room");
   }

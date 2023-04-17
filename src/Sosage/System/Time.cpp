@@ -52,22 +52,24 @@ void Time::run()
   m_clock.update(true);
   get<C::Double> (CLOCK__TIME)->set(m_clock.time());
 
-  if (auto begin_speedup = request<C::Double>("Speedup", "begin"))
+  if (signal ("Time", "speedup"))
   {
+    auto begin_speedup = get_or_set<C::Double>("Time", "begin_speedup", m_clock.time());
     double time = begin_speedup->value()
                   + Config::speedup_factor * (m_clock.time()
                                               - begin_speedup->value());
     get<C::Double> (CLOCK__TIME)->set(time);
-
-    if (status()->is(CUTSCENE) || receive ("Time", "end_speedup"))
-    {
-      m_clock.set (time);
-      remove (begin_speedup);
-    }
   }
+  else if (auto begin_speedup = request<C::Double>("Time", "begin_speedup"))
+  {
+    double time = begin_speedup->value()
+                  + Config::speedup_factor * (m_clock.time()
+                                              - begin_speedup->value());
 
-  if (receive ("Time", "begin_speedup") && !status()->is(CUTSCENE))
-    set<C::Double>("Speedup", "begin", m_clock.time());
+    m_clock.set (time);
+    remove (begin_speedup);
+    get<C::Double> (CLOCK__TIME)->set(time);
+  }
 
   // Do not count time spent in menu for in-game time computation
   if (!signal("Game", "save") &&

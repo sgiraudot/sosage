@@ -156,6 +156,7 @@ bool Logic::function_control (const std::vector<std::string>& args)
  */
 bool Logic::function_cutscene (const std::vector<std::string>&)
 {
+  receive ("Time", "speedup");
   status()->push(CUTSCENE);
   return true;
 }
