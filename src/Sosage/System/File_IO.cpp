@@ -599,6 +599,24 @@ void File_IO::read_init ()
   auto white_right_circle_img = set<C::Image>("White_right_circle", "image", white_right_circle, 1, BOX, true);
   white_right_circle_img->on() = false;
 
+  std::string fast_forward = input["fast_forward"].string("images", "interface", "png");
+  auto fast_forward_img = C::make_handle<C::Image>("Fast_forward", "image", fast_forward,
+                                                   Config::notification_depth, BOX);
+  fast_forward_img->set_relative_origin(1.0, 0.0);
+  fast_forward_img->set_alpha(64);
+  set<C::Absolute_position>("Fast_forward", "position", Point(Config::world_width - 20, 20));
+
+  // Fast forward only displayed in touchscreen mode AND not cutscene
+  set<C::Conditional>
+      ("Fast_forward", "image",
+       C::make_and
+       (C::make_simple_condition
+        (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE), TOUCHSCREEN),
+        C::make_not(C::make_value_condition
+                    (get<C::Value<Status>>(GAME__STATUS), CUTSCENE))),
+       fast_forward_img);
+
+
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
   set<C::Font> ("Debug", "font", debug_font, 40);
 

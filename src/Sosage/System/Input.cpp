@@ -307,25 +307,30 @@ void Input::run()
     }
     else if (mode->value() == TOUCHSCREEN)
     {
+      if (ev == Event(TOUCH_DOWN, LEFT)
 #ifdef SOSAGE_DEV
-      if (m_fake_touchscreen) // Simulate touchscreen with mouse for testing
+          || (m_fake_touchscreen && ev == Event(MOUSE_DOWN, LEFT))
+ #endif
+          )
       {
-        if (ev == Event(MOUSE_DOWN, LEFT))
+        // Very specific case of fast forward
+        if (ev.x() > Config::world_width - 150 && ev.y() < 150)
+          emit ("Time", "begin_speedup");
+        else
         {
           get<C::Position>
               (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
           emit ("Cursor", "clicked");
         }
       }
-      else // Real touchscreen
+      else if (ev == Event(TOUCH_UP, LEFT)
+#ifdef SOSAGE_DEV
+                   || (m_fake_touchscreen && ev == Event(MOUSE_UP, LEFT))
 #endif
+               )
       {
-        if (ev == Event(TOUCH_DOWN, LEFT))
-        {
-          get<C::Position>
-            (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-          emit ("Cursor", "clicked");
-        }
+        if (request<C::Double>("Speedup", "begin"))
+          emit ("Time", "end_speedup");
       }
     }
     else // if (mode->value() == GAMEPAD)
