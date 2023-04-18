@@ -975,7 +975,7 @@ void SDL::draw (const Image& image, unsigned char alpha,
         SDL_RenderCopyF(m_renderer, image->texture[idx], &inter, &target);
         if (image->highlight[idx] != nullptr && highlight_alpha != 0)
         {
-          SDL_SetTextureAlphaMod(image->highlight[idx], alpha);
+          SDL_SetTextureAlphaMod(image->highlight[idx], highlight_alpha);
           SDL_RenderCopyF(m_renderer, image->highlight[idx], &inter, &target);
         }
 
