@@ -313,11 +313,11 @@ void File_IO::read_room (const std::string& file_name)
   }
   if (input.has("ground_map"))
   {
-    emit ("Player", "not_moved_yet");
     int front_z = input["front_z"].integer();
     int back_z = input["back_z"].integer();
     if (input["ground_map"].size() == 0)
     {
+      emit ("Player", "not_moved_yet");
       std::string ground_map = input["ground_map"].string("images", "backgrounds", "png");
       set<C::Ground_map>("background", "ground_map", ground_map,
                          front_z, back_z, callback->value());
@@ -326,6 +326,8 @@ void File_IO::read_room (const std::string& file_name)
     {
       if (input["ground_map"][0].string() != "null")
       {
+        emit ("Player", "not_moved_yet");
+
         std::string ground_map = input["ground_map"][0].string("images", "backgrounds", "png");
         set<C::Ground_map>("background", "ground_map", ground_map,
                            front_z, back_z, callback->value());
