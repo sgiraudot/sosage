@@ -189,8 +189,8 @@ void Ground_map::build_graph (const std::function<void()>& callback)
     if (it != todo.end())
       todo.erase (it);
 
-    m_graph.delete_edge(m_graph.incident_edge(v, 0));
     m_graph.delete_edge(m_graph.incident_edge(v, 1));
+    m_graph.delete_edge(m_graph.incident_edge(v, 0));
 
     m_graph.add_edge (n0, n1);
 
