@@ -182,7 +182,32 @@ void Logic::run ()
     std::stringstream ss(console_action->value());
     std::string function;
     std::getline(ss, function, ' ');
-    if (m_dispatcher.find(function) == m_dispatcher.end())
+    if (function == "info")
+    {
+      std::vector<std::string> args(1);
+      while (std::getline(ss, args.back(), ' '))
+      {
+        args.emplace_back();
+      }
+      args.pop_back();
+
+      if (args.size() != 2)
+      {
+        debug << "Info requires 2 arguments" << std::endl;
+      }
+      else
+      {
+        if (auto comp = request<C::Base>(args[0], args[1]))
+        {
+          debug << "INFO = " << comp->str() << std::endl;
+        }
+        else
+        {
+          debug << "Component " << args[0] << ":" << args[1] << " not found" << std::endl;
+        }
+      }
+    }
+    else if (m_dispatcher.find(function) == m_dispatcher.end())
     {
       debug << "Function " << function << " not found" << std::endl;
     }

@@ -29,6 +29,7 @@
 
 #include <Sosage/Component/Base.h>
 #include <Sosage/Component/Condition.h>
+#include <Sosage/Utils/conversions.h>
 
 #include <unordered_map>
 #include <vector>
@@ -108,6 +109,15 @@ public:
       return Handle();
     return iter->second;
   }
+
+  STR_NAME("Simple_conditional");
+  STR_VALUE(to_string(m_simple->value()));
+  STR_SUB(
+      std::string out;
+  for (const auto& h : m_handles)
+      out += component_str(h.second, indent+1, "If " + to_string(h.first) + " = ");
+  return out;
+  );
 };
 
 template <typename T>

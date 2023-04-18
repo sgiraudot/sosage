@@ -93,6 +93,10 @@ public:
   bool is_target_inside (int x, int y) const;
 
   STR_NAME("Image");
+  STR_VALUE(std::string(m_on ? "ON" : "OFF") + ", z=" + to_string(m_z)
+            + ", scale=" + to_string(m_scaling)
+            + ", alpha=" + to_string(m_alpha)
+            + ", highlight=" + to_string(m_highlight_alpha));
 };
 
 using Image_handle = std::shared_ptr<Image>;

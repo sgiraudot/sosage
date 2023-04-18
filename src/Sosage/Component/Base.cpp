@@ -103,6 +103,9 @@ std::string Base::str() const
   std::string v = str_value();
   if (v != "")
     out += " = " + v;
+  std::string sub = str_sub(0);
+  if (sub != "")
+    out += "\n" + sub;
   return out;
 }
 
