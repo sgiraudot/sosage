@@ -350,53 +350,25 @@ void Interface::make_text_menu_text (Component::Menu::Node node, const std::stri
 void Interface::make_settings_item (Component::Menu::Node node, const std::string& id, int y)
 {
   auto reference = get<C::Position>("Menu", "reference");
-  auto font = get<C::Font>("Interface", "font");
   auto light_font = get<C::Font>("Interface", "light_font");
 
   // Create button
-  auto button = request<C::Image>(id + "_button", "image");
+
+  C::Image_handle button;
   C::Position_handle pos_button;
-  if (!button)
-  {
-    button = set<C::Image>(id + "_button", "image", get<C::Image>("Menu_settings_button", "image"));
-    button->z() = Config::menu_button_depth;
-    button->set_relative_origin(0.5, 0.5);
-    button->on() = false;
-    pos_button = set<C::Relative_position>(id + "_button", "position", reference,
-                                           Vector (240, y + Config::settings_menu_height / 2));
-  }
-  else
-    pos_button = get<C::Position>(id + "_button", "position");
+  std::tie (button, pos_button) = make_settings_button (id, y);
   node.init(button, pos_button);
 
-  set<C::String>(id , "effect", id);
+  set<C::String>(id, "effect", id);
 
   node.split(HORIZONTALLY, 4);
 
   // Setting title
   {
-    auto text = request<C::String>(id , "text");
-    auto img = request<C::Image>(id , "image");
-    C::Position_handle pos, pos_icon;
-    if (!img)
-    {
-      img = set<C::Image>(id + "_setting", "image", font, "FFFFFF", locale(text->value()));
-      img->z() = Config::menu_text_depth;
-      img->on() = false;
-      img->set_scale(0.5);
-      img->set_relative_origin(0, 0.5);
-      img->set_collision(UNCLICKABLE);
-
-      pos = set<C::Relative_position>(id + "_setting", "position", reference,
-                                      Vector (Config::settings_menu_margin
-                                              + Config::settings_menu_in_margin,
-                                              y + Config::settings_menu_in_margin
-                                              + Config::settings_menu_margin));
-    }
-    else
-    {
-      pos = get<C::Position>(id + "_setting", "position");
-    }
+    C::Image_handle img;
+    C::Position_handle pos;
+    std::tie (img, pos) = make_settings_title (id, "setting", y,
+                                               locale_get(id, "text"));
     node[0].init(img, pos);
   }
 
@@ -475,6 +447,83 @@ void Interface::make_settings_item (Component::Menu::Node node, const std::strin
                                                       - Config::settings_menu_margin));
     node[3].init (right_arrow, right_pos);
   }
+}
+
+std::pair<C::Image_handle, C::Position_handle>
+Interface::make_settings_button (const std::string& id, int y)
+{
+  auto button = request<C::Image>(id + "_button", "image");
+  if (!button)
+  {
+    auto reference = get<C::Position>("Menu", "reference");
+    auto button = set<C::Image>(id + "_button", "image",
+                                get<C::Image>("Menu_settings_button", "image"));
+    button->z() = Config::menu_button_depth;
+    button->set_relative_origin(0.5, 0.5);
+    button->on() = false;
+    auto pos_button = set<C::Relative_position>(id + "_button", "position",
+                                                reference,
+                                                Vector (240, y + Config::settings_menu_height / 2));
+    return std::make_pair (button, pos_button);
+  }
+  // else
+  return std::make_pair (button, get<C::Position>(id + "_button", "position"));
+}
+
+std::pair<C::Image_handle, C::Position_handle>
+Interface::make_settings_title (const std::string& id, const std::string& suffix, int y, const std::string& text)
+{
+  auto reference = get<C::Position>("Menu", "reference");
+  auto font = get<C::Font>("Interface", "font");
+  auto img = request<C::Image>(id , "image");
+  C::Position_handle pos, pos_icon;
+  if (!img)
+  {
+    img = set<C::Image>(id + "_" + suffix, "image", font, "FFFFFF", text);
+    img->z() = Config::menu_text_depth;
+    img->on() = false;
+    img->set_scale(0.5);
+    img->set_relative_origin(0, 0.5);
+    img->set_collision(UNCLICKABLE);
+
+    set<C::Relative_position>(id + "_" + suffix, "position", reference,
+                              Vector (Config::settings_menu_margin
+                                      + Config::settings_menu_in_margin,
+                                      y + Config::settings_menu_in_margin
+                                      + Config::settings_menu_margin));
+  }
+  else
+    pos = get<C::Position>(id + "_" + suffix, "position");
+
+  return std::make_pair (img, pos);
+}
+
+std::pair<C::Image_handle, C::Position_handle>
+Interface::make_settings_subtitle (const std::string& id, const std::string& suffix,
+                                   int y, const std::string& text)
+{
+  auto reference = get<C::Position>("Menu", "reference");
+  auto light_font = get<C::Font>("Interface", "light_font");
+  auto img = request<C::Image>(id + "_number", "image");
+  C::Position_handle pos;
+  if (!img)
+  {
+    img = set<C::Image>(id + "_" + suffix, "image", light_font, "FFFFFF", text);
+    img->z() = Config::menu_text_depth;
+    img->on() = false;
+    img->set_scale(0.45);
+    img->set_relative_origin(0, 0.5);
+    img->set_collision(UNCLICKABLE);
+
+    pos = set<C::Relative_position>(id + "_" + suffix, "position", reference,
+                                    Vector (Config::settings_menu_margin
+                                            + Config::settings_menu_in_margin,
+                                            y + Config::settings_menu_value_margin));
+  }
+  else
+    pos = get<C::Position>(id + "_" + suffix, "position");
+
+  return std::make_pair (img, pos);
 }
 
 void Interface::update_menu()
@@ -921,9 +970,6 @@ void Interface::update_phone_menu()
   make_text_menu_title((*phone_menu)[0], "Phone");
 
   // Make action item
-  auto reference = get<C::Position>("Menu", "reference");
-  auto font = get<C::Font>("Interface", "font");
-  auto light_font = get<C::Font>("Interface", "light_font");
 
   std::size_t idx = 1;
   int y = Config::settings_menu_start;
@@ -938,19 +984,9 @@ void Interface::update_phone_menu()
 
     // Create button
     C::Menu::Node node = (*phone_menu)[idx];
-    auto button = request<C::Image>(id + "_button", "image");
+    C::Image_handle button;
     C::Position_handle pos_button;
-    if (!button)
-    {
-      button = set<C::Image>(id + "_button", "image", get<C::Image>("Menu_settings_button", "image"));
-      button->z() = Config::menu_button_depth;
-      button->set_relative_origin(0.5, 0.5);
-      button->on() = false;
-      pos_button = set<C::Relative_position>(id + "_button", "position", reference,
-                                             Vector (240, y + Config::settings_menu_height / 2));
-    }
-    else
-      pos_button = get<C::Position>(id + "_button", "position");
+    std::tie (button, pos_button) = make_settings_button (id, y);
     node.init(button, pos_button);
 
     set<C::String>(id , "effect", id);
@@ -959,50 +995,17 @@ void Interface::update_phone_menu()
 
     // Name
     {
-      auto img = request<C::Image>(id + "_name", "image");
+      C::Image_handle img;
       C::Position_handle pos;
-      if (!img)
-      {
-        img = set<C::Image>(id + "_name", "image", font, "FFFFFF", name);
-        img->z() = Config::menu_text_depth;
-        img->on() = false;
-        img->set_scale(0.5);
-        img->set_relative_origin(0, 0.5);
-        img->set_collision(UNCLICKABLE);
-
-        pos = set<C::Relative_position>(id + "_name", "position", reference,
-                                        Vector (Config::settings_menu_margin
-                                                + Config::settings_menu_in_margin,
-                                                y + Config::settings_menu_in_margin
-                                                + Config::settings_menu_margin));
-      }
-      else
-      {
-        pos = get<C::Position>(id + "_name", "position");
-      }
+      std::tie (img, pos) = make_settings_title (id, "name", y, name);
       node[0].init(img, pos);
     }
 
     // Number value
     {
-      auto img = request<C::Image>(id + "_number", "image");
+      C::Image_handle img;
       C::Position_handle pos;
-      if (!img)
-      {
-        img = set<C::Image>(id + "_number", "image", light_font, "FFFFFF", number);
-        img->z() = Config::menu_text_depth;
-        img->on() = false;
-        img->set_scale(0.45);
-        img->set_relative_origin(0, 0.5);
-        img->set_collision(UNCLICKABLE);
-
-        pos = set<C::Relative_position>(id + "_number", "position", reference,
-                                        Vector (Config::settings_menu_margin
-                                                + Config::settings_menu_in_margin,
-                                                y + Config::settings_menu_value_margin));
-      }
-      else
-        pos = get<C::Position>(id + "_number", "position");
+      std::tie (img, pos) = make_settings_subtitle (id, "number", y, number);
       node[1].init(img, pos);
     }
     y += Config::settings_menu_height;

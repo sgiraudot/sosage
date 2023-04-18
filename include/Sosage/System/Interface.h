@@ -124,6 +124,16 @@ private:
   void make_text_menu_text (Component::Menu::Node node, const std::string& id, bool credits = false);
   void make_settings_item (Component::Menu::Node node, const std::string& id, int y);
 
+  std::pair<Component::Image_handle, Component::Position_handle>
+  make_settings_button (const std::string& id, int y);
+  std::pair<Component::Image_handle, Component::Position_handle>
+  make_settings_title (const std::string& id, const std::string& suffix, int y,
+                       const std::string& text);
+  std::pair<Component::Image_handle, Component::Position_handle>
+  make_settings_subtitle (const std::string& id, const std::string& suffix, int y,
+                          const std::string& text);
+
+
   void create_menu (const std::string& id);
   void delete_menu (const std::string& id);
   void menu_clicked ();
