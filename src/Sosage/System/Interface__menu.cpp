@@ -46,9 +46,10 @@ constexpr int exit_menu_logo = 130;
 constexpr int exit_menu_start = 300;
 constexpr int exit_menu_text = menu_margin + 60;
 constexpr int settings_menu_margin = 15;
-constexpr int settings_menu_start = 120;
+constexpr int settings_menu_start = 135;
+constexpr int settings_menu_height = 100;
 constexpr int settings_menu_in_margin = 20;
-constexpr int settings_menu_value_margin = 65;
+constexpr int settings_menu_value_margin = 75;
 constexpr int settings_menu_larrow_x = settings_menu_margin + 370;
 constexpr int settings_menu_rarrow_x = settings_menu_margin + 420;
 } // namespace Sosage::Config
@@ -107,13 +108,13 @@ void Interface::init_menus()
 
   auto settings_menu = set<C::Menu>("Settings", "menu");
   if constexpr (Config::emscripten || Config::android)
-    settings_menu->split(VERTICALLY, 7);
+      settings_menu->split(VERTICALLY, 7);
   else
-    settings_menu->split(VERTICALLY, 8);
+  settings_menu->split(VERTICALLY, 8);
 
-    make_text_menu_title((*settings_menu)[0], "Settings");
-    idx = 1;
-    y = Config::settings_menu_start;
+  make_text_menu_title((*settings_menu)[0], "Settings");
+  idx = 1;
+  y = Config::settings_menu_start;
   for (const std::string& id : { "Language",
 #if !defined (SOSAGE_ANDROID) && !defined(SOSAGE_EMSCRIPTEN)
         "Fullscreen",
@@ -121,7 +122,7 @@ void Interface::init_menus()
        "Text_size", "Text_speed", "Music_volume", "Sound_volume" })
   {
     make_settings_item ((*settings_menu)[idx], id, y);
-    y += Config::settings_menu_start;
+    y += Config::settings_menu_height + Config::settings_menu_margin;
     idx ++;
   }
   make_oknotok_item ((*settings_menu)[idx], true);
@@ -362,7 +363,7 @@ void Interface::make_settings_item (Component::Menu::Node node, const std::strin
     button->set_relative_origin(0.5, 0.5);
     button->on() = false;
     pos_button = set<C::Relative_position>(id + "_button", "position", reference,
-                                           Vector (240, y + Config::settings_menu_start / 2 - Config::settings_menu_margin));
+                                           Vector (240, y + Config::settings_menu_height / 2));
   }
   else
     pos_button = get<C::Position>(id + "_button", "position");
@@ -387,8 +388,10 @@ void Interface::make_settings_item (Component::Menu::Node node, const std::strin
       img->set_collision(UNCLICKABLE);
 
       pos = set<C::Relative_position>(id + "_setting", "position", reference,
-                                      Vector (Config::settings_menu_margin + Config::settings_menu_in_margin,
-                                              y + Config::settings_menu_in_margin));
+                                      Vector (Config::settings_menu_margin
+                                              + Config::settings_menu_in_margin,
+                                              y + Config::settings_menu_in_margin
+                                              + Config::settings_menu_margin));
     }
     else
     {
@@ -418,7 +421,8 @@ void Interface::make_settings_item (Component::Menu::Node node, const std::strin
                           "100" };
 
     auto pos = set<C::Relative_position>(id , "position", reference,
-                                         Vector (Config::settings_menu_margin + Config::settings_menu_in_margin,
+                                         Vector (Config::settings_menu_margin
+                                                 + Config::settings_menu_in_margin,
                                                  y + Config::settings_menu_value_margin));
     for (std::size_t i = 0; i < possible_values.size(); ++ i)
     {
@@ -434,7 +438,7 @@ void Interface::make_settings_item (Component::Menu::Node node, const std::strin
       auto img = set<C::Image>(value_id , "image", light_font, "FFFFFF", text);
       img->z() = Config::menu_text_depth;
       img->on() = false;
-      img->set_scale(0.5);
+      img->set_scale(0.45);
       img->set_relative_origin(0, 0.5);
       img->set_collision(UNCLICKABLE);
       set<C::Variable>(value_id , "position", pos);
@@ -455,7 +459,8 @@ void Interface::make_settings_item (Component::Menu::Node node, const std::strin
     auto left_pos = set<C::Relative_position>(id + "_left_arrow", "position",
                                               reference,
                                               Vector(Config::settings_menu_larrow_x,
-                                                     y + Config::settings_menu_start / 2));
+                                                     y + Config::settings_menu_value_margin
+                                                     - Config::settings_menu_margin));
     node[2].init (left_arrow, left_pos);
 
     auto right_arrow = set<C::Image>(id + "_right_arrow", "image",
@@ -466,7 +471,8 @@ void Interface::make_settings_item (Component::Menu::Node node, const std::strin
     auto right_pos = set<C::Relative_position>(id + "_right_arrow", "position",
                                                reference,
                                                Vector(Config::settings_menu_rarrow_x,
-                                                      y + Config::settings_menu_start / 2));
+                                                      y + Config::settings_menu_value_margin
+                                                      - Config::settings_menu_margin));
     node[3].init (right_arrow, right_pos);
   }
 }
@@ -941,7 +947,7 @@ void Interface::update_phone_menu()
       button->set_relative_origin(0.5, 0.5);
       button->on() = false;
       pos_button = set<C::Relative_position>(id + "_button", "position", reference,
-                                             Vector (240, y + Config::settings_menu_start / 2 - Config::settings_menu_margin));
+                                             Vector (240, y + Config::settings_menu_height / 2));
     }
     else
       pos_button = get<C::Position>(id + "_button", "position");
@@ -965,8 +971,10 @@ void Interface::update_phone_menu()
         img->set_collision(UNCLICKABLE);
 
         pos = set<C::Relative_position>(id + "_name", "position", reference,
-                                        Vector (Config::settings_menu_margin + Config::settings_menu_in_margin,
-                                                y + Config::settings_menu_in_margin));
+                                        Vector (Config::settings_menu_margin
+                                                + Config::settings_menu_in_margin,
+                                                y + Config::settings_menu_in_margin
+                                                + Config::settings_menu_margin));
       }
       else
       {
@@ -984,19 +992,20 @@ void Interface::update_phone_menu()
         img = set<C::Image>(id + "_number", "image", light_font, "FFFFFF", number);
         img->z() = Config::menu_text_depth;
         img->on() = false;
-        img->set_scale(0.5);
+        img->set_scale(0.45);
         img->set_relative_origin(0, 0.5);
         img->set_collision(UNCLICKABLE);
 
         pos = set<C::Relative_position>(id + "_number", "position", reference,
-                                        Vector (Config::settings_menu_margin + Config::settings_menu_in_margin,
+                                        Vector (Config::settings_menu_margin
+                                                + Config::settings_menu_in_margin,
                                                 y + Config::settings_menu_value_margin));
       }
       else
         pos = get<C::Position>(id + "_number", "position");
       node[1].init(img, pos);
     }
-    y += Config::settings_menu_start;
+    y += Config::settings_menu_height;
     ++ idx;
   }
 
