@@ -31,6 +31,8 @@
 #include <lz4.h>
 #include <lz4hc.h>
 
+//#define SOSAGE_FAST_COMPRESS
+
 namespace Sosage
 {
 
@@ -39,8 +41,12 @@ Buffer lz4_compress_buffer (void* data, std::size_t size)
   const char* cdata = reinterpret_cast<const char*>(data);
   unsigned int max_lz4_size = LZ4_compressBound(size);
   Buffer out (max_lz4_size);
+#ifdef SOSAGE_FAST_COMPRESS
+  unsigned int true_size = LZ4_compress_default(cdata, out.data(), size, max_lz4_size);
+#else
   unsigned int true_size = LZ4_compress_HC(cdata, out.data(), size, max_lz4_size,
                                            LZ4HC_CLEVEL_MAX);
+#endif
   out.resize(true_size);
   return out;
 }
