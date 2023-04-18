@@ -38,14 +38,21 @@ print("## BUILDING " + id + "\n")
 
 raw_data_folder = data["folder"]
 data_folder = data["folder"] + "/compressed_data"
-data_dir = "/tmp/sosage_build/data"
-linux_buildir = "/tmp/sosage_build/linux"
-steam_buildir = "/tmp/sosage_build/steamos"
-appimg_buildir = "/tmp/sosage_build/appimg"
-android_buildir = "/tmp/sosage_build/android"
-mac_buildir = "/tmp/sosage_build/mac"
-windows_buildir = "/tmp/sosage_build/windows"
-emscripten_buildir = "/tmp/sosage_build/emscripten"
+if not data["use_compressed_data"]:
+    if data["compress_data"]:
+        print("Error: uncoherent use_compressed / compress")
+        exit()
+    data_folder = data["folder"]
+    
+data_dir = data["buildfolder"] + "/data"
+linux_buildir = data["buildfolder"] + "/linux"
+steam_buildir = data["buildfolder"] + "/steamos"
+appimg_buildir = data["buildfolder"] + "/appimg"
+android_buildir = data["buildfolder"] + "/android"
+mac_buildir = data["buildfolder"] + "/mac"
+win32_buildir = data["buildfolder"] + "/win32"
+win64_buildir = data["buildfolder"] + "/win64"
+emscripten_buildir = data["buildfolder"] + "/emscripten"
 output_dir = data["output"] + "/release-v" + version
 steam_dir = output_dir + "/steam"
 appname = gamename + "-" + version
@@ -180,6 +187,32 @@ if data["linux"]:
         chdir(cwd)
         print("  -> failed")
 
+if data["linux32"]:
+    try:
+        print("### BUILDING LINUX 32")
+        begin = time.perf_counter()
+        run_cmd("rm -rf " + linux_buildir)
+        run_cmd("mkdir -p " + linux_buildir)
+        chdir(linux_buildir)
+
+        cfg_cmd = cmake_cmd + ' -DYAML_INCLUDE_DIR=' + data["libyaml_source_path"] + '/include/'
+        cfg_cmd += ' -DCMAKE_INSTALL_PREFIX=./install'
+        cfg_cmd += ' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
+        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_bullseye_32/lib/libSDL2_mixer_ext.a'
+        cfg_cmd += ' -DLZ4_INCLUDE_DIR=' + data["lz4_source_path"] + '/lib/ ' + cwd
+        run_cmd('schroot --chroot debian_bullseye -- sh -c "' + cfg_cmd + '"')
+        if not configure_only:
+            run_cmd('schroot --chroot debian_bullseye -- sh -c "make -j ' + str(data["threads"]) + '"')
+            run_cmd('schroot --chroot debian_bullseye -- sh -c "cpack"')
+            run_cmd("cp *.deb " + output_dir + "/" + appname + "-gnunux.deb")
+            run_cmd("cp *.rpm " + output_dir + "/" + appname + "-gnunux.rpm")
+        chdir(cwd)
+        end = time.perf_counter()
+        print("  -> done in " + str(int(end - begin)) + "s\n")
+    except:
+        chdir(cwd)
+        print("  -> failed")
+
 if data["steam"]:
     try:
         print("### BUILDING LINUX/STEAMOS")
@@ -271,25 +304,45 @@ if data["mac"]:
         chdir(cwd)
         print("  -> failed")
 
-if data["windows"]:
+if data["win32"]:
     try:
-        print("### BUILDING WINDOWS")
+        print("### BUILDING WIN32")
         begin = time.perf_counter()
-        run_cmd("rm -rf " + windows_buildir)
-        run_cmd("mkdir -p " + windows_buildir)
-        chdir(windows_buildir)
+        run_cmd("rm -rf " + win32_buildir)
+        run_cmd("mkdir -p " + win32_buildir)
+        chdir(win32_buildir)
         run_cmd(cmake_cmd + " -DCMAKE_TOOLCHAIN_FILE=" + cwd + "/cmake/Toolchain-mingw32.cmake "
-                + "-DSDL2_INCLUDE_DIR=" + data["windows_sdl_folder"] + " " + cwd)
+                + "-DSDL2_INCLUDE_DIR=" + data["win32_sdl_folder"] + " " + cwd)
         if not configure_only:
             run_cmd("make -j " + str(data["threads"]) + "")
             run_cmd("cpack")
-            run_cmd("cp *-win32.exe " + output_dir + "/" + appname + "-windows.exe")
+            run_cmd("cp *-win32.exe " + output_dir + "/" + appname + "-win32.exe")
             run_cmd("cmake -DCMAKE_INSTALL_PREFIX=./install .")
             run_cmd("mkdir -p install")
             run_cmd("make -j " + str(data["threads"]))
             run_cmd("make install")
             run_cmd("rm -rf " + steam_dir + "/windows")
             run_cmd("cp -r install " + steam_dir + "/windows")
+        chdir(cwd)
+        end = time.perf_counter()
+        print("  -> done in " + str(int(end - begin)) + "s\n")
+    except:
+        chdir(cwd)
+        print("  -> failed")
+
+if data["win64"]:
+    try:
+        print("### BUILDING WIN64")
+        begin = time.perf_counter()
+        run_cmd("rm -rf " + win64_buildir)
+        run_cmd("mkdir -p " + win64_buildir)
+        chdir(win64_buildir)
+        run_cmd(cmake_cmd + " -DCMAKE_TOOLCHAIN_FILE=" + cwd + "/cmake/Toolchain-mingw32-x86_64.cmake "
+                + "-DSDL2_INCLUDE_DIR=" + data["win64_sdl_folder"] + " " + cwd)
+        if not configure_only:
+            run_cmd("make -j " + str(data["threads"]) + "")
+            run_cmd("cpack")
+            run_cmd("cp *.exe " + output_dir + "/" + appname + "-win64.exe")
         chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
