@@ -301,11 +301,16 @@ Asset Asset_manager::open (const std::string& filename, bool file_is_package)
 
 bool Asset_manager::exists (const std::string& filename)
 {
-  Asset asset = open (filename);
-  if (asset)
+  if (packaged())
+    return package_asset_map.find(filename) != package_asset_map.end();
+  else
   {
-    asset.close();
-    return true;
+    Asset asset (local_file_name(filename));
+    if (asset)
+    {
+      asset.close();
+      return true;
+    }
   }
   return false;
 }
