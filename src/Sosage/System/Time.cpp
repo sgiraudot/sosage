@@ -50,7 +50,8 @@ void Time::run()
   SOSAGE_UPDATE_DBG_LOCATION("Time::run()");
 
   m_clock.update(true);
-  get<C::Double> (CLOCK__TIME)->set(m_clock.time());
+
+  double t = m_clock.time();
 
   if (signal ("Time", "speedup"))
   {
@@ -58,7 +59,7 @@ void Time::run()
     double time = begin_speedup->value()
                   + Config::speedup_factor * (m_clock.time()
                                               - begin_speedup->value());
-    get<C::Double> (CLOCK__TIME)->set(time);
+    t = time;
   }
   else if (auto begin_speedup = request<C::Double>("Time", "begin_speedup"))
   {
@@ -73,12 +74,29 @@ void Time::run()
 
     m_clock.set (time);
     remove (begin_speedup);
-    get<C::Double> (CLOCK__TIME)->set(time);
+    t = time;
   }
+
+  if (status()->is(PAUSED))
+  {
+    auto begin_pause = get_or_set<C::Double>("Time", "begin_pause", m_clock.time());
+    return;
+  }
+  else if (auto begin_pause = request<C::Double>("Time", "begin_pause"))
+  {
+    double time = begin_pause->value();
+    double real_time = m_clock.time();
+    debug << "Time spent in pause = " << real_time - time << std::endl;
+    m_clock.set (time);
+    m_clock.update();
+    remove (begin_pause);
+    t = m_clock.time();
+  }
+  get<C::Double> (CLOCK__TIME)->set(t);
 
   // Do not count time spent in menu for in-game time computation
   if (!signal("Game", "save") &&
-      (status()->is(IN_MENU, PAUSED) || request<C::String>("Game", "new_room")))
+      (status()->is(IN_MENU) || request<C::String>("Game", "new_room")))
   {
     if (signal("Game", "reset"))
     {

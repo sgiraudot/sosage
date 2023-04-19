@@ -66,9 +66,17 @@ Event SDL_events::next_event ()
     return Event (WINDOW, BACKGROUND);
   if (ev.type == SDL_APP_DIDENTERFOREGROUND)
     return Event (WINDOW, FOREGROUND);
-  if (ev.type == SDL_WINDOWEVENT &&
-      ev.window.event == SDL_WINDOWEVENT_RESIZED)
-    return Event (WINDOW, RESIZED, ev.window.data1, ev.window.data2);
+  if (ev.type == SDL_WINDOWEVENT)
+  {
+    if (ev.window.event == SDL_WINDOWEVENT_RESIZED)
+      return Event (WINDOW, RESIZED, ev.window.data1, ev.window.data2);
+    if (ev.window.event == SDL_WINDOWEVENT_HIDDEN
+        || ev.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+      return Event (WINDOW, BACKGROUND);
+    if (ev.window.event == SDL_WINDOWEVENT_SHOWN
+        || ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+      return Event (WINDOW, FOREGROUND);
+  }
   if (ev.type == SDL_CONTROLLERDEVICEADDED)
   {
     SDL_GameControllerOpen(ev.cdevice.which);

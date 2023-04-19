@@ -114,6 +114,10 @@ void File_IO::clean_content()
   if (full_reset)
   {
     // Reset camera, zoom, etc.
+    auto blackscreen = get<C::Image>("Blackscreen", "image");
+    blackscreen->on() = true;
+    blackscreen->set_alpha(255);
+
     get<C::Absolute_position>(CAMERA__POSITION)->set (Point(0,0));
     get<C::Double>(CAMERA__ZOOM)->set(1.);
     get<C::Status>(GAME__STATUS)->reset();

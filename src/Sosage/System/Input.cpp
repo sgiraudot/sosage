@@ -234,10 +234,16 @@ void Input::run()
 
     if (ev == Event(WINDOW, FOREGROUND)
         && status()->is(PAUSED))
+    {
       status()->pop();
+      std::cerr << "RESUME" << std::endl;
+    }
     if (ev == Event(WINDOW, BACKGROUND)
         && !status()->is (PAUSED))
+    {
       status()->push(PAUSED);
+      std::cerr << "PAUSE" << std::endl;
+    }
 
     if (status()->is (PAUSED))
       continue;

@@ -107,22 +107,14 @@ void Sound::run()
 
     if (paused && music->on())
     {
-      if (status()->was (CUTSCENE))
-        for (std::size_t i = 0; i < music->tracks(); ++ i)
-          m_core.pause_music (music->core(i), i);
-      else
-        for (std::size_t i = 0; i < music->tracks(); ++ i)
-          m_core.set_volume(music->core(i), i, 0.15 * volume * music->mix(i));
+      for (std::size_t i = 0; i < music->tracks(); ++ i)
+        m_core.pause_music (music->core(i), i);
       music->on() = false;
     }
     else if (!paused && !music->on())
     {
-      if (status()->is (CUTSCENE))
-        for (std::size_t i = 0; i < music->tracks(); ++ i)
-          m_core.resume_music(music->core(i), i);
-      else
-        for (std::size_t i = 0; i < music->tracks(); ++ i)
-          m_core.set_volume (music->core(i), i, volume * music->mix(i));
+      for (std::size_t i = 0; i < music->tracks(); ++ i)
+        m_core.resume_music(music->core(i), i);
       music->on() = true;
     }
   }
