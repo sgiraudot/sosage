@@ -113,6 +113,29 @@ public:
 template <typename T>
 using Simple_condition_handle = std::shared_ptr<Simple_condition<T> >;
 
+class Functional_condition : public Condition
+{
+  using Function = std::function<bool(const std::string&)>;
+  Function m_function;
+  std::string m_arg;
+
+public:
+
+  Functional_condition (const std::string& entity, const std::string& component,
+                        const Function& function,
+                        const std::string& arg)
+
+    : Condition(entity, component), m_function (function), m_arg (arg)
+  { }
+
+  virtual bool value() const;
+
+  STR_NAME("Function_condition")
+  STR_VALUE(m_arg);
+};
+
+using Functional_condition_handle = std::shared_ptr<Functional_condition>;
+
 class And : public Condition
 {
   std::pair<Condition_handle, Condition_handle> m_values;

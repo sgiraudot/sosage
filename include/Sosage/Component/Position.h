@@ -131,7 +131,8 @@ class Functional_position : public Position
 
 public:
 
-  Functional_position (const std::string& entity, const std::string& component, const Function& function,
+  Functional_position (const std::string& entity, const std::string& component,
+                       const Function& function,
                        const std::string& arg,
                        bool is_interface = false);
 

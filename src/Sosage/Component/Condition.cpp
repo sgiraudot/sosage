@@ -69,6 +69,11 @@ void Boolean::end_temporary_true()
   m_value = m_memory;
 }
 
+bool Functional_condition::value() const
+{
+  return m_function (m_arg);
+}
+
 And::And (const std::string& entity, const std::string& component,
           Condition_handle first, Condition_handle second)
   : Condition(entity, component), m_values(first, second)

@@ -638,12 +638,19 @@ void File_IO::read_init ()
   // Fast forward only displayed in touchscreen mode AND not cutscene
   set<C::Conditional>
       ("Fast_forward", "image",
-       C::make_and
-       (C::make_simple_condition
-        (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE), TOUCHSCREEN),
-        C::make_not(C::make_value_condition
-                    (get<C::Value<Status>>(GAME__STATUS), CUTSCENE))),
-       fast_forward_img);
+       C::make_or
+       (C::make_and
+        (C::make_simple_condition
+         (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE), TOUCHSCREEN),
+         C::make_not(C::make_value_condition
+                     (get<C::Value<Status>>(GAME__STATUS), CUTSCENE))),
+        C::make_handle<C::Functional_condition>
+        ("Is_sped_up", "condition",
+         [&](const std::string&) -> bool
+         {
+           return signal("Time", "speedup");
+         }, "")),
+        fast_forward_img);
 
 
   std::string debug_font = input["debug_font"].string("fonts", "ttf");

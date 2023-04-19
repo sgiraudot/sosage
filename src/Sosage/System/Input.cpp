@@ -130,6 +130,7 @@ void Input::run()
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
 
+
   // Only allow mode change when idle or cutscene
   if (status()->is(IDLE, CUTSCENE))
   {
@@ -176,6 +177,16 @@ void Input::run()
       get<C::Double>(CLOCK__LATEST_ACTIVE)->set(value<C::Double>(CLOCK__TIME));
   }
 
+  if (auto t = request<C::Double>("Skip_or_speed", "time"))
+  {
+    // If click lasts longer than 0.1 second, speedup time
+    if (value<C::Double>(CLOCK__TIME) - t->value() > 0.1)
+    {
+      remove(t);
+      emit ("Time", "speedup");
+    }
+  }
+
   bool arrow_released = false;
   for (const Event& ev : m_current_events)
   {
@@ -200,18 +211,23 @@ void Input::run()
     }
 
     // Some ways to skip notifications
-    if (ev == Event(KEY_UP, SPACE)
-        || ev == Event(BUTTON_DOWN, EAST)
+    if (ev == Event(BUTTON_DOWN, EAST)
         || ev == Event(BUTTON_DOWN, SOUTH)
-        || ev == Event(TOUCH_DOWN, LEFT)
-        || ev == Event(MOUSE_DOWN, RIGHT))
+        || ev == Event(TOUCH_DOWN, LEFT))
       emit ("Game", "clear_notifications");
 
-    // Speeding up game
-    if (ev == Event(MOUSE_DOWN, RIGHT) or ev == Event(KEY_DOWN, SPACE))
-      emit ("Time", "speedup");
-    else if (ev == Event(MOUSE_UP, RIGHT) or ev == Event(KEY_UP, SPACE))
+    // Speeding up game (or skip notifications with mouse/space)
+    if (ev == Event(MOUSE_DOWN, RIGHT) || ev == Event(KEY_DOWN, SPACE))
+      set<C::Double>("Skip_or_speed", "time", value<C::Double>(CLOCK__TIME));
+    else if (ev == Event(MOUSE_UP, RIGHT) || ev == Event(KEY_UP, SPACE))
+    {
+      if (auto t = request<C::Double>("Skip_or_speed", "time"))
+      {
+        emit ("Game", "clear_notifications");
+        remove(t);
+      }
       receive ("Time", "speedup");
+    }
 
     if (ev == Event(WINDOW, FOREGROUND)
         && status()->is(PAUSED))
