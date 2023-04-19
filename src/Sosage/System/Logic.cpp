@@ -123,6 +123,7 @@ void Logic::run ()
 
   if (receive ("Game", "clear_notifications"))
   {
+    debug << "Clear notifications" << std::endl;
     auto action = get<C::Action>("Notifications", "action");
     for (const auto& th : action->scheduled())
       emit (th.second->entity(), "end_notification");
@@ -257,7 +258,10 @@ void Logic::run ()
             if (C::cast<C::Signal>(th.second))
               set (th.second);
             else if (th.second->component() == "notification")
-              emit (th.second->entity(), "end_notification");
+            {
+              if (request<C::Image>(th.second->entity(), "image"))
+                emit (th.second->entity(), "end_notification");
+            }
             else if (th.second->entity() != "wait")
             {
               debug << a->str() << " remove " << th.second->str() << std::endl;
