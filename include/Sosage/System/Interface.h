@@ -115,6 +115,7 @@ private:
 
   // Implemented in Interface__menu.cpp
   void init_menus();
+  void init_loadsave_menus();
   void update_menu();
   void update_exit();
 
@@ -134,7 +135,8 @@ private:
                           const std::string& text);
 
 
-  void create_menu (const std::string& id);
+  void show_menu (const std::string& id);
+  void hide_menu (const std::string& id);
   void delete_menu (const std::string& id);
   void menu_clicked ();
   void apply_setting (const std::string& setting, const std::string& value);

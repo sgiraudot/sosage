@@ -32,18 +32,32 @@
 #include <Sosage/System/Interface.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/conversions.h>
+#include <Sosage/Utils/datetime.h>
 
 #include <queue>
 
 namespace Sosage::Config
 {
-constexpr int menu_margin = 95;
+auto exit_menu_items
+= {  "Phone", "Settings", "Credits", "New_game"
+     #ifndef SOSAGE_EMSCRIPTEN
+     , "Load", "Save", "Quit"
+     #endif
+  };
+auto menus
+= {  "Exit", "Phone", "Settings", "Credits"
+     #ifndef SOSAGE_EMSCRIPTEN
+     , "Load", "Save"
+     #endif
+  };
+
+constexpr int menu_margin = 90;
 constexpr int menu_small_margin = 35;
 constexpr int menu_oknotok_y = 858;
 constexpr int menu_ok_x = 120;
 constexpr int menu_notok_x = 360;
 constexpr int exit_menu_logo = 130;
-constexpr int exit_menu_start = 300;
+constexpr int exit_menu_start = 220;
 constexpr int exit_menu_text = menu_margin + 60;
 constexpr int settings_menu_margin = 15;
 constexpr int settings_menu_start = 135;
@@ -63,21 +77,14 @@ void Interface::init_menus()
 {
   auto exit_menu = set<C::Menu>("Exit", "menu");
 
-  if constexpr (Config::emscripten)
-    exit_menu->split(VERTICALLY, 6);
-  else
-    exit_menu->split(VERTICALLY, 7);
+  exit_menu->split(VERTICALLY, Config::exit_menu_items.size() + 2);
 
   set<C::Relative_position>("Menu", "reference", get<C::Position>("Menu_background", "position"), Vector(-240, -420));
   make_exit_menu_item ((*exit_menu)[0], "Menu_logo", Config::exit_menu_logo);
 
   int y = Config::exit_menu_start;
   std::size_t idx = 1;
-  for (const std::string& id : {  "Phone", "Settings", "New_game", "Credits"
-#ifndef SOSAGE_EMSCRIPTEN
-       , "Save_and_quit"
-#endif
-})
+  for (const std::string& id : Config::exit_menu_items)
   {
     make_exit_menu_item ((*exit_menu)[idx], id, y);
     y += Config::menu_margin;
@@ -104,6 +111,7 @@ void Interface::init_menus()
   make_text_menu_text((*phone_menu)[1], "No_number_text");
   make_oknotok_item ((*phone_menu)[2], true);
 
+  init_loadsave_menus();
   set<C::Menu>("Message", "menu");
 
   auto settings_menu = set<C::Menu>("Settings", "menu");
@@ -132,6 +140,134 @@ void Interface::init_menus()
   menu_overlay->z() = Config::overlay_depth;
   menu_overlay->set_collision(UNCLICKABLE);
   set<C::Absolute_position>("Menu_overlay", "position", Point(0,0));
+}
+
+void Interface::init_loadsave_menus ()
+{
+  std::deque<C::Tuple_handle<std::string, double, int>>
+      save_infos;
+
+  for (std::size_t idx = 0; idx < 5; ++ idx)
+    if (auto info = request<C::Tuple<std::string, double, int>>
+        ("Save_" + std::to_string(idx+1), "info"))
+      save_infos.emplace_back (info);
+    else
+      break;
+
+  std::size_t nb_saves = save_infos.size();
+  // Additional free slot if enough space
+  if (nb_saves < 5)
+    nb_saves ++;
+
+  auto save_menu = set<C::Menu>("Save", "menu");
+  save_menu->split(VERTICALLY, nb_saves + 2);
+  make_text_menu_title((*save_menu)[0], "Save");
+
+  int y = Config::settings_menu_start;
+  for (std::size_t idx = 1; idx < nb_saves + 1; ++ idx)
+  {
+    auto node = (*save_menu)[idx];
+    std::string id = "Save_" + std::to_string(idx);
+    C::Image_handle button;
+    C::Position_handle pos_button;
+    std::tie (button, pos_button) = make_settings_button (id, y);
+    node.init(button, pos_button);
+
+    set<C::String>(id, "effect", id);
+
+    node.split(VERTICALLY, 2);
+
+    std::string slot = std::to_string(idx) + ". ";
+    std::string info = locale_get("Free_slot", "text");
+
+    if (idx - 1 < save_infos.size())
+    {
+      auto saveinfo = save_infos[idx - 1];
+      slot += locale(saveinfo->get<0>());
+      info = date_to_string(saveinfo->get<2>());
+      info += " (" + locale_get("Game_time", "text")
+              + " = " + time_to_string(saveinfo->get<1>()) + ")";
+    }
+
+    // Slot
+    {
+      C::Image_handle img;
+      C::Position_handle pos;
+      std::tie (img, pos) = make_settings_title (id, "slot", y, slot);
+      node[0].init(img, pos);
+    }
+
+    // Number value
+    {
+      C::Image_handle img;
+      C::Position_handle pos;
+      std::tie (img, pos) = make_settings_subtitle (id, "info", y, info);
+      node[1].init(img, pos);
+    }
+
+    y += Config::settings_menu_height + Config::settings_menu_margin;
+  }
+
+  make_oknotok_item ((*save_menu)[nb_saves + 1], true);
+
+  if (auto info = request<C::Tuple<std::string, double, int>>("Save_auto", "info"))
+    save_infos.emplace_front (info);
+
+  auto load_menu = set<C::Menu>("Load", "menu");
+  std::size_t load_size = save_infos.size();
+  if (load_size == 0)
+    load_size = 1;
+  load_menu->split(VERTICALLY, load_size + 2);
+  make_text_menu_title((*load_menu)[0], "Load");
+
+  y = Config::settings_menu_start;
+  for (std::size_t idx = 1; idx < save_infos.size() + 1; ++ idx)
+  {
+    auto node = (*load_menu)[idx];
+    auto saveinfo = save_infos[idx - 1];
+    std::string save_id (saveinfo->entity().begin() + saveinfo->entity().find('_') + 1,
+                         saveinfo->entity().end());
+    std::string id = "Load_" + save_id;
+    C::Image_handle button;
+    C::Position_handle pos_button;
+    std::tie (button, pos_button) = make_settings_button (id, y);
+    node.init(button, pos_button);
+
+    set<C::String>(id, "effect", id);
+
+    node.split(VERTICALLY, 2);
+
+    std::string slot = save_id + ". ";
+    if (save_id == "auto")
+      slot = "(Auto) ";
+    slot += locale(saveinfo->get<0>());
+    std::string info = date_to_string(saveinfo->get<2>());
+    info += " (" + locale_get("Game_time", "text")
+            + " = " + time_to_string(saveinfo->get<1>()) + ")";
+
+    // Slot
+    {
+      C::Image_handle img;
+      C::Position_handle pos;
+      std::tie (img, pos) = make_settings_title (id, "slot", y, slot);
+      node[0].init(img, pos);
+    }
+
+    // Number value
+    {
+      C::Image_handle img;
+      C::Position_handle pos;
+      std::tie (img, pos) = make_settings_subtitle (id, "info", y, info);
+      node[1].init(img, pos);
+    }
+
+    y += Config::settings_menu_height + Config::settings_menu_margin;
+  }
+
+  if (save_infos.size() == 0)
+    make_text_menu_text((*load_menu)[1], "No_savegame");
+
+  make_oknotok_item ((*load_menu)[load_size + 1], true);
 }
 
 void Interface::make_exit_menu_item (Component::Menu::Node node, const std::string& id, int y)
@@ -483,6 +619,9 @@ Interface::make_settings_title (const std::string& id, const std::string& suffix
     img->z() = Config::menu_text_depth;
     img->on() = false;
     img->set_scale(0.5);
+    if (img->width() * img->scale() > 415)
+      img->set_scale(415 / double(img->width()));
+
     img->set_relative_origin(0, 0.5);
     img->set_collision(UNCLICKABLE);
 
@@ -512,6 +651,9 @@ Interface::make_settings_subtitle (const std::string& id, const std::string& suf
     img->z() = Config::menu_text_depth;
     img->on() = false;
     img->set_scale(0.45);
+    if (img->width() * img->scale() > 415)
+      img->set_scale(415 / double(img->width()));
+
     img->set_relative_origin(0, 0.5);
     img->set_collision(UNCLICKABLE);
 
@@ -532,14 +674,21 @@ void Interface::update_menu()
 
   if (auto menu = request<C::String>("Menu", "create"))
   {
-    create_menu (menu->value());
+    show_menu (menu->value());
     remove("Menu", "create");
   }
 
   if (auto menu = request<C::String>("Menu", "delete"))
   {
-    delete_menu (menu->value());
+    hide_menu (menu->value());
     remove("Menu", "delete");
+  }
+
+  if (receive("Saves", "have_changed"))
+  {
+    delete_menu ("Load");
+    delete_menu ("Save");
+    init_loadsave_menus();
   }
 
   if (!status()->is (IN_MENU))
@@ -617,7 +766,7 @@ void Interface::update_menu()
   }
 }
 
-void Interface::create_menu (const std::string& id)
+void Interface::show_menu (const std::string& id)
 {
   set<C::String>("Game", "current_menu", id);
 
@@ -665,7 +814,7 @@ void Interface::create_menu (const std::string& id)
   get<C::Image>("Menu_overlay", "image")->on() = true;
 }
 
-void Interface::delete_menu (const std::string& id)
+void Interface::hide_menu (const std::string& id)
 {
   auto menu = get<C::Menu>(id , "menu");
   menu->hide();
@@ -674,6 +823,19 @@ void Interface::delete_menu (const std::string& id)
 
   remove ("Interface", "active_menu_item", true);
   remove ("Interface", "gamepad_active_menu_item", true);
+}
+
+void Interface::delete_menu (const std::string& id)
+{
+  auto menu = get<C::Menu>(id , "menu");
+  menu->apply([&](C::Image_handle img)
+  {
+    std::string id = img->entity();
+    if (contains(id, "Exit_"))
+      id = std::string (id.begin() + 5, id.end());
+    if (request<C::String>(id , "text"))
+      remove(img->entity(), img->component(), true);
+  });
 }
 
 void Interface::menu_clicked ()
@@ -717,23 +879,24 @@ void Interface::menu_clicked ()
 
   emit("Click", "play_sound");
 
-  if (effect->value() == "Save_and_quit")
+  if (effect->value() == "Quit")
   {
     // Avoid exiting when testing input
     if (!signal ("Game", "prevent_exit"))
       emit ("Game", "exit");
     else
     {
-      delete_menu(menu);
+      hide_menu(menu);
       status()->pop();
     }
     emit ("Game", "save");
+    set<C::String>("Savegame", "id", "auto");
   }
   else if (effect->value() == "New_game")
   {
-    delete_menu(menu);
+    hide_menu(menu);
     if (menu == "Exit")
-      create_menu ("Wanna_restart");
+      show_menu ("Wanna_restart");
     else
     {
       // Avoid restarting when testing input
@@ -781,44 +944,63 @@ void Interface::menu_clicked ()
         }
         emit ("Game", "reset");
         emit ("Music", "stop");
-        delete_menu("Wanna_restart");
+        hide_menu("Wanna_restart");
         status()->pop();
         status()->push(LOCKED);
       }
     }
-    else if (menu == "Credits" || menu == "Settings" || menu == "Phone")
+    else if (menu == "Credits" || menu == "Settings" || menu == "Phone" ||
+             menu == "Save" || menu == "Load")
     {
-      delete_menu (menu);
-      create_menu ("Exit");
+      hide_menu (menu);
+      show_menu ("Exit");
     }
     else if (menu == "Exit")
     {
-      delete_menu(menu);
+      hide_menu(menu);
       status()->pop();
     }
     else if (menu == "Message")
     {
-      delete_menu(menu);
+      hide_menu(menu);
       status()->pop();
     }
   }
   else if (effect->value() == "Credits" || effect->value() == "Settings"
-           || effect->value() == "Phone")
+           || effect->value() == "Phone" || effect->value() == "Save"
+           || effect->value() == "Load")
   {
-    delete_menu ("Exit");
-    create_menu (effect->value());
+    hide_menu ("Exit");
+    show_menu (effect->value());
   }
   else if (effect->value() == "Cancel")
   {
-    delete_menu(menu);
+    hide_menu(menu);
     if (menu == "Exit")
       status()->pop();
     else if (menu == "Wanna_restart")
-      create_menu("Exit");
+      show_menu("Exit");
+  }
+  else if (startswith(effect->value(), "Save_"))
+  {
+    std::string save_id (effect->value().begin() + effect->value().find('_') + 1, effect->value().end());
+    emit ("Game", "save");
+    set<C::String>("Savegame", "id", save_id);
+    hide_menu(menu);
+    status()->pop();
+  }
+  else if (startswith(effect->value(), "Load_"))
+  {
+    std::string save_id (effect->value().begin() + effect->value().find('_') + 1, effect->value().end());
+    emit ("Game", "load");
+    emit ("Game", "reset");
+    set<C::String>("Savegame", "id", save_id);
+    hide_menu(menu);
+    status()->pop();
   }
   else if (auto action = request<C::Action>(effect->value() , "action"))
   {
-    delete_menu(menu);
+    hide_menu(menu);
     status()->pop();
     set<C::Variable>("Character", "triggered_action", action);
   }
@@ -842,22 +1024,13 @@ void Interface::apply_setting (const std::string& setting, const std::string& v)
       }
 
     // Delete all menus
-    for (const std::string& id : { "Exit", "Wanna_restart", "Settings", "Credits", "Phone" })
-    {
-      auto menu = get<C::Menu>(id , "menu");
-      menu->apply([&](C::Image_handle img)
-      {
-        std::string id = img->entity();
-        if (contains(id, "Exit_"))
-          id = std::string (id.begin() + 5, id.end());
-        if (request<C::String>(id , "text"))
-          remove(img->entity(), img->component(), true);
-      });
-    }
+    for (const std::string& id : Config::menus)
+      if (id != "New_game")
+        delete_menu(id);
 
     // Reinit interface
     init();
-    create_menu ("Settings");
+    show_menu ("Settings");
 
     // Update Game name
     emit("Game", "name_changed");

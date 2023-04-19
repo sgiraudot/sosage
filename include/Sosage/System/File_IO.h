@@ -61,7 +61,7 @@ public:
   void read_init ();
   void read_locale ();
 
-  bool read_savefile();
+  bool read_savefile(const std::string& save_id);
   void write_savefile();
 
 private:

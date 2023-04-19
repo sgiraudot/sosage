@@ -304,6 +304,7 @@ void File_IO::read_room (const std::string& file_name)
   std::string name = input["name"].string(); // unused so far
 
   set<C::String>("Game", "current_room", file_name);
+  set<C::String>("Game", "current_room_name", name);
 
   if (input.has("background"))
   {

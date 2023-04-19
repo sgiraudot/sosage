@@ -82,6 +82,14 @@ void File_IO::run()
   SOSAGE_TIMER_START(System_File_IO__run);
   SOSAGE_UPDATE_DBG_LOCATION("File_IO::run()");
 
+  if (receive("Game", "load"))
+  {
+    clean_content();
+    auto save_id = get<C::String>("Savegame", "id");
+    read_savefile (save_id->value());
+    remove (save_id);
+  }
+
   if (auto new_room = request<C::String>("Game", "new_room"))
   {
     receive ("Time", "speedup");
@@ -280,12 +288,12 @@ void File_IO::write_config()
   output.write ("window", value<C::Int>("Window", "width"), value<C::Int>("Window", "height"));
 }
 
-bool File_IO::read_savefile()
+bool File_IO::read_savefile (const std::string& save_id)
 {
-  Core::File_IO input ("save" + value<C::String>("Save", "suffix", "") +  ".yaml", true);
+  Core::File_IO input ("save" + value<C::String>("Save", "suffix", "") +
+                       + "_" + save_id + ".yaml", true);
   if (!input.parse())
   {
-    debug << "Can't parse save file" << std::endl;
     return false;
   }
 
@@ -401,9 +409,14 @@ bool File_IO::read_savefile()
 
 void File_IO::write_savefile()
 {
-  Core::File_IO output ("save" + value<C::String>("Save", "suffix", "") +  ".yaml", true, true);
+  auto save_id = get<C::String>("Savegame", "id");
+  Core::File_IO output ("save" + value<C::String>("Save", "suffix", "") + "_" + save_id->value() + ".yaml", true, true);
+  remove (save_id);
 
-  output.write("time", value<C::Double>(CLOCK__SAVED_TIME) + value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__DISCOUNTED_TIME));
+  int date = std::time(nullptr);
+  output.write("date", date);
+  double time = value<C::Double>(CLOCK__SAVED_TIME) + value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__DISCOUNTED_TIME);
+  output.write("time", time);
   output.write("room", value<C::String>("Game", "current_room"));
   output.write("player", value<C::String>("Player", "name"));
   if (auto follower = request<C::String>("Follower", "name"))
@@ -507,6 +520,12 @@ void File_IO::write_savefile()
             if (s->value() == "Dummy")
               output.write_list_item (a->entity());
   output.end_section();
+
+  set<C::Tuple<std::string, double, int>>
+      ("Save_" + save_id->value(),
+       "info", value<C::String>("Game", "current_room_name"),
+       time, date);
+  emit("Saves", "have_changed");
 }
 
 
@@ -757,12 +776,45 @@ void File_IO::read_init ()
   set<C::String>("Game", "init_new_room", input["load"][0].string());
   set<C::String>("Game", "init_new_room_origin", input["load"][1].string());
 
-  if (!read_savefile())
+  int most_recent = -1;
+  std::string most_recent_save_id = "";
+  for (std::string save_id : { "1", "2", "3", "4", "5", "auto" })
+  {
+    std::string save_path = "save" + value<C::String>("Save", "suffix", "") +
+                            "_" + save_id + ".yaml";
+    Core::File_IO input (save_path, true);
+    if (!input.parse())
+      continue;
+
+    int date = 0;
+    if (input.has("date"))
+      date = input["date"].integer();
+    if (date > most_recent)
+    {
+      most_recent = date;
+      most_recent_save_id = save_id;
+    }
+    double time = input["time"].floating();
+    std::string room_id = input["room"].string();
+
+    // Get room name
+    Core::File_IO room_content ("data/rooms/" + room_id + ".yaml");
+    room_content.parse();
+    std::string room_name = room_content["name"].string();
+
+    set<C::Tuple<std::string, double, int>>("Save_" + save_id,
+                                            "info", room_name, time, date);
+  }
+
+  if (most_recent_save_id != "")
+    read_savefile (most_recent_save_id);
+  else
   {
     set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
     if (auto orig = request<C::String>("Game", "init_new_room_origin"))
       set<C::Variable>("Game", "new_room_origin", orig);
   }
+
   if (auto force = request<C::String>("Force_load", "room"))
   {
     debug << "Force load " << force->value() << std::endl;
