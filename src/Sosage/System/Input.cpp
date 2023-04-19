@@ -209,12 +209,14 @@ void Input::run()
           || ev == Event(MOUSE_DOWN, RIGHT))
         emit ("Game", "skip_dialog");
     }
-
-    // Some ways to skip notifications
-    if (ev == Event(BUTTON_DOWN, EAST)
-        || ev == Event(BUTTON_DOWN, SOUTH)
-        || ev == Event(TOUCH_DOWN, LEFT))
-      emit ("Game", "clear_notifications");
+    else
+    {
+      // Some ways to skip notifications
+      if (ev == Event(BUTTON_DOWN, EAST)
+          || ev == Event(BUTTON_DOWN, SOUTH)
+          || ev == Event(TOUCH_DOWN, LEFT))
+        emit ("Game", "clear_notifications");
+    }
 
     // Speeding up game (or skip notifications with mouse/space)
     if (ev == Event(MOUSE_DOWN, RIGHT) || ev == Event(KEY_DOWN, SPACE))
@@ -223,7 +225,8 @@ void Input::run()
     {
       if (auto t = request<C::Double>("Skip_or_speed", "time"))
       {
-        emit ("Game", "clear_notifications");
+        if (!status()->is(LOCKED))
+          emit ("Game", "clear_notifications");
         remove(t);
       }
       receive ("Time", "speedup");
