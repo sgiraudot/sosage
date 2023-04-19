@@ -694,6 +694,17 @@ bool Logic::function_rescale60fps (const std::vector<std::string>& args)
 }
 
 /*
+  - save: [] -> save current state to save_auto.yaml
+ */
+bool Logic::function_save (const std::vector<std::string>&)
+{
+  emit ("Game", "save");
+  set<C::String>("Savegame", "id", "auto");
+  push_notification (locale_get("Saving", "text"), 2);
+  return true;
+}
+
+/*
   - set: [ID target_id, ID state_id]                      -> change state of target to state_id
   - set: [ID target_id, ID state_from_id, ID state_to_id] -> change state of target to state_to_id ONLY if current state is state_from_id
   - set: [ID integer_id, INT value]                       -> sets integer to value

@@ -806,15 +806,6 @@ void File_IO::read_init ()
                                             "info", room_name, time, date);
   }
 
-  if (most_recent_save_id != "")
-    read_savefile (most_recent_save_id);
-  else
-  {
-    set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
-    if (auto orig = request<C::String>("Game", "init_new_room_origin"))
-      set<C::Variable>("Game", "new_room_origin", orig);
-  }
-
   if (auto force = request<C::String>("Force_load", "room"))
   {
     debug << "Force load " << force->value() << std::endl;
@@ -823,6 +814,14 @@ void File_IO::read_init ()
       set<C::Variable>("Game", "new_room_origin", orig);
     else
       set<C::String>("Game", "new_room_origin", force->value() + "_test");
+  }
+  else if (most_recent_save_id != "")
+    read_savefile (most_recent_save_id);
+  else
+  {
+    set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
+    if (auto orig = request<C::String>("Game", "init_new_room_origin"))
+      set<C::Variable>("Game", "new_room_origin", orig);
   }
 
   read_locale();

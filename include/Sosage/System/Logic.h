@@ -111,6 +111,7 @@ private:
   bool function_remove (const std::vector<std::string>& args);
   bool function_rescale (const std::vector<std::string>& args);
   bool function_rescale60fps (const std::vector<std::string>& args);
+  bool function_save (const std::vector<std::string>& args);
   bool function_set (const std::vector<std::string>& args);
   bool function_set12fps (const std::vector<std::string>& args);
   bool function_shake (const std::vector<std::string>& args);

@@ -87,6 +87,7 @@ Logic::Logic (Content& content)
   INIT_DISPATCHER(remove);
   INIT_DISPATCHER(rescale);
   INIT_DISPATCHER(rescale60fps);
+  INIT_DISPATCHER(save);
   INIT_DISPATCHER(set);
   INIT_DISPATCHER(set12fps);
   INIT_DISPATCHER(shake);
