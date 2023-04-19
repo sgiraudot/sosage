@@ -755,7 +755,10 @@ bool Logic::function_set (const std::vector<std::string>& args)
   {
     if (!was_in_inventory)
     {
-      get<C::Inventory>("Game", "inventory")->add(target);
+      auto inventory =  get<C::Inventory>("Game", "inventory");
+      inventory->add(target);
+      while (inventory->next());
+
       if (!signal("Game", "in_new_room"))
         push_notification (locale_get("You_got", "text") + " "
                            + locale_get(target, "name") + ".", 3);

@@ -68,16 +68,24 @@ void Inventory::remove (const std::string& entity)
     }
 }
 
-void Inventory::next()
+bool Inventory::next()
 {
-  if (m_position < m_data.size() - Config::displayed_inventory_size)
+  if (m_position + Config::displayed_inventory_size < m_data.size())
+  {
     ++ m_position;
+    return true;
+  }
+  return false;
 }
 
-void Inventory::prev()
+bool Inventory::prev()
 {
   if (m_position != 0)
+  {
     -- m_position;
+    return true;
+  }
+  return false;
 }
 
 std::size_t Inventory::size() const

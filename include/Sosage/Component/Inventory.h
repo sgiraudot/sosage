@@ -55,8 +55,8 @@ public:
   std::vector<std::string>::const_iterator end() const;
   void add (const std::string& entity);
   void remove (const std::string& entity);
-  void next();
-  void prev();
+  bool next();
+  bool prev();
   std::size_t size() const;
   std::size_t position() const;
   std::string get (std::size_t i) const;
