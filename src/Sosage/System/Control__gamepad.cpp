@@ -487,7 +487,7 @@ void Control::menu_sub_triggered (const Event_value& key)
 
   auto active_item = request<C::String>("Interface", "gamepad_active_menu_item");
   if (!active_item)
-   return;
+    return;
 
   if (key == UP_ARROW)
     menu_sub_switch_active_item (false);
@@ -565,8 +565,10 @@ void Control::menu_sub_switch_active_item (bool right)
         std::size_t pos = entity.find("_left_arrow");
         if (pos != std::string::npos)
           nodes.emplace_back(entity.begin(), entity.begin() + pos);
+        if (entity == "Ok_alone_button")
+          nodes.push_back (entity);
       }
-      if (contains(entity, "_button"))
+      else if (contains(entity, "_button"))
         nodes.push_back (current.image()->entity());
 
       if (!nodes.empty() && nodes.back() == active_item->value())

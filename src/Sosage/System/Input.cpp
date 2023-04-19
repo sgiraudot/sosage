@@ -418,7 +418,14 @@ void Input::run()
             emit("Action", "inventory");
         }
         else if (ev.type() == BUTTON_UP)
+        {
           key_on(ev.value()) = false;
+          if (ev.value() == UP_ARROW
+              || ev.value() == DOWN_ARROW
+              || ev.value() == LEFT_ARROW
+              || ev.value() == RIGHT_ARROW)
+            arrow_released = true;
+        }
       }
     }
   }
@@ -427,10 +434,7 @@ void Input::run()
   {
     // Speed-up
     if (key_on(RIGHT_SHOULDER) && key_on(LEFT_SHOULDER))
-    {
-      debug << "KEY ON" << std::endl;
       emit ("Time", "speedup");
-    }
     else
       receive ("Time", "speedup");
 

@@ -977,6 +977,7 @@ void Interface::menu_clicked ()
     {
       emit ("Game", "load");
       emit ("Game", "reset");
+      emit ("Music", "stop");
       hide_menu(menu);
       status()->pop();
     }
