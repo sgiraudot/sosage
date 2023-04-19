@@ -581,6 +581,22 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
 
     bool need_update = false;
 
+    double overflow_down = Config::world_height - Config::label_height - 0.5 * get<C::Image>(id + "_inventory_label_back", "image")->height()
+                           - value<C::Position>(id + "_inventory_label_back", "position").y();
+    if (overflow_down < 0)
+    {
+      need_update = true;
+      if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+        position->set(Point(position->value().x(), position->value().y() + overflow_down));
+      else
+      {
+        take_orient = LEFTER;
+        look_orient = RIGHTER;
+        move_orient = LEFT_UP;
+        inventory_orient = RIGHT_UP;
+      }
+    }
+
     double overflow_left = value<C::Position>(id + "_take_label_back", "position").x()
                            - Config::label_height - 0.5 * get<C::Image>(id + "_take_label_back", "image")->width();
     if (overflow_left < 0)
@@ -610,22 +626,6 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
         look_orient = DOWN_LEFT;
         move_orient = UPPER;
         inventory_orient = DOWNER;
-      }
-    }
-
-    double overflow_down = Config::world_height - Config::label_height - 0.5 * get<C::Image>(id + "_inventory_label_back", "image")->height()
-                           - value<C::Position>(id + "_inventory_label_back", "position").y();
-    if (overflow_down < 0)
-    {
-      need_update = true;
-      if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
-        position->set(Point(position->value().x(), position->value().y() + overflow_down));
-      else
-      {
-        take_orient = LEFTER;
-        look_orient = RIGHTER;
-        move_orient = LEFT_UP;
-        inventory_orient = RIGHT_UP;
       }
     }
 
