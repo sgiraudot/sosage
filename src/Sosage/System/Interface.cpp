@@ -319,9 +319,38 @@ void Interface::update_active_objects()
         delete_label (m_active_object + "_label");
       }
     }
-    // Active object didn't change, nothing to do
+    // Active object didn't change
     else if (m_active_object == active->value())
-    {}
+    {
+      if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == MOUSE)
+      {
+        bool right_oriented = (value<C::Position>(m_active_object
+                                                  + "_label_back", "position").x()
+                               > value<C::Position>(CURSOR__POSITION).x());
+
+        // If mouse mode, just check that object is well oriented
+        if (right_oriented)
+        {
+          if (value<C::Position>(m_active_object + "_label_back", "position").x()
+              + get<C::Image>(m_active_object+ "_label_back", "image")->width() / 2
+              > Config::world_width - Config::label_height / 2)
+          {
+            debug << "Reorient label left" << std::endl;
+            create_object_label (m_active_object);
+          }
+        }
+        else
+        {
+          if (value<C::Position>(CURSOR__POSITION).x()
+              + get<C::Image>(m_active_object+ "_label_back", "image")->width()
+              < Config::world_width - Config::label_height)
+          {
+            debug << "Reorient label right" << std::endl;
+            create_object_label (m_active_object);
+          }
+        }
+     }
+    }
     // New active object
     else
     {
