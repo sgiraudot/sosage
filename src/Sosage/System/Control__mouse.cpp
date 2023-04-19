@@ -62,6 +62,9 @@ void Control::idle_mouse()
     if (!request<C::String>(img->entity() , "name"))
       return false;
 
+    if (signal (img->entity(), "no_interact"))
+      return false;
+
     // This shouldn't happen except if user has light-speed cursor control
     // Just in case: ignore inventory items while in idle mode
     auto state = request<C::String>(img->entity(), "state");
@@ -272,6 +275,10 @@ void Control::object_choice_mouse()
 
     if (!request<C::String>(id , "name"))
       return false;
+
+    if (signal (img->entity(), "no_interact"))
+      return false;
+
     auto state = request<C::String>(id , "state");
     if (!state)
       return false;

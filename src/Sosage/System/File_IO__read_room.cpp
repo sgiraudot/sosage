@@ -120,6 +120,8 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   set<C::Boolean>(id, "uses_2nd_map", (input.has("uses_secondary_ground_map")
                                        ? input["uses_secondary_ground_map"].boolean() : false));
 
+  if (input.has("no_interact"))
+    emit (id, "no_interact");
 
   std::string default_state = "default";
   if (input.has("states"))
