@@ -718,6 +718,18 @@ bool Logic::function_set (const std::vector<std::string>& args)
   if (auto integer = request<C::Int>(target, "value"))
   {
     integer->set(to_int(args[1]));
+
+    auto action = request<C::Action>(target, std::to_string(integer->value()));
+    if (!action)
+      action = request<C::Action>(target, "default");
+
+    if (action)
+    {
+      action->launch();
+      while (action->on())
+        apply_next_step (action);
+    }
+
     return true;
   }
 
