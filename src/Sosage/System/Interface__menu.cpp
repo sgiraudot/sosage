@@ -99,6 +99,24 @@ void Interface::init_menus()
   make_text_menu_text((*wanna_restart)[1], "Wanna_restart");
   make_oknotok_item ((*wanna_restart)[2], false);
 
+  auto wanna_save = set<C::Menu>("Wanna_save", "menu");
+  wanna_save->split(VERTICALLY, 3);
+  make_text_menu_title((*wanna_save)[0], "Save");
+  make_text_menu_text((*wanna_save)[1], "Wanna_save");
+  make_oknotok_item ((*wanna_save)[2], false);
+
+  auto wanna_load = set<C::Menu>("Wanna_load", "menu");
+  wanna_load->split(VERTICALLY, 3);
+  make_text_menu_title((*wanna_load)[0], "Load");
+  make_text_menu_text((*wanna_load)[1], "Wanna_load");
+  make_oknotok_item ((*wanna_load)[2], false);
+
+  auto saved = set<C::Menu>("Saved", "menu");
+  saved->split(VERTICALLY, 3);
+  make_text_menu_title((*saved)[0], "Save");
+  make_text_menu_text((*saved)[1], "Saved");
+  make_oknotok_item ((*saved)[2], true);
+
   auto credits_menu = set<C::Menu>("Credits", "menu");
   credits_menu->split(VERTICALLY, 3);
   make_text_menu_title((*credits_menu)[0], "Credits");
@@ -949,18 +967,26 @@ void Interface::menu_clicked ()
         status()->push(LOCKED);
       }
     }
+    else if (menu == "Wanna_save")
+    {
+      emit ("Game", "save");
+      hide_menu(menu);
+      show_menu("Saved");
+    }
+    else if (menu == "Wanna_load")
+    {
+      emit ("Game", "load");
+      emit ("Game", "reset");
+      hide_menu(menu);
+      status()->pop();
+    }
     else if (menu == "Credits" || menu == "Settings" || menu == "Phone" ||
              menu == "Save" || menu == "Load")
     {
       hide_menu (menu);
       show_menu ("Exit");
     }
-    else if (menu == "Exit")
-    {
-      hide_menu(menu);
-      status()->pop();
-    }
-    else if (menu == "Message")
+    else if (menu == "Exit" || menu == "Message" || menu == "Saved")
     {
       hide_menu(menu);
       status()->pop();
@@ -980,23 +1006,33 @@ void Interface::menu_clicked ()
       status()->pop();
     else if (menu == "Wanna_restart")
       show_menu("Exit");
+    else if (menu == "Wanna_save")
+      show_menu("Save");
+    else if (menu == "Wanna_load")
+      show_menu("Load");
   }
   else if (startswith(effect->value(), "Save_"))
   {
     std::string save_id (effect->value().begin() + effect->value().find('_') + 1, effect->value().end());
-    emit ("Game", "save");
     set<C::String>("Savegame", "id", save_id);
-    hide_menu(menu);
-    status()->pop();
+    if (request<C::Tuple<std::string, double, int>>(effect->value(), "info"))
+    {
+      hide_menu(menu);
+      show_menu("Wanna_save");
+    }
+    else
+    {
+      emit ("Game", "save");
+      hide_menu(menu);
+      show_menu("Saved");
+    }
   }
   else if (startswith(effect->value(), "Load_"))
   {
     std::string save_id (effect->value().begin() + effect->value().find('_') + 1, effect->value().end());
-    emit ("Game", "load");
-    emit ("Game", "reset");
     set<C::String>("Savegame", "id", save_id);
     hide_menu(menu);
-    status()->pop();
+    show_menu("Wanna_load");
   }
   else if (auto action = request<C::Action>(effect->value() , "action"))
   {
