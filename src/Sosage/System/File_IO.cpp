@@ -653,6 +653,23 @@ void File_IO::read_init ()
         fast_forward_img);
 
 
+  std::string code_success = input["code_results"][0].string
+                             ("images", "interface", "png");
+  auto code_success_img = set<C::Image>("Code_success", "image", code_success,
+                                        Config::label_depth, UNCLICKABLE);
+  code_success_img->set_relative_origin(0.5, 0.5);
+  code_success_img->on() = false;
+
+  std::string code_failure = input["code_results"][1].string
+                             ("images", "interface", "png");
+  auto code_failure_img = set<C::Image>("Code_failure", "image", code_failure,
+                                        Config::label_depth, UNCLICKABLE);
+  code_failure_img->set_relative_origin(0.5, 0.5);
+  code_failure_img->on() = false;
+
+  set<C::Absolute_position>("Code_result", "position", Point(Config::world_width / 2,
+                                                              Config::world_height / 2));
+
   std::string debug_font = input["debug_font"].string("fonts", "ttf");
   set<C::Font> ("Debug", "font", debug_font, 40);
 

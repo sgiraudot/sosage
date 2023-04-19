@@ -371,13 +371,25 @@ void Logic::run ()
     {
       code->reset();
       emit ("code", "play_failure");
+
+      auto img = set<C::Image>("Code_result", "image",
+                               get<C::Image>("Code_failure", "image"));
+      img->on() = true;
+      get<C::Action>("Logic", "action")->schedule
+          (m_current_time + Config::button_click_duration * 5, img);
     }
     else if (code->success())
     {
       code->reset();
       emit ("code", "play_success");
-      get<C::Action>("Logic", "action")->schedule (m_current_time + Config::button_click_duration,
-                                                C::make_handle<C::Signal>("code", "quit"));
+      auto img = set<C::Image>("Code_result", "image",
+                               get<C::Image>("Code_success", "image"));
+      img->on() = true;
+      auto logic_action = get<C::Action>("Logic", "action");
+      logic_action->schedule
+          (m_current_time + Config::button_click_duration * 5, img);
+      logic_action->schedule (m_current_time + Config::button_click_duration,
+                              C::make_handle<C::Signal>("code", "quit"));
       status()->push(LOCKED);
     }
     else
