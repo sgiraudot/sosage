@@ -450,7 +450,7 @@ void Interface::update_label_position (const std::string& id, double scale)
   }
 }
 
-void Interface::delete_label (const std::string& id)
+void Interface::delete_label (const std::string& id, bool animate)
 {
   SOSAGE_UPDATE_DBG_LOCATION("Interface::delete_label()");
 
@@ -463,17 +463,27 @@ void Interface::delete_label (const std::string& id)
   debug << "Delete label " << id << std::endl;
 
   remove(id , "global_position", true);
-  double current_time = value<C::Double>(CLOCK__TIME);
-  group->apply<C::Image>([&](auto img_old)
+  if (animate)
   {
-    // To avoid later referencing a fading-out image, copy it with another ID and animate the copy
-    auto img = set<C::Image>(img_old->entity() + "_old", "image", img_old);
-    set<C::Variable>(img_old->entity() + "_old", "position", get<C::Position>(img_old->entity() , "position"));
-    remove(img_old->entity() , "position");
-    remove(img_old);
-    set<C::GUI_image_animation>(img->entity() , "animation", current_time, current_time + Config::inventory_speed,
-                                img, img->scale(), img->scale(), img->alpha(), 0, true);
-  });
+    double current_time = value<C::Double>(CLOCK__TIME);
+    group->apply<C::Image>([&](auto img_old)
+    {
+      // To avoid later referencing a fading-out image, copy it with another ID and animate the copy
+      auto img = set<C::Image>(img_old->entity() + "_old", "image", img_old);
+      set<C::Variable>(img_old->entity() + "_old", "position", get<C::Position>(img_old->entity() , "position"));
+      remove(img_old->entity() , "position");
+      remove(img_old);
+      set<C::GUI_image_animation>(img->entity() , "animation", current_time, current_time + Config::inventory_speed,
+                                  img, img->scale(), img->scale(), img->alpha(), 0, true);
+    });
+  }
+  else
+  {
+    group->apply<C::Image>([&](auto img)
+    {
+      remove (img);
+    });
+  }
   remove(group);
 }
 

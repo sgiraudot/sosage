@@ -85,7 +85,6 @@ private:
   void update_inventory();
   void update_code_hover();
   void update_dialog_choices();
-  void update_skip_message();
   void update_cursor();
 
   // Implemented in Interface__labels.cpp
@@ -98,7 +97,7 @@ private:
   void update_label (const std::string& id, const Label_type& ltype,
                      Component::Position_handle pos, double scale = 1.0);
   void update_label_position (const std::string& id, double scale = 1.0);
-  void delete_label (const std::string& id);
+  void delete_label (const std::string& id, bool animate = true);
   void fade_action_selector (const std::string& id, bool fade_in);
   void highlight_object (const std::string& id, unsigned char highlight);
   void set_action_selector (const Selector_type& type, const std::string& id = "");

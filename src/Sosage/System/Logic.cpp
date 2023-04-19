@@ -143,6 +143,9 @@ void Logic::run ()
     status()->pop();
   }
 
+  if (receive ("Skip_message", "create"))
+    push_notification (locale_get("Skip_cutscene", "text"), 5);
+
   bool skip_dialog = receive("Game", "skip_dialog");
 
   if (receive ("Cancel", "action"))

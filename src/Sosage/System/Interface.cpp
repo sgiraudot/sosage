@@ -64,7 +64,6 @@ void Interface::run()
   update_object_switcher();
   update_code_hover();
   update_dialog_choices();
-  update_skip_message();
   update_cursor();
   update_menu();
   SOSAGE_TIMER_STOP(System_Interface__run);
@@ -507,14 +506,18 @@ void Interface::update_object_switcher()
 
 void Interface::update_notifications()
 {
+  bool in_new_room = signal("Game", "in_new_room");
+  if (in_new_room)
+    debug << "In new room ? " << in_new_room << std::endl;
+
   std::vector<C::Handle> to_remove;
   for (auto c : components("notification"))
   {
     const std::string& id = c->entity();
 
-    if (receive (id, "end_notification"))
+    if (receive (id, "end_notification") || in_new_room)
     {
-      delete_label(id);
+      delete_label(id, !in_new_room);
       to_remove.push_back (c);
       continue;
     }
@@ -842,44 +845,6 @@ void Interface::update_dialog_choices()
     bool on = (c == choice);
     img_off->on() = !on;
     img_on->on() = on;
-  }
-}
-
-void Interface::update_skip_message()
-{
-  SOSAGE_UPDATE_DBG_LOCATION("Interface::update_skip_message()");
-
-  if (receive ("Skip_message", "create"))
-  {
-    auto interface_font = get<C::Font> ("Interface", "font");
-
-    auto img
-        = set<C::Image>("Skip_message", "image", interface_font, "FFFFFF",
-                        locale_get("Skip_cutscene", "text"));
-    img->z() += 10;
-    img->set_scale(0.5);
-    img->set_relative_origin (1, 1);
-
-    auto img_back
-        = set<C::Image>("Skip_message_back", "image", 0.5 * img->width() + 30, 0.5 * img->height() + 30,
-                        0, 0, 0, 128);
-    img_back->z() = img->z() - 1;
-    img_back->set_relative_origin (1, 1);
-
-    int window_width = Config::world_width;
-    int window_height = Config::world_height;
-    set<C::Absolute_position>("Skip_message", "position", Point (window_width - 15,
-                                                              window_height - 15));
-    set<C::Absolute_position>("Skip_message_back", "position", Point (window_width,
-                                                                   window_height));
-  }
-
-  if (receive ("Skip_message", "remove"))
-  {
-    remove("Skip_message", "image");
-    remove("Skip_message", "position");
-    remove("Skip_message_back", "image");
-    remove("Skip_message_back", "position");
   }
 }
 

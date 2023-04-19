@@ -129,21 +129,24 @@ void Control::update_exit()
   if (status()->is (CUTSCENE))
   {
     double time = value<C::Double>(CLOCK__TIME);
-    bool exit_message_exists = bool(request<C::Image>("Skip_message", "image"));
+    bool exit_message_exists = signal ("Skip_message", "exists");
 
-    if (receive("Game", "escape"))
+    if (receive("Game", "escape") || receive("Game", "clear_notifications"))
     {
       if (exit_message_exists)
       {
         emit("Game", "skip_cutscene");
-        emit("Skip_message", "remove");
+        receive("Skip_message", "exists");
       }
       else
+      {
+        emit("Skip_message", "exists");
         emit("Skip_message", "create");
+      }
       m_latest_exit = time;
     }
     if (exit_message_exists && time - m_latest_exit >= Config::key_repeat_delay)
-      emit("Skip_message", "remove");
+      receive("Skip_message", "exists");
   }
   else // status != CUTSCENE
   {
