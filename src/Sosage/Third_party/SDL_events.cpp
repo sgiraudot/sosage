@@ -70,11 +70,9 @@ Event SDL_events::next_event ()
   {
     if (ev.window.event == SDL_WINDOWEVENT_RESIZED)
       return Event (WINDOW, RESIZED, ev.window.data1, ev.window.data2);
-    if (ev.window.event == SDL_WINDOWEVENT_HIDDEN
-        || ev.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+    if (ev.window.event == SDL_WINDOWEVENT_HIDDEN)
       return Event (WINDOW, BACKGROUND);
-    if (ev.window.event == SDL_WINDOWEVENT_SHOWN
-        || ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+    if (ev.window.event == SDL_WINDOWEVENT_SHOWN)
       return Event (WINDOW, FOREGROUND);
   }
   if (ev.type == SDL_CONTROLLERDEVICEADDED)
