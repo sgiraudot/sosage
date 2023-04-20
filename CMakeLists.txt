@@ -349,7 +349,7 @@ if(SOSAGE_COMPILE_SCAP)
     "src/Sosage/Utils/image_split.cpp" "src/Sosage/Utils/profiling.cpp")
   add_executable("SCAP" "src/Sosage/SCAP.cpp" ${SCAP_SRC})
   target_include_directories(SCAP PUBLIC ${SOSAGE_INCLUDE_DIRECTORIES})
-  target_link_libraries(SCAP ${SOSAGE_LINK_LIBRARIES})
+  target_link_libraries(SCAP ${SOSAGE_LINK_LIBRARIES} "tbb")
   target_compile_definitions(SCAP PUBLIC
     ${SOSAGE_COMPILE_DEFINITIONS}
     "SOSAGE_SCAP")

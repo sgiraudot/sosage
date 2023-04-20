@@ -41,6 +41,8 @@
 #include <fstream>
 #include <sstream>
 
+#include <tbb/parallel_for_each.h>
+
 namespace Sosage::SCAP
 {
 
@@ -152,20 +154,29 @@ void write_image (std::ofstream& ofile, const std::string& filename, bool is_obj
     std::cerr << " -> image splitted into " << tiles.size() << std::endl;
   }
 
-  std::size_t total_size_before = 0;
-  std::size_t total_size_after = 0;
-  for (SDL_Surface* tile : tiles)
+  std::size_t parallel_size = (is_object ? 2 * tiles.size() : tiles.size());
+  std::vector<std::size_t> index (tiles.size());
+  for (std::size_t i = 0; i < index.size(); ++ i)
+    index[i] = i;
+  std::vector<std::size_t> size_before (parallel_size);
+  std::vector<std::size_t> size_after (parallel_size);
+  std::vector<Buffer> buffer (parallel_size);
+
+  // 8min15 100% seq
+  // 5min00 limit 8
+  // 4min17 100% parallel
+  // 4min13 limit 3
+  auto compress_images = [&](const std::size_t& idx)
   {
+    SDL_Surface* tile = tiles[idx];
+    std::size_t iidx = (is_object ? idx*2 : idx);
     SDL_LockSurface(tile);
     unsigned int size = bpp * tile->w * tile->h;
-    std::size_t size_before = size;
-    total_size_before += size_before;
-    Buffer buffer = lz4_compress_buffer (tile->pixels, size);
-    binary_write (ofile, buffer.size());
-    binary_write (ofile, buffer);
+    size_before[iidx] = size;
+
+    buffer[iidx] = lz4_compress_buffer (tile->pixels, size);
     SDL_UnlockSurface(tile);
-    std::size_t size_after = buffer.size();
-    total_size_after += size_after;
+    size_after[iidx] = buffer[iidx].size();
 
     // Highlight
     if (is_object)
@@ -181,17 +192,31 @@ void write_image (std::ofstream& ofile, const std::string& filename, bool is_obj
       access.release();
 
       SDL_LockSurface(high);
-      total_size_before += size_before;
-      Buffer buffer = lz4_compress_buffer (high->pixels, size);
-      binary_write (ofile, buffer.size());
-      binary_write (ofile, buffer);
+      size_before[iidx+1] = size;
+      buffer[iidx+1] = lz4_compress_buffer (high->pixels, size);
       SDL_UnlockSurface(high);
-      size_after = buffer.size();
-      total_size_after += size_after;
-
+      size_after[iidx+1] = buffer[iidx].size();
       SDL_FreeSurface (high);
     }
     SDL_FreeSurface (tile);
+  };
+
+  std::size_t limit = 3;
+  if (tiles.size() > limit)
+    tbb::parallel_for_each (index.begin(), index.end(), compress_images);
+  else
+    std::for_each (index.begin(), index.end(), compress_images);
+
+  std::size_t total_size_before = 0;
+  std::size_t total_size_after = 0;
+
+  for (std::size_t i = 0; i < buffer.size(); ++ i)
+  {
+    total_size_before += size_before[i];
+    binary_write (ofile, buffer[i].size());
+    binary_write (ofile, buffer[i]);
+    total_size_after += size_after[i];
+
   }
 
   if (is_object)
