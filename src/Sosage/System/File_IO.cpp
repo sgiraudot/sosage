@@ -457,7 +457,8 @@ void File_IO::write_savefile()
     if (!c->is_system())
       if (auto lr = request<C::Animation>(c->entity() + "_head", "image"))
       {
-        if (auto anim = request<C::String>(c->entity(), "animation"))
+        auto anim = request<C::String>(c->entity(), "animation");
+        if (anim && anim->value() != "action")
           output.write_list_item ("id", c->entity(), "value", is_looking_right(c->entity()), "animation", anim->value());
         else
           output.write_list_item ("id", c->entity(), "value", is_looking_right(c->entity()));
