@@ -530,11 +530,6 @@ void Logic::run ()
     if (!a->ready())
       continue;
 
-    C::Action_handle saved_character_action;
-    if (auto ca = request<C::Action>("Character", "action"))
-      if (ca == a)
-        saved_character_action = a;
-
     do
     {
       if (!apply_next_step (a))
@@ -542,12 +537,11 @@ void Logic::run ()
     }
     while (a->on());
 
-    // If character action has changed state, let's save the
+    // If action has changed state, let's save the
     // previous stated action so it can finish safely
-    if (saved_character_action)
-      if (request<C::Action>(a->entity(), a->component())
-          != saved_character_action)
-        set<C::Variable>("Finishing", "action", saved_character_action);
+    auto action = request<C::Action>(a->entity(), a->component());
+    if (action != a && a->on())
+      set<C::Variable>(a->entity() + "_finishing", "action", a);
   }
 
   SOSAGE_TIMER_STOP(System_Logic__run);
