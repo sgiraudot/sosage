@@ -64,8 +64,7 @@ Content::Content()
           "stop_animation",
           "stop_talking",
           "stop_walking",
-          "value",
-          "walk_start_time" };
+          "value" };
 
   m_data.resize(reserved_components.size() + 1);
   std::size_t idx = 1;

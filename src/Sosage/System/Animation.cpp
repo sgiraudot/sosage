@@ -392,6 +392,18 @@ void Animation::run_animation_frame()
               mhead->set (Point (length * std::cos(direction), length * std::sin(direction)));
             }
           }
+
+          pos = anim->entity().find("_body");
+          if (pos != std::string::npos && value<C::Boolean>(anim->character_entity(), "walking"))
+          {
+            if (anim->current_frame().x == 0 || anim->current_frame().x == 4)
+            {
+              emit ("Step", "play_sound");
+              Point point = value<C::Position>(anim->character_entity(), "position")
+                          - value<C::Absolute_position>(CAMERA__POSITION);
+              set<C::Double>("Step", "panning", 1. - (point.x() / Config::world_width));
+            }
+          }
         }
       }
 
@@ -536,7 +548,6 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
 
   if (head->on())
   {
-    set<C::Double>(id, "walk_start_time", value<C::Double>(CLOCK__TIME));
     image->reset();
     head->reset();
     head->on() = false;
@@ -571,8 +582,6 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
 
 void Animation::generate_random_idle_animation (const std::string& id, bool looking_right)
 {
-  remove(id, "walk_start_time", true);
-
   // If character has no skin ("fake" character), do nothing
   if (!request<C::Group>(id, "group"))
     return;

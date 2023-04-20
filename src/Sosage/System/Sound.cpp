@@ -135,26 +135,6 @@ void Sound::run()
        (get<C::Code>("Game", "code")->entity() +"_button", "sound")->core(),
        value<C::Int>("Sounds", "volume") / 10.);
 
-  // Steps
-  for (C::Handle ev : components("walk_start_time"))
-  {
-    auto stime = C::cast<C::Double>(ev);
-    double start_time = stime->value();
-    double current_time = value<C::Double>(CLOCK__TIME);
-
-    double period = (4. / Config::animation_fps);
-
-    if (current_time - start_time >= period || start_time == current_time)
-    {
-      Point point = value<C::Position>(ev->entity(), "position")
-                  - value<C::Absolute_position>(CAMERA__POSITION);
-      double panning = 1. - (point.x() / Config::world_width);
-      m_core.play_sound (get<C::Sound> ("Step" , "sound")->core(),
-                         value<C::Int>("Sounds", "volume") / 10., panning);
-      stime->set(current_time);
-    }
-  }
-
   std::vector<C::Handle> to_remove;
   for (C::Handle ev : components("play_sound"))
   {
