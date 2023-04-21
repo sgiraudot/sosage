@@ -723,13 +723,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   if (isupper(action[0]))
     label = get<C::String>(action , "text");
   if (!label)
-  {
     label = get<C::String>("Default_" + action , "label");
-    if (is_character(id) && action == "inventory")
-      label = get<C::String>("Default_inventory_char", "label");
-  }
-  if (id == "Default" && action == "inventory")
-    label = get<C::String>("Inventory", "label");
 
   Label_type ltype = PLAIN;
   Vector label_position;

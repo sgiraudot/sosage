@@ -822,9 +822,7 @@ void File_IO::read_init ()
     }
   }
 
-  set<C::String>("Inventory", "label", input["default"]["inventory_button"]["label"].string());
-
-  set<C::String>("Default_inventory_char", "label", input["default"]["inventory_char"]["label"].string());
+  set<C::String>("Inventory", "label", input["default"]["inventory"]["label"].string());
 
   set<C::String>("Game", "init_new_room", input["load"][0].string());
   set<C::String>("Game", "init_new_room_origin", input["load"][1].string());
