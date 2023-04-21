@@ -45,6 +45,7 @@ if not data["use_compressed_data"]:
     data_folder = data["folder"]
     
 data_dir = data["buildfolder"] + "/data"
+scap_buildir = data["buildfolder"] + "/scap"
 linux_buildir = data["buildfolder"] + "/linux"
 steam_buildir = data["buildfolder"] + "/steamos"
 appimg_buildir = data["buildfolder"] + "/appimg"
@@ -111,22 +112,23 @@ print("  -> done in " + str(int(end - begin)) + "s\n")
 if data["compress_data"]:
     print("### COMPILING DATA PACKAGER")
     begin = time.perf_counter()
-    run_cmd("rm -rf " + linux_buildir)
-    run_cmd("mkdir -p " + linux_buildir)
-    chdir(linux_buildir)
+    run_cmd("rm -rf " + scap_buildir)
+    run_cmd("mkdir -p " + scap_buildir)
+    chdir(scap_buildir)
     run_cmd("cmake -DCMAKE_BUILD_TYPE=" + data["build"] + " -DSOSAGE_COMPILE_SCAP:BOOL=True -DSOSAGE_DATA_FOLDER=" + raw_data_folder + " " + cwd)
     run_cmd("make -j " + str(data["threads"]) + " SCAP")
     end = time.perf_counter()
     print("  -> done in " + str(int(end - begin)) + "s\n")
 
-    print("### PACKAGING DATA")
-    begin = time.perf_counter()
-    run_cmd("rm -rf " + data_folder)
-    run_cmd("mkdir -p " + data_folder)
-    run_cmd("./SCAP " + raw_data_folder + " " + data_folder)
+    if not configure_only:
+        print("### PACKAGING DATA")
+        begin = time.perf_counter()
+        run_cmd("rm -rf " + data_folder)
+        run_cmd("mkdir -p " + data_folder)
+        run_cmd("./SCAP " + raw_data_folder + " " + data_folder)
+        end = time.perf_counter()
+        print("  -> done in " + str(int(end - begin)) + "s\n")
     chdir(cwd)
-    end = time.perf_counter()
-    print("  -> done in " + str(int(end - begin)) + "s\n")
 
 if data["data"]:
     try:
