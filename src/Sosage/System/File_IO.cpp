@@ -523,12 +523,21 @@ void File_IO::write_savefile()
         output.write_list_item ("id", c->entity(), "value", i->value());
   output.end_section();
 
-  output.start_section("hidden");
+  std::unordered_set<std::string> hidden;
   for (C::Handle c : components("group"))
     if (!c->is_system())
       if (auto lr = request<C::Animation>(c->entity() + "_body", "image"))
         if (!lr->on())
-          output.write_list_item (c->entity());
+          hidden.insert (c->entity());
+
+  // Some elements might have not been process by System::Animation yet
+  for (auto c : components("set_hidden"))
+    hidden.insert (c->entity());
+
+  output.start_section("hidden");
+  for (const std::string& id : hidden)
+    if (!contains(components("set_visible"), id))
+      output.write_list_item (id);
   output.end_section();
 
   output.start_section("active_animations");
