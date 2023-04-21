@@ -106,12 +106,16 @@ void SDL_mixer_ext::stop_music(const SDL_mixer_ext::Music& music, int)
   Mix_HaltMusicStream (music.first);
 }
 
-void SDL_mixer_ext::fade (const SDL_mixer_ext::Music& music, int, double time, bool in)
+void SDL_mixer_ext::fade (const SDL_mixer_ext::Music& music, int,
+                          double time, bool in, double position)
 {
   if (in)
   {
     debug << "Fade in music " << time << std::endl;
-    Mix_FadeInMusicStream(music.first, -1, int(1000 * time));
+    if (position == 0)
+      Mix_FadeInMusicStream(music.first, -1, int(1000 * time));
+    else
+      Mix_FadeInMusicStreamPos (music.first, -1, int(1000 * time), position);
   }
   else
   {
@@ -146,6 +150,11 @@ void SDL_mixer_ext::play_sound (const SDL_mixer_ext::Sound& sound, double volume
   Mix_Volume (channel, volume * Config::max_music_volume);
   Mix_SetPanning(channel, left, right);
   Mix_PlayChannel(channel, sound, 0);
+}
+
+double SDL_mixer_ext::position (const SDL_mixer_ext::Music& music) const
+{
+  return Mix_GetMusicPosition (music.first);
 }
 
 int SDL_mixer_ext::reserve_channel()

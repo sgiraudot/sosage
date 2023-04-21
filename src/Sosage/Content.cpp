@@ -54,6 +54,7 @@ Content::Content()
           "position",
           "rescale",
           "rescale60fps",
+          "resume_at",
           "set_state",
           "set_visible",
           "set_hidden",

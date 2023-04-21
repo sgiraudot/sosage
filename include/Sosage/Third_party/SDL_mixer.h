@@ -76,11 +76,13 @@ public:
   void set_music_channels (std::size_t nb);
   void start_music (const Music& music, int channel, double volume);
   void stop_music(const Music& music, int channel);
-  void fade (const Music& music, int channel, double time, bool in);
+  void fade (const Music& music, int channel, double time, bool in, double position = 0.);
   void set_volume (const Music& music, int channel, double percentage);
   void pause_music (const Music& music, int channel);
   void resume_music (const Music& music, int channel);
   void play_sound (const Sound& sound, double volume, double panning = 0.5);
+
+  double position (const Music& music) const;
 
 private:
 

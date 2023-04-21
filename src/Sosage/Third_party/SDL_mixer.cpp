@@ -110,7 +110,8 @@ void SDL_mixer::stop_music(const SDL_mixer::Music&, int channel)
   Mix_HaltChannel(m_music_channels[channel]);
 }
 
-void SDL_mixer::fade (const SDL_mixer::Music& music, int channel, double time, bool in)
+void SDL_mixer::fade (const SDL_mixer::Music& music, int channel,
+                      double time, bool in, double)
 {
   if (in)
   {
@@ -150,6 +151,11 @@ void SDL_mixer::play_sound (const SDL_mixer::Sound& sound, double volume, double
   Mix_Volume (channel, volume * Config::max_music_volume);
   Mix_SetPanning(channel, left, right);
   Mix_PlayChannel(channel, sound, 0);
+}
+
+double SDL_Mixer::position (const SDL_mixer::Music&) const
+{
+  return 0.; // Not available
 }
 
 int SDL_mixer::reserve_channel()

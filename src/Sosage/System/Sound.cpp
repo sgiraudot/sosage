@@ -69,9 +69,17 @@ void Sound::run()
 
   if (music && receive("Music", "stop"))
   {
+    double position = m_core.position(music->core(0));
+    set<C::Double>(music->entity(), "resume_at", position);
     for (std::size_t i = 0; i < music->tracks(); ++ i)
       m_core.fade(music->core(i), i, Config::default_sound_fade_time, false);
     music->on() = false;
+  }
+
+  if (music && signal("Game", "save"))
+  {
+    double position = m_core.position(music->core(0));
+    set<C::Double>(music->entity(), "resume_at", position);
   }
 
   if (music && receive("Music", "start"))
@@ -86,12 +94,27 @@ void Sound::run()
   if (auto fade = request<C::Tuple<double, double, bool>>("Music", "fade"))
   {
     check (music, "No music to fade");
+
+    double position = 0;
+    if (fade->get<2>())
+    {
+      position = value<C::Double>(music->entity(), "resume_at", 0);
+      debug << "Resume position " << position << std::endl;
+    }
+    else
+    {
+      double position = m_core.position(music->core(0));
+      set<C::Double>(music->entity(), "resume_at", position);
+      debug << "Save position " << position << std::endl;
+    }
+
     double current_time = value<C::Double> (CLOCK__TIME);
     m_core.set_music_channels(music->tracks());
     for (std::size_t i = 0; i < music->tracks(); ++ i)
     {
       m_core.set_volume (music->core(i), i, volume * music->mix(i));
-      m_core.fade(music->core(i), i, fade->get<1>() - current_time, fade->get<2>());
+      m_core.fade(music->core(i), i, fade->get<1>() - current_time, fade->get<2>(),
+                  position);
     }
     music->on() = true;
     remove("Music", "fade");

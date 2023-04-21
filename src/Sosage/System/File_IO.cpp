@@ -152,8 +152,9 @@ void File_IO::clean_content()
          if (signal(c->entity(), "is_global"))
            return false;
 
-         // keep states, positions and signals
-         if (c->component() == "state" || c->component() == "position" || c->component() == "signal")
+         // keep states, positions, signals and music info
+         if (c->component() == "state" || c->component() == "position"
+             || c->component() == "signal" || c->component() == "resume_at")
            return false;
 
          // keep integers
@@ -337,6 +338,14 @@ bool File_IO::read_savefile (const std::string& save_id)
   }
   action->add ("fadein", { "0.5" });
 
+  if (input.has("music_positions"))
+    for (std::size_t i = 0; i < input["music_positions"].size(); ++ i)
+    {
+      const Core::File_IO::Node& iresume = input["music_positions"][i];
+      auto ra = set<C::Double>(iresume["id"].string(), "resume_at",
+          iresume["value"].floating());
+    }
+
   std::unordered_map<std::string, std::string> looking_right;
   std::unordered_map<std::string, std::string> char_anims;
   for (std::size_t i = 0; i < input["characters"].size(); ++ i)
@@ -445,6 +454,12 @@ void File_IO::write_savefile()
       output.end_section();
     }
   }
+
+  output.start_section("music_positions");
+  for (C::Handle c : components("resume_at"))
+    if (auto r= C::cast<C::Double>(c))
+      output.write_list_item ("id", c->entity(), "value", r->value());
+  output.end_section();
 
   if (auto dialog = request<C::String>("Game", "current_dialog"))
   {
