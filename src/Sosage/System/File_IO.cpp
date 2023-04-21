@@ -536,7 +536,7 @@ void File_IO::write_savefile()
 
   output.start_section("hidden");
   for (const std::string& id : hidden)
-    if (!contains(components("set_visible"), id))
+    if (!contains(components("set_visible"), C::Id(id, "set_visible")))
       output.write_list_item (id);
   output.end_section();
 

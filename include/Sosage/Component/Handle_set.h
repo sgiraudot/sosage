@@ -83,6 +83,7 @@ public:
   iterator end() { return iterator(m_map.end()); }
   const_iterator begin() const { return iterator(m_map.begin()); }
   const_iterator end() const { return iterator(m_map.end()); }
+  const_iterator find (const Id& id) const { return m_map.find(id); }
 };
 
 } // namespace Sosage::Component
