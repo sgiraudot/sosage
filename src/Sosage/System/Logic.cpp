@@ -500,7 +500,20 @@ void Logic::run ()
   {
     skip = receive ("Game", "skip_cutscene");
     if (skip)
+    {
       status()->pop();
+      // Finish all paths
+      for (auto c : components("path"))
+        if (auto path = C::cast<C::Path>(c))
+        {
+          Point destination = (*path)[path->size() - 1];
+          function_move ({path->entity(), to_string (destination.X()),
+                          to_string (destination.Y()),
+                          to_string(is_looking_right(path->entity()))});
+          emit(path->entity(), "stop_walking");
+        }
+      components("path").clear();
+    }
   }
 
   // Quick'n'dirty workaround for the cutscene camera
@@ -521,9 +534,12 @@ void Logic::run ()
     if (skip)
     {
       C::Action::Step s = a->next_step();
-      a->reset_scheduled();
       while (s.function() != "unlock" && a->on())
+      {
         s = a->next_step();
+        skip_step(s);
+      }
+      a->reset_scheduled();
       if (!a->on())
         continue;
     }
@@ -690,6 +706,55 @@ bool Logic::apply_next_step (C::Action_handle action)
   check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
          s.function() + " is not a valid function");
   return m_dispatcher[s.function()](s.args());
+}
+
+void Logic::skip_step (const C::Action::Step& step)
+{
+  const std::string& function = step.function();
+  const std::vector<std::string>& args = step.args();
+
+  // For all steps that change a final step, just skip to the end
+  if (function == "move")
+  {
+    if (args.size() == 5)
+      function_move ({ args[0], args[1], args[2], args[3] });
+    else
+      function_move (args);
+  }
+  else if (function == "move60fps")
+    function_move ({ args[0], args[1], args[2], args[3] });
+  else if (function == "goto")
+  {
+    check ((args.size() == 2 && is_int(args[0]) && is_int(args[1]))
+        || (args.size() == 3 && is_character(args[0]) && is_int(args[1])) && is_int(args[2]),
+        "Can't skip this version of goto");
+    if (args.size() == 2)
+      function_move ({ value<C::String>("Player", "name"), args[0], args[1], "true" });
+    else
+      function_move ({ args[0], args[1], args[2], "true" });
+  }
+  else if (function == "rescale")
+  {
+    if (args.size() == 3)
+      function_rescale ({ args[0], args[1] });
+    else
+      function_rescale (args);
+  }
+  else if (function == "rescale60fps")
+    function_rescale (args);
+  else if (function == "camera")
+  {
+    const std::string& x = args[0];
+    std::string y = (args.size() > 1 ? args[1] : "0");
+    function_camera ({x, y, "0"});
+  }
+  else if (function == "hide")
+  {
+    if (request<C::Image>(args[0], "image"))
+      function_hide (args);
+  }
+  else if (function == "stop")
+    function_stop (args);
 }
 
 bool Logic::subfunction_fade (bool fadein, double duration)

@@ -77,6 +77,7 @@ private:
   void update_debug_info (Component::Debug_handle debug_info);
 
   bool apply_next_step (Component::Action_handle action);
+  void skip_step (const Component::Action::Step& step);
 
   bool subfunction_fade (bool fadein, double duration);
   bool subfunction_trigger_dialog (const std::vector<std::string>& args);
