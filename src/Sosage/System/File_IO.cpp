@@ -195,8 +195,8 @@ void File_IO::clean_content()
           Core::File_IO subfile ("data/" + section + "/" + s.string() + ".yaml");
           bool okay = subfile.parse();
           check(okay, "Can't open data/" + section + "/" + s.string() + ".yaml");
-          func (s.string(), subfile.root());
           emit (s.string(), "is_global");
+          func (s.string(), subfile.root());
         }
     }
   }
