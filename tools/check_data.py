@@ -345,6 +345,7 @@ possible_functions = [ [ "add", is_integer_id, is_convertible_to_int ],
                        [ "rescale", is_scalable_id, is_convertible_to_float ],
                        [ "rescale", is_scalable_id, is_convertible_to_float, is_convertible_to_float ],
                        [ "rescale60fps", is_scalable_id, is_convertible_to_float, is_convertible_to_float ],
+                       [ "save" ],
                        [ "set", is_stated_id, is_state_id ],
                        [ "set", is_stated_id, is_state_id, is_state_id ],
                        [ "set", is_integer_id, is_convertible_to_int ],
@@ -556,7 +557,7 @@ if test(data, "text", is_array):
         if "icon" in t:
             test(t, "icon", file_exists, ["images/interface", "png"])
 
-for act in ["look", "move", "take", "inventory_button", "inventory", "use",
+for act in ["look", "move", "take", "inventory", "use",
             "combine", "goto"]:
     test(data, "default/" + act + "/label", is_line)
     if "effect" in data["default"][act]:
