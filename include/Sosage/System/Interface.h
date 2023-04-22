@@ -105,6 +105,11 @@ private:
   void generate_action (const std::string& id, const std::string& action,
                         const Button_orientation& orientation, const std::string& button,
                         Component::Position_handle position, const Animation_style& style = NONE);
+  void compute_action_positions (const Button_orientation& orientation,
+                                 std::size_t& selector_idx,
+                                 Vector& label_position, Vector& button_position,
+                                 Vector& start_position, Label_type& ltype);
+
   Component::Functional_position_handle wriggly_position (const std::string& id, const std::string& cmp,
                                                           Component::Position_handle origin,
                                                           const Vector& diff,

@@ -729,12 +729,127 @@ void Interface::generate_action (const std::string& id, const std::string& actio
   Vector label_position;
   Vector button_position;
   Vector start_position;
-
-  // Default cross orientation
   std::size_t selector_idx = 0;
-  if (orientation == UP)
+  compute_action_positions (orientation, selector_idx, label_position,
+                            button_position, start_position, ltype);
+
+  m_action_selector[selector_idx] = id + "_" + action;
+
+  if (style != DEPLOY)
+    start_position = button_position;
+
+  if (id != "")
   {
-    selector_idx = 0;
+    std::string label_id = id + "_" + action + "_label";
+    create_label (label_id, locale(label->value()), ltype, BOX);
+
+    update_label (label_id, ltype,
+                  wriggly_position(label_id, "global_position",
+                                   position, label_position, orientation));
+
+    // UPPER and DOWNER configs might need to be moved to be on screen
+    if (orientation == UPPER || orientation == DOWNER)
+    {
+      int diff = 0;
+      auto pos = get<C::Position>(label_id + "_back", "position");
+      auto img =  get<C::Image>(label_id + "_back", "image");
+      if (pos->value().x() - 0.5 * img->width() < Config::label_margin)
+        diff = Config::label_margin - pos->value().x() + 0.5 * img->width();
+      else if (pos->value().x() + 0.5 * img->width() > Config::world_width - Config::label_margin)
+        diff = (Config::world_width - Config::label_margin) - pos->value().x() - 0.5 * img->width();
+
+      if (diff != 0)
+      {
+        get<C::Functional_position>(label_id, "global_position")->set
+            (wriggly_position(label_id, "global_position",
+                              position,
+                              pos->value() - position->value() + Vector(diff, 0),
+                              orientation, false)->function());
+      }
+    }
+    // LEFT_UP, RIGHT_UP, LEFT_DOWN, RIGHT_DOWN always need to be moved to not overlap
+    else if (orientation == LEFT_UP)
+    {
+      auto pos = get<C::Position>(label_id + "_back", "position");
+      double diff = Config::label_margin - get<C::Image>(label_id + "_back", "image")->width() / 2;
+      get<C::Functional_position>(label_id, "global_position")->set
+          (wriggly_position(label_id, "global_position",
+                            position,
+                            pos->value() - position->value() + Vector(diff, 0),
+                            orientation, false)->function());
+    }
+    else if (orientation == RIGHT_UP)
+    {
+      auto pos = get<C::Position>(label_id + "_back", "position");
+      double diff = -Config::label_margin + get<C::Image>(label_id + "_back", "image")->width() / 2;
+      get<C::Functional_position>(label_id, "global_position")->set
+          (wriggly_position(label_id, "global_position",
+                            position,
+                            pos->value() - position->value() + Vector(diff, 0),
+                            orientation, false)->function());
+    }
+    else if (orientation == LEFT_DOWN)
+    {
+      auto pos = get<C::Position>(label_id + "_back", "position");
+      double diff = Config::label_margin - get<C::Image>(label_id + "_back", "image")->width() / 2;
+      get<C::Functional_position>(label_id, "global_position")->set
+          (wriggly_position(label_id, "global_position",
+                            position,
+                            pos->value() - position->value() + Vector(diff, 0),
+                            orientation, false)->function());
+    }
+    else if (orientation == RIGHT_DOWN)
+    {
+      auto pos = get<C::Position>(label_id + "_back", "position");
+      double diff = -Config::label_margin + get<C::Image>(label_id + "_back", "image")->width() / 2;
+      get<C::Functional_position>(label_id, "global_position")->set
+          (wriggly_position(label_id, "global_position",
+                            position,
+                            pos->value() - position->value() + Vector(diff, 0),
+                            orientation, false)->function());
+    }
+
+    animate_label (label_id, style);
+  }
+
+  std::string button_id = "";
+  if (id == "")
+  {
+    m_action_selector[selector_idx] = "Default_" + action;
+    button_id = "Default_" + action + "_button";
+    create_label (button_id, button, LABEL_BUTTON, BOX);
+    update_label (button_id, LABEL_BUTTON,
+                  wriggly_position(button_id, "global_position",
+                                   position, button_position, orientation));
+    get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
+
+//                  set<C::Relative_position>(button_id , "global_position", position, start_position));
+    if (auto img = request<C::Image>("Default_" + action + "_button", "image"))
+      img->on() = false;
+    get<C::Image>("Default_" + action + "_button_back", "image")->set_alpha(128);
+  }
+  else
+  {
+    button_id = id + "_" + action + "_button";
+    create_label (button_id, button, LABEL_BUTTON, BOX);
+    update_label (button_id, LABEL_BUTTON,
+                  wriggly_position(button_id, "global_position",
+                                   position, button_position, orientation));
+    get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
+//                  set<C::Relative_position>(button_id , "global_position", position, start_position));
+  }
+
+  animate_label (button_id, style, true, position->value() + button_position);
+}
+
+void Interface::compute_action_positions (const Button_orientation& orientation,
+                                          std::size_t& selector_idx,
+                                          Vector& label_position, Vector& button_position,
+                                          Vector& start_position, Label_type& ltype)
+{
+  // Default cross orientation
+  if (orientation == UP)
+  { selector_idx = 0;
     label_position = Vector(0, -80);
     button_position = Vector(0, -40);
     start_position = Vector(0, -14);
@@ -854,113 +969,6 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     button_position = Vector(28.25, 50);
     start_position = Vector(0, 14);
   }
-  m_action_selector[selector_idx] = id + "_" + action;
-
-  if (style != DEPLOY)
-    start_position = button_position;
-
-  if (id != "")
-  {
-    std::string label_id = id + "_" + action + "_label";
-    create_label (label_id, locale(label->value()), ltype, BOX);
-
-    update_label (label_id, ltype,
-                  wriggly_position(label_id, "global_position",
-                                   position, label_position, orientation));
-
-    // UPPER and DOWNER configs might need to be moved to be on screen
-    if (orientation == UPPER || orientation == DOWNER)
-    {
-      int diff = 0;
-      auto pos = get<C::Position>(label_id + "_back", "position");
-      auto img =  get<C::Image>(label_id + "_back", "image");
-      if (pos->value().x() - 0.5 * img->width() < Config::label_margin)
-        diff = Config::label_margin - pos->value().x() + 0.5 * img->width();
-      else if (pos->value().x() + 0.5 * img->width() > Config::world_width - Config::label_margin)
-        diff = (Config::world_width - Config::label_margin) - pos->value().x() - 0.5 * img->width();
-
-      if (diff != 0)
-      {
-        get<C::Functional_position>(label_id, "global_position")->set
-            (wriggly_position(label_id, "global_position",
-                              position,
-                              pos->value() - position->value() + Vector(diff, 0),
-                              orientation, false)->function());
-      }
-    }
-    // LEFT_UP, RIGHT_UP, LEFT_DOWN, RIGHT_DOWN always need to be moved to not overlap
-    else if (orientation == LEFT_UP)
-    {
-      auto pos = get<C::Position>(label_id + "_back", "position");
-      double diff = Config::label_margin - get<C::Image>(label_id + "_back", "image")->width() / 2;
-      get<C::Functional_position>(label_id, "global_position")->set
-          (wriggly_position(label_id, "global_position",
-                            position,
-                            pos->value() - position->value() + Vector(diff, 0),
-                            orientation, false)->function());
-    }
-    else if (orientation == RIGHT_UP)
-    {
-      auto pos = get<C::Position>(label_id + "_back", "position");
-      double diff = -Config::label_margin + get<C::Image>(label_id + "_back", "image")->width() / 2;
-      get<C::Functional_position>(label_id, "global_position")->set
-          (wriggly_position(label_id, "global_position",
-                            position,
-                            pos->value() - position->value() + Vector(diff, 0),
-                            orientation, false)->function());
-    }
-    else if (orientation == LEFT_DOWN)
-    {
-      auto pos = get<C::Position>(label_id + "_back", "position");
-      double diff = Config::label_margin - get<C::Image>(label_id + "_back", "image")->width() / 2;
-      get<C::Functional_position>(label_id, "global_position")->set
-          (wriggly_position(label_id, "global_position",
-                            position,
-                            pos->value() - position->value() + Vector(diff, 0),
-                            orientation, false)->function());
-    }
-    else if (orientation == RIGHT_DOWN)
-    {
-      auto pos = get<C::Position>(label_id + "_back", "position");
-      double diff = -Config::label_margin + get<C::Image>(label_id + "_back", "image")->width() / 2;
-      get<C::Functional_position>(label_id, "global_position")->set
-          (wriggly_position(label_id, "global_position",
-                            position,
-                            pos->value() - position->value() + Vector(diff, 0),
-                            orientation, false)->function());
-    }
-
-    animate_label (label_id, style);
-  }
-
-  std::string button_id = "";
-  if (id == "")
-  {
-    m_action_selector[selector_idx] = "Default_" + action;
-    button_id = "Default_" + action + "_button";
-    create_label (button_id, button, LABEL_BUTTON, BOX);
-    update_label (button_id, LABEL_BUTTON,
-                  wriggly_position(button_id, "global_position",
-                                   position, button_position, orientation));
-    get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
-
-//                  set<C::Relative_position>(button_id , "global_position", position, start_position));
-    if (auto img = request<C::Image>("Default_" + action + "_button", "image"))
-      img->on() = false;
-    get<C::Image>("Default_" + action + "_button_back", "image")->set_alpha(128);
-  }
-  else
-  {
-    button_id = id + "_" + action + "_button";
-    create_label (button_id, button, LABEL_BUTTON, BOX);
-    update_label (button_id, LABEL_BUTTON,
-                  wriggly_position(button_id, "global_position",
-                                   position, button_position, orientation));
-    get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
-//                  set<C::Relative_position>(button_id , "global_position", position, start_position));
-  }
-
-  animate_label (button_id, style, true, position->value() + button_position);
 }
 
 C::Functional_position_handle Interface::wriggly_position (const std::string& id,
