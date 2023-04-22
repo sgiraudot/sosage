@@ -122,18 +122,7 @@ void Logic::run ()
   update_debug_info (get<C::Debug>(GAME__DEBUG));
 
   if (receive ("Game", "clear_notifications"))
-  {
-    debug << "Clear notifications" << std::endl;
-    auto action = get<C::Action>("Notifications", "action");
-    for (const auto& th : action->scheduled())
-    {
-      // Only remove notification if it was displayed long enough
-      // for user to react
-      if (m_current_time - value<C::Double>(th.second->entity(), "creation_time", 0)
-          > Config::minimum_reaction_time)
-        emit (th.second->entity(), "end_notification");
-    }
-  }
+    clear_notifications();
 
   if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU)
       || signal("Game", "reset"))
@@ -152,93 +141,150 @@ void Logic::run ()
   if (receive ("Skip_message", "create"))
     push_notification (locale_get("Skip_cutscene", "text"), 5);
 
-  bool skip_dialog = receive("Game", "skip_dialog");
-
   if (receive ("Cancel", "action"))
+    cancel_action();
+
+  if (auto str = request<C::String>("Test", "console_action"))
+    console_action (str);
+
+  update_scheduled();
+
+#if 0
+  if (receive ("Game", "test"))
+    push_notification("Test de notif", 1);
+#endif
+
+  update_character_path();
+
+  update_code();
+
+  if (!in_new_room)
+    update_follower();
+
+  if (auto new_room_origin = request<C::String>("Game", "new_room_origin"))
   {
-    // Cancel current action
-    if (auto action = request<C::Action>("Character", "action"))
+    get<C::Action>(new_room_origin->value() , "action")->launch();
+    if (new_room_origin->value() == "Saved_game")
     {
-      debug << "Cancel action " << action->str() << std::endl;
-      auto logic_action = get<C::Action>("Logic", "action");
-
-      for (const auto& th : action->scheduled())
-      {
-        if (th.first == 0) // special case for Path and animations
-        {
-          remove (th.second->entity(), "nofollow", true);
-          continue;
-        }
-        if (th.second->entity().find("Comment_") == 0) // keep dialogs when moving
-          logic_action->schedule (th.first, th.second);
-        else
-        {
-          if (C::cast<C::Signal>(th.second))
-            set (th.second);
-          else if (th.second->entity() != "wait")
-            remove (th.second);
-        }
-      }
-
-      action->stop();
-      remove("Character", "action");
-      const std::string& id = value<C::String>("Player", "name");
-      remove(id , "path", true);
-      emit(id, "stop_walking");
+      auto room_name = value<C::String>("Game", "current_room");
+      if (auto action = request<C::Action>(room_name + "_save", "action"))
+        action->launch();
     }
+    remove ("Game", "new_room_origin");
   }
 
-  if (auto console_action = request<C::String>("Test", "console_action"))
-  {
-    std::stringstream ss(console_action->value());
-    std::string function;
-    std::getline(ss, function, ' ');
-    if (function == "info")
-    {
-      std::vector<std::string> args(1);
-      while (std::getline(ss, args.back(), ' '))
-      {
-        args.emplace_back();
-      }
-      args.pop_back();
+  if (auto triggered_action = request<C::Action>("Character", "triggered_action"))
+    update_action (triggered_action);
 
-      if (args.size() != 2)
+  bool skip = skip_cutscene();
+
+  run_actions(skip);
+
+  SOSAGE_TIMER_STOP(System_Logic__run);
+}
+
+void Logic::clear_notifications()
+{
+  debug << "Clear notifications" << std::endl;
+  auto action = get<C::Action>("Notifications", "action");
+  for (const auto& th : action->scheduled())
+  {
+    // Only remove notification if it was displayed long enough
+    // for user to react
+    if (m_current_time - value<C::Double>(th.second->entity(), "creation_time", 0)
+        > Config::minimum_reaction_time)
+      emit (th.second->entity(), "end_notification");
+  }
+}
+
+void Logic::cancel_action()
+{
+  // Cancel current action
+  if (auto action = request<C::Action>("Character", "action"))
+  {
+    debug << "Cancel action " << action->str() << std::endl;
+    auto logic_action = get<C::Action>("Logic", "action");
+
+    for (const auto& th : action->scheduled())
+    {
+      if (th.first == 0) // special case for Path and animations
       {
-        debug << "Info requires 2 arguments" << std::endl;
+        remove (th.second->entity(), "nofollow", true);
+        continue;
       }
+      if (th.second->entity().find("Comment_") == 0) // keep dialogs when moving
+        logic_action->schedule (th.first, th.second);
       else
       {
-        if (auto comp = request<C::Base>(args[0], args[1]))
-        {
-          debug << "INFO = " << comp->str() << std::endl;
-        }
-        else
-        {
-          debug << "Component " << args[0] << ":" << args[1] << " not found" << std::endl;
-        }
+        if (C::cast<C::Signal>(th.second))
+          set (th.second);
+        else if (th.second->entity() != "wait")
+          remove (th.second);
       }
     }
-    else if (m_dispatcher.find(function) == m_dispatcher.end())
+
+    action->stop();
+    remove("Character", "action");
+    const std::string& id = value<C::String>("Player", "name");
+    remove(id , "path", true);
+    emit(id, "stop_walking");
+  }
+}
+
+void Logic::console_action (C::String_handle str)
+{
+  std::stringstream ss(str->value());
+  std::string function;
+  std::getline(ss, function, ' ');
+  if (function == "info")
+  {
+    std::vector<std::string> args(1);
+    while (std::getline(ss, args.back(), ' '))
     {
-      debug << "Function " << function << " not found" << std::endl;
+      args.emplace_back();
+    }
+    args.pop_back();
+
+    if (args.size() != 2)
+    {
+      debug << "Info requires 2 arguments" << std::endl;
     }
     else
     {
-      std::vector<std::string> args(1);
-      while (std::getline(ss, args.back(), ' '))
+      if (auto comp = request<C::Base>(args[0], args[1]))
       {
-        args.emplace_back();
+        debug << "INFO = " << comp->str() << std::endl;
       }
-      args.pop_back();
-
-      auto action = set<C::Action>("Console", "action");
-      action->add (function, args);
-      action->launch();
+      else
+      {
+        debug << "Component " << args[0] << ":" << args[1] << " not found" << std::endl;
+      }
     }
-    remove (console_action);
   }
+  else if (m_dispatcher.find(function) == m_dispatcher.end())
+  {
+    debug << "Function " << function << " not found" << std::endl;
+  }
+  else
+  {
+    std::vector<std::string> args(1);
+    while (std::getline(ss, args.back(), ' '))
+    {
+      args.emplace_back();
+    }
+    args.pop_back();
 
-  std::set<std::string> done;
+    auto action = set<C::Action>("Console", "action");
+    action->add (function, args);
+    action->launch();
+  }
+  remove (str);
+}
+
+void Logic::update_scheduled()
+{
+  bool skip_dialog = receive("Game", "skip_dialog");
+
   for (auto c : components("action"))
     if (auto a = C::cast<C::Action>(c))
       if (c->entity() != "Character")
@@ -309,33 +355,12 @@ void Logic::run ()
           return true;
         });
       }
+}
 
-
+void Logic::update_character_path()
+{
   if (receive ("Cursor", "clicked"))
     compute_path_from_target(get<C::Position>(CURSOR__POSITION));
-
-  if (receive ("Game", "test"))
-  {
-    push_notification("Test de notif", 1);
-
-#if 0 // Uncomment to quickly test paths
-    Point p (-0.5, 970);
-    Vector v (0.562398475328108716, -0.629368298259299408);
-    auto ground_map = get<C::Ground_map>("background", "ground_map");
-    std::vector<Point> path;
-    ground_map->find_path (p, v, path);
-    try
-    {
-    }
-    catch (std::runtime_error& e)
-    {
-      debug << e.what() << std::endl;
-      //exit(1);
-    }
-    set<C::Absolute_position>("Debug_body", "position", p);
-    set<C::Path>("Debug", "path", path);
-#endif
-  }
 
   if (receive ("Stick", "moved"))
   {
@@ -357,7 +382,10 @@ void Logic::run ()
       compute_path_from_direction(dir);
     }
   }
+}
 
+void Logic::update_code()
+{
   if (receive ("code", "button_clicked"))
   {
     auto code = get<C::Code>("Game", "code");
@@ -435,75 +463,68 @@ void Logic::run ()
 
     get<C::Action>(get<C::Code>("Game", "code")->entity() , "action")->launch();
   }
+}
 
-  if (!in_new_room)
-    if (auto follower = request<C::String>("Follower", "name"))
-      if (!request<C::Base>(follower->value(), "nofollow"))
-      {
-        // Only recompute following every second
-        auto latest_recomputation = get_or_set<C::Double>("Following", "latest_recompuation",
-                                                          m_current_time);
-        if (m_current_time - latest_recomputation->value() > 1.)
-        {
-          follow (follower->value());
-          latest_recomputation->set(m_current_time);
-        }
-      }
-
-  if (auto new_room_origin = request<C::String>("Game", "new_room_origin"))
-  {
-    get<C::Action>(new_room_origin->value() , "action")->launch();
-    if (new_room_origin->value() == "Saved_game")
+void Logic::update_follower()
+{
+  if (auto follower = request<C::String>("Follower", "name"))
+    if (!request<C::Base>(follower->value(), "nofollow"))
     {
-      auto room_name = value<C::String>("Game", "current_room");
-      if (auto action = request<C::Action>(room_name + "_save", "action"))
-        action->launch();
+      // Only recompute following every second
+      auto latest_recomputation = get_or_set<C::Double>("Following", "latest_recompuation",
+                                                        m_current_time);
+      if (m_current_time - latest_recomputation->value() > 1.)
+      {
+        follow (follower->value());
+        latest_recomputation->set(m_current_time);
+      }
     }
-    remove ("Game", "new_room_origin");
+}
+
+void Logic::update_action (C::Action_handle triggered_action)
+{
+  if (auto action = request<C::Action>("Character", "action"))
+  {
+    debug << "Action " << action->entity() << " interrupted" << std::endl;
+    for (const auto& th : action->scheduled())
+    {
+      if (th.first != 0) // special case for Path
+      {
+        if (C::cast<C::Signal>(th.second))
+          set (th.second);
+        else if (th.second->entity() != "wait")
+          // comments might already have been removed
+          remove (th.second->entity(), th.second->component(), true);
+      }
+    }
+    action->stop();
+  }
+  triggered_action->launch();
+
+  // Very specific event: if we're about to leave a room and we're
+  // already pretty close to the target point, don't move at all
+  // and immediately leave
+  if (endswith(triggered_action->entity(), "_goto")
+      && triggered_action->first_step().function() == "goto"
+      && triggered_action->last_step().function() == "load")
+  {
+    auto pos = value<C::Position>(value<C::String>("Player", "name"), "position");
+    auto target = value<C::Position>(triggered_action->target_entity(), "position");
+    if (std::abs(pos.X() - target.X()) < Config::goto_active_zone_x
+        && std::abs(pos.Y() - target.Y()) < Config::goto_active_zone_y)
+    {
+      debug << "Player is already close to target, leave room immediately" << std::endl;
+      triggered_action->next_step();
+    }
   }
 
-  if (auto triggered_action = request<C::Action>("Character", "triggered_action"))
-  {
-    if (auto action = request<C::Action>("Character", "action"))
-    {
-      debug << "Action " << action->entity() << " interrupted" << std::endl;
-      for (const auto& th : action->scheduled())
-      {
-        if (th.first != 0) // special case for Path
-        {
-          if (C::cast<C::Signal>(th.second))
-            set (th.second);
-          else if (th.second->entity() != "wait")
-            // comments might already have been removed
-            remove (th.second->entity(), th.second->component(), true);
-        }
-      }
-      action->stop();
-    }
-    triggered_action->launch();
+  debug << "Action " << triggered_action->entity() << " launched" << std::endl;
+  set<C::Variable>("Character", "action", triggered_action);
+  remove ("Character", "triggered_action");
+}
 
-    // Very specific event: if we're about to leave a room and we're
-    // already pretty close to the target point, don't move at all
-    // and immediately leave
-    if (endswith(triggered_action->entity(), "_goto")
-        && triggered_action->first_step().function() == "goto"
-        && triggered_action->last_step().function() == "load")
-    {
-      auto pos = value<C::Position>(value<C::String>("Player", "name"), "position");
-      auto target = value<C::Position>(triggered_action->target_entity(), "position");
-      if (std::abs(pos.X() - target.X()) < Config::goto_active_zone_x
-          && std::abs(pos.Y() - target.Y()) < Config::goto_active_zone_y)
-      {
-        debug << "Player is already close to target, leave room immediately" << std::endl;
-        triggered_action->next_step();
-      }
-    }
-
-    debug << "Action " << triggered_action->entity() << " launched" << std::endl;
-    set<C::Variable>("Character", "action", triggered_action);
-    remove ("Character", "triggered_action");
-  }
-
+bool Logic::skip_cutscene()
+{
   bool skip = false;
   if (status()->is(CUTSCENE))
   {
@@ -531,6 +552,11 @@ void Logic::run ()
   if (skip)
     remove("Camera", "move60fps", true);
 
+  return skip;
+}
+
+void Logic::run_actions (bool skip)
+{
   for (auto c : components("action"))
     if (auto a = C::cast<C::Action>(c))
       if (c->entity() != "Character" && a->on())
@@ -568,8 +594,6 @@ void Logic::run ()
     if (action != a && (a->on() || !a->scheduled().empty()))
       set<C::Variable>(a->entity() + "_finishing", "action", a);
   }
-
-  SOSAGE_TIMER_STOP(System_Logic__run);
 }
 
 bool Logic::compute_path_from_target (C::Position_handle target,

@@ -70,6 +70,17 @@ public:
 
 private:
 
+  void clear_notifications();
+  void cancel_action();
+  void console_action (Component::String_handle str);
+  void update_scheduled();
+  void update_character_path();
+  void update_code();
+  void update_follower();
+  void update_action (Component::Action_handle triggered_action);
+  bool skip_cutscene();
+  void run_actions(bool skip);
+
   bool compute_path_from_target (Component::Position_handle target,
                                  std::string id = "");
   bool compute_path_from_direction (const Vector& direction);
