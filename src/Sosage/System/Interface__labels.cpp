@@ -58,17 +58,24 @@ void Interface::create_object_label (const std::string& id)
   {
     auto position = get<C::Position>(id , "position");
     auto pos = set<C::Relative_position>(id + "_label", "global_position", position,
-                                         Vector(0, -Config::inventory_height / 2 - 2 * Config::inventory_margin));
+                                         Vector(0, -Config::inventory_height / 2 - 2 * Config::inventory_margin * Config::interface_scale));
 
     const std::string& name = value<C::String>(id , "name");
     create_label (id + "_label", locale(name), PLAIN, UNCLICKABLE);
     update_label(id + "_label", PLAIN, pos);
 
     double diff = value<C::Position>(id + "_label_back", "position").x()
-                  - 0.5 * get<C::Image>(id + "_label_back", "image")->width()
+                  - 0.5 * get<C::Image>(id + "_label_back", "image")->width() * Config::interface_scale
                   - (value<C::Position>("Chamfer", "position").x() + Config::label_height);
     if (diff < 0)
       pos->set(Point (pos->value().x() - diff, pos->value().y()));
+
+    diff = Config::world_width - (value<C::Position>(id + "_label_back", "position").x()
+                                  + (0.5 * get<C::Image>(id + "_label_back", "image")->width() + Config::label_margin)
+                                  * Config::interface_scale);
+
+    if (diff < 0)
+      pos->set(Point (pos->value().x() + diff, pos->value().y()));
 
     animate_label (id + "_label", FADE);
     return;
@@ -683,11 +690,11 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     auto position = set<C::Absolute_position>
                     ("Action_selector", "position",
                      Point (object_pos.x(),
-                            value<C::Position>("Inventory", "origin").y() - 0.75 * Config::label_height));
+                            value<C::Position>("Inventory", "origin").y() - 0.75 * Config::label_height * Config::interface_scale));
 
     generate_action (id, "combine", LEFT_BUTTON, "", position, DEPLOY);
     double diff = value<C::Position>(id + "_combine_label_back", "position").x()
-                  - 0.5 * get<C::Image>(id + "_combine_label_back", "image")->width()
+                  - 0.5 * get<C::Image>(id + "_combine_label_back", "image")->width() * Config::interface_scale
                   - (value<C::Position>("Chamfer", "position").x() + Config::label_height);
     if (diff < 0)
     {
@@ -992,7 +999,7 @@ C::Functional_position_handle Interface::wriggly_position (const std::string& id
                                                            bool insert,
                                                            bool object_label)
 {
-  constexpr double range = 5;
+  double range = 5 * Config::interface_scale;
   constexpr double period = 0.75;
   constexpr double cos30 = 0.866025404;
   constexpr double sin30 = 0.5;
@@ -1015,7 +1022,7 @@ C::Functional_position_handle Interface::wriggly_position (const std::string& id
 
   auto out = C::make_handle<C::Functional_position>
       (id, cmp,
-       [origin, diff, time, tbegin, orientation, object_label](const std::string&) -> Point
+       [range, origin, diff, time, tbegin, orientation, object_label](const std::string&) -> Point
   {
     if (object_label)
     {

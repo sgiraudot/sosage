@@ -90,19 +90,21 @@ void Interface::init()
                                        "FFFFFF", locale_get("Inventory", "label"));
   inventory_label->set_collision(UNCLICKABLE);
   inventory_label->z() = Config::inventory_depth;
-  inventory_label->set_scale(0.5);
+  inventory_label->set_scale(0.5 * Config::interface_scale);
   inventory_label->set_relative_origin (0.5, 0.5);
 
   auto inventory_label_background = set<C::Image>("Inventory_label_background", "image",
-                                                  Config::label_margin + inventory_label->width() / 2,
-                                                  Config::label_height);
+                                                  (Config::label_margin + inventory_label->width() / 2) * Config::interface_scale,
+                                                  Config::label_height * Config::interface_scale);
   inventory_label_background->set_collision(BOX);
   inventory_label_background->z() = Config::interface_depth;
   int label_width = inventory_label_background->width();
   int label_height = inventory_label_background->height();
   set<C::Relative_position>("Inventory_label_background", "position", inventory_origin, Vector(0, -label_height));
   set<C::Relative_position>("Chamfer", "position", inventory_origin, Vector(label_width, -label_height));
-  get<C::Image>("Chamfer", "image")->set_collision(BOX);
+  auto chamfer = get<C::Image>("Chamfer", "image");
+  chamfer->set_collision(BOX);
+  chamfer->set_scale(Config::interface_scale);
   set<C::Relative_position>("Inventory_label", "position", inventory_origin, Vector(label_width / 2, - 0.5 * label_height));
 
   auto inventory_background = set<C::Image>("Inventory_background", "image", Config::world_width, Config::inventory_height);
@@ -116,9 +118,9 @@ void Interface::init()
   auto switcher_pos = wriggly_position
                       ("Switcher", "position",
                        C::make_handle<C::Absolute_position>("Switcher", "position",
-                                                            Point(Config::label_height / 2,
+                                                            Point(Config::interface_scale * Config::label_height / 2,
                                                                   Config::world_height -
-                                                                  Config::label_height / 2)),
+                                                                  Config::interface_scale * Config::label_height / 2)),
                       Vector(), UP, true, true);
 
   // Init object switchers
@@ -126,21 +128,21 @@ void Interface::init()
   auto kb_left_pos = set<C::Relative_position>("Keyboard_switcher_left", "global_position", switcher_pos);
   update_label ("Keyboard_switcher_left", LABEL_BUTTON, kb_left_pos);
   auto kb_left_back = get<C::Image>("Keyboard_switcher_left_back", "image");
-  kb_left_pos->set (Point (switcher_pos->value().x() + kb_left_back->width() / 2,
-                           switcher_pos->value().y() - kb_left_back->height() / 2));
+  kb_left_pos->set (Point (switcher_pos->value().x() + Config::interface_scale * kb_left_back->width() / 2,
+                           switcher_pos->value().y() - Config::interface_scale * kb_left_back->height() / 2));
 
   create_label ("Gamepad_switcher_left", "L", LABEL_BUTTON, UNCLICKABLE);
   auto left_pos = set<C::Relative_position>("Gamepad_switcher_left", "global_position", switcher_pos);
   update_label ("Gamepad_switcher_left", LABEL_BUTTON, left_pos);
   auto left_back = get<C::Image>("Gamepad_switcher_left_back", "image");
-  left_pos->set (Point (switcher_pos->value().x() + left_back->width() / 2,
-                        switcher_pos->value().y() - left_back->height() / 2));
+  left_pos->set (Point (switcher_pos->value().x() + Config::interface_scale * left_back->width() / 2,
+                        switcher_pos->value().y() - Config::interface_scale * left_back->height() / 2));
 
   create_label ("Keyboard_switcher_label", locale_get("Switch_target", "text"), OPEN_LEFT, UNCLICKABLE);
   auto kb_img = get<C::Image>("Keyboard_switcher_label_back", "image");
   auto kb_pos = set<C::Relative_position>("Keyboard_switcher_label", "global_position", switcher_pos);
   update_label ("Keyboard_switcher_label", OPEN_LEFT, kb_pos);
-  kb_pos->set (Point (value<C::Position>("Keyboard_switcher_left_back", "position").x() + kb_img->width() / 2,
+  kb_pos->set (Point (value<C::Position>("Keyboard_switcher_left_back", "position").x() + Config::interface_scale * kb_img->width() / 2,
                       kb_left_pos->value().y()));
   get<C::Relative_position>("Keyboard_switcher_label", "position")->set(Vector(Config::label_margin,0));
   get<C::Relative_position>("Keyboard_switcher_label_back", "position")->set(Vector(0,0));
@@ -149,13 +151,13 @@ void Interface::init()
   auto img = get<C::Image>("Gamepad_switcher_label_back", "image");
   auto pos = set<C::Relative_position>("Gamepad_switcher_label", "global_position", switcher_pos);
   update_label ("Gamepad_switcher_label", OPEN, pos);
-  pos->set (Point (value<C::Position>("Gamepad_switcher_left_back", "position").x() + img->width() / 2,
+  pos->set (Point (value<C::Position>("Gamepad_switcher_left_back", "position").x() + Config::interface_scale * img->width() / 2,
                    left_pos->value().y()));
 
   create_label ("Gamepad_switcher_right", "R", LABEL_BUTTON, UNCLICKABLE);
   auto right_pos = set<C::Relative_position>("Gamepad_switcher_right", "global_position", switcher_pos);
   update_label ("Gamepad_switcher_right", LABEL_BUTTON, right_pos);
-  right_pos->set (Point (pos->value().x() + img->width() / 2, left_pos->value().y()));
+  right_pos->set (Point (pos->value().x() + Config::interface_scale * img->width() / 2, left_pos->value().y()));
 
   auto kb_switcher = set<C::Group>("Keyboard_switcher", "group");
   kb_switcher->add (get<C::Group>("Keyboard_switcher_left", "group"));
@@ -170,7 +172,8 @@ void Interface::init()
 
   // Init gamepad action selector position
   set<C::Absolute_position>("Gamepad_action_selector", "position",
-                            inventory_origin->value() + Vector (Config::world_width - 260, -Config::inventory_active_zone - 130));
+                            inventory_origin->value() + Vector (Config::world_width - 260 * Config::interface_scale,
+                                                                -(Config::inventory_active_zone + 130) * Config::interface_scale));
 
   set<C::Variable>("Selected_object", "position", get<C::Position>(CURSOR__POSITION));
 }
@@ -627,7 +630,7 @@ void Interface::update_inventory()
   if (status()->is (IN_INVENTORY, OBJECT_CHOICE, INVENTORY_ACTION_CHOICE))
   {
     target = Config::world_height - Config::inventory_height;
-    as_target = target - 80 - 2 * Config::inventory_margin;
+    as_target = target - (80 + 2 * Config::inventory_margin) * Config::interface_scale;
     std::size_t position = inventory->position();
     for (std::size_t i = 0; i < inventory->size(); ++ i)
     {
@@ -638,19 +641,19 @@ void Interface::update_inventory()
       {
         std::size_t pos = i - position;
         if (pos > 6)
-          as_target -= 1.5 * Config::label_height;
+          as_target -= 1.5 * Config::label_height * Config::interface_scale;
       }
     }
   }
   else if ((mode == MOUSE || mode == TOUCHSCREEN) && status()->is (IDLE))
   {
     target = Config::world_height;
-    as_target = target - Config::inventory_active_zone - 130;
+    as_target = target - (Config::inventory_active_zone + 130) * Config::interface_scale;
   }
   else
   {
-    target = Config::inventory_active_zone + Config::world_height; // hidden at the bottom
-    as_target = target - Config::inventory_active_zone - 130;
+    target = Config::interface_scale * Config::inventory_active_zone + Config::world_height; // hidden at the bottom
+    as_target = target - (Config::inventory_active_zone + 130) * Config::interface_scale;
   }
 
   if (target != inventory_origin->value().y())
@@ -670,13 +673,13 @@ void Interface::update_inventory()
   if (as_target != as_pos->value().y())
   {
     if (auto as_anim = request<C::GUI_position_animation>("Gamepad_action_selector", "animation"))
-      as_anim->update(Point(Config::world_width - 260, as_target));
+      as_anim->update(Point(Config::world_width - 260 * Config::interface_scale, as_target));
     else
     {
       double current_time = value<C::Double>(CLOCK__TIME);
       auto as_pos = get<C::Position>("Gamepad_action_selector", "position");
       set<C::GUI_position_animation> ("Gamepad_action_selector", "animation", current_time, current_time + Config::inventory_speed,
-                                      as_pos, Point(Config::world_width - 260, as_target));
+                                      as_pos, Point(Config::world_width - 260 * Config::interface_scale, as_target));
     }
   }
 
