@@ -98,6 +98,11 @@ Point Point::left()
   return Point (-1e10, 0);
 }
 
+Point Point::center (const Box& box)
+{
+  return Point ((box.xmin + box.xmax) / 2, (box.ymin + box.ymax) / 2);
+}
+
 Vector::Vector (double x, double y)
   : Point (x, y)
 { }

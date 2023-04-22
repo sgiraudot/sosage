@@ -57,6 +57,7 @@ void Interface::run()
   SOSAGE_TIMER_START(System_Interface__run);
   SOSAGE_UPDATE_DBG_LOCATION("Interface::run()");
 
+  update_object_labels();
   update_inventory();
   update_active_objects();
   update_action_selector();
@@ -176,6 +177,81 @@ void Interface::init()
                                                                 -(Config::inventory_active_zone + 130) * Config::interface_scale));
 
   set<C::Variable>("Selected_object", "position", get<C::Position>(CURSOR__POSITION));
+}
+
+void Interface::update_object_labels()
+{
+  if (!receive("Game", "new_room_loaded"))
+    return;
+
+  std::vector<C::Absolute_position_handle> room_objects;
+  std::vector<double> width;
+  constexpr int pixels_per_letter = 14; // Rough maximum
+  constexpr int margin = 50;
+  double step = 0.0005 * Config::interface_scale;
+
+  double height = Config::label_height * Config::interface_scale;
+
+  for (auto c : components("label"))
+    if (auto pos = C::cast<C::Absolute_position>(c))
+      if (auto name = request<C::String>(c->entity(), "name"))
+        if (auto state = request<C::String>(c->entity(), "state"))
+          if (!startswith(state->value(), "inventory"))
+          {
+            room_objects.push_back (pos);
+            width.push_back
+                (Config::interface_scale
+                 * (margin
+                    + pixels_per_letter * locale(name->value()).size()));
+          }
+
+  // Compute intersection and move step by step objects
+  // to get them away from each other. Limit to 50 iterations
+  // just in case something goes bad, but in the worst cases,
+  // it's done in 20 steps.
+  std::vector<Box> boxes (room_objects.size());
+  for (std::size_t iter = 0; iter < 50; ++ iter)
+  {
+    bool collision = false;
+
+    for (std::size_t i = 0; i < room_objects.size(); ++ i)
+    {
+      boxes[i].xmin = room_objects[i]->value().x() - width[i] * 0.5 - 5;
+      boxes[i].xmax = room_objects[i]->value().x() + width[i] * 0.5 + 5;
+      boxes[i].ymin = room_objects[i]->value().y() - height * 0.5 - 5;
+      boxes[i].ymax = room_objects[i]->value().y() + height * 0.5 + 5;
+    }
+
+    std::vector<Vector> moves (room_objects.size(), Vector(0,0));
+
+    for (std::size_t i = 0; i < room_objects.size() - 1; ++ i)
+      for (std::size_t j = i + 1; j < room_objects.size(); ++ j)
+      {
+        if (intersect (boxes[i], boxes[j]))
+        {
+          debug << "INTERSECTION " << room_objects[i]->entity() << "/" << room_objects[j]->entity() << std::endl;
+          collision = true;
+          Box inter = intersection (boxes[i], boxes[j]);
+          double dx = inter.xmax - inter.xmin;
+          double dy = inter.ymax - inter.ymin;
+
+          Vector i_to_j (Point::center(boxes[i]),
+                         Point::center(boxes[j]));
+          i_to_j = Vector (dy * i_to_j.x(), dx * i_to_j.y());
+
+          moves[i] = moves[i] + (-1.) * i_to_j;
+          moves[j] = moves[j] + i_to_j;
+        }
+      }
+
+    for (std::size_t i = 0; i < room_objects.size(); ++ i)
+      if (moves[i] != Vector(0,0))
+        room_objects[i]->set (Point(room_objects[i]->value() + step * moves[i]));
+
+    if (!collision)
+      break;
+    debug << iter << std::endl;
+  }
 }
 
 void Interface::update_active_objects()
@@ -625,24 +701,25 @@ void Interface::update_inventory()
   std::string active_object = value<C::String>("Interface", "active_object", "");
   std::string source_object = value<C::String>("Interface", "source_object", "");
 
+  auto as_pos = get<C::Position>("Gamepad_action_selector", "position");
+
   double target = 0;
-  double as_target = 0;
+  double as_target = as_pos->value().y();
   if (status()->is (IN_INVENTORY, OBJECT_CHOICE, INVENTORY_ACTION_CHOICE))
   {
     target = Config::world_height - Config::inventory_height;
-    as_target = target - (80 + 2 * Config::inventory_margin) * Config::interface_scale;
-    std::size_t position = inventory->position();
-    for (std::size_t i = 0; i < inventory->size(); ++ i)
+    // Wait for label to be created to update AS target
+    if (request<C::Image>(active_object + "_label_back", "image"))
     {
-      if (inventory->get(i) != active_object && inventory->get(i) != source_object)
-        continue;
+      as_target = target - (80 + 2 * Config::inventory_margin) * Config::interface_scale;
 
-      if (position <= i && i < position + Config::displayed_inventory_size)
-      {
-        std::size_t pos = i - position;
-        if (pos > 6)
-          as_target -= 1.5 * Config::label_height * Config::interface_scale;
-      }
+      Point backup_pos = as_pos->value();
+      as_pos->set (Point(backup_pos.x(), as_target));
+
+      if (labels_intersect (active_object + "_label", active_object + "_Cancel_label"))
+        as_target -= 1.5 * Config::label_height * Config::interface_scale;
+
+      as_pos->set (backup_pos);
     }
   }
   else if ((mode == MOUSE || mode == TOUCHSCREEN) && status()->is (IDLE))
@@ -669,7 +746,6 @@ void Interface::update_inventory()
     }
   }
 
-  auto as_pos = get<C::Position>("Gamepad_action_selector", "position");
   if (as_target != as_pos->value().y())
   {
     if (auto as_anim = request<C::GUI_position_animation>("Gamepad_action_selector", "animation"))

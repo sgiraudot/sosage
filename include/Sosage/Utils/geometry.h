@@ -51,6 +51,8 @@ struct Box
   double xmax;
   double ymax;
 
+  double area() { return (xmax - xmin) * (ymax - ymin); }
+
   friend Box operator+ (const Box& a, const Box& b)
   {
     return {std::min (a.xmin, b.xmin),
@@ -66,6 +68,16 @@ struct Box
     if (a.ymax < b.ymin || b.ymax < a.ymin)
       return false;
     return true;
+  }
+
+  friend Box intersection (const Box& a, const Box& b)
+  {
+    Box out;
+    out.xmin = std::max (a.xmin, b.xmin);
+    out.xmax = std::min (a.xmax, b.xmax);
+    out.ymin = std::max (a.ymin, b.ymin);
+    out.ymax = std::min (a.ymax, b.ymax);
+    return out;
   }
 };
 
@@ -89,6 +101,7 @@ public:
   static Point invalid();
   static Point right();
   static Point left();
+  static Point center (const Box& box);
 
   friend std::string to_string(const Point& p)
   {
@@ -173,6 +186,10 @@ public:
   friend Point operator+ (const Point& a, const Vector& b)
   {
     return Point(a.x() + b.x(), a.y() + b.y());
+  }
+  friend Vector operator+ (const Vector& a, const Vector& b)
+  {
+    return Vector(a.x() + b.x(), a.y() + b.y());
   }
   friend Point operator- (const Point& a, const Vector& b)
   {

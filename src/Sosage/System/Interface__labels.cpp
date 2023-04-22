@@ -702,8 +702,19 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
       generate_action (id, "combine", LEFT_BUTTON, "", position, DEPLOY);
     }
 
-    generate_action (id, "use", UP, "", position, DEPLOY);
     generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
+    diff = Config::world_width
+           - (value<C::Position>(id + "_look_label_back", "position").x()
+              + 0.5 * get<C::Image>(id + "_look_label_back", "image")->width() * Config::interface_scale
+              + Config::label_margin * Config::interface_scale);
+    if (diff < 0)
+    {
+      position->set(Point (position->value().x() + diff, position->value().y()));
+      generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
+      generate_action (id, "combine", LEFT_BUTTON, "", position, DEPLOY);
+    }
+
+    generate_action (id, "use", UP, "", position, DEPLOY);
   }
   else if (type == GP_INV_ACTION_SEL)
   {
@@ -989,6 +1000,31 @@ void Interface::compute_action_positions (const Button_orientation& orientation,
   label_position = Config::interface_scale * label_position;
   button_position = Config::interface_scale * button_position;
   start_position = Config::interface_scale * start_position;
+}
+
+bool Interface::labels_intersect (const std::string& a, const std::string& b)
+{
+  auto aimg = request<C::Image>(a + "_back", "image");
+  auto bimg = request<C::Image>(b + "_back", "image");
+
+  if (!aimg || !bimg)
+    return false;
+
+  const auto& apos = value<C::Position>(a + "_back", "position");
+  const auto& bpos = value<C::Position>(b + "_back", "position");
+
+  Box boxa;
+  boxa.xmin = apos.x() - aimg->width() * 0.5 * Config::interface_scale;
+  boxa.xmax = apos.x() + aimg->width() * 0.5 * Config::interface_scale;
+  boxa.ymin = apos.y() - aimg->height() * 0.5 * Config::interface_scale;
+  boxa.ymax = apos.y() + aimg->height() * 0.5 * Config::interface_scale;
+  Box boxb;
+  boxb.xmin = bpos.x() - bimg->width() * 0.5 * Config::interface_scale;
+  boxb.xmax = bpos.x() + bimg->width() * 0.5 * Config::interface_scale;
+  boxb.ymin = bpos.y() - bimg->height() * 0.5 * Config::interface_scale;
+  boxb.ymax = bpos.y() + bimg->height() * 0.5 * Config::interface_scale;
+
+  return intersect (boxa, boxb);
 }
 
 C::Functional_position_handle Interface::wriggly_position (const std::string& id,

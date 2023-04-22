@@ -78,6 +78,7 @@ public:
 
 private:
 
+  void update_object_labels();
   void update_active_objects();
   void update_action_selector();
   void update_object_switcher();
@@ -109,6 +110,8 @@ private:
                                  std::size_t& selector_idx,
                                  Vector& label_position, Vector& button_position,
                                  Vector& start_position, Label_type& ltype);
+
+  bool labels_intersect (const std::string& a, const std::string& b);
 
   Component::Functional_position_handle wriggly_position (const std::string& id, const std::string& cmp,
                                                           Component::Position_handle origin,

@@ -171,6 +171,7 @@ void Logic::run ()
         action->launch();
     }
     remove ("Game", "new_room_origin");
+    emit ("Game", "new_room_loaded");
   }
 
   if (auto triggered_action = request<C::Action>("Character", "triggered_action"))
