@@ -65,7 +65,6 @@ void Interface::run()
   update_code_hover();
   update_dialog_choices();
   update_cursor();
-  update_menu();
   SOSAGE_TIMER_STOP(System_Interface__run);
 }
 
@@ -174,8 +173,6 @@ void Interface::init()
                             inventory_origin->value() + Vector (Config::world_width - 260, -Config::inventory_active_zone - 130));
 
   set<C::Variable>("Selected_object", "position", get<C::Position>(CURSOR__POSITION));
-
-  init_menus();
 }
 
 void Interface::update_active_objects()

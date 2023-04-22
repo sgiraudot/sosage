@@ -44,6 +44,7 @@
 #include <Sosage/System/Input.h>
 #include <Sosage/System/Interface.h>
 #include <Sosage/System/Logic.h>
+#include <Sosage/System/Menu.h>
 #include <Sosage/System/Sound.h>
 #include <Sosage/System/Time.h>
 #include <Sosage/Utils/Asset_manager.h>
@@ -122,6 +123,7 @@ bool Engine::run (const std::string& folder_name)
   auto graphic = System::make_handle<System::Graphic>(m_content);
   auto control = System::make_handle<System::Control>(m_content);
   auto interface = System::make_handle<System::Interface>(m_content);
+  auto menu = System::make_handle<System::Menu>(m_content);
   auto time = System::make_handle<System::Time>(m_content);
   auto animation = System::make_handle<System::Animation>(m_content);
 
@@ -143,6 +145,7 @@ bool Engine::run (const std::string& folder_name)
 
   m_systems.push_back (control);
   m_systems.push_back (interface);
+  m_systems.push_back (menu);
   m_systems.push_back (System::make_handle<System::Logic>(m_content));
   m_systems.push_back (animation);
   m_systems.push_back (System::make_handle<System::Sound>(m_content));
@@ -170,6 +173,7 @@ bool Engine::run (const std::string& folder_name)
   file_io->read_init ();
   control->init();
   interface->init();
+  menu->init();
 
   debug << "Init done, entering main loop" << std::endl;
 

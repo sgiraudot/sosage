@@ -29,7 +29,6 @@
 
 #include <Sosage/Component/Group.h>
 #include <Sosage/Component/Image.h>
-#include <Sosage/Component/Menu.h>
 #include <Sosage/Component/Position.h>
 #include <Sosage/Content.h>
 #include <Sosage/System/Base.h>
@@ -46,6 +45,7 @@ constexpr int inventory_margin = 20;
 constexpr double inventory_speed = 0.25;
 constexpr int label_height = 50;
 constexpr int label_margin = 20;
+
 } // namespace Config
 
 namespace System
@@ -112,34 +112,6 @@ private:
                                                           bool insert = true,
                                                           bool object_label = false);
 
-  // Implemented in Interface__menu.cpp
-  void init_menus();
-  void init_loadsave_menus();
-  void update_menu();
-  void update_exit();
-
-  void make_oknotok_item (Component::Menu::Node node, bool only_ok);
-  void make_exit_menu_item (Component::Menu::Node node, const std::string& id, int y);
-  void make_text_menu_title (Component::Menu::Node node, const std::string& id);
-  void make_text_menu_text (Component::Menu::Node node, const std::string& id, bool credits = false);
-  void make_settings_item (Component::Menu::Node node, const std::string& id, int y);
-
-  std::pair<Component::Image_handle, Component::Position_handle>
-  make_settings_button (const std::string& id, int y);
-  std::pair<Component::Image_handle, Component::Position_handle>
-  make_settings_title (const std::string& id, const std::string& suffix, int y,
-                       const std::string& text);
-  std::pair<Component::Image_handle, Component::Position_handle>
-  make_settings_subtitle (const std::string& id, const std::string& suffix, int y,
-                          const std::string& text);
-
-
-  void show_menu (const std::string& id);
-  void hide_menu (const std::string& id);
-  void delete_menu (const std::string& id);
-  void menu_clicked ();
-  void apply_setting (const std::string& setting, const std::string& value);
-  void update_phone_menu();
 };
 
 
