@@ -924,6 +924,8 @@ void Interface::update_cursor()
       else
         state->set("default");
     }
+    if (auto cursor = request<C::Image>("Cursor", "image"))
+      cursor->set_scale (Config::interface_scale);
   }
   else
   {

@@ -53,6 +53,8 @@ constexpr auto possible_actions = { "look", "move", "take", "inventory", "use", 
 
 constexpr double default_sound_fade_time = 0.2;
 
+extern double interface_scale;
+
 enum Depth
 {
   interface_depth = 1000000,

@@ -139,6 +139,9 @@ void Interface::create_label (const std::string& id, std::string name,
   SOSAGE_TIMER_START(Interface__create_label);
   const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
 
+  double scaled_alpha = scale * 255;
+  scale *= Config::interface_scale;
+
   auto group = set<C::Group>(id , "group");
   int depth = (ltype == LABEL_BUTTON ? Config::action_button_depth : Config::label_depth);
   if (mode == GAMEPAD)
@@ -157,7 +160,7 @@ void Interface::create_label (const std::string& id, std::string name,
     label->set_scale(scale * 0.5);
     label->z() = depth;
     label->set_collision(collision);
-    label->set_alpha(scale * 255);
+    label->set_alpha(scaled_alpha);
   }
 
   if (ltype == GOTO_LEFT && mode != MOUSE)
@@ -257,8 +260,13 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
     {
       double from = 0.5 * 0.75, to = 0.5;
       double from_back = 0.75, to_back = 1.0;
+      from *= Config::interface_scale;
+      from_back *= Config::interface_scale;
+      to *= Config::interface_scale;
+      to_back *= Config::interface_scale;
+
       unsigned char alpha_label_from = 192, alpha_label_to = 255;
-      if (get<C::Image>(id , "image")->scale() != 0.5)
+      if (get<C::Image>(id , "image")->scale() != 0.5 * Config::interface_scale)
       {
         std::swap(from, to);
         std::swap(from_back, to_back);
@@ -333,7 +341,7 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
       set<C::GUI_position_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
                                      get<C::Position>(id , "global_position"), position);
       set<C::GUI_image_animation>(id + "_back", "animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(id + "_back", "image"), 0.357, 1, alpha, alpha);
+                                  get<C::Image>(id + "_back", "image"), 0.357 * Config::interface_scale, Config::interface_scale, alpha, alpha);
     }
     else if (style == FADE)
     {
@@ -347,6 +355,8 @@ void Interface::update_label (const std::string& id, const Label_type& ltype,
                               C::Position_handle pos, double scale)
 {
   SOSAGE_UPDATE_DBG_LOCATION("Interface::update_label()");
+
+  scale *= Config::interface_scale;
 
   auto label = request<C::Image>(id , "image");
   auto back = get<C::Image>(id + "_back", "image");
@@ -969,6 +979,9 @@ void Interface::compute_action_positions (const Button_orientation& orientation,
     button_position = Vector(28.25, 50);
     start_position = Vector(0, 14);
   }
+  label_position = Config::interface_scale * label_position;
+  button_position = Config::interface_scale * button_position;
+  start_position = Config::interface_scale * start_position;
 }
 
 C::Functional_position_handle Interface::wriggly_position (const std::string& id,
@@ -986,6 +999,12 @@ C::Functional_position_handle Interface::wriggly_position (const std::string& id
 
   auto time = get<C::Double>(CLOCK__TIME);
   double tbegin = std::asin(-1) - time->value() / period - Config::inventory_speed;
+
+  const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+  // Keep action selector of gamepad always in sync
+  if (mode == GAMEPAD && !status()->is(ACTION_CHOICE))
+    tbegin = 0;
+
   if (object_label)
   {
     // Get something close to random *but* unique per ID, to
@@ -993,12 +1012,6 @@ C::Functional_position_handle Interface::wriggly_position (const std::string& id
     tbegin = std::hash<std::string>{}(id) / double(std::numeric_limits<std::size_t>::max());
     tbegin *= 2*M_PI;
   }
-
-  const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
-
-  // Keep action selector of gamepad always in sync
-  if (mode == GAMEPAD && !status()->is(ACTION_CHOICE))
-    tbegin = 0;
 
   auto out = C::make_handle<C::Functional_position>
       (id, cmp,
