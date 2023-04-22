@@ -126,7 +126,13 @@ void Logic::run ()
     debug << "Clear notifications" << std::endl;
     auto action = get<C::Action>("Notifications", "action");
     for (const auto& th : action->scheduled())
-      emit (th.second->entity(), "end_notification");
+    {
+      // Only remove notification if it was displayed long enough
+      // for user to react
+      if (m_current_time - value<C::Double>(th.second->entity(), "creation_time", 0)
+          > Config::minimum_reaction_time)
+        emit (th.second->entity(), "end_notification");
+    }
   }
 
   if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU)
@@ -283,7 +289,10 @@ void Logic::run ()
             }
             return false;
           }
-          else if (skip_dialog)
+          else if (skip_dialog
+                   // Only skip dialog if displayed for at least a short time
+                   && m_current_time - value<C::Double>("Dialog", "creation_time", 0)
+                   > Config::minimum_reaction_time)
           {
             if (contains(th.second->entity(), "Comment_"))
             {
@@ -873,6 +882,8 @@ void Logic::create_dialog (const std::string& character,
   int idx = 0;
   while (remove("Comment_" + to_string(idx), "image", true))
     ++ idx;
+
+  set<C::Double> ("Dialog", "creation_time", m_current_time);
 
   static const int width_max = int(0.6 * Config::world_width);
 

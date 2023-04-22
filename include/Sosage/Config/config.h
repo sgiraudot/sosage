@@ -43,6 +43,8 @@ constexpr int object_reach_x = 250;
 constexpr int object_reach_y = 100;
 constexpr int object_reach_hysteresis = 20;
 
+constexpr double minimum_reaction_time = 0.25;
+
 constexpr double camera_speed = 1.0;
 
 constexpr int animation_fps = 12;

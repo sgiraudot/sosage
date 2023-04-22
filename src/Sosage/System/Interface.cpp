@@ -556,6 +556,8 @@ void Interface::update_notifications()
     if (request<C::Image>(id, "image"))
       continue;
 
+    set<C::Double> (id, "creation_time", value<C::Double>(CLOCK__TIME));
+
     auto group = set<C::Group>(id, "group");
     std::string text = C::cast<C::String>(c)->value();
 
