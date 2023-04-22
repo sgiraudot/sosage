@@ -319,7 +319,8 @@ void Interface::update_active_objects()
     // Active object didn't change
     else if (m_active_object == active->value())
     {
-      if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == MOUSE
+      if (status()->is(IDLE)
+          && value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == MOUSE
           && !request<C::Boolean>(m_active_object + "_goto", "right"))
       {
         bool right_oriented = (value<C::Position>(m_active_object
