@@ -51,6 +51,9 @@ class Animation : public Base
 private:
 
   std::size_t m_frame_id;
+  std::vector<Component::Handle> m_to_remove;
+
+  std::unordered_set<std::string> m_just_started;
 
 public:
 
@@ -69,6 +72,14 @@ private:
 
   void run_gui_frame();
   void run_animation_frame();
+
+  void handle_character_lookat (bool in_new_room);
+  void handle_animation_stops();
+  bool handle_moves();
+  void handle_animation_starts();
+  void handle_state_changes();
+  void handle_characters_headmove (Component::Animation_handle anim);
+  void trigger_step_sounds (Component::Animation_handle anim);
 
   bool compute_movement_from_path (Component::Path_handle path);
   void set_move_animation (const std::string& id, const Vector& direction);

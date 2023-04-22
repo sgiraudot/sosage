@@ -182,10 +182,49 @@ void Animation::run_animation_frame()
           anim->on() = true;
   }
 
-  std::vector<C::Handle> to_remove;
-  std::vector<C::Animation_handle> animations;
 
   // First check if some character should change looking direction
+  handle_character_lookat(in_new_room);
+
+  // Then check animations stopping
+  handle_animation_stops();
+
+  // Then check all other cases
+  bool has_moved = handle_moves();
+
+  handle_animation_starts();
+
+  handle_state_changes();
+
+  static std::vector<Component::Animation_handle> animations;
+
+  for (auto c : components("image"))
+    if (auto anim = C::cast<C::Animation>(c))
+      if (anim->on() && anim->playing())
+      {
+        animations.push_back(anim);
+        if (anim->animated())
+          handle_characters_headmove (anim);
+      }
+
+  for (C::Handle c : m_to_remove)
+    remove(c);
+  m_to_remove.clear();
+
+  if (has_moved)
+    update_camera_target();
+
+  for (const auto& animation : animations)
+    if (!contains(m_just_started, animation->entity()))
+      if (!animation->next_frame())
+        animation->on() = false;
+
+  animations.clear();
+  m_just_started.clear();
+}
+
+void Animation::handle_character_lookat (bool in_new_room)
+{
   for (auto c : components("lookat"))
   {
     const std::string& id = c->entity();
@@ -203,7 +242,7 @@ void Animation::run_animation_frame()
     auto phead = get<C::Position>(id + "_head", "position");
     auto pmouth = get<C::Position>(id + "_mouth", "position");
 
-    to_remove.push_back (c);
+    m_to_remove.push_back (c);
 
     Vector direction (pbody->value(), lookat->value());
     bool looking_right = (direction.x() > 0);
@@ -213,8 +252,10 @@ void Animation::run_animation_frame()
 
     generate_random_idle_animation (id, looking_right);
   }
+}
 
-  // Then check animations stopping
+void Animation::handle_animation_stops()
+{
   for (auto c : components("stop_talking"))
   {
     const std::string& id = c->entity();
@@ -223,7 +264,7 @@ void Animation::run_animation_frame()
       mhead->set (Point (0, 0));
       generate_random_idle_head_animation (id, is_looking_right(id));
     }
-    to_remove.push_back (c);
+    m_to_remove.push_back (c);
   }
 
   for (auto c : components("stop_walking"))
@@ -234,7 +275,7 @@ void Animation::run_animation_frame()
       generate_random_idle_animation (id, is_walking_right(id));
       place_and_scale_character(id);
     }
-    to_remove.push_back (c);
+    m_to_remove.push_back (c);
   }
 
   for (auto c : components("stop_animation"))
@@ -254,14 +295,14 @@ void Animation::run_animation_frame()
       // Remove fake state that keeps animation running from room to room
       remove (id, "state", true);
     }
-    to_remove.push_back (c);
+    m_to_remove.push_back (c);
   }
+}
 
+bool Animation::handle_moves()
+{
   bool has_moved = false;
 
-  std::unordered_set<std::string> just_started;
-
-  // Then check all other cases
   for (auto c : components("move"))
     if (auto a = C::cast<C::Tuple<Point, Point, int, int, double, double>>(c))
     {
@@ -297,19 +338,23 @@ void Animation::run_animation_frame()
     if (auto path = C::cast<C::Path>(c))
     {
       if (path->entity() != "Debug" && !compute_movement_from_path(path))
-        to_remove.push_back(c);
+        m_to_remove.push_back(c);
       else if (path->entity() == value<C::String>("Player", "name"))
       {
         has_moved = true;
         emit("Music", "adjust_mix");
       }
     }
+  return has_moved;
+}
 
+void Animation::handle_animation_starts()
+{
   for (auto c : components("start_talking"))
   {
     const std::string& id = c->entity();
     generate_random_mouth_animation (id);
-    to_remove.push_back(c);
+    m_to_remove.push_back(c);
   }
 
   for (auto c : components("start_animation"))
@@ -320,8 +365,8 @@ void Animation::run_animation_frame()
       auto anim = get<C::Animation>(id , "image");
       anim->on() = true;
       anim->playing() = true;
-      just_started.insert (id);
-      to_remove.push_back(c);
+      m_just_started.insert (id);
+      m_to_remove.push_back(c);
     }
     else
     {
@@ -329,18 +374,21 @@ void Animation::run_animation_frame()
       const std::string& id = c->entity();
       debug << "start_animation" << std::endl;
       generate_animation (id, anim->value());
-      to_remove.push_back (c);
+      m_to_remove.push_back (c);
 
       // For savegames
       set<C::String>(id, "animation", anim->value());
     }
   }
+}
 
+void Animation::handle_state_changes()
+{
   for (auto c : components("pause"))
   {
     const std::string& id = c->entity();
     get<C::Animation>(id, "image")->playing() = false;
-    to_remove.push_back (c);
+    m_to_remove.push_back (c);
   }
 
   for (auto c : components("set_state"))
@@ -348,7 +396,7 @@ void Animation::run_animation_frame()
     auto state = C::cast<C::String>(c);
     debug << "Set state of " << state->entity() << " to " << state->value() << std::endl;
     get<C::String>(state->entity(), "state")->set(state->value());
-    to_remove.push_back(c);
+    m_to_remove.push_back(c);
   }
 
   for (auto c : components("set_hidden"))
@@ -357,7 +405,7 @@ void Animation::run_animation_frame()
     const std::string& id = c->entity();
     auto g = get<C::Group>(id , "group");
     g->apply<C::Image>([](auto img) { img->on() = false; });
-    to_remove.push_back(c);
+    m_to_remove.push_back(c);
   }
 
   for (auto c : components("set_visible"))
@@ -366,57 +414,43 @@ void Animation::run_animation_frame()
     const std::string& id = c->entity();
     auto g = get<C::Group>(id , "group");
     g->apply<C::Image>([](auto img) { img->on() = true; });
-    to_remove.push_back(c);
+    m_to_remove.push_back(c);
+  }
+}
+
+void Animation::handle_characters_headmove (C::Animation_handle anim)
+{
+  // Randomly move head if character speaking
+  auto pos = anim->entity().find("_mouth");
+  if (pos != std::string::npos)
+  {
+    if (random_int(0,3) == 0)
+    {
+      std::string entity (anim->entity().begin(), anim->entity().begin() + pos);
+      auto mhead = get<C::Position>(entity + "_head_move", "position");
+
+      int radius = value<C::Int>(entity, "head_move_radius", 4);
+      double direction = random_double(0, 2 * M_PI);
+      double length = random_double (radius / 2., radius);
+      mhead->set (Point (length * std::cos(direction), length * std::sin(direction)));
+    }
   }
 
-  for (auto c : components("image"))
-    if (auto anim = C::cast<C::Animation>(c))
-      if (anim->on() && anim->playing())
-      {
-        animations.push_back(anim);
+  pos = anim->entity().find("_body");
+  if (pos != std::string::npos && value<C::Boolean>(anim->character_entity(), "walking"))
+    trigger_step_sounds (anim);
+}
 
-        if (anim->animated())
-        {
-          // Randomly move head if character speaking
-          auto pos = anim->entity().find("_mouth");
-          if (pos != std::string::npos)
-          {
-            if (random_int(0,3) == 0)
-            {
-              std::string entity (anim->entity().begin(), anim->entity().begin() + pos);
-              auto mhead = get<C::Position>(entity + "_head_move", "position");
 
-              int radius = value<C::Int>(entity, "head_move_radius", 4);
-              double direction = random_double(0, 2 * M_PI);
-              double length = random_double (radius / 2., radius);
-              mhead->set (Point (length * std::cos(direction), length * std::sin(direction)));
-            }
-          }
-
-          pos = anim->entity().find("_body");
-          if (pos != std::string::npos && value<C::Boolean>(anim->character_entity(), "walking"))
-          {
-            if (anim->current_frame().x == 0 || anim->current_frame().x == 4)
-            {
-              emit ("Step", "play_sound");
-              Point point = value<C::Position>(anim->character_entity(), "position")
-                          - value<C::Absolute_position>(CAMERA__POSITION);
-              set<C::Double>("Step", "panning", 1. - (point.x() / Config::world_width));
-            }
-          }
-        }
-      }
-
-  for (C::Handle c : to_remove)
-    remove(c);
-
-  if (has_moved)
-    update_camera_target();
-
-  for (const auto& animation : animations)
-    if (!contains(just_started, animation->entity()))
-      if (!animation->next_frame())
-        animation->on() = false;
+void Animation::trigger_step_sounds (C::Animation_handle anim)
+{
+  if (anim->current_frame().x == 0 || anim->current_frame().x == 4)
+  {
+    emit ("Step", "play_sound");
+    Point point = value<C::Position>(anim->character_entity(), "position")
+                - value<C::Absolute_position>(CAMERA__POSITION);
+    set<C::Double>("Step", "panning", 1. - (point.x() / Config::world_width));
+  }
 }
 
 bool Animation::run_loading()
