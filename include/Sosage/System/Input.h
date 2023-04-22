@@ -70,6 +70,15 @@ public:
 
 private:
 
+  void update_mode();
+  void handle_exit_pause_speed(const Event& ev);
+  void handle_debug_tools(const Event& ev);
+  void update_window(const Event& ev);
+  void update_mouse(const Event& ev);
+  void update_touchscreen(const Event& ev);
+  bool update_gamepad(const Event& ev);
+  void finalize_gamepad (bool arrow_released);
+
   typename std::vector<bool>::reference key_on(const Event_value& value);
 #if defined(SOSAGE_DEV) || defined(SOSAGE_DEMO)
   void run_demo_mode();

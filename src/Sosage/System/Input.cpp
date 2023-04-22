@@ -66,6 +66,66 @@ void Input::run()
     m_keys_on.resize (NUMBER_OF_EVENT_VALUES, false);
   }
 
+  update_mode();
+
+  if (auto t = request<C::Double>("Skip_or_speed", "time"))
+  {
+    // If click lasts longer than 0.1 second, speedup time
+    if (value<C::Double>(CLOCK__TIME) - t->value() > 0.1)
+    {
+      remove(t);
+      emit ("Time", "speedup");
+    }
+  }
+
+  auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+
+  bool arrow_released = false;
+  for (const Event& ev : m_current_events)
+  {
+    handle_exit_pause_speed (ev);
+
+    if (status()->is (PAUSED))
+      continue;
+
+    handle_debug_tools (ev);
+
+    update_window (ev);
+
+    if (ev.type() == MOUSE_MOVE
+        && (mode->value() == MOUSE
+            || (mode->value() == TOUCHSCREEN
+#ifdef SOSAGE_DEV
+                && m_fake_touchscreen
+#endif
+                )))
+      get<C::Position>
+          (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
+
+    // If locked/cutscene, ignore mouse clicks
+    if (status()->is (LOCKED, CUTSCENE))
+      continue;
+
+    if (mode->value() == MOUSE)
+      update_mouse (ev);
+    else if (mode->value() == TOUCHSCREEN)
+      update_touchscreen (ev);
+    else // if (mode->value() == GAMEPAD)
+    {
+      if (update_gamepad (ev))
+        arrow_released = true;
+    }
+  }
+
+  if (mode->value() == GAMEPAD)
+    finalize_gamepad (arrow_released);
+
+  m_current_events.clear();
+  SOSAGE_TIMER_STOP(System_Input__run);
+}
+
+void Input::update_mode()
+{
 #ifdef SOSAGE_DEV
   bool keyboard_used = false;
 #endif
@@ -130,7 +190,6 @@ void Input::run()
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
 
-
   // Only allow mode change when idle or cutscene
   if (status()->is(IDLE, CUTSCENE))
   {
@@ -176,289 +235,269 @@ void Input::run()
         || value<C::Simple<Vector>>(STICK__DIRECTION) != Vector(0,0))
       get<C::Double>(CLOCK__LATEST_ACTIVE)->set(value<C::Double>(CLOCK__TIME));
   }
+}
 
-  if (auto t = request<C::Double>("Skip_or_speed", "time"))
+void Input::handle_exit_pause_speed (const Event& ev)
+{
+  if (ev == Event(KEY_UP, ESCAPE) ||
+      ev == Event(KEY_UP, ANDROID_BACK) ||
+      ev == Event(BUTTON_UP, START) ||
+      ev == Event(BUTTON_UP, SELECT))
+    emit ("Game", "escape");
+
+  if (ev == Event(WINDOW, EXIT))
+    emit ("Game", "exit");
+
+  // Some ways to skip dialogs
+  if (status()->is(LOCKED))
   {
-    // If click lasts longer than 0.1 second, speedup time
-    if (value<C::Double>(CLOCK__TIME) - t->value() > 0.1)
-    {
-      remove(t);
-      emit ("Time", "speedup");
-    }
+    if (ev == Event(KEY_UP, SPACE)
+        || ev == Event(BUTTON_DOWN, EAST)
+        || ev == Event(BUTTON_DOWN, SOUTH)
+        || ev == Event(TOUCH_DOWN, LEFT)
+        || ev == Event(MOUSE_DOWN, RIGHT))
+      emit ("Game", "skip_dialog");
   }
 
-  bool arrow_released = false;
-  for (const Event& ev : m_current_events)
+  // Speeding up game (or skip notifications with mouse/space)
+  if (ev == Event(MOUSE_DOWN, RIGHT) || ev == Event(KEY_DOWN, SPACE))
+    set<C::Double>("Skip_or_speed", "time", value<C::Double>(CLOCK__TIME));
+  else if (ev == Event(MOUSE_UP, RIGHT) || ev == Event(KEY_UP, SPACE))
   {
-    if (ev == Event(KEY_UP, ESCAPE) ||
-        ev == Event(KEY_UP, ANDROID_BACK) ||
-        ev == Event(BUTTON_UP, START) ||
-        ev == Event(BUTTON_UP, SELECT))
-      emit ("Game", "escape");
+    if (auto t = request<C::Double>("Skip_or_speed", "time"))
+      remove(t);
+    receive ("Time", "speedup");
+  }
 
-    if (ev == Event(WINDOW, EXIT))
-      emit ("Game", "exit");
+  if (ev == Event(WINDOW, FOREGROUND)
+      && status()->is(PAUSED))
+  {
+    status()->pop();
+    std::cerr << "RESUME" << std::endl;
+  }
+  if (ev == Event(WINDOW, BACKGROUND)
+      && !status()->is (PAUSED))
+  {
+    status()->push(PAUSED);
+    std::cerr << "PAUSE" << std::endl;
+  }
+}
 
-    // Some ways to skip dialogs
-    if (status()->is(LOCKED))
-    {
-      if (ev == Event(KEY_UP, SPACE)
-          || ev == Event(BUTTON_DOWN, EAST)
-          || ev == Event(BUTTON_DOWN, SOUTH)
-          || ev == Event(TOUCH_DOWN, LEFT)
-          || ev == Event(MOUSE_DOWN, RIGHT))
-        emit ("Game", "skip_dialog");
-    }
-
-    // Speeding up game (or skip notifications with mouse/space)
-    if (ev == Event(MOUSE_DOWN, RIGHT) || ev == Event(KEY_DOWN, SPACE))
-      set<C::Double>("Skip_or_speed", "time", value<C::Double>(CLOCK__TIME));
-    else if (ev == Event(MOUSE_UP, RIGHT) || ev == Event(KEY_UP, SPACE))
-    {
-      if (auto t = request<C::Double>("Skip_or_speed", "time"))
-        remove(t);
-      receive ("Time", "speedup");
-    }
-
-    if (ev == Event(WINDOW, FOREGROUND)
-        && status()->is(PAUSED))
-    {
-      status()->pop();
-      std::cerr << "RESUME" << std::endl;
-    }
-    if (ev == Event(WINDOW, BACKGROUND)
-        && !status()->is (PAUSED))
-    {
-      status()->push(PAUSED);
-      std::cerr << "PAUSE" << std::endl;
-    }
-
-    if (status()->is (PAUSED))
-      continue;
-
+void Input::handle_debug_tools (const Event& ev)
+{
 #ifndef SOSAGE_RELEASE
-    if (ev == Event(KEY_UP, D))
-      get<C::Boolean>("Game", "debug")->toggle();
+  if (ev == Event(KEY_UP, D))
+    get<C::Boolean>("Game", "debug")->toggle();
 #endif
 
 #ifdef SOSAGE_DEV
-    if (ev == Event(KEY_UP, N))
-      emit("Game", "test");
+  if (ev == Event(KEY_UP, N))
+    emit("Game", "test");
 #endif
 
 #ifdef SOSAGE_PROFILE
-    if (ev == Event(KEY_UP, P))
+  if (ev == Event(KEY_UP, P))
+  {
+    std::size_t nb_small = 0;
+    std::size_t i = 0;
+    for (const auto& comp : m_content)
     {
-      std::size_t nb_small = 0;
-      std::size_t i = 0;
-      for (const auto& comp : m_content)
-      {
-        debug << i << ": " << comp.size() << std::endl;
-        if (comp.size() <= 3)
-          ++ nb_small;
-      }
-      debug << m_content.size() << " UNIQUE COMPONENTS" << std::endl;
-      debug << "(" << nb_small << " small ones -> "
-            << 100. * nb_small / m_content.size() << "%)" << std::endl;
+      debug << i << ": " << comp.size() << std::endl;
+      if (comp.size() <= 3)
+        ++ nb_small;
     }
+    debug << m_content.size() << " UNIQUE COMPONENTS" << std::endl;
+    debug << "(" << nb_small << " small ones -> "
+          << 100. * nb_small / m_content.size() << "%)" << std::endl;
+  }
 #endif
 
-    if (ev == Event(KEY_UP, Sosage::C))
-    {
+  if (ev == Event(KEY_UP, Sosage::C))
+  {
 #if 0
-      for (const auto& cmp : m_content)
-        for (const auto& c : cmp)
-        {
-          debug << component_str(c.second, 0);
-        }
+    for (const auto& cmp : m_content)
+      for (const auto& c : cmp)
+      {
+        debug << component_str(c.second, 0);
+      }
 #endif
 
 #ifdef SOSAGE_DEV
-      debug << "> " << std::endl;
-      std::string text_input;
-      std::getline (std::cin, text_input);
-      set<C::String>("Test", "console_action", text_input);
+    debug << "> " << std::endl;
+    std::string text_input;
+    std::getline (std::cin, text_input);
+    set<C::String>("Test", "console_action", text_input);
 #endif
-    }
+  }
+}
 
-    if constexpr (!Config::emscripten) // Do not prevent web users to use F1/F2/etc
+void Input::update_window (const Event& ev)
+{
+  if constexpr (!Config::emscripten) // Do not prevent web users to use F1/F2/etc
+  {
+    if (ev == Event(KEY_DOWN, ALT))
+      key_on(ALT) = true;
+    else if (ev == Event(KEY_UP, ALT))
+      key_on(ALT) = false;
+    else if (ev == Event(KEY_UP, ENTER) && key_on(ALT))
     {
-      if (ev == Event(KEY_DOWN, ALT))
-        key_on(ALT) = true;
-      else if (ev == Event(KEY_UP, ALT))
-        key_on(ALT) = false;
-      else if (ev == Event(KEY_UP, ENTER) && key_on(ALT))
-      {
-        get<C::Boolean>("Window", "fullscreen")->toggle();
-        emit ("Window", "toggle_fullscreen");
-      }
-    }
-    if (ev == Event(WINDOW, RESIZED))
-    {
-      get<C::Int>("Window", "width")->set(ev.x());
-      get<C::Int>("Window", "height")->set(ev.y());
-      emit ("Window", "rescaled");
-    }
-
-    if (ev.type() == MOUSE_MOVE
-        && (mode->value() == MOUSE
-            || (mode->value() == TOUCHSCREEN
-#ifdef SOSAGE_DEV
-                && m_fake_touchscreen
-#endif
-                )))
-      get<C::Position>
-          (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-
-    // If locked/cutscene, ignore mouse clicks
-    if (status()->is (LOCKED, CUTSCENE))
-      continue;
-
-    if (mode->value() == MOUSE)
-    {
-      if (ev == Event(MOUSE_DOWN, LEFT))
-      {
-        get<C::Position>
-            (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-        emit ("Cursor", "clicked");
-      }
-    }
-    else if (mode->value() == TOUCHSCREEN)
-    {
-      if (ev == Event(TOUCH_DOWN, LEFT)
-#ifdef SOSAGE_DEV
-          || (m_fake_touchscreen && ev == Event(MOUSE_DOWN, LEFT))
- #endif
-          )
-      {
-        // Very specific case of fast forward
-        if (ev.x() > Config::world_width - 150 && ev.y() < 150)
-          emit ("Time", "speedup");
-        else
-        {
-          get<C::Position>
-              (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
-          emit ("Cursor", "clicked");
-        }
-      }
-      else if (ev == Event(TOUCH_UP, LEFT)
-#ifdef SOSAGE_DEV
-                   || (m_fake_touchscreen && ev == Event(MOUSE_UP, LEFT))
-#endif
-               )
-      {
-        receive ("Time", "speedup");
-      }
-    }
-    else // if (mode->value() == GAMEPAD)
-    {
-#ifdef SOSAGE_DEV
-      if (gamepad->value() == KEYBOARD)
-      {
-        if (ev.type() == KEY_DOWN)
-        {
-          key_on(ev.value()) = true;
-          if (ev.value() == TAB)
-            set<C::Boolean>("Switch", "right", true);
-          else if (ev.value() == I)
-            emit("Action", "move");
-          else if (ev.value() == J)
-            emit("Action", "take");
-          else if (ev.value() == L)
-            emit("Action", "look");
-          else if (ev.value() == K)
-            emit("Action", "inventory");
-        }
-        else if (ev.type() == KEY_UP)
-        {
-          key_on(ev.value()) = false;
-          if (ev.value() == UP_ARROW
-              || ev.value() == DOWN_ARROW
-              || ev.value() == LEFT_ARROW
-              || ev.value() == RIGHT_ARROW)
-            arrow_released = true;
-        }
-      }
-      else // Real gamepad (no keyboard)
-#endif
-      {
-        if (ev == Event (STICK_MOVE, LEFT))
-        {
-          if (ev.y() == Config::no_value)
-            m_x = ev.x() / Config::stick_max;
-          if (ev.x() == Config::no_value)
-            m_y = ev.y() / Config::stick_max;
-        }
-        else if (ev.type() == BUTTON_DOWN)
-        {
-          key_on(ev.value()) = true;
-          if (ev.value() == LEFT_SHOULDER)
-            set<C::Boolean>("Switch", "right", false);
-          else if (ev.value() == RIGHT_SHOULDER)
-            set<C::Boolean>("Switch", "right", true);
-          else if (ev.value() == NORTH)
-            emit("Action", "move");
-          else if (ev.value() == WEST)
-            emit("Action", "take");
-          else if (ev.value() == EAST)
-            emit("Action", "look");
-          else if (ev.value() == SOUTH)
-            emit("Action", "inventory");
-        }
-        else if (ev.type() == BUTTON_UP)
-        {
-          key_on(ev.value()) = false;
-          if (ev.value() == UP_ARROW
-              || ev.value() == DOWN_ARROW
-              || ev.value() == LEFT_ARROW
-              || ev.value() == RIGHT_ARROW)
-            arrow_released = true;
-        }
-      }
+      get<C::Boolean>("Window", "fullscreen")->toggle();
+      emit ("Window", "toggle_fullscreen");
     }
   }
-
-  if (mode->value() == GAMEPAD)
+  if (ev == Event(WINDOW, RESIZED))
   {
-    // Speed-up
-    if (key_on(RIGHT_SHOULDER) && key_on(LEFT_SHOULDER))
+    get<C::Int>("Window", "width")->set(ev.x());
+    get<C::Int>("Window", "height")->set(ev.y());
+    emit ("Window", "rescaled");
+  }
+}
+
+void Input::update_mouse (const Event& ev)
+{
+  if (ev == Event(MOUSE_DOWN, LEFT))
+  {
+    get<C::Position>
+        (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
+    emit ("Cursor", "clicked");
+  }
+}
+
+void Input::update_touchscreen (const Event& ev)
+{
+  if (ev == Event(TOUCH_DOWN, LEFT)
+#ifdef SOSAGE_DEV
+      || (m_fake_touchscreen && ev == Event(MOUSE_DOWN, LEFT))
+#endif
+      )
+  {
+    // Very specific case of fast forward
+    if (ev.x() > Config::world_width - 150 && ev.y() < 150)
       emit ("Time", "speedup");
     else
-      receive ("Time", "speedup");
-
-    // If D-PAD is used, ignore stick
-    if (arrow_released || key_on(UP_ARROW)
-        || key_on(DOWN_ARROW) || key_on(LEFT_ARROW)
-        || key_on(RIGHT_ARROW))
     {
-      m_x = 0;
-      m_y = 0;
-
-      // Use DPAD if stick is not used only
-      if (key_on(UP_ARROW)) m_y = -1.;
-      if (key_on(DOWN_ARROW)) m_y = 1.;
-      if (key_on(LEFT_ARROW)) m_x = -1.;
-      if (key_on(RIGHT_ARROW)) m_x = 1.;
-    }
-
-    Vector vec (m_x, m_y);
-    if (vec.length() > 0.5)
-      vec.normalize();
-    else // deadzone
-      vec = Vector(0,0);
-
-    auto stick_direction = get<C::Simple<Vector>>(STICK__DIRECTION);
-    if (vec != stick_direction->value())
-    {
-      stick_direction->set(vec);
-      debug << " Stick moved to " << vec << std::endl;
-      debug << m_x << " " << m_y << std::endl;
-      emit("Stick", "moved");
+      get<C::Position>
+          (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
+      emit ("Cursor", "clicked");
     }
   }
+  else if (ev == Event(TOUCH_UP, LEFT)
+#ifdef SOSAGE_DEV
+               || (m_fake_touchscreen && ev == Event(MOUSE_UP, LEFT))
+#endif
+           )
+  {
+    receive ("Time", "speedup");
+  }
+}
 
-  m_current_events.clear();
-  SOSAGE_TIMER_STOP(System_Input__run);
+bool Input::update_gamepad (const Event& ev)
+{
+  bool arrow_released = false;
+#ifdef SOSAGE_DEV
+  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
+  if (gamepad->value() == KEYBOARD)
+  {
+    if (ev.type() == KEY_DOWN)
+    {
+      key_on(ev.value()) = true;
+      if (ev.value() == TAB)
+        set<C::Boolean>("Switch", "right", true);
+      else if (ev.value() == I)
+        emit("Action", "move");
+      else if (ev.value() == J)
+        emit("Action", "take");
+      else if (ev.value() == L)
+        emit("Action", "look");
+      else if (ev.value() == K)
+        emit("Action", "inventory");
+    }
+    else if (ev.type() == KEY_UP)
+    {
+      key_on(ev.value()) = false;
+      if (ev.value() == UP_ARROW
+          || ev.value() == DOWN_ARROW
+          || ev.value() == LEFT_ARROW
+          || ev.value() == RIGHT_ARROW)
+        arrow_released = true;
+    }
+  }
+  else // Real gamepad (no keyboard)
+#endif
+  {
+    if (ev == Event (STICK_MOVE, LEFT))
+    {
+      if (ev.y() == Config::no_value)
+        m_x = ev.x() / Config::stick_max;
+      if (ev.x() == Config::no_value)
+        m_y = ev.y() / Config::stick_max;
+    }
+    else if (ev.type() == BUTTON_DOWN)
+    {
+      key_on(ev.value()) = true;
+      if (ev.value() == LEFT_SHOULDER)
+        set<C::Boolean>("Switch", "right", false);
+      else if (ev.value() == RIGHT_SHOULDER)
+        set<C::Boolean>("Switch", "right", true);
+      else if (ev.value() == NORTH)
+        emit("Action", "move");
+      else if (ev.value() == WEST)
+        emit("Action", "take");
+      else if (ev.value() == EAST)
+        emit("Action", "look");
+      else if (ev.value() == SOUTH)
+        emit("Action", "inventory");
+    }
+    else if (ev.type() == BUTTON_UP)
+    {
+      key_on(ev.value()) = false;
+      if (ev.value() == UP_ARROW
+          || ev.value() == DOWN_ARROW
+          || ev.value() == LEFT_ARROW
+          || ev.value() == RIGHT_ARROW)
+        arrow_released = true;
+    }
+  }
+  return arrow_released;
+}
+
+void Input::finalize_gamepad (bool arrow_released)
+{
+  // Speed-up
+  if (key_on(RIGHT_SHOULDER) && key_on(LEFT_SHOULDER))
+    emit ("Time", "speedup");
+  else
+    receive ("Time", "speedup");
+
+  // If D-PAD is used, ignore stick
+  if (arrow_released || key_on(UP_ARROW)
+      || key_on(DOWN_ARROW) || key_on(LEFT_ARROW)
+      || key_on(RIGHT_ARROW))
+  {
+    m_x = 0;
+    m_y = 0;
+
+    // Use DPAD if stick is not used only
+    if (key_on(UP_ARROW)) m_y = -1.;
+    if (key_on(DOWN_ARROW)) m_y = 1.;
+    if (key_on(LEFT_ARROW)) m_x = -1.;
+    if (key_on(RIGHT_ARROW)) m_x = 1.;
+  }
+
+  Vector vec (m_x, m_y);
+  if (vec.length() > 0.5)
+    vec.normalize();
+  else // deadzone
+    vec = Vector(0,0);
+
+  auto stick_direction = get<C::Simple<Vector>>(STICK__DIRECTION);
+  if (vec != stick_direction->value())
+  {
+    stick_direction->set(vec);
+    debug << " Stick moved to " << vec << std::endl;
+    debug << m_x << " " << m_y << std::endl;
+    emit("Stick", "moved");
+  }
 }
 
 typename std::vector<bool>::reference Input::key_on(const Event_value& value)
