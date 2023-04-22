@@ -184,21 +184,7 @@ void File_IO::clean_content()
     // Reload global objects when restarting the game
     Core::File_IO input ("data/init.yaml");
     input.parse();
-    for (const auto& d : m_dispatcher)
-    {
-      const std::string& section = d.first;
-      const Function& func = d.second;
-      if (input.has(section))
-        for (std::size_t i = 0; i < input[section].size(); ++ i)
-        {
-          const Core::File_IO::Node& s = input[section][i];
-          Core::File_IO subfile ("data/" + section + "/" + s.string() + ".yaml");
-          bool okay = subfile.parse();
-          check(okay, "Can't open data/" + section + "/" + s.string() + ".yaml");
-          emit (s.string(), "is_global");
-          func (s.string(), subfile.root());
-        }
-    }
+    read_init_global_items (input);
   }
 
   emit("Game", "clear_managers");
@@ -563,6 +549,24 @@ void File_IO::read_init ()
   Core::File_IO input ("data/init.yaml");
   input.parse();
 
+  read_init_general (input);
+  read_init_cursor (input);
+  read_init_inventory (input);
+  read_init_interface (input);
+  read_init_functions (input);
+  read_init_global_items (input);
+  read_init_text_defaults (input);
+
+  set<C::String>("Game", "init_new_room", input["load"][0].string());
+  set<C::String>("Game", "init_new_room_origin", input["load"][1].string());
+
+  read_savefiles (input);
+
+  read_locale();
+}
+
+void File_IO::read_init_general (const Core::File_IO& input)
+{
   std::string v = input["version"].string();
   check (Version::parse(v) <= Version::get(),
          "Error: room version " + v + " incompatible with Sosage " + Version::str());
@@ -574,6 +578,48 @@ void File_IO::read_init ()
   std::string icon = input["icon"].string("images", "interface", "png");
   set<C::String>("Icon", "filename", icon);
 
+  std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
+  int nb_img = input["loading_spin"][1].integer();
+  auto loading_spin_img = set_fac<C::Animation> (LOADING_SPIN__IMAGE, "Loading_spin", "image", loading_spin,
+                                                                   Config::loading_depth, nb_img, 1, true);
+  loading_spin_img->on() = false;
+  loading_spin_img->set_relative_origin(0.5, 0.5);
+  set_fac<C::Absolute_position> (LOADING_SPIN__POSITION, "Loading_spin", "position",
+                                 Point(Config::world_width - loading_spin_img->width() * 1.5,
+                                       Config::world_height - loading_spin_img->height() * 1.5));
+
+  std::string code_success = input["code_results"][0].string
+                             ("images", "interface", "png");
+  auto code_success_img = set<C::Image>("Code_success", "image", code_success,
+                                        Config::label_depth, UNCLICKABLE);
+  code_success_img->set_relative_origin(0.5, 0.5);
+  code_success_img->on() = false;
+
+  std::string code_failure = input["code_results"][1].string
+                             ("images", "interface", "png");
+  auto code_failure_img = set<C::Image>("Code_failure", "image", code_failure,
+                                        Config::label_depth, UNCLICKABLE);
+  code_failure_img->set_relative_origin(0.5, 0.5);
+  code_failure_img->on() = false;
+
+  set<C::Absolute_position>("Code_result", "position", Point(Config::world_width / 2,
+                                                              Config::world_height / 2));
+
+  std::string debug_font = input["debug_font"].string("fonts", "ttf");
+  set<C::Font> ("Debug", "font", debug_font, 40);
+
+  std::string interface_font = input["interface_font"].string("fonts", "ttf");
+  set<C::Font> ("Interface", "font", interface_font, 80);
+
+  std::string interface_light_font = input["interface_light_font"].string("fonts", "ttf");
+  set<C::Font> ("Interface", "light_font", interface_light_font, 80);
+
+  std::string dialog_font = input["dialog_font"].string("fonts", "ttf");
+  set<C::Font> ("Dialog", "font", dialog_font, 80);
+}
+
+void File_IO::read_init_cursor (const Core::File_IO& input)
+{
   std::string cursor = input["cursor"][0].string("images", "interface", "png");
   auto cursor_default = C::make_handle<C::Image> ("Cursor", "image", cursor, Config::cursor_depth);
   cursor_default->set_relative_origin(0.1, 0.1);
@@ -610,16 +656,16 @@ void File_IO::read_init ()
 
   set_fac<C::Absolute_position> (CURSOR__POSITION, "Cursor", "position", Point(0,0));
 
-  std::string loading_spin = input["loading_spin"][0].string("images", "interface", "png");
-  int nb_img = input["loading_spin"][1].integer();
-  auto loading_spin_img = set_fac<C::Animation> (LOADING_SPIN__IMAGE, "Loading_spin", "image", loading_spin,
-                                                                   Config::loading_depth, nb_img, 1, true);
-  loading_spin_img->on() = false;
-  loading_spin_img->set_relative_origin(0.5, 0.5);
-  set_fac<C::Absolute_position> (LOADING_SPIN__POSITION, "Loading_spin", "position",
-                                 Point(Config::world_width - loading_spin_img->width() * 1.5,
-                                       Config::world_height - loading_spin_img->height() * 1.5));
+  std::string big_circle = input["circle"][2].string("images", "interface", "png");
+  auto big_circle_img = C::make_handle<C::Image>("Cursor", "image", big_circle,
+                                                 Config::cursor_depth);
+  big_circle_img->set_relative_origin(0.5, 0.5);
 
+  cursor_img->add("selected", big_circle_img);
+}
+
+void File_IO::read_init_inventory (const Core::File_IO& input)
+{
   std::string left_arrow = input["inventory_arrows"][0].string("images", "interface", "png");
   auto left_arrow_img = set<C::Image>("Left_arrow", "image", left_arrow, Config::inventory_depth, PIXEL_PERFECT);
   left_arrow_img->set_relative_origin (0, 0.5);
@@ -630,7 +676,10 @@ void File_IO::read_init ()
   std::string chamfer = input["inventory_chamfer"].string("images", "interface", "png");
   auto chamfer_img = set<C::Image>("Chamfer", "image", chamfer);
   chamfer_img->z() = Config::interface_depth;
+}
 
+void File_IO::read_init_interface (const Core::File_IO& input)
+{
   std::string click_sound = input["click_sound"].string("sounds", "effects", "ogg");
   set<C::Sound>("Click", "sound", click_sound);
   std::string step_sound = input["step_sound"].string("sounds", "effects", "ogg");
@@ -642,13 +691,6 @@ void File_IO::read_init ()
   std::string right_circle = input["circle"][1].string("images", "interface", "png");
   auto right_circle_img = set<C::Image>("Right_circle", "image", right_circle, 1, BOX, true);
   right_circle_img->on() = false;
-
-  std::string big_circle = input["circle"][2].string("images", "interface", "png");
-  auto big_circle_img = C::make_handle<C::Image>("Cursor", "image", big_circle,
-                                                 Config::cursor_depth);
-  big_circle_img->set_relative_origin(0.5, 0.5);
-
-  cursor_img->add("selected", big_circle_img);
 
   std::string white_left_circle = input["circle"][3].string("images", "interface", "png");
   auto white_left_circle_img = set<C::Image>("White_left_circle", "image", white_left_circle, 1, BOX, true);
@@ -680,36 +722,6 @@ void File_IO::read_init ()
            return signal("Time", "speedup");
          }, "")),
         fast_forward_img);
-
-
-  std::string code_success = input["code_results"][0].string
-                             ("images", "interface", "png");
-  auto code_success_img = set<C::Image>("Code_success", "image", code_success,
-                                        Config::label_depth, UNCLICKABLE);
-  code_success_img->set_relative_origin(0.5, 0.5);
-  code_success_img->on() = false;
-
-  std::string code_failure = input["code_results"][1].string
-                             ("images", "interface", "png");
-  auto code_failure_img = set<C::Image>("Code_failure", "image", code_failure,
-                                        Config::label_depth, UNCLICKABLE);
-  code_failure_img->set_relative_origin(0.5, 0.5);
-  code_failure_img->on() = false;
-
-  set<C::Absolute_position>("Code_result", "position", Point(Config::world_width / 2,
-                                                              Config::world_height / 2));
-
-  std::string debug_font = input["debug_font"].string("fonts", "ttf");
-  set<C::Font> ("Debug", "font", debug_font, 40);
-
-  std::string interface_font = input["interface_font"].string("fonts", "ttf");
-  set<C::Font> ("Interface", "font", interface_font, 80);
-
-  std::string interface_light_font = input["interface_light_font"].string("fonts", "ttf");
-  set<C::Font> ("Interface", "light_font", interface_light_font, 80);
-
-  std::string dialog_font = input["dialog_font"].string("fonts", "ttf");
-  set<C::Font> ("Dialog", "font", dialog_font, 80);
 
   std::string menu_background = input["menu_background"].string("images", "interface", "png");
   auto menu_background_img = set<C::Image> ("Menu_background", "image", menu_background);
@@ -751,7 +763,10 @@ void File_IO::read_init ()
   auto menu_settings_button = set<C::Image>("Menu_settings_button", "image", menu_settings_button_id, 1, BOX);
   menu_settings_button->set_relative_origin(0.5, 0.5);
   menu_settings_button->on() = false;
+}
 
+void File_IO::read_init_functions (const Core::File_IO& input)
+{
   for (std::size_t i = 0; i < input["functions"].size(); ++ i)
   {
     const Core::File_IO::Node& imeta = input["functions"][i];
@@ -764,7 +779,10 @@ void File_IO::read_init ()
       action->add (function, imeta["effect"][k][function].string_array());
     }
   }
+}
 
+void File_IO::read_init_global_items (const Core::File_IO& input)
+{
   for (const auto& d : m_dispatcher)
   {
     const std::string& section = d.first;
@@ -780,7 +798,10 @@ void File_IO::read_init ()
         func (s.string(), subfile.root());
       }
   }
+}
 
+void File_IO::read_init_text_defaults (const Core::File_IO& input)
+{
   for (std::size_t i = 0; i < input["text"].size(); ++ i)
   {
     const Core::File_IO::Node& itext = input["text"][i];
@@ -821,12 +842,11 @@ void File_IO::read_init ()
       }
     }
   }
-
   set<C::String>("Inventory", "label", input["default"]["inventory"]["label"].string());
+}
 
-  set<C::String>("Game", "init_new_room", input["load"][0].string());
-  set<C::String>("Game", "init_new_room_origin", input["load"][1].string());
-
+void File_IO::read_savefiles (const Core::File_IO& input)
+{
   int most_recent = -1;
   std::string most_recent_save_id = "";
   for (std::string save_id : { "1", "2", "3", "4", "5", "auto" })
@@ -856,7 +876,6 @@ void File_IO::read_init ()
     set<C::Tuple<std::string, double, int>>("Save_" + save_id,
                                             "info", room_name, time, date);
   }
-
   if (auto force = request<C::String>("Force_load", "room"))
   {
     debug << "Force load " << force->value() << std::endl;
@@ -874,8 +893,6 @@ void File_IO::read_init ()
     if (auto orig = request<C::String>("Game", "init_new_room_origin"))
       set<C::Variable>("Game", "new_room_origin", orig);
   }
-
-  read_locale();
 }
 
 void File_IO::read_locale()

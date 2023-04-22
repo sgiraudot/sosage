@@ -66,6 +66,16 @@ public:
 
 private:
 
+  void read_init_general (const Core::File_IO& input);
+  void read_init_cursor (const Core::File_IO& input);
+  void read_init_inventory (const Core::File_IO& input);
+  void read_init_interface (const Core::File_IO& input);
+  void read_init_functions (const Core::File_IO& input);
+  void read_init_global_items (const Core::File_IO& input);
+  void read_init_text_defaults (const Core::File_IO& input);
+
+  void read_savefiles (const Core::File_IO& input);
+
   void parse_function (const std::vector<std::string>& args,
                        Component::Action_handle action);
   void create_locale_dependent_text (const std::string& id, Component::Font_handle font,
