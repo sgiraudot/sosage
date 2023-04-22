@@ -565,7 +565,7 @@ void Logic::run ()
     // If action has changed state, let's save the
     // previous stated action so it can finish safely
     auto action = request<C::Action>(a->entity(), a->component());
-    if (action != a && a->on())
+    if (action != a && (a->on() || !a->scheduled().empty()))
       set<C::Variable>(a->entity() + "_finishing", "action", a);
   }
 
