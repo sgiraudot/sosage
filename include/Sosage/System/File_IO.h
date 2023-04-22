@@ -90,6 +90,8 @@ private:
   void read_action (const std::string& id, const Core::File_IO::Node& input);
   void read_animation (const std::string& id, const Core::File_IO::Node& input);
   void read_character (const std::string& id, const Core::File_IO::Node& input);
+  void read_character_skin (const std::string& id, const Core::File_IO::Node& input,
+                            const std::string& default_state);
   void read_code (const std::string& id, const Core::File_IO::Node& input);
   void read_dialog (const std::string& id, const Core::File_IO::Node& input);
   void read_integer (const std::string& id, const Core::File_IO::Node& input);

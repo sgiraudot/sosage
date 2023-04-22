@@ -109,7 +109,7 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
   else
     set<C::Variable>(id, "view", position);
 
-  bool looking_right = input["looking_right"].boolean();
+
 
   std::string name = input["name"].string();
   set<C::String> (id , "name", name);
@@ -150,141 +150,148 @@ void File_IO::read_character (const std::string& id, const Core::File_IO::Node& 
       }
 
   if (input.has("skin"))
+    read_character_skin (id, input, default_state);
+}
+
+void File_IO::read_character_skin (const std::string& id,
+                                   const Core::File_IO::Node& input,
+                                   const std::string& default_state)
+{
+  const Core::File_IO::Node& skin = input["skin"];
+  auto state_handle = get<C::String>(id , "state");
+  auto position = get<C::Position>(id, "position");
+  bool looking_right = input["looking_right"].boolean();
+
+  if (skin.has("head_move_radius"))
+    set<C::Int> (id, "head_move_radius", skin["head_move_radius"].integer());
+
+  bool visible = value<C::Boolean>(id , "visible", true);
+  remove(id , "visible", true);
+
+  auto walking = set<C::Boolean>(id , "walking", false);
+
+  auto group = set<C::Group>(id , "group");
+
+  int size = 11;
+  if (skin["mouth"].has("size"))
+    size = skin["mouth"]["size"].integer();
+
+  std::string mouth = skin["mouth"]["skin"].string("images", "characters", "png");
+  auto amouth
+      = set<C::Animation>(id + "_mouth", "image", mouth,
+                          0, size, 2, true);
+  amouth->set_relative_origin(0.5, 1.0);
+  amouth->on() = visible;
+  group->add(amouth);
+
+  std::vector<std::string> hpositions;
+  for (std::size_t i = 0; i < skin["head"]["positions"].size(); ++ i)
+    hpositions.push_back (skin["head"]["positions"][i].string());
+
+  set<C::Vector<std::string> >(id + "_head", "values", hpositions);
+
+  std::string head = skin["head"]["skin"].string("images", "characters", "png");
+  int head_size = int(hpositions.size());
+  auto ahead
+      = set<C::Animation>(id + "_head", "image", head,
+                          0, head_size, 2, true);
+  ahead->set_relative_origin(0.5, 1.0);
+  ahead->on() = visible;
+  group->add(ahead);
+
+  C::Animation_handle awalk;
+
+  if (skin.has("walk"))
   {
-    const Core::File_IO::Node& skin = input["skin"];
-
-    if (skin.has("head_move_radius"))
-      set<C::Int> (id, "head_move_radius", skin["head_move_radius"].integer());
-
-    bool visible = value<C::Boolean>(id , "visible", true);
-    remove(id , "visible", true);
-
-    auto walking = set<C::Boolean>(id , "walking", false);
-
-    auto group = set<C::Group>(id , "group");
-
-    int size = 11;
-    if (skin["mouth"].has("size"))
-      size = skin["mouth"]["size"].integer();
-
-    std::string mouth = skin["mouth"]["skin"].string("images", "characters", "png");
-    auto amouth
-        = set<C::Animation>(id + "_mouth", "image", mouth,
-                            0, size, 2, true);
-    amouth->set_relative_origin(0.5, 1.0);
-    amouth->on() = visible;
-    group->add(amouth);
-
-    std::vector<std::string> hpositions;
-    for (std::size_t i = 0; i < skin["head"]["positions"].size(); ++ i)
-      hpositions.push_back (skin["head"]["positions"][i].string());
-
-    set<C::Vector<std::string> >(id + "_head", "values", hpositions);
-
-    std::string head = skin["head"]["skin"].string("images", "characters", "png");
-    int head_size = int(hpositions.size());
-    auto ahead
-        = set<C::Animation>(id + "_head", "image", head,
-                            0, head_size, 2, true);
-    ahead->set_relative_origin(0.5, 1.0);
-    ahead->on() = visible;
-    group->add(ahead);
-
-    C::Animation_handle awalk;
-
-    if (skin.has("walk"))
-    {
-      int steps = 8;
-      if (skin["walk"].has("steps"))
-        steps = skin["walk"]["steps"].integer();
-      std::string walk = skin["walk"]["skin"].string("images", "characters", "png");
-      awalk = C::make_handle<C::Animation>(id + "_body", "image", walk,
-                                           0, steps, 4, true);
-      awalk->set_relative_origin(0.5, 0.95);
-      awalk->on() = visible;
-    }
-
-    std::string idle = skin["idle"]["skin"].string("images", "characters", "png");
-    std::vector<std::string> positions;
-    for (std::size_t i = 0; i < skin["idle"]["positions"].size(); ++ i)
-      positions.push_back (skin["idle"]["positions"][i].string());
-
-    set<C::Vector<std::string> >(id + "_idle", "values", positions);
-
-    auto aidle = C::make_handle<C::Animation>(id + "_body", "image", idle,
-                                              0, positions.size(), 2, true);
-    aidle->set_relative_origin(0.5, 0.95);
-    aidle->on() = visible;
-
-    auto abody = set<C::Conditional>(id + "_body", "image", walking, awalk, aidle);
-    group->add(abody);
-
-    int width = aidle->width() * 0.5;
-    int height = aidle->height() * 1.05;
-
-    auto amask = C::make_handle<C::Image>(id, "conditional_image",
-                                          width, height, 0, 0, 0, 0);
-    amask->z() = 0;
-    amask->set_relative_origin(0.5, 0.95);
-
-    auto camask = set<C::String_conditional>(id , "image", state_handle);
-
-    if (input.has("states"))
-      for (std::size_t j = 0; j < input["states"].size(); ++ j)
-      {
-        const std::string& istate = input["states"][j].string();
-        camask->add(istate, amask);
-      }
-    else
-      camask->add(default_state, amask);
-
-    camask->add("player", nullptr); // No mask/interaction if character is player
-    group->add(camask);
-
-    int hdx_right = skin["head"]["dx_right"].integer();
-    int hdx_left = skin["head"]["dx_left"].integer();
-    int hdy = skin["head"]["dy"].integer();
-    set<C::Simple<Vector>>(id + "_head", "gap_right", Vector(hdx_right, hdy));
-    set<C::Simple<Vector>>(id + "_head", "gap_left", Vector(hdx_left, hdy));
-
-    int mdx_right = skin["mouth"]["dx_right"].integer();
-    int mdx_left = skin["mouth"]["dx_left"].integer();
-    int mdy = skin["mouth"]["dy"].integer();
-    set<C::Simple<Vector>>(id + "_mouth", "gap_right", Vector(mdx_right, mdy));
-    set<C::Simple<Vector>>(id + "_mouth", "gap_left", Vector(mdx_left, mdy));
-
-    auto pbody = set<C::Variable>(id + "_body", "position", position);
-
-    auto move_head = set<C::Absolute_position>(id + "_head_move", "position", Point(0,0), false);
-
-    auto phead = set<C::Functional_position>
-                 (id + "_head", "position",
-                  [&](const std::string& id) -> Point
-    {
-      auto abody = get<C::Image>(id + "_body", "image");
-      auto pbody = get<C::Position>(id + "_body", "position");
-      auto mhead = get<C::Position>(id + "_head_move", "position");
-      return (pbody->value() - abody->scale()
-              * (value<C::Simple<Vector>>(id + "_head",
-                                          (is_looking_right(id) ? "gap_right" : "gap_left"))
-                 + Vector(mhead->value())));
-    }, id);
-
-    set<C::Functional_position>
-        (id + "_mouth", "position",
-         [&](const std::string& id) -> Point
-    {
-      auto ahead = get<C::Animation>(id + "_head", "image");
-      auto phead = get<C::Position>(id + "_head", "position");
-      return (phead->value() - ahead->scale()
-              * value<C::Simple<Vector>>(id + "_mouth",
-                                         (is_looking_right(id) ? "gap_right" : "gap_left")));
-    }, id);
-
-    set<C::Absolute_position>(id, "lookat",
-                              looking_right ? Point::right() : Point::left());
+    int steps = 8;
+    if (skin["walk"].has("steps"))
+      steps = skin["walk"]["steps"].integer();
+    std::string walk = skin["walk"]["skin"].string("images", "characters", "png");
+    awalk = C::make_handle<C::Animation>(id + "_body", "image", walk,
+                                         0, steps, 4, true);
+    awalk->set_relative_origin(0.5, 0.95);
+    awalk->on() = visible;
   }
 
+  std::string idle = skin["idle"]["skin"].string("images", "characters", "png");
+  std::vector<std::string> positions;
+  for (std::size_t i = 0; i < skin["idle"]["positions"].size(); ++ i)
+    positions.push_back (skin["idle"]["positions"][i].string());
+
+  set<C::Vector<std::string> >(id + "_idle", "values", positions);
+
+  auto aidle = C::make_handle<C::Animation>(id + "_body", "image", idle,
+                                            0, positions.size(), 2, true);
+  aidle->set_relative_origin(0.5, 0.95);
+  aidle->on() = visible;
+
+  auto abody = set<C::Conditional>(id + "_body", "image", walking, awalk, aidle);
+  group->add(abody);
+
+  int width = aidle->width() * 0.5;
+  int height = aidle->height() * 1.05;
+
+  auto amask = C::make_handle<C::Image>(id, "conditional_image",
+                                        width, height, 0, 0, 0, 0);
+  amask->z() = 0;
+  amask->set_relative_origin(0.5, 0.95);
+
+  auto camask = set<C::String_conditional>(id , "image", state_handle);
+
+  if (input.has("states"))
+    for (std::size_t j = 0; j < input["states"].size(); ++ j)
+    {
+      const std::string& istate = input["states"][j].string();
+      camask->add(istate, amask);
+    }
+  else
+    camask->add(default_state, amask);
+
+  camask->add("player", nullptr); // No mask/interaction if character is player
+  group->add(camask);
+
+  int hdx_right = skin["head"]["dx_right"].integer();
+  int hdx_left = skin["head"]["dx_left"].integer();
+  int hdy = skin["head"]["dy"].integer();
+  set<C::Simple<Vector>>(id + "_head", "gap_right", Vector(hdx_right, hdy));
+  set<C::Simple<Vector>>(id + "_head", "gap_left", Vector(hdx_left, hdy));
+
+  int mdx_right = skin["mouth"]["dx_right"].integer();
+  int mdx_left = skin["mouth"]["dx_left"].integer();
+  int mdy = skin["mouth"]["dy"].integer();
+  set<C::Simple<Vector>>(id + "_mouth", "gap_right", Vector(mdx_right, mdy));
+  set<C::Simple<Vector>>(id + "_mouth", "gap_left", Vector(mdx_left, mdy));
+
+  auto pbody = set<C::Variable>(id + "_body", "position", position);
+
+  auto move_head = set<C::Absolute_position>(id + "_head_move", "position", Point(0,0), false);
+
+  auto phead = set<C::Functional_position>
+               (id + "_head", "position",
+                [&](const std::string& id) -> Point
+  {
+    auto abody = get<C::Image>(id + "_body", "image");
+    auto pbody = get<C::Position>(id + "_body", "position");
+    auto mhead = get<C::Position>(id + "_head_move", "position");
+    return (pbody->value() - abody->scale()
+            * (value<C::Simple<Vector>>(id + "_head",
+                                        (is_looking_right(id) ? "gap_right" : "gap_left"))
+               + Vector(mhead->value())));
+  }, id);
+
+  set<C::Functional_position>
+      (id + "_mouth", "position",
+       [&](const std::string& id) -> Point
+  {
+    auto ahead = get<C::Animation>(id + "_head", "image");
+    auto phead = get<C::Position>(id + "_head", "position");
+    return (phead->value() - ahead->scale()
+            * value<C::Simple<Vector>>(id + "_mouth",
+                                       (is_looking_right(id) ? "gap_right" : "gap_left")));
+  }, id);
+
+  set<C::Absolute_position>(id, "lookat",
+                            looking_right ? Point::right() : Point::left());
 }
 
 void File_IO::read_room (const std::string& file_name)
