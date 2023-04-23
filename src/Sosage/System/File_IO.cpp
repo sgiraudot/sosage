@@ -199,7 +199,7 @@ void File_IO::read_config()
   int gamepad_type = NO_LABEL;
 
   int dialog_speed = Config::MEDIUM_SPEED;
-  int dialog_size = Config::MEDIUM;
+  int interface_scale = Config::SMALL;
 
   int music_volume = 7;
   int sounds_volume = 9;
@@ -222,7 +222,8 @@ void File_IO::read_config()
     if (input.has("input_mode")) input_mode = input["input_mode"].integer();
     if (input.has("gamepad_type")) gamepad_type = input["gamepad_type"].integer();
     if (input.has("dialog_speed")) dialog_speed = input["dialog_speed"].floating();
-    if (input.has("dialog_size")) dialog_size = input["dialog_size"].floating();
+    if (input.has("interface_scale"))
+      interface_scale = input["interface_scale"].integer();
     if (input.has("music_volume")) music_volume = input["music_volume"].integer();
     if (input.has("sounds_volume")) sounds_volume = input["sounds_volume"].integer();
     if (input.has("autosave")) autosave = input["autosave"].boolean();
@@ -240,7 +241,6 @@ void File_IO::read_config()
     sounds_volume = 0;
   }
 
-
   set_fac<C::String>(GAME__CURRENT_LOCAL, "Game", "current_locale", locale);
   set<C::Boolean>("Window", "fullscreen", fullscreen);
   debug << "INPUT MODE = " << input_mode << std::endl;
@@ -248,7 +248,8 @@ void File_IO::read_config()
   set_fac<C::Simple<Gamepad_type>>(GAMEPAD__TYPE, "Gamepad", "type", Gamepad_type(gamepad_type));
 
   set<C::Int>("Dialog", "speed", dialog_speed);
-  set<C::Int>("Dialog", "size", dialog_size);
+  set<C::Int>("Interface", "scale", interface_scale);
+  Config::interface_scale = interface_scale / double(6.);
 
   set<C::Int>("Music", "volume", music_volume);
   set<C::Int>("Sounds", "volume", sounds_volume);
@@ -269,7 +270,7 @@ void File_IO::write_config()
   output.write ("gamepad_type", value<C::Simple<Gamepad_type>>(GAMEPAD__TYPE));
 
   output.write ("dialog_speed", value<C::Int>("Dialog", "speed"));
-  output.write ("dialog_size", value<C::Int>("Dialog", "size"));
+  output.write ("interface_scale", value<C::Int>("Interface", "scale"));
 
   output.write ("music_volume", value<C::Int>("Music", "volume"));
   output.write ("sounds_volume", value<C::Int>("Sounds", "volume"));

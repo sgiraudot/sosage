@@ -916,23 +916,41 @@ bool Logic::function_talk (const std::vector<std::string>& args)
     position = value<C::Position>(id, "label", value<C::Position>(value<C::String>("Player", "name"), "label"));
 
   int x = position.x(), y = position.y();
-  double size_factor = 0.75 * (value<C::Int>("Dialog", "size") / double(Config::MEDIUM));
+  double size_factor = 0.75 * Config::interface_scale;
 
   int height = 80 * size_factor * dialog.size();
   y = y - height;
   if (y < 100)
     y = 100;
 
+  double max_scale = 1.;
+
   for (auto img : dialog)
-    if (x + size_factor * img->width() / 2 > Config::world_width - 50)
+  {
+    bool overflow_right = (x + size_factor * img->width() / 2 > Config::world_width - 50);
+    if (overflow_right)
       x = int(Config::world_width - 50 - size_factor * img->width() / 2);
-    else if (x - size_factor * img->width() / 2 < 50)
+
+    bool overflow_left = x - size_factor * img->width() / 2 < 50;
+    if (overflow_left)
       x = int(50 + size_factor * img->width() / 2);
+
+    if (overflow_right && overflow_left)
+    {
+      x = Config::world_width / 2;
+      max_scale = std::min (max_scale, (Config::world_width - 50) / (size_factor * img->width()));
+      debug << "Max scale = " << (size_factor * size_factor * img->width()) << " -> " << max_scale
+            << std::endl;
+    }
+  }
+  if (max_scale != 1.)
+    for (auto img : dialog)
+      img->set_scale (max_scale * size_factor);
 
   for (auto img : dialog)
   {
     auto pos = set<C::Absolute_position> (img->entity() , "position", Point(x,y));
-    y += 80 * size_factor;
+    y += 70 * size_factor * max_scale;
 
    m_current_action->schedule (m_current_time + std::max(1., nb_seconds_read), img);
   }

@@ -227,7 +227,7 @@ void Menu::init()
 #if !defined (SOSAGE_ANDROID) && !defined(SOSAGE_EMSCRIPTEN)
         "Fullscreen",
 #endif
-       "Text_size", "Text_speed", "Music_volume", "Sound_volume" })
+       "Interface_scale", "Text_speed", "Music_volume", "Sound_volume" })
   {
     make_settings_item ((*settings_menu)[idx], id, y);
     y += Config::settings_menu_height + Config::settings_menu_margin;
@@ -262,6 +262,7 @@ void Menu::apply_setting (const std::string& setting, const std::string& v)
         delete_menu(id);
 
     // Reinit interface
+    emit ("Interface", "reinit");
     init();
     show_menu ("Settings");
 
@@ -277,14 +278,20 @@ void Menu::apply_setting (const std::string& setting, const std::string& v)
       emit ("Window", "toggle_fullscreen");
     }
   }
-  else if (setting == "Text_size")
+  else if (setting == "Interface_scale")
   {
-    if (v == "Small")
-      set<C::Int>("Dialog", "size")->set(Config::SMALL);
-    else if (v == "Medium")
-      set<C::Int>("Dialog", "size")->set(Config::MEDIUM);
-    else
-      set<C::Int>("Dialog", "size")->set(Config::LARGE);
+    auto iscale = get<C::Int>("Interface", "scale");
+    if (v == "Tiny")
+      iscale->set(Config::TINY);
+    else if (v == "Small")
+      iscale->set(Config::SMALL);
+    else if (v == "Large")
+      iscale->set(Config::LARGE);
+    else if (v == "Huge")
+      iscale->set(Config::HUGE);
+    Config::interface_scale = iscale->value() / double(6.);
+    emit ("Interface", "reinit");
+    emit ("Interface", "update_scale");
   }
   else if (setting == "Text_speed")
   {
@@ -334,13 +341,15 @@ void Menu::show_menu (const std::string& id)
     else if (speed == Config::FAST)
       menu->update_setting ("Text_speed", "Fast");
 
-    int size = value<C::Int>("Dialog", "size");
-    if (size == Config::SMALL)
-      menu->update_setting ("Text_size", "Small");
-    else if (size == Config::MEDIUM)
-      menu->update_setting ("Text_size", "Medium");
+    int size = value<C::Int>("Interface", "scale");
+    if (size == Config::TINY)
+      menu->update_setting ("Interface_scale", "Tiny");
+    else if (size == Config::SMALL)
+      menu->update_setting ("Interface_scale", "Small");
     else if (size == Config::LARGE)
-      menu->update_setting ("Text_size", "Large");
+      menu->update_setting ("Interface_scale", "Large");
+    else if (size == Config::HUGE)
+      menu->update_setting ("Interface_scale", "Huge");
 
     menu->update_setting ("Music_volume", std::to_string(10 * value<C::Int>("Music", "volume")));
     menu->update_setting ("Sound_volume", std::to_string(10 * value<C::Int>("Sounds", "volume")));

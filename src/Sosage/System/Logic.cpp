@@ -910,9 +910,19 @@ void Logic::create_dialog (const std::string& character,
 
   set<C::Double> ("Dialog", "creation_time", m_current_time);
 
-  static const int width_max = int(0.6 * Config::world_width);
+  int iscale = value<C::Int>("Interface", "scale");
 
-  double size_factor = 0.75 * (value<C::Int>("Dialog", "size") / double(Config::MEDIUM));
+  int width_max;
+  if (iscale == Config::TINY)
+    width_max = int(0.33 * Config::world_width);
+  else if (iscale == Config::SMALL)
+      width_max = int(0.5 * Config::world_width);
+  else if (iscale == Config::LARGE)
+      width_max = int(0.75 * Config::world_width);
+  else // if (iscale == Config::HUGE)
+      width_max = int(0.85 * Config::world_width);
+
+  double size_factor = 0.75 * Config::interface_scale;
   auto font = get<C::Font> ("Dialog", "font");
   const std::string& color = value<C::String> (character , "color");
   int estimated_size = 25 * text.size() * size_factor;

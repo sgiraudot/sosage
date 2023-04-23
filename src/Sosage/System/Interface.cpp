@@ -57,6 +57,9 @@ void Interface::run()
   SOSAGE_TIMER_START(System_Interface__run);
   SOSAGE_UPDATE_DBG_LOCATION("Interface::run()");
 
+  if (receive ("Interface", "reinit"))
+    init();
+
   update_object_labels();
   update_inventory();
   update_active_objects();
@@ -181,8 +184,9 @@ void Interface::init()
 
 void Interface::update_object_labels()
 {
-  if (!receive("Game", "new_room_loaded"))
+  if (!receive("Game", "new_room_loaded") && !receive ("Interface", "update_scale"))
     return;
+
   SOSAGE_TIMER_START(System_Interface__update_object_labels);
 
   std::vector<C::Absolute_position_handle> room_objects;
@@ -202,6 +206,9 @@ void Interface::update_object_labels()
         if (auto state = request<C::String>(c->entity(), "state"))
           if (!startswith(state->value(), "inventory"))
           {
+            // Backup so the original position can be reused
+            pos = get_or_set<C::Absolute_position>
+                  (c->entity(), "label_backup", pos->value());
             room_objects.push_back (pos);
             width.push_back
                 (Config::interface_scale
@@ -217,6 +224,9 @@ void Interface::update_object_labels()
                 ltype.back() = GOTO_LEFT;
             }
           }
+
+  if (room_objects.empty())
+    return;
 
   // Compute intersection and move step by step objects
   // to get them away from each other. Limit to 50 iterations
@@ -930,17 +940,24 @@ void Interface::update_dialog_choices()
         = set<C::Image>(entity + "_off", "image", interface_font, "FFFFFF",
                         locale(choices[std::size_t(c)]));
       img_off->z() = Config::dialog_depth;
-      img_off->set_scale(0.75);
+      img_off->set_scale(0.75 * Config::interface_scale);
       img_off->set_relative_origin(0., 1.);
+      if (img_off->width() * 0.75 * Config::interface_scale > Config::world_width - 20)
+        img_off->set_scale ((Config::world_width - 20.)
+                            / (img_off->width()));
 
       auto img_on
         = set<C::Image>(entity + "_on", "image", interface_font,
                         value<C::String>(player , "color"),
                         locale(choices[std::size_t(c)]));
       img_on->z() = Config::dialog_depth;
-      img_on->set_scale(0.75);
+      img_on->set_scale(0.75 * Config::interface_scale);
       img_on->set_relative_origin(0., 1.);
-      y -= img_off->height() * 0.75;
+      if (img_on->width() * 0.75 * Config::interface_scale > Config::world_width - 20)
+        img_on->set_scale ((Config::world_width - 20.)
+                           / (img_off->width()));
+
+      y -= img_off->height() * img_off->scale();
 
     }
 
@@ -975,7 +992,7 @@ void Interface::update_dialog_choices()
     Point p (10, y);
     set<C::Absolute_position>(entity + "_off", "position", p);
     set<C::Absolute_position>(entity + "_on", "position", p);
-    y -= img_off->height() * 0.75;
+    y -= img_off->height() * img_off->scale();
 
     bool on = (c == choice);
     img_off->on() = !on;

@@ -421,8 +421,8 @@ void Menu::make_settings_item (Component::Menu::Node node, const std::string& id
     }
     else if (id == "Fullscreen")
       possible_values = { "Yes", "No" };
-    else if (id == "Text_size")
-      possible_values = { "Small", "Medium", "Large" };
+    else if (id == "Interface_scale")
+      possible_values = { "Tiny", "Small", "Large", "Huge" };
     else if (id == "Text_speed")
       possible_values = { "Slow", "Medium_speed", "Fast" };
     else if (id == "Music_volume" || id == "Sound_volume")

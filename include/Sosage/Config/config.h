@@ -78,11 +78,17 @@ enum Dialog_speed
   FAST = 9
 };
 
-enum Dialog_size
+enum Interface_scale
 {
+  TINY = 4,
+  SMALL = 6,
+  LARGE = 9,
+  HUGE = 12
+  /* Old dialog sizes =
   SMALL = 9,
   MEDIUM = 12,
   LARGE = 18,
+  */
 };
 
 } // namespace Sosage::Config
