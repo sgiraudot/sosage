@@ -73,13 +73,19 @@ void Menu::run()
   }
 
   if (!status()->is (IN_MENU))
+  {
+    SOSAGE_TIMER_STOP(System_Menu__run);
     return;
+  }
 
   if (receive ("Menu", "clicked"))
     menu_clicked();
 
   if (!status()->is (IN_MENU))
+  {
+    SOSAGE_TIMER_STOP(System_Menu__run);
     return;
+  }
 
   bool gamepad = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD;
   bool touchscreen = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == TOUCHSCREEN;

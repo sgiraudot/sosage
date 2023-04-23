@@ -64,7 +64,7 @@ namespace Sosage
 std::string Asset_manager::folder_name = "";
 std::vector<Buffer> Asset_manager::buffers;
 Package_asset_map Asset_manager::package_asset_map;
-double Config::interface_scale = 2;
+double Config::interface_scale = 1;
 #ifdef SOSAGE_DEBUG_BUFFER
 Debug_buffer debug_buffer;
 std::ostream debug(&debug_buffer);

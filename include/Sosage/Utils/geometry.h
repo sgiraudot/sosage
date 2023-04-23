@@ -79,6 +79,14 @@ struct Box
     out.ymax = std::min (a.ymax, b.ymax);
     return out;
   }
+
+  friend std::ostream& operator<< (std::ostream& os, const Box& b)
+  {
+    os << "Box((" << b.xmin << ";" << b.ymin << ") -> ("
+       << b.xmax << ";" << b.ymax << "))";
+    return os;
+  }
+
 };
 
 class Vector;

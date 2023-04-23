@@ -183,11 +183,15 @@ void Interface::update_object_labels()
 {
   if (!receive("Game", "new_room_loaded"))
     return;
+  SOSAGE_TIMER_START(System_Interface__update_object_labels);
 
   std::vector<C::Absolute_position_handle> room_objects;
   std::vector<double> width;
-  constexpr int pixels_per_letter = 14; // Rough maximum
+  std::vector<Label_type> ltype;
+  constexpr int pixels_per_letter = 20; // Rough maximum
   constexpr int margin = 50;
+  constexpr int margin_goto = 50;
+  constexpr int gap = 5;
   double step = 0.0005 * Config::interface_scale;
 
   double height = Config::label_height * Config::interface_scale;
@@ -203,6 +207,15 @@ void Interface::update_object_labels()
                 (Config::interface_scale
                  * (margin
                     + pixels_per_letter * locale(name->value()).size()));
+            ltype.push_back (PLAIN);
+            if (auto gt = request<C::Boolean>(c->entity() + "_goto", "right"))
+            {
+              width.back() += margin_goto * Config::interface_scale;
+              if (gt->value())
+                ltype.back() = GOTO_RIGHT;
+              else if (gt->value())
+                ltype.back() = GOTO_LEFT;
+            }
           }
 
   // Compute intersection and move step by step objects
@@ -216,10 +229,20 @@ void Interface::update_object_labels()
 
     for (std::size_t i = 0; i < room_objects.size(); ++ i)
     {
-      boxes[i].xmin = room_objects[i]->value().x() - width[i] * 0.5 - 5;
-      boxes[i].xmax = room_objects[i]->value().x() + width[i] * 0.5 + 5;
-      boxes[i].ymin = room_objects[i]->value().y() - height * 0.5 - 5;
-      boxes[i].ymax = room_objects[i]->value().y() + height * 0.5 + 5;
+      boxes[i].xmin = room_objects[i]->value().x() - gap * Config::interface_scale;
+      boxes[i].xmax = room_objects[i]->value().x() + gap * Config::interface_scale;
+      boxes[i].ymin = room_objects[i]->value().y() - gap * Config::interface_scale - height * 0.5;
+      boxes[i].ymax = room_objects[i]->value().y() + gap * Config::interface_scale + height * 0.5;
+
+      if (ltype[i] == GOTO_RIGHT)
+        boxes[i].xmin -= width[i];
+      else if (ltype[i] == GOTO_LEFT)
+        boxes[i].xmax += width[i];
+      else // PLAIN
+      {
+        boxes[i].xmin -= width[i] * 0.5;
+        boxes[i].xmax += width[i] * 0.5;
+      }
     }
 
     std::vector<Vector> moves (room_objects.size(), Vector(0,0));
@@ -229,7 +252,8 @@ void Interface::update_object_labels()
       {
         if (intersect (boxes[i], boxes[j]))
         {
-          debug << "INTERSECTION " << room_objects[i]->entity() << "/" << room_objects[j]->entity() << std::endl;
+          debug << "INTERSECTION BETWEEN " << room_objects[i]->entity()
+                << " AND " << room_objects[j]->entity() << std::endl;
           collision = true;
           Box inter = intersection (boxes[i], boxes[j]);
           double dx = inter.xmax - inter.xmin;
@@ -247,11 +271,13 @@ void Interface::update_object_labels()
     for (std::size_t i = 0; i < room_objects.size(); ++ i)
       if (moves[i] != Vector(0,0))
         room_objects[i]->set (Point(room_objects[i]->value() + step * moves[i]));
+    debug << iter << std::endl;
 
     if (!collision)
       break;
-    debug << iter << std::endl;
   }
+
+  SOSAGE_TIMER_STOP(System_Interface__update_object_labels);
 }
 
 void Interface::update_active_objects()

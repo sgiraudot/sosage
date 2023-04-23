@@ -182,7 +182,7 @@ void Input::update_mode()
   {
     m_current_events.clear();
     run_demo_mode();
-    SOSAGE_TIMER_STOP(System_Input__run);
+    // TODO actually return from the run() function
     return;
   }
 #endif
