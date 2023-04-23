@@ -45,8 +45,8 @@ void Control::idle_mouse()
 
   // If cursor below inventory threshold, go to inventory
   if (cursor->value().y() > Config::world_height - Config::inventory_active_zone / 5
-      || (cursor->value().y() > Config::world_height - Config::inventory_active_zone
-          && cursor->value().x() < get<C::Image>("Inventory_label_background", "image")->width()))
+      || (cursor->value().y() > Config::world_height - Config::inventory_active_zone * Config::interface_scale
+          && cursor->value().x() < get<C::Image>("Inventory_label_background", "image")->width() * Config::interface_scale))
   {
     if (receive("Cursor", "clicked"))
       emit ("Cancel", "action");

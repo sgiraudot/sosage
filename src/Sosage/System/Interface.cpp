@@ -132,21 +132,21 @@ void Interface::init()
   auto kb_left_pos = set<C::Relative_position>("Keyboard_switcher_left", "global_position", switcher_pos);
   update_label ("Keyboard_switcher_left", LABEL_BUTTON, kb_left_pos);
   auto kb_left_back = get<C::Image>("Keyboard_switcher_left_back", "image");
-  kb_left_pos->set (Point (switcher_pos->value().x() + Config::interface_scale * kb_left_back->width() / 2,
-                           switcher_pos->value().y() - Config::interface_scale * kb_left_back->height() / 2));
+  kb_left_pos->set (Point (switcher_pos->value().x() + Config::interface_scale * kb_left_back->width() * 0.25,
+                           switcher_pos->value().y() - Config::interface_scale * kb_left_back->height() * 0.25));
 
   create_label ("Gamepad_switcher_left", "L", LABEL_BUTTON, UNCLICKABLE);
   auto left_pos = set<C::Relative_position>("Gamepad_switcher_left", "global_position", switcher_pos);
   update_label ("Gamepad_switcher_left", LABEL_BUTTON, left_pos);
   auto left_back = get<C::Image>("Gamepad_switcher_left_back", "image");
-  left_pos->set (Point (switcher_pos->value().x() + Config::interface_scale * left_back->width() / 2,
-                        switcher_pos->value().y() - Config::interface_scale * left_back->height() / 2));
+  left_pos->set (Point (switcher_pos->value().x() + Config::interface_scale * left_back->width() * 0.25,
+                        switcher_pos->value().y() - Config::interface_scale * left_back->height() * 0.25));
 
   create_label ("Keyboard_switcher_label", locale_get("Switch_target", "text"), OPEN_LEFT, UNCLICKABLE);
   auto kb_img = get<C::Image>("Keyboard_switcher_label_back", "image");
   auto kb_pos = set<C::Relative_position>("Keyboard_switcher_label", "global_position", switcher_pos);
   update_label ("Keyboard_switcher_label", OPEN_LEFT, kb_pos);
-  kb_pos->set (Point (value<C::Position>("Keyboard_switcher_left_back", "position").x() + Config::interface_scale * kb_img->width() / 2,
+  kb_pos->set (Point (value<C::Position>("Keyboard_switcher_left_back", "position").x() + Config::interface_scale * kb_img->width() * 0.25,
                       kb_left_pos->value().y()));
   get<C::Relative_position>("Keyboard_switcher_label", "position")->set(Vector(Config::label_margin,0));
   get<C::Relative_position>("Keyboard_switcher_label_back", "position")->set(Vector(0,0));
@@ -155,13 +155,13 @@ void Interface::init()
   auto img = get<C::Image>("Gamepad_switcher_label_back", "image");
   auto pos = set<C::Relative_position>("Gamepad_switcher_label", "global_position", switcher_pos);
   update_label ("Gamepad_switcher_label", OPEN, pos);
-  pos->set (Point (value<C::Position>("Gamepad_switcher_left_back", "position").x() + Config::interface_scale * img->width() / 2,
+  pos->set (Point (value<C::Position>("Gamepad_switcher_left_back", "position").x() + Config::interface_scale * img->width() * 0.25,
                    left_pos->value().y()));
 
   create_label ("Gamepad_switcher_right", "R", LABEL_BUTTON, UNCLICKABLE);
   auto right_pos = set<C::Relative_position>("Gamepad_switcher_right", "global_position", switcher_pos);
   update_label ("Gamepad_switcher_right", LABEL_BUTTON, right_pos);
-  right_pos->set (Point (pos->value().x() + Config::interface_scale * img->width() / 2, left_pos->value().y()));
+  right_pos->set (Point (pos->value().x() + Config::interface_scale * img->width() * 0.25, left_pos->value().y()));
 
   auto kb_switcher = set<C::Group>("Keyboard_switcher", "group");
   kb_switcher->add (get<C::Group>("Keyboard_switcher_left", "group"));
@@ -192,11 +192,12 @@ void Interface::update_object_labels()
   std::vector<C::Absolute_position_handle> room_objects;
   std::vector<double> width;
   std::vector<Label_type> ltype;
-  constexpr int pixels_per_letter = 20; // Rough maximum
+  constexpr int pixels_per_letter = 16; // Rough maximum
   constexpr int margin = 50;
   constexpr int margin_goto = 50;
-  constexpr int gap = 5;
-  double step = 0.0005 * Config::interface_scale;
+
+  int gap = 5 * Config::interface_scale;
+  double step = 0.05 * Config::interface_scale;
 
   double height = Config::label_height * Config::interface_scale;
 
@@ -207,8 +208,9 @@ void Interface::update_object_labels()
           if (!startswith(state->value(), "inventory"))
           {
             // Backup so the original position can be reused
-            pos = get_or_set<C::Absolute_position>
-                  (c->entity(), "label_backup", pos->value());
+            auto backup = get_or_set<C::Absolute_position>
+                          (c->entity(), "label_backup", pos->value());
+            pos->set (backup->value());
             room_objects.push_back (pos);
             width.push_back
                 (Config::interface_scale
@@ -220,7 +222,7 @@ void Interface::update_object_labels()
               width.back() += margin_goto * Config::interface_scale;
               if (gt->value())
                 ltype.back() = GOTO_RIGHT;
-              else if (gt->value())
+              else
                 ltype.back() = GOTO_LEFT;
             }
           }
@@ -231,36 +233,87 @@ void Interface::update_object_labels()
     return;
   }
 
+  std::size_t world_width = Config::world_width;
+  if (auto background = request<C::Image>("background", "image"))
+    world_width = background->width();
+
   // Compute intersection and move step by step objects
   // to get them away from each other. Limit to 50 iterations
   // just in case something goes bad, but in the worst cases,
   // it's done in 20 steps.
   std::vector<Box> boxes (room_objects.size());
-  for (std::size_t iter = 0; iter < 50; ++ iter)
+  for (std::size_t iter = 0; iter < 100; ++ iter)
   {
     bool collision = false;
 
     for (std::size_t i = 0; i < room_objects.size(); ++ i)
     {
-      boxes[i].xmin = room_objects[i]->value().x() - gap * Config::interface_scale;
-      boxes[i].xmax = room_objects[i]->value().x() + gap * Config::interface_scale;
-      boxes[i].ymin = room_objects[i]->value().y() - gap * Config::interface_scale - height * 0.5;
-      boxes[i].ymax = room_objects[i]->value().y() + gap * Config::interface_scale + height * 0.5;
+      boxes[i].xmin = room_objects[i]->value().x() - gap;
+      boxes[i].xmax = room_objects[i]->value().x() + gap;
+      boxes[i].ymin = room_objects[i]->value().y() - gap - height * 0.5;
+      boxes[i].ymax = room_objects[i]->value().y() + gap + height * 0.5;
 
       if (ltype[i] == GOTO_RIGHT)
+      {
+        debug << "GOTO RIGHT" << std::endl;
         boxes[i].xmin -= width[i];
+      }
       else if (ltype[i] == GOTO_LEFT)
+      {
+        debug << "GOTO LEFT" << std::endl;
         boxes[i].xmax += width[i];
+      }
       else // PLAIN
       {
+        debug << "PLAIN" << std::endl;
         boxes[i].xmin -= width[i] * 0.5;
         boxes[i].xmax += width[i] * 0.5;
+      }
+      debug << room_objects[i]->entity() << " with coordinates " << room_objects[i]->value()
+            << " has box " << boxes[i] << std::endl;
+
+      if (boxes[i].xmin < gap)
+      {
+        debug << "Fix xmin " << room_objects[i]->entity() << std::endl;
+        double diff = gap - boxes[i].xmin;
+        Point pos = room_objects[i]->value();
+        room_objects[i]->set (pos + Vector (diff, 0));
+        boxes[i].xmin += diff;
+        boxes[i].xmax += diff;
+      }
+      if (boxes[i].xmax > world_width - gap)
+      {
+        debug << "Fix xmax " << room_objects[i]->entity() << std::endl;
+        double diff = world_width - gap - boxes[i].xmax;
+        Point pos = room_objects[i]->value();
+        room_objects[i]->set (pos + Vector (diff, 0));
+        boxes[i].xmin += diff;
+        boxes[i].xmax += diff;
+      }
+      if (boxes[i].ymin < gap)
+      {
+        debug << "Fix ymin " << room_objects[i]->entity() << std::endl;
+        double diff = gap - boxes[i].ymin;
+        Point pos = room_objects[i]->value();
+        room_objects[i]->set (pos + Vector (0, diff));
+        boxes[i].ymin += diff;
+        boxes[i].ymax += diff;
+      }
+      if (boxes[i].ymax > Config::world_height - gap)
+      {
+        debug << "Fix ymax " << room_objects[i]->entity() << std::endl;
+        double diff = Config::world_height - gap - boxes[i].ymax;
+        Point pos = room_objects[i]->value();
+        room_objects[i]->set (pos + Vector (0, diff));
+        boxes[i].ymin += diff;
+        boxes[i].ymax += diff;
       }
     }
 
     std::vector<Vector> moves (room_objects.size(), Vector(0,0));
 
     for (std::size_t i = 0; i < room_objects.size() - 1; ++ i)
+    {
       for (std::size_t j = i + 1; j < room_objects.size(); ++ j)
       {
         if (intersect (boxes[i], boxes[j]))
@@ -274,18 +327,20 @@ void Interface::update_object_labels()
 
           Vector i_to_j (Point::center(boxes[i]),
                          Point::center(boxes[j]));
+          i_to_j.normalize();
           i_to_j = Vector (dy * i_to_j.x(), dx * i_to_j.y());
 
           moves[i] = moves[i] + (-1.) * i_to_j;
           moves[j] = moves[j] + i_to_j;
         }
       }
+    }
 
     for (std::size_t i = 0; i < room_objects.size(); ++ i)
       if (moves[i] != Vector(0,0))
         room_objects[i]->set (Point(room_objects[i]->value() + step * moves[i]));
-    debug << iter << std::endl;
 
+    debug << iter << std::endl;
     if (!collision)
       break;
   }
