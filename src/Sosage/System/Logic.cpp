@@ -149,9 +149,9 @@ void Logic::run ()
 
   update_scheduled();
 
-#if 0
+#if 1
   if (receive ("Game", "test"))
-    push_notification("Test de notif", 1);
+    push_notification ("Test de notif", 1);
 #endif
 
   update_character_path();

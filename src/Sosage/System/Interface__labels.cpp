@@ -65,13 +65,13 @@ void Interface::create_object_label (const std::string& id)
     update_label(id + "_label", PLAIN, pos);
 
     double diff = value<C::Position>(id + "_label_back", "position").x()
-                  - 0.5 * get<C::Image>(id + "_label_back", "image")->width() * Config::interface_scale
+                  - 0.25 * get<C::Image>(id + "_label_back", "image")->width() * Config::interface_scale
                   - (value<C::Position>("Chamfer", "position").x() + Config::label_height);
     if (diff < 0)
       pos->set(Point (pos->value().x() - diff, pos->value().y()));
 
     diff = Config::world_width - (value<C::Position>(id + "_label_back", "position").x()
-                                  + (0.5 * get<C::Image>(id + "_label_back", "image")->width() + Config::label_margin)
+                                  + (0.25 * get<C::Image>(id + "_label_back", "image")->width() + Config::label_margin)
                                   * Config::interface_scale);
 
     if (diff < 0)
@@ -100,7 +100,7 @@ void Interface::create_object_label (const std::string& id)
     auto cursor = get<C::Position>(CURSOR__POSITION);
     update_label(id + "_label", ltype, cursor, 1.0);
     if (force_right || value<C::Position>(id + "_label_back", "position").x()
-        + get<C::Image>(id + "_label_back", "image")->width() / 2
+        + get<C::Image>(id + "_label_back", "image")->width() * 0.25
         > Config::world_width - Config::label_height)
     {
       ltype = force_right ? GOTO_RIGHT : CURSOR_RIGHT;
@@ -216,7 +216,7 @@ void Interface::create_label (const std::string& id, std::string name,
 
     if (width != 0)
     {
-      back = C::make_handle<C::Image>(id + "_back", "image", width, Config::label_height);
+      back = C::make_handle<C::Image>(id + "_back", "image", 2* width, 2 * Config::label_height);
 
       back->set_relative_origin(0.5, 0.5);
       back->set_scale(scale);
@@ -239,7 +239,7 @@ void Interface::create_label (const std::string& id, std::string name,
 
   back->on() = true;
   back->set_relative_origin(0.5, 0.5);
-  back->set_scale(scale);
+  back->set_scale(0.5 * scale);
   back->set_alpha(alpha);
   back->z() = depth - 1;
   back->set_collision(collision);
@@ -266,7 +266,7 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
     if (style == ZOOM)
     {
       double from = 0.5 * 0.75, to = 0.5;
-      double from_back = 0.75, to_back = 1.0;
+      double from_back = 0.75 * 0.5, to_back = 0.5;
       from *= Config::interface_scale;
       from_back *= Config::interface_scale;
       to *= Config::interface_scale;
@@ -294,7 +294,7 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
         std::string object_id (id.begin(), id.begin() + pos);
         if (auto right = request<C::Boolean>(object_id + "_goto", "right"))
         {
-          double gap = get<C::Image>(id + "_back", "image")->width() / 2.;
+          double gap = get<C::Image>(id + "_back", "image")->width() * 0.25;
           if (!right->value())
             gap = -gap;
           double gap_from = from_back * gap;
@@ -307,7 +307,7 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
           set<C::GUI_position_animation>(id + "_back_pos", "animation", current_time, current_time + Config::inventory_speed,
                                          pos, pos_to);
 
-          double label_gap = get<C::Image>(id , "image")->width() / 2.;
+          double label_gap = get<C::Image>(id , "image")->width() * 0.5;
           if (!right->value())
             label_gap = -label_gap;
 
@@ -331,12 +331,12 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
 
       if (style == DEPLOY)
         set<C::GUI_image_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
-                                    get<C::Image>(id , "image"), 0.05, 0.5 * img->scale(), 0, 255);
+                                    get<C::Image>(id , "image"), 0.05, img->scale(), 0, 255);
       else if (style == FADE || style == FADE_LABEL_ONLY)
       {
         unsigned char alpha = get<C::Image>(id, "image")->alpha();
         set<C::GUI_image_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
-                                    get<C::Image>(id , "image"), 0.5 * img->scale(), 0.5 * img->scale(), 0, alpha);
+                                    get<C::Image>(id , "image"), img->scale(), img->scale(), 0, alpha);
       }
     }
   }
@@ -348,12 +348,13 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
       set<C::GUI_position_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
                                      get<C::Position>(id , "global_position"), position);
       set<C::GUI_image_animation>(id + "_back", "animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(id + "_back", "image"), 0.357 * Config::interface_scale, Config::interface_scale, alpha, alpha);
+                                  get<C::Image>(id + "_back", "image"), 0.177 * Config::interface_scale,
+                                  0.5 * Config::interface_scale, alpha, alpha);
     }
     else if (style == FADE)
     {
       set<C::GUI_image_animation>(id + "_back", "animation", current_time, current_time + Config::inventory_speed,
-                                  get<C::Image>(id + "_back", "image"), 1, 1, 0, alpha);
+                                  get<C::Image>(id + "_back", "image"), 0.5, 0.5, 0, alpha);
     }
   }
 }
@@ -381,7 +382,7 @@ void Interface::update_label (const std::string& id, const Label_type& ltype,
 
   if (label)
     label->set_scale(scale * 0.5);
-  back->set_scale(scale);
+  back->set_scale(scale * 0.5);
 
   if(ltype == PLAIN || ltype == OPEN || ltype == LABEL_BUTTON) // symmetric label
   {
@@ -392,7 +393,7 @@ void Interface::update_label (const std::string& id, const Label_type& ltype,
   {
     if (label)
     {
-      double label_pos = 0.5 * back_width;
+      double label_pos = 0.25 * back_width;
       if (ltype == CURSOR_LEFT)
         label_pos += 5;
       else if (ltype == OPEN_LEFT)
@@ -402,15 +403,15 @@ void Interface::update_label (const std::string& id, const Label_type& ltype,
       set<C::Relative_position>(id , "position", pos, Vector(label_pos, 0));
     }
     if (ltype == OPEN_LEFT)
-      set<C::Relative_position>(id + "_back", "position", pos, Vector(back_width / 2 - 25, 0));
+      set<C::Relative_position>(id + "_back", "position", pos, Vector(back_width * 0.25 - 25 * Config::interface_scale, 0));
     else
-      set<C::Relative_position>(id + "_back", "position", pos, Vector(back_width / 2, 0));
+      set<C::Relative_position>(id + "_back", "position", pos, Vector(back_width * 0.25, 0));
   }
   else if (ltype == OPEN_RIGHT || ltype == GOTO_RIGHT || ltype == CURSOR_RIGHT)
   {
     if (label)
     {
-      double label_pos = -0.5 * back_width;
+      double label_pos = -0.25 * back_width;
       if (ltype == CURSOR_RIGHT)
         label_pos -= 5;
       else if (ltype == OPEN_RIGHT)
@@ -421,9 +422,9 @@ void Interface::update_label (const std::string& id, const Label_type& ltype,
       set<C::Relative_position>(id , "position", pos, Vector(label_pos, 0));
     }
     if (ltype == OPEN_RIGHT)
-      set<C::Relative_position>(id + "_back", "position", pos, Vector(-back_width / 2 + 25, 0));
+      set<C::Relative_position>(id + "_back", "position", pos, Vector(-back_width * 0.25 + 25 * Config::interface_scale, 0));
     else
-      set<C::Relative_position>(id + "_back", "position", pos, Vector(-back_width / 2, 0));
+      set<C::Relative_position>(id + "_back", "position", pos, Vector(-back_width * 0.25, 0));
   }
 }
 
@@ -598,7 +599,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
 
     bool need_update = false;
 
-    double overflow_down = Config::world_height - Config::label_margin - 0.5 * get<C::Image>(id + "_inventory_label_back", "image")->height()
+    double overflow_down = Config::world_height - Config::label_margin
+                           - 0.5 * get<C::Image>(id + "_inventory_label_back", "image")->height() * Config::interface_scale
                            - value<C::Position>(id + "_inventory_label_back", "position").y();
     if (overflow_down < 0)
     {
@@ -615,7 +617,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     }
 
     double overflow_up = value<C::Position>(id + "_move_label_back", "position").y()
-                         - Config::label_margin - 0.5 * get<C::Image>(id + "_move_label_back", "image")->height();
+                         - Config::label_margin
+                         - 0.5 * get<C::Image>(id + "_move_label_back", "image")->height() * Config::interface_scale;
 
     if (overflow_up < 0)
     {
@@ -632,7 +635,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     }
 
     double overflow_left = value<C::Position>(id + "_take_label_back", "position").x()
-                           - Config::label_margin - 0.5 * get<C::Image>(id + "_take_label_back", "image")->width();
+                           - Config::label_margin
+                           - 0.5 * get<C::Image>(id + "_take_label_back", "image")->width() * Config::interface_scale;
     if (overflow_left < 0)
     {
       need_update = true;
@@ -647,7 +651,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
       }
     }
 
-    double overflow_right = Config::world_width - Config::label_margin - 0.5 * get<C::Image>(id + "_look_label_back", "image")->width()
+    double overflow_right = Config::world_width - Config::label_margin
+                            - 0.5 * get<C::Image>(id + "_look_label_back", "image")->width() * Config::interface_scale
                             - value<C::Position>(id + "_look_label_back", "position").x();
     if (overflow_right < 0)
     {
@@ -694,7 +699,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
 
     generate_action (id, "combine", LEFT_BUTTON, "", position, DEPLOY);
     double diff = value<C::Position>(id + "_combine_label_back", "position").x()
-                  - 0.5 * get<C::Image>(id + "_combine_label_back", "image")->width() * Config::interface_scale
+                  - 0.25 * get<C::Image>(id + "_combine_label_back", "image")->width() * Config::interface_scale
                   - (value<C::Position>("Chamfer", "position").x() + Config::label_height);
     if (diff < 0)
     {
@@ -705,7 +710,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     generate_action (id, "look", RIGHT_BUTTON, "", position, DEPLOY);
     diff = Config::world_width
            - (value<C::Position>(id + "_look_label_back", "position").x()
-              + 0.5 * get<C::Image>(id + "_look_label_back", "image")->width() * Config::interface_scale
+              + 0.25 * get<C::Image>(id + "_look_label_back", "image")->width() * Config::interface_scale
               + Config::label_margin * Config::interface_scale);
     if (diff < 0)
     {
@@ -1014,15 +1019,15 @@ bool Interface::labels_intersect (const std::string& a, const std::string& b)
   const auto& bpos = value<C::Position>(b + "_back", "position");
 
   Box boxa;
-  boxa.xmin = apos.x() - aimg->width() * 0.5 * Config::interface_scale;
-  boxa.xmax = apos.x() + aimg->width() * 0.5 * Config::interface_scale;
-  boxa.ymin = apos.y() - aimg->height() * 0.5 * Config::interface_scale;
-  boxa.ymax = apos.y() + aimg->height() * 0.5 * Config::interface_scale;
+  boxa.xmin = apos.x() - aimg->width() * 0.25 * Config::interface_scale;
+  boxa.xmax = apos.x() + aimg->width() * 0.25 * Config::interface_scale;
+  boxa.ymin = apos.y() - aimg->height() * 0.25 * Config::interface_scale;
+  boxa.ymax = apos.y() + aimg->height() * 0.25 * Config::interface_scale;
   Box boxb;
-  boxb.xmin = bpos.x() - bimg->width() * 0.5 * Config::interface_scale;
-  boxb.xmax = bpos.x() + bimg->width() * 0.5 * Config::interface_scale;
-  boxb.ymin = bpos.y() - bimg->height() * 0.5 * Config::interface_scale;
-  boxb.ymax = bpos.y() + bimg->height() * 0.5 * Config::interface_scale;
+  boxb.xmin = bpos.x() - bimg->width() * 0.25 * Config::interface_scale;
+  boxb.xmax = bpos.x() + bimg->width() * 0.25 * Config::interface_scale;
+  boxb.ymin = bpos.y() - bimg->height() * 0.25 * Config::interface_scale;
+  boxb.ymax = bpos.y() + bimg->height() * 0.25 * Config::interface_scale;
 
   return intersect (boxa, boxb);
 }

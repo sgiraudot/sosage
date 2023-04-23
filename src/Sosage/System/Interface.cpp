@@ -226,7 +226,10 @@ void Interface::update_object_labels()
           }
 
   if (room_objects.empty())
+  {
+    SOSAGE_TIMER_STOP(System_Interface__update_object_labels);
     return;
+  }
 
   // Compute intersection and move step by step objects
   // to get them away from each other. Limit to 50 iterations
@@ -683,7 +686,7 @@ void Interface::update_notifications()
                                "000000", text);
     label->set_relative_origin(0.5, 0.5);
     label->set_alpha(alpha);
-    label->set_scale(0.5);
+    label->set_scale(0.5 * Config::interface_scale);
     label->z() = depth+1;
     label->set_collision(UNCLICKABLE);
     group->add(label);
@@ -693,9 +696,9 @@ void Interface::update_notifications()
     auto right = C::make_handle<C::Image>(id + "_right_circle", "image",
                                           get<C::Image>("White_right_circle", "image"));
 
-    int width = label->width() / 2;
-    auto back = C::make_handle<C::Image>(id + "_back", "image", width,
-                              Config::label_height,
+    int width = label->width() * 0.5;
+    auto back = C::make_handle<C::Image>(id + "_back", "image", 2 * width,
+                              2 * Config::label_height,
                               255, 255, 255);
     left->compose_with (back);
     back = left;
@@ -705,17 +708,26 @@ void Interface::update_notifications()
     back->z() = depth;
     back->set_collision(UNCLICKABLE);
     back->set_alpha(alpha);
+    back->set_scale(0.5 * Config::interface_scale);
     back->on() = true;
     back = set<C::Image>(id + "_back", "image", back);
     group->add(back);
 
-    int y = Config::label_margin + number * (Config::label_margin + Config::label_height);
+    if (back->width() * back->scale() > Config::world_width - 2 * Config::label_margin)
+    {
+      double scale = (Config::world_width - 2 * Config::label_margin) / double(back->width());
+      back->set_scale(scale);
+      label->set_scale(scale);
+    }
+
+    int y = Config::label_margin + number * Config::label_margin
+            + number * Config::label_height * Config::interface_scale;
 
     set<C::Absolute_position>(id + "_back", "position",
                               Point (Config::label_margin, y));
     set<C::Absolute_position>(id, "position",
-                              Point (Config::label_margin + back->width() / 2,
-                                     y + back->height() / 2));
+                              Point (Config::label_margin + 0.5 * back->width() * back->scale(),
+                                     y + 0.5 * back->height() * back->scale()));
     animate_label(id, FADE);
   }
 
@@ -1019,7 +1031,7 @@ void Interface::update_cursor()
         auto cursor_img = C::make_handle<C::Image>("Selected_object", "image",
                                                    get<C::Image>(source->value() , "image"));
         cursor_img->set_alpha(255);
-        cursor_img->set_scale(0.28);
+        cursor_img->set_scale(0.28 * Config::interface_scale);
         cursor_img->set_collision(UNCLICKABLE);
         cursor_img->z() = Config::cursor_depth+1;
 
@@ -1048,7 +1060,7 @@ void Interface::update_cursor()
         state->set("default");
     }
     if (auto cursor = request<C::Image>("Cursor", "image"))
-      cursor->set_scale (Config::interface_scale);
+      cursor->set_scale (0.5 * Config::interface_scale);
   }
   else
   {
