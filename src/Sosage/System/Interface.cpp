@@ -189,6 +189,7 @@ void Interface::update_object_labels()
 
   SOSAGE_TIMER_START(System_Interface__update_object_labels);
 
+  std::vector<C::Absolute_position_handle> backups;
   std::vector<C::Absolute_position_handle> room_objects;
   std::vector<double> width;
   std::vector<Label_type> ltype;
@@ -210,6 +211,7 @@ void Interface::update_object_labels()
             // Backup so the original position can be reused
             auto backup = get_or_set<C::Absolute_position>
                           (c->entity(), "label_backup", pos->value());
+            backups.push_back (backup);
             pos->set (backup->value());
             room_objects.push_back (pos);
             width.push_back
@@ -262,6 +264,8 @@ void Interface::update_object_labels()
         boxes[i].xmin -= width[i] * 0.5;
         boxes[i].xmax += width[i] * 0.5;
       }
+//      debug << room_objects[i]->entity() << " with coordinates " << room_objects[i]->value()
+//            << " has box " << boxes[i] << std::endl;
 
       if (boxes[i].xmin < gap)
       {
@@ -303,15 +307,28 @@ void Interface::update_object_labels()
     {
       for (std::size_t j = i + 1; j < room_objects.size(); ++ j)
       {
+        // If two labels are exactly at the same position, it's probably
+        // wanted, so let's ignore it
+        if (backups[i]->value() == backups[j]->value())
+          continue;
+
         if (intersect (boxes[i], boxes[j]))
         {
-          collision = true;
+//          debug << "INTERSECTION BETWEEN " << room_objects[i]->entity()
+//                          << " AND " << room_objects[j]->entity() << std::endl;
+
           Box inter = intersection (boxes[i], boxes[j]);
           double dx = inter.xmax - inter.xmin;
           double dy = inter.ymax - inter.ymin;
 
           Vector i_to_j (Point::center(boxes[i]),
                          Point::center(boxes[j]));
+
+          // Avoid nan appearing in worst case scenario
+          if (i_to_j.length() == 0)
+            continue;
+
+          collision = true;
           i_to_j.normalize();
           i_to_j = Vector (dy * i_to_j.x(), dx * i_to_j.y());
 
@@ -325,6 +342,7 @@ void Interface::update_object_labels()
       if (moves[i] != Vector(0,0))
         room_objects[i]->set (Point(room_objects[i]->value() + step * moves[i]));
 
+//    debug << iter << std::endl;
     if (!collision)
       break;
   }
