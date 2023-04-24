@@ -358,6 +358,7 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
       set<C::GUI_image_animation>(id + "_back", "animation", current_time, current_time + Config::inventory_speed,
                                   get<C::Image>(id + "_back", "image"), 0.177 * Config::interface_scale,
                                   0.5 * Config::interface_scale, alpha, alpha);
+
       if (auto img = request<C::Image>(id, "image")) // If button has label
         set<C::GUI_image_animation>(id + "_label", "animation", current_time, current_time + Config::inventory_speed,
                                     img, 0.177 * Config::interface_scale,
@@ -874,7 +875,8 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     update_label (button_id, LABEL_BUTTON,
                   wriggly_position(button_id, "global_position",
                                    position, button_position, orientation));
-    get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
+    if (style == DEPLOY)
+      get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
 
 //                  set<C::Relative_position>(button_id , "global_position", position, start_position));
     if (auto img = request<C::Image>("Default_" + action + "_button", "image"))
@@ -888,7 +890,8 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     update_label (button_id, LABEL_BUTTON,
                   wriggly_position(button_id, "global_position",
                                    position, button_position, orientation));
-    get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
+    if (style == DEPLOY)
+      get<C::Position>(button_id, "global_position")->set(position->value() + start_position);
 //                  set<C::Relative_position>(button_id , "global_position", position, start_position));
   }
 
