@@ -238,6 +238,13 @@ void Input::update_mode()
 #endif
         || value<C::Simple<Vector>>(STICK__DIRECTION) != Vector(0,0))
       get<C::Double>(CLOCK__LATEST_ACTIVE)->set(value<C::Double>(CLOCK__TIME));
+
+    if (!request<C::String>("Gamepad", "name"))
+    {
+      auto info = m_core.gamepad_type();
+      gamepad->set (info.first);
+      set<C::String>("Gamepad", "name", info.second);
+    }
   }
 }
 
