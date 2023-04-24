@@ -65,7 +65,7 @@ public:
         new_data.insert (d);
       else
       {
-        debug << "Remove " << typeid(Resource*).name() << " " << d.first << std::endl;
+//        debug << "Remove " << typeid(Resource*).name() << " " << d.first << std::endl;
       }
     m_data.swap(new_data);
   }

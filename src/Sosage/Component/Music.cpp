@@ -175,12 +175,14 @@ bool Music::adjust_mix (const Point& position, const double& time)
 
   general_sources.clear();
 
+#if 0
   debug << "Mix = ";
   for (double& m : m_mix)
   {
     debug << m << " ";
   }
   debug << std::endl;
+#endif
 
   return still_fading;
 }

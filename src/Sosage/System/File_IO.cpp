@@ -162,11 +162,6 @@ void File_IO::clean_content()
            return false;
        }
 
-       if (!c->is_system())
-       {
-         debug << "Cleaning/deleting " << c->str() << std::endl;
-       }
-
        // Force remove comments
        if (startswith(c->entity(), "Comment"))
          return true;

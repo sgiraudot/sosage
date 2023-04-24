@@ -49,7 +49,6 @@ SDL_mixer_ext::SDL_mixer_ext()
     m_available_channels[i] = true;
     Mix_ChannelFinished([](int channel)
     {
-      debug << "Release channel " << channel << std::endl;
       m_available_channels[channel] = true;
     });
   }
@@ -162,7 +161,6 @@ int SDL_mixer_ext::reserve_channel()
   for (std::size_t i = 0; i < Config::sound_channels; ++ i)
     if (m_available_channels[i])
     {
-      debug << "Reserve channel " << i << std::endl;
       m_available_channels[i] = false;
       return i;
     }

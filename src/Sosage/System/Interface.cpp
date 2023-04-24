@@ -254,27 +254,17 @@ void Interface::update_object_labels()
       boxes[i].ymax = room_objects[i]->value().y() + gap + height * 0.5;
 
       if (ltype[i] == GOTO_RIGHT)
-      {
-        debug << "GOTO RIGHT" << std::endl;
         boxes[i].xmin -= width[i];
-      }
       else if (ltype[i] == GOTO_LEFT)
-      {
-        debug << "GOTO LEFT" << std::endl;
         boxes[i].xmax += width[i];
-      }
       else // PLAIN
       {
-        debug << "PLAIN" << std::endl;
         boxes[i].xmin -= width[i] * 0.5;
         boxes[i].xmax += width[i] * 0.5;
       }
-      debug << room_objects[i]->entity() << " with coordinates " << room_objects[i]->value()
-            << " has box " << boxes[i] << std::endl;
 
       if (boxes[i].xmin < gap)
       {
-        debug << "Fix xmin " << room_objects[i]->entity() << std::endl;
         double diff = gap - boxes[i].xmin;
         Point pos = room_objects[i]->value();
         room_objects[i]->set (pos + Vector (diff, 0));
@@ -283,7 +273,6 @@ void Interface::update_object_labels()
       }
       if (boxes[i].xmax > world_width - gap)
       {
-        debug << "Fix xmax " << room_objects[i]->entity() << std::endl;
         double diff = world_width - gap - boxes[i].xmax;
         Point pos = room_objects[i]->value();
         room_objects[i]->set (pos + Vector (diff, 0));
@@ -292,7 +281,6 @@ void Interface::update_object_labels()
       }
       if (boxes[i].ymin < gap)
       {
-        debug << "Fix ymin " << room_objects[i]->entity() << std::endl;
         double diff = gap - boxes[i].ymin;
         Point pos = room_objects[i]->value();
         room_objects[i]->set (pos + Vector (0, diff));
@@ -301,7 +289,6 @@ void Interface::update_object_labels()
       }
       if (boxes[i].ymax > Config::world_height - gap)
       {
-        debug << "Fix ymax " << room_objects[i]->entity() << std::endl;
         double diff = Config::world_height - gap - boxes[i].ymax;
         Point pos = room_objects[i]->value();
         room_objects[i]->set (pos + Vector (0, diff));
@@ -318,8 +305,6 @@ void Interface::update_object_labels()
       {
         if (intersect (boxes[i], boxes[j]))
         {
-          debug << "INTERSECTION BETWEEN " << room_objects[i]->entity()
-                << " AND " << room_objects[j]->entity() << std::endl;
           collision = true;
           Box inter = intersection (boxes[i], boxes[j]);
           double dx = inter.xmax - inter.xmin;
@@ -340,7 +325,6 @@ void Interface::update_object_labels()
       if (moves[i] != Vector(0,0))
         room_objects[i]->set (Point(room_objects[i]->value() + step * moves[i]));
 
-    debug << iter << std::endl;
     if (!collision)
       break;
   }

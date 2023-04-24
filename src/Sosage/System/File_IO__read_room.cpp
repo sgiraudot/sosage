@@ -403,7 +403,7 @@ void File_IO::read_room (const std::string& file_name)
   emit ("Game", "loading_done");
   emit ("Window", "rescaled");
 
-#ifdef SOSAGE_DEBUG
+#if 0
   // Display layers of images for easy room creation
   std::vector<C::Image_handle> images;
   for (C::Handle h : components("image"))
