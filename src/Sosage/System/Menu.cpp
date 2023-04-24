@@ -288,7 +288,7 @@ void Menu::apply_setting (const std::string& setting, const std::string& v)
     else if (v == "Large")
       iscale->set(Config::LARGE);
     else if (v == "Huge")
-      iscale->set(Config::HUGE);
+      iscale->set(Config::HUGE_);
     Config::interface_scale = iscale->value() / double(6.);
     emit ("Interface", "reinit");
     emit ("Interface", "update_scale");
@@ -348,7 +348,7 @@ void Menu::show_menu (const std::string& id)
       menu->update_setting ("Interface_scale", "Small");
     else if (size == Config::LARGE)
       menu->update_setting ("Interface_scale", "Large");
-    else if (size == Config::HUGE)
+    else if (size == Config::HUGE_)
       menu->update_setting ("Interface_scale", "Huge");
 
     menu->update_setting ("Music_volume", std::to_string(10 * value<C::Int>("Music", "volume")));

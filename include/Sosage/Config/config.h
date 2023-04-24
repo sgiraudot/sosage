@@ -83,7 +83,7 @@ enum Interface_scale
   TINY = 4,
   SMALL = 6,
   LARGE = 9,
-  HUGE = 12
+  HUGE_ = 12
   /* Old dialog sizes =
   SMALL = 9,
   MEDIUM = 12,
