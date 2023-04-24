@@ -30,6 +30,7 @@ History of versions and modifications of the SOSAGE engine.
 - Fast forward mode
 - Custom functions in YAML
 - Multitrack musics
+- Music positions is saved and reloaded when entering a room again
 - Signals in YAML
 - Multiple inventory states
 - Randomized actions

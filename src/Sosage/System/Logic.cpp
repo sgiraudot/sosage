@@ -223,7 +223,7 @@ void Logic::cancel_action()
           remove (th.second);
       }
     }
-
+    action->reset_scheduled();
     action->stop();
     remove("Character", "action");
     const std::string& id = value<C::String>("Player", "name");
