@@ -618,8 +618,11 @@ std::vector<std::string> Control::detect_active_objects()
   if (auto a = request<C::Vector<std::string>>("Interface", "active_objects"))
     active_objects = std::unordered_set<std::string>(a->value().begin(), a->value().end());
 
+  std::string follower = value<C::String>("Follower", "name", "");
+
   // Find objects with labels close to player
   std::vector<std::string> out;
+  bool follower_found = false;
   for (auto e : components("label"))
     if (auto label = C::cast<C::Position>(e))
     {
@@ -649,12 +652,80 @@ std::vector<std::string> Control::detect_active_objects()
 
       // Object in reach
       if (dx <= reach_factor * Config::object_reach_x && dy <= reach_factor * Config::object_reach_y)
-        out.emplace_back (label->entity());
+      {
+        if (label->entity() == follower)
+          follower_found = true;
+        else
+          out.emplace_back (label->entity());
+      }
 
       // Object in hysteresis range
       else if (contains(active_objects, label->entity()))
-        out.emplace_back (label->entity());
+      {
+        if (label->entity() == follower)
+          follower_found = true;
+        else
+          out.emplace_back (label->entity());
+      }
     }
+
+  // Only add follower if they're not moving AND their label does not collide
+  // with other items
+  if (follower_found && !request<C::Base>(follower, "path"))
+  {
+    bool okay = true;
+
+    if (!out.empty())
+    {
+      constexpr int pixels_per_letter = 16; // Rough maximum
+      constexpr int margin = 50;
+      constexpr int margin_goto = 50;
+      int gap = 5 * Config::interface_scale;
+      double height = 50 * Config::interface_scale;
+
+      auto get_box = [&](const std::string& id) -> Box
+      {
+        std::string name = locale_get(id, "name");
+        Point position = value<C::Position>(id, "position");
+        double width = Config::interface_scale * (margin + pixels_per_letter * name.size());
+
+        Box box;
+        box.xmin = position.x() - gap;
+        box.xmax = position.x() + gap;
+        box.ymin = position.y() - gap - height * 0.5;
+        box.ymax = position.y() + gap + height * 0.5;
+        if (auto gt = request<C::Boolean>(id + "_goto", "right"))
+        {
+          width += margin_goto;
+          if (gt->value())
+            box.xmin -= width;
+          else
+            box.xmax += width;
+        }
+        else
+        {
+          box.xmin -= width * 0.5;
+          box.xmax += width * 0.5;
+        }
+        return box;
+      };
+
+      Box box = get_box(follower);
+
+      for (const std::string& id : out)
+      {
+        Box other = get_box(id);
+        if (intersect (box, other))
+        {
+          okay = false;
+          break;
+        }
+      }
+    }
+
+    if (okay)
+      out.emplace_back (follower);
+  }
 
   // Sort by X position
   std::sort (out.begin(), out.end(),
