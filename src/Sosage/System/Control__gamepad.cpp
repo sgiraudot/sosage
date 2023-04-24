@@ -645,7 +645,7 @@ std::vector<std::string> Control::detect_active_objects()
         continue;
 
       // Inventory objet
-      if (value<C::String>(label->entity() , "state") == "inventory")
+      if (startswith(value<C::String>(label->entity() , "state"), "inventory"))
         continue;
 
       // Object in reach
