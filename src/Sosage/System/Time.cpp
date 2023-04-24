@@ -36,6 +36,7 @@ namespace C = Component;
 
 Time::Time (Content& content)
   : Base (content)
+  , m_loading (false)
 {
   set_fac<C::Debug>(GAME__DEBUG, "Game", "debug", m_content, m_clock);
   set_fac<C::Double> (CLOCK__TIME, "Clock", "time", 0.);
@@ -51,7 +52,13 @@ void Time::run()
 
   m_clock.update(true);
 
+  if (!m_loading)
+    limit_fps();
+
   double t = m_clock.time();
+
+  if (m_loading)
+    m_loading = false;
 
   if (signal ("Time", "speedup"))
   {
@@ -113,6 +120,62 @@ void Time::run()
     remove (start);
   }
   SOSAGE_TIMER_STOP(System_Time__run);
+}
+
+void Time::limit_fps()
+{
+  static bool needs_limits = false;
+  static bool game_started = false;
+  static bool needs_update = true;
+  static double latest_refresh = 0.;
+  static double refresh_time = 0.;
+  static int nb_refresh = 0;
+  if (needs_update)
+  {
+    if (!game_started)
+    {
+      if (signal ("Game", "new_room_loaded"))
+      {
+        latest_refresh = m_clock.time();
+        refresh_time = 0;
+        nb_refresh = 0;
+        game_started = true;
+      }
+      return;
+    }
+
+    if (m_clock.time() == 0)
+      return;
+
+    refresh_time += (m_clock.time() - latest_refresh);
+    nb_refresh ++;
+    latest_refresh = m_clock.time();
+
+    if (refresh_time > 5)
+    {
+      refresh_time /= nb_refresh;
+      double estimated_fps = 1. / refresh_time;
+      if (estimated_fps > 70)
+      {
+        debug << "FPS = " << estimated_fps << ", activating limit to 60 FPS" << std::endl;
+        needs_limits = true;
+      }
+      else
+      {
+        debug << "FPS = " << estimated_fps << ", no limit needed" << std::endl;
+      }
+      needs_update = false;
+    }
+  }
+
+  if (needs_limits)
+  {
+    constexpr double refresh_time = (1. / 60);
+    double time_spent = m_clock.time() - latest_refresh;
+    if (time_spent < refresh_time)
+      m_clock.sleep (refresh_time - time_spent);
+    latest_refresh = m_clock.time();
+  }
 }
 
 } // namespace Sosage::System

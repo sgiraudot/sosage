@@ -73,6 +73,12 @@ void Clock::update(bool verbose)
   m_time = (m_latest - m_start) / 1000.;
 }
 
+void Clock::sleep (double time)
+{
+  Time::wait (time * 1000.);
+  m_time = (Time::now() - m_start) / 1000.;
+}
+
 double Clock::fps() const
 {
   return m_fps;

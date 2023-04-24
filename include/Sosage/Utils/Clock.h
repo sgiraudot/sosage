@@ -51,6 +51,7 @@ public:
   double get() const;
   void set (double time);
   void update(bool verbose = false);
+  void sleep (double time);
   double fps() const;
   double time() const;
 

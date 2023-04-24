@@ -45,12 +45,18 @@ namespace System
 class Time : public Base
 {
   Clock m_clock;
+  bool m_loading;
 
 public:
 
   Time (Content& content);
 
   virtual void run();
+  void signal_loading() { m_loading = true; }
+
+private:
+
+  void limit_fps();
 };
 
 } // namespace System

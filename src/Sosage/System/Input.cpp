@@ -249,6 +249,14 @@ void Input::handle_exit_pause_speed (const Event& ev)
       ev == Event(BUTTON_UP, SELECT))
     emit ("Game", "escape");
 
+  if (status()->is(CUTSCENE))
+  {
+    // Additional ways to skip cutscene
+    if (ev == Event(KEY_UP, SPACE)
+        || ev == Event(MOUSE_DOWN, RIGHT))
+      emit ("Game", "escape");
+  }
+
   if (ev == Event(WINDOW, EXIT))
     emit ("Game", "exit");
 
