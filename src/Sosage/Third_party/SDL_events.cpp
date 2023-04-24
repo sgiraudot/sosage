@@ -73,7 +73,16 @@ Event SDL_events::next_event ()
     if (ev.window.event == SDL_WINDOWEVENT_HIDDEN)
       return Event (WINDOW, BACKGROUND);
     if (ev.window.event == SDL_WINDOWEVENT_SHOWN)
+    {
+      // Apparently cursor might show up when window gains focus again, so just in case...
+      SDL_ShowCursor(SDL_DISABLE);
       return Event (WINDOW, FOREGROUND);
+    }
+    if (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+    {
+      // Apparently cursor might show up when window gains focus again, so just in case...
+      SDL_ShowCursor(SDL_DISABLE);
+    }
   }
   if (ev.type == SDL_CONTROLLERDEVICEADDED)
   {
