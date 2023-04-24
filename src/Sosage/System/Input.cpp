@@ -83,6 +83,8 @@ void Input::run()
   bool arrow_released = false;
   for (const Event& ev : m_current_events)
   {
+    update_keys_on (ev);
+
     handle_exit_pause_speed (ev);
 
     if (status()->is (PAUSED))
@@ -248,6 +250,18 @@ void Input::update_mode()
   }
 }
 
+void Input::update_keys_on (const Event& ev)
+{
+  if (ev.type() == KEY_DOWN)
+    key_on(ev.value()) = true;
+  else if (ev.type() == KEY_UP)
+    key_on(ev.value()) = false;
+  else if (ev.type() == BUTTON_DOWN)
+    key_on(ev.value()) = true;
+  else if (ev.type() == BUTTON_UP)
+    key_on(ev.value()) = false;
+}
+
 void Input::handle_exit_pause_speed (const Event& ev)
 {
   if (ev == Event(KEY_UP, ESCAPE) ||
@@ -354,11 +368,7 @@ void Input::update_window (const Event& ev)
 {
   if constexpr (!Config::emscripten) // Do not prevent web users to use F1/F2/etc
   {
-    if (ev == Event(KEY_DOWN, ALT))
-      key_on(ALT) = true;
-    else if (ev == Event(KEY_UP, ALT))
-      key_on(ALT) = false;
-    else if (ev == Event(KEY_UP, ENTER) && key_on(ALT))
+    if (ev == Event(KEY_UP, ENTER) && key_on(ALT))
     {
       get<C::Boolean>("Window", "fullscreen")->toggle();
       emit ("Window", "toggle_fullscreen");
@@ -419,7 +429,6 @@ bool Input::update_gamepad (const Event& ev)
   {
     if (ev.type() == KEY_DOWN)
     {
-      key_on(ev.value()) = true;
       if (ev.value() == TAB)
         set<C::Boolean>("Switch", "right", true);
       else if (ev.value() == I)
@@ -433,7 +442,6 @@ bool Input::update_gamepad (const Event& ev)
     }
     else if (ev.type() == KEY_UP)
     {
-      key_on(ev.value()) = false;
       if (ev.value() == UP_ARROW
           || ev.value() == DOWN_ARROW
           || ev.value() == LEFT_ARROW
@@ -453,7 +461,6 @@ bool Input::update_gamepad (const Event& ev)
     }
     else if (ev.type() == BUTTON_DOWN)
     {
-      key_on(ev.value()) = true;
       if (ev.value() == LEFT_SHOULDER)
         set<C::Boolean>("Switch", "right", false);
       else if (ev.value() == RIGHT_SHOULDER)
@@ -469,7 +476,6 @@ bool Input::update_gamepad (const Event& ev)
     }
     else if (ev.type() == BUTTON_UP)
     {
-      key_on(ev.value()) = false;
       if (ev.value() == UP_ARROW
           || ev.value() == DOWN_ARROW
           || ev.value() == LEFT_ARROW
@@ -483,7 +489,7 @@ bool Input::update_gamepad (const Event& ev)
 void Input::finalize_gamepad (bool arrow_released)
 {
   // Speed-up
-  if (key_on(RIGHT_SHOULDER) && key_on(LEFT_SHOULDER))
+  if (key_on(RIGHT_SHOULDER) && key_on(LEFT_SHOULDER) && !status()->is(CUTSCENE))
     emit ("Time", "speedup");
   else
     receive ("Time", "speedup");

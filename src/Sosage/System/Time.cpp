@@ -60,6 +60,10 @@ void Time::run()
   if (m_loading)
     m_loading = false;
 
+  // Never speed up cutscenes
+  if (status()->is(CUTSCENE))
+    receive ("Time", "speedup");
+
   if (signal ("Time", "speedup"))
   {
     auto begin_speedup = get_or_set<C::Double>("Time", "begin_speedup", m_clock.time());
