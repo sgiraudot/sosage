@@ -50,7 +50,6 @@ if v_data == '' or v_major == '' or v_minor == '' or v_patch == '':
 
 version = v_major + '.' + v_minor + '.' + v_patch + '-d' + v_data + '-' + v_variant
 print(version)
-exit()
     
 id = gamename + '-v' + version
 print("## BUILDING " + id + "\n")
