@@ -104,13 +104,6 @@ Logic::Logic (Content& content)
   set<C::Action>("Notifications", "action");
 
   set<C::String>("Hinter", "color", "FFFFFF");
-  set<C::Functional_position>("Hinter", "position",
-                              [&](const std::string&) -> Point
-  {
-    const std::string& player = value<C::String>("Player", "name");
-    Vector diff ((is_looking_right(player) ? 50 : -50), 0);
-    return value<C::Position>(player, "position") + diff;
-  }, "");
 }
 
 void Logic::run ()

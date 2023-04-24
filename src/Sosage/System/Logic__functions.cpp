@@ -905,11 +905,15 @@ bool Logic::function_talk (const std::vector<std::string>& args)
         << nb_seconds_lips_moving << "s" << std::endl;
 
   Point position;
-  if (auto rel = request<C::Absolute_position>(id, "relative_label"))
+  std::string pos_id = id;
+  if (id == "Hinter")
+    pos_id = value<C::String>("Player", "name");
+
+  if (auto rel = request<C::Absolute_position>(pos_id, "relative_label"))
   {
-    const Point& init_position = value<C::Position>(id, "position");
+    const Point& init_position = value<C::Position>(pos_id, "position");
     const Point& relative = rel->value();
-    auto img = request<C::Image>(id + "_body", "image");
+    auto img = request<C::Image>(pos_id + "_body", "image");
     const Point& camera = value<C::Absolute_position>(CAMERA__POSITION);
     double zoom = value<C::Double>(CAMERA__ZOOM);
 
