@@ -255,9 +255,16 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
 {
   SOSAGE_UPDATE_DBG_LOCATION("Interface::animate_label()");
 
-  debug << "Animate label " << id << std::endl;
-  if (style == NONE)
+  debug << "Animate label " << id << " " << button;
+  if (style == DEPLOY) { debug << " DEPLOY" << std::endl; }
+  else if (style == ZOOM) { debug << " ZOOM" << std::endl; }
+  else if (style == FADE) { debug << " FADE" << std::endl; }
+  else if (style == FADE_LABEL_ONLY) { debug << " FADE_LABEL_ONLY" << std::endl; }
+  else if (style == NONE)
+  {
+    debug << " NONE" << std::endl;
     return;
+  }
 
   double current_time = value<C::Double>(CLOCK__TIME);
 
@@ -294,7 +301,7 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
         std::string object_id (id.begin(), id.begin() + pos);
         if (auto right = request<C::Boolean>(object_id + "_goto", "right"))
         {
-          double gap = get<C::Image>(id + "_back", "image")->width() * 0.25;
+          double gap = get<C::Image>(id + "_back", "image")->width() * 0.5;
           if (!right->value())
             gap = -gap;
           double gap_from = from_back * gap;
@@ -345,11 +352,16 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
     unsigned char alpha = get<C::Image>(id + "_back", "image")->alpha();
     if (style == DEPLOY)
     {
+      auto start_pos = get<C::Position>(id , "global_position");
       set<C::GUI_position_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
-                                     get<C::Position>(id , "global_position"), position);
+                                     start_pos, position);
       set<C::GUI_image_animation>(id + "_back", "animation", current_time, current_time + Config::inventory_speed,
                                   get<C::Image>(id + "_back", "image"), 0.177 * Config::interface_scale,
                                   0.5 * Config::interface_scale, alpha, alpha);
+      if (auto img = request<C::Image>(id, "image")) // If button has label
+        set<C::GUI_image_animation>(id + "_label", "animation", current_time, current_time + Config::inventory_speed,
+                                    img, 0.177 * Config::interface_scale,
+                                    0.5 * Config::interface_scale, 0, alpha);
     }
     else if (style == FADE)
     {
@@ -584,6 +596,14 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
   }
   else if (type == ACTION_SEL)
   {
+    bool is_gamepad = (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD);
+
+    if (is_gamepad)
+    {
+      get<C::Position>(CURSOR__POSITION)->set(value<C::Position>(id, "label")
+                                              - value<C::Position>(CAMERA__POSITION));
+    }
+
     auto position = set<C::Absolute_position>("Action_selector", "position",
                                               value<C::Position>(CURSOR__POSITION));
 
@@ -605,7 +625,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     if (overflow_down < 0)
     {
       need_update = true;
-      if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+      if (gamepad)
         position->set(Point(position->value().x(), position->value().y() + overflow_down));
       else
       {
@@ -623,7 +643,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     if (overflow_up < 0)
     {
       need_update = true;
-      if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+      if (gamepad)
         position->set(Point(position->value().x(), position->value().y() - overflow_up));
       else
       {
@@ -640,7 +660,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     if (overflow_left < 0)
     {
       need_update = true;
-      if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+      if (gamepad)
         position->set(Point(position->value().x() - overflow_left, position->value().y()));
       else
       {
@@ -657,7 +677,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     if (overflow_right < 0)
     {
       need_update = true;
-      if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+      if (gamepad)
         position->set(Point(position->value().x() + overflow_right, position->value().y()));
       else
       {
@@ -669,7 +689,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     }
 
     // If overflow on two sides, fallback to regular selector but moved away
-    if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) != GAMEPAD)
+    if (gamepad)
       if ((overflow_up < 0 || overflow_down < 0) && (overflow_left < 0 || overflow_right < 0 ))
       {
         double dx = (overflow_left < 0 ? -overflow_left : overflow_right);

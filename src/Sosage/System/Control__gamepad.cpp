@@ -85,8 +85,6 @@ void Control::idle_gamepad()
       {
         set<C::String>("Interface", "action_choice_target", active_object->value());
         status()->push (ACTION_CHOICE);
-        get<C::Position>(CURSOR__POSITION)->set(value<C::Position>(active_object->value() , "label")
-                                                - value<C::Position>(CAMERA__POSITION));
       }
       emit("Click", "play_sound");
     }

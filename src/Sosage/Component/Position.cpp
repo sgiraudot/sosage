@@ -52,11 +52,6 @@ Point Absolute_position::value () const
 
 void Absolute_position::set (const Point& p)
 {
-  if (this->entity() == "couloir" && this->component() == "position")
-  {
-    check (p.X() == 187 && p.Y() == 840,
-           "couloir moved to " + str());
-  }
   m_pos = p;
   mark_as_altered();
 }
@@ -151,11 +146,7 @@ Functional_position::Functional_position (const std::string& entity, const std::
 Point Functional_position::value() const
 {
   if (!m_tmp_point.is_invalid())
-  {
-    Point out = m_tmp_point;
-    m_tmp_point = Point::invalid();
-    return out;
-  }
+    return m_tmp_point;
   return m_function(m_arg);
 }
 
@@ -166,7 +157,6 @@ const Functional_position::Function& Functional_position::function() const
 
 void Functional_position::set (const Point& p)
 {
-//  check(false, "Trying to set hardcoded position of functional position");
   m_tmp_point = p;
 }
 

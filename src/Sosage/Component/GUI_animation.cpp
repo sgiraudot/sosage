@@ -80,6 +80,9 @@ void GUI_position_animation::cancel()
 void GUI_position_animation::finalize()
 {
   m_position->set(m_end_pos);
+  // If position was a functional one, reset it to use the function
+  if (cast<Functional_position>(m_position))
+    m_position->set (Point::invalid());
 }
 
 void GUI_position_animation::update_impl (double current_time)
