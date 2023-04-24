@@ -199,7 +199,8 @@ void Control::begin_status (const Status& s)
         for (std::size_t i = 0; i < inventory->size(); ++ i)
           if (inventory->get(i) == source->value())
           {
-            if (i == inventory->size() - 1)
+            if (i == inventory->size() - 1
+                || i == inventory->position() + Config::displayed_inventory_size - 1)
               set<C::String>("Interface", "active_object", inventory->get(i-1));
             else
               set<C::String>("Interface", "active_object", inventory->get(i+1));
@@ -219,7 +220,8 @@ void Control::begin_status (const Status& s)
             }
           remove ("Interface", "previous_active_inventory_object");
         }
-        set<C::String>("Interface", "active_object", inventory->get(idx));
+        set<C::String>("Interface", "active_object",
+                       inventory->get(inventory->position()));
       }
     }
     else if (s == IN_CODE)
