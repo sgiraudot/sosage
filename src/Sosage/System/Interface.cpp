@@ -504,7 +504,7 @@ void Interface::update_active_objects()
         if (right_oriented)
         {
           if (value<C::Position>(m_active_object + "_label_back", "position").x()
-              + get<C::Image>(m_active_object+ "_label_back", "image")->width() / 2
+              + get<C::Image>(m_active_object+ "_label_back", "image")->width() * 0.25 * Config::interface_scale
               > Config::world_width - Config::label_height / 2)
           {
             debug << "Reorient label left" << std::endl;
@@ -514,7 +514,7 @@ void Interface::update_active_objects()
         else
         {
           if (value<C::Position>(CURSOR__POSITION).x()
-              + get<C::Image>(m_active_object+ "_label_back", "image")->width()
+              + get<C::Image>(m_active_object+ "_label_back", "image")->width() * 0.5 * Config::interface_scale
               < Config::world_width - Config::label_height)
           {
             debug << "Reorient label right" << std::endl;

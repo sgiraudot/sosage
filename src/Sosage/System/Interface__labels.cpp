@@ -100,7 +100,7 @@ void Interface::create_object_label (const std::string& id)
     auto cursor = get<C::Position>(CURSOR__POSITION);
     update_label(id + "_label", ltype, cursor, 1.0);
     if (force_right || value<C::Position>(id + "_label_back", "position").x()
-        + get<C::Image>(id + "_label_back", "image")->width() * 0.25
+        + get<C::Image>(id + "_label_back", "image")->width() * 0.25 * Config::interface_scale
         > Config::world_width - Config::label_height)
     {
       ltype = force_right ? GOTO_RIGHT : CURSOR_RIGHT;
@@ -620,7 +620,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     bool need_update = false;
 
     double overflow_down = Config::world_height - Config::label_margin
-                           - 0.5 * get<C::Image>(id + "_inventory_label_back", "image")->height() * Config::interface_scale
+                           - 0.25 * get<C::Image>(id + "_inventory_label_back", "image")->height() * Config::interface_scale
                            - value<C::Position>(id + "_inventory_label_back", "position").y();
     if (overflow_down < 0)
     {
@@ -638,7 +638,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
 
     double overflow_up = value<C::Position>(id + "_move_label_back", "position").y()
                          - Config::label_margin
-                         - 0.5 * get<C::Image>(id + "_move_label_back", "image")->height() * Config::interface_scale;
+                         - 0.25 * get<C::Image>(id + "_move_label_back", "image")->height() * Config::interface_scale;
 
     if (overflow_up < 0)
     {
@@ -656,7 +656,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
 
     double overflow_left = value<C::Position>(id + "_take_label_back", "position").x()
                            - Config::label_margin
-                           - 0.5 * get<C::Image>(id + "_take_label_back", "image")->width() * Config::interface_scale;
+                           - 0.25 * get<C::Image>(id + "_take_label_back", "image")->width() * Config::interface_scale;
     if (overflow_left < 0)
     {
       need_update = true;
@@ -672,7 +672,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     }
 
     double overflow_right = Config::world_width - Config::label_margin
-                            - 0.5 * get<C::Image>(id + "_look_label_back", "image")->width() * Config::interface_scale
+                            - 0.25 * get<C::Image>(id + "_look_label_back", "image")->width() * Config::interface_scale
                             - value<C::Position>(id + "_look_label_back", "position").x();
     if (overflow_right < 0)
     {
@@ -806,10 +806,10 @@ void Interface::generate_action (const std::string& id, const std::string& actio
       int diff = 0;
       auto pos = get<C::Position>(label_id + "_back", "position");
       auto img =  get<C::Image>(label_id + "_back", "image");
-      if (pos->value().x() - 0.5 * img->width() < Config::label_margin)
-        diff = Config::label_margin - pos->value().x() + 0.5 * img->width();
-      else if (pos->value().x() + 0.5 * img->width() > Config::world_width - Config::label_margin)
-        diff = (Config::world_width - Config::label_margin) - pos->value().x() - 0.5 * img->width();
+      if (pos->value().x() - 0.25 * img->width() < Config::label_margin)
+        diff = Config::label_margin - pos->value().x() + 0.25 * img->width();
+      else if (pos->value().x() + 0.25 * img->width() > Config::world_width - Config::label_margin)
+        diff = (Config::world_width - Config::label_margin) - pos->value().x() - 0.25 * img->width();
 
       if (diff != 0)
       {
@@ -824,7 +824,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     else if (orientation == LEFT_UP)
     {
       auto pos = get<C::Position>(label_id + "_back", "position");
-      double diff = Config::label_margin - get<C::Image>(label_id + "_back", "image")->width() / 2;
+      double diff = Config::label_margin - get<C::Image>(label_id + "_back", "image")->width() * 0.25;
       get<C::Functional_position>(label_id, "global_position")->set
           (wriggly_position(label_id, "global_position",
                             position,
@@ -834,7 +834,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     else if (orientation == RIGHT_UP)
     {
       auto pos = get<C::Position>(label_id + "_back", "position");
-      double diff = -Config::label_margin + get<C::Image>(label_id + "_back", "image")->width() / 2;
+      double diff = -Config::label_margin + get<C::Image>(label_id + "_back", "image")->width() * 0.25;
       get<C::Functional_position>(label_id, "global_position")->set
           (wriggly_position(label_id, "global_position",
                             position,
@@ -844,7 +844,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     else if (orientation == LEFT_DOWN)
     {
       auto pos = get<C::Position>(label_id + "_back", "position");
-      double diff = Config::label_margin - get<C::Image>(label_id + "_back", "image")->width() / 2;
+      double diff = Config::label_margin - get<C::Image>(label_id + "_back", "image")->width() * 0.25;
       get<C::Functional_position>(label_id, "global_position")->set
           (wriggly_position(label_id, "global_position",
                             position,
@@ -854,7 +854,7 @@ void Interface::generate_action (const std::string& id, const std::string& actio
     else if (orientation == RIGHT_DOWN)
     {
       auto pos = get<C::Position>(label_id + "_back", "position");
-      double diff = -Config::label_margin + get<C::Image>(label_id + "_back", "image")->width() / 2;
+      double diff = -Config::label_margin + get<C::Image>(label_id + "_back", "image")->width() * 0.25;
       get<C::Functional_position>(label_id, "global_position")->set
           (wriggly_position(label_id, "global_position",
                             position,
