@@ -89,6 +89,15 @@ void Control::run()
   const Input_mode& new_mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
   const Status& new_status = status()->value();
 
+  if (signal ("Game", "in_new_room"))
+  {
+    // Clean up
+    remove ("Interface", "active_object", true);
+    remove ("Interface", "active_objects", true);
+    remove ("Interface", "source_object", true);
+    remove ("Interface", "target_object", true);
+  }
+
   if (new_status != m_status || new_mode != m_mode)
   {
     end_status(m_status);

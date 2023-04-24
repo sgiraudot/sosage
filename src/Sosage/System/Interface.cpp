@@ -352,7 +352,8 @@ void Interface::update_active_objects()
 {
   SOSAGE_UPDATE_DBG_LOCATION("Interface::update_active_objects()");
   // Clear if input mode changed
-  if (receive("Input_mode", "changed") || status()->is (IN_MENU))
+  if (receive("Input_mode", "changed") || status()->is (IN_MENU) ||
+      signal("Game", "in_new_room"))
   {
     if (!m_active_objects.empty())
     {
@@ -777,6 +778,10 @@ void Interface::update_notifications()
 
     int y = Config::label_margin + number * Config::label_margin
             + number * Config::label_height * Config::interface_scale;
+
+    if (status()->is(CUTSCENE))
+      y = Config::world_height - (number + 1) * Config::label_margin
+          - (number + 1) * Config::label_height * Config::interface_scale;
 
     set<C::Absolute_position>(id + "_back", "position",
                               Point (Config::label_margin, y));
