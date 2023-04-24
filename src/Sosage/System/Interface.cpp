@@ -819,7 +819,10 @@ void Interface::update_inventory()
       Point backup_pos = as_pos->value();
       as_pos->set (Point(backup_pos.x(), as_target));
 
-      if (labels_intersect (active_object + "_label", active_object + "_Cancel_label"))
+      if ((status()->is (IN_INVENTORY) &&
+          labels_intersect (active_object + "_label", active_object + "_Cancel_label"))
+          || (status()->is (OBJECT_CHOICE) &&
+              labels_intersect (active_object + "_label", "oknotok_Cancel_label")))
         as_target -= 1.5 * Config::label_height * Config::interface_scale;
 
       as_pos->set (backup_pos);
