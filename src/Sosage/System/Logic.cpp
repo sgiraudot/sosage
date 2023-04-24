@@ -135,6 +135,8 @@ void Logic::run ()
   if (signal("Game", "in_new_room"))
   {
     in_new_room = true;
+    emit ("Cancel", "action");
+    remove ("Character", "triggered_action", true);
     status()->pop();
   }
 
