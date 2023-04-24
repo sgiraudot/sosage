@@ -339,6 +339,9 @@ bool Logic::function_look (const std::vector<std::string>& args)
 
   debug << "Action_look " << id << " " << target << std::endl;
 
+  if (target == "Default")
+    return true;
+
   if (auto t = request<C::String>("Click", "target"))
   {
     set<C::Absolute_position>(id , "lookat",
