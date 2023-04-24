@@ -352,7 +352,7 @@ void Test_input::run_touchscreen()
   else
     remove ("Action", "finish", true);
 
-  if (auto path = request<C::Path>(value<C::String>("Player", "name"), "path"))
+  if (auto path = request<C::Path>(value<C::String>("Player", "name", ""), "path"))
   {
     // 20% of times, let the path finish before clicking again
     auto let_finish = get_or_set<C::Boolean>("Path", "finish", random_chance(0.2));
