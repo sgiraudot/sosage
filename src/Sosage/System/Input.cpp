@@ -219,7 +219,11 @@ void Input::update_mode()
     {
       mode->set (GAMEPAD);
       if (previous_mode != GAMEPAD)
-        gamepad->set (m_core.gamepad_type());
+      {
+        auto info = m_core.gamepad_type();
+        gamepad->set (info.first);
+        set<C::String>("Gamepad", "name", info.second);
+      }
     }
 
     if (previous_mode != mode->value())

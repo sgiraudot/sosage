@@ -24,15 +24,34 @@ if gamename == '':
     print("Couldn't find SOSAGE_EXE_NAME in " + data["folder"] + "/config.cmake")
     exit()
 
-version = ''
+v_major = ''
+v_minor = ''
+v_patch = ''
+v_data = ''
+v_variant = ''
+
+for line in open('cmake/Sosage_version.cmake').readlines():
+    if 'SOSAGE_VERSION_MAJOR ' in line:
+        v_major = line.split('SOSAGE_VERSION_MAJOR ')[1].split(')')[0]
+    if 'SOSAGE_VERSION_MINOR ' in line:
+        v_minor = line.split('SOSAGE_VERSION_MINOR ')[1].split(')')[0]
+    if 'SOSAGE_VERSION_PATCH ' in line:
+        v_patch = line.split('SOSAGE_VERSION_PATCH ')[1].split(')')[0]
 for line in open(data["folder"] + '/data/data/init.yaml').readlines():
-    if 'version: ' in line:
-        version = line.split('version: ')[1][:-1]
+    if 'data_version: ' in line:
+        v_data = line.split('data_version: ')[1][:-1]
+    if 'data_variant: ' in line:
+        v_variant = line.split('data_variant: ')[1][1:-2]
         break
-if version == '':
-    print("Couldn't find version in " + data["folder"] + "/data/data/init.yaml")
+
+if v_data == '' or v_major == '' or v_minor == '' or v_patch == '':
+    print("Couldn't read version")
     exit()
 
+version = v_major + '.' + v_minor + '.' + v_patch + '-d' + v_data + '-' + v_variant
+print(version)
+exit()
+    
 id = gamename + '-v' + version
 print("## BUILDING " + id + "\n")
 

@@ -568,9 +568,13 @@ void File_IO::read_init ()
 
 void File_IO::read_init_general (const Core::File_IO& input)
 {
-  std::string v = input["version"].string();
-  check (Version::parse(v) <= Version::get(),
-         "Error: room version " + v + " incompatible with Sosage " + Version::str());
+  std::string data_version = input["data_version"].string();
+  std::string data_variant = input["data_variant"].string();
+  std::string min_sosage_version = input["min_sosage_version"].string();
+  check (Version::parse(min_sosage_version) <= Version::get(),
+         "Error: min version " + min_sosage_version + " incompatible with Sosage " + Version::str());
+
+  set<C::String>("Version", "string", "v" + min_sosage_version + "-d" + data_version + '-' + data_variant);
 
   std::string game_name = input["name"].string();
   set<C::String>("Game", "name", game_name);

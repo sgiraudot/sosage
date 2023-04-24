@@ -98,7 +98,7 @@ Event SDL_events::next_event ()
   return Event(UNUSED);
 }
 
-Gamepad_type SDL_events::gamepad_type() const
+std::pair<Gamepad_type, std::string> SDL_events::gamepad_type() const
 {
   for (int i = 0; i < SDL_NumJoysticks(); ++ i)
     if (SDL_IsGameController(i))
@@ -107,8 +107,9 @@ Gamepad_type SDL_events::gamepad_type() const
       if (controller)
       {
         SDL_GameControllerType type = SDL_GameControllerGetType(controller);
+        std::string name = SDL_GameControllerName (controller);
         if (type == SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO)
-          return JAPAN;
+          return std::make_pair (JAPAN, name);
         if (type == SDL_CONTROLLER_TYPE_XBOX360
             || type == SDL_CONTROLLER_TYPE_XBOXONE
 #if 0 // Might add it later, requires a more recent SDL version than 2.0.14
@@ -116,14 +117,14 @@ Gamepad_type SDL_events::gamepad_type() const
             || type == SDL_CONTROLLER_TYPE_GOOGLE_STADIA
 #endif
             )
-          return USA;
+          return std::make_pair (USA, name);
         // else
-        return NO_LABEL;
+        return std::make_pair (NO_LABEL, name);
       }
   }
 
   // Default controller, no label
-  return NO_LABEL;
+  return std::make_pair (NO_LABEL, "unknown gamepad");
 }
 
 Event SDL_events::mouse_event (const Event_type& type, const SDL_Event& ev) const

@@ -508,7 +508,9 @@ filename = "init.yaml"
 refname = filename
 current_id = filename.split('/', 1)[-1].split('.',1)[0]
 data = load_yaml(data_folder + filename)
-(data, "version")
+(data, "data_version")
+(data, "data_variant")
+(data, "min_sosage_version")
 test(data, "locale", is_array)
 test(data, "name", is_line)
 test(data, "icon", file_exists, ["images/interface", "png"])

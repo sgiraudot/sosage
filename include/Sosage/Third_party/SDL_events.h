@@ -57,7 +57,7 @@ public:
 
   Event next_event();
 
-  Gamepad_type gamepad_type() const;
+  std::pair<Gamepad_type, std::string> gamepad_type() const;
 
 private:
 

@@ -366,6 +366,24 @@ void Menu::show_menu (const std::string& id)
 
   get<C::Image>("Menu_background", "image")->on() = true;
   get<C::Image>("Menu_overlay", "image")->on() = true;
+
+  if (!request<C::Image>("Menu", "game_info"))
+  {
+    auto debug_font = get<C::Font> ("Debug", "font");
+    std::string info = value<C::String> ("Version", "string");
+#ifndef SOSAGE_RELEASE
+    if (auto ginfo = request<C::String>("Gamepad", "name"))
+      info += ", " + ginfo->value();
+#endif
+
+    auto info_img = set<C::Image> ("Game_info", "image",
+                                   debug_font, "FFFFFF", info);
+    info_img->z() = Config::menu_text_depth;
+    info_img->set_relative_origin (1., 1.);
+    info_img->set_scale(0.5);
+    set<C::Absolute_position>
+        ("Game_info", "position", Point(Config::world_width - 5, Config::world_height - 5));
+  }
 }
 
 void Menu::hide_menu (const std::string& id)
@@ -374,6 +392,7 @@ void Menu::hide_menu (const std::string& id)
   menu->hide();
   get<C::Image>("Menu_background", "image")->on() = false;
   get<C::Image>("Menu_overlay", "image")->on() = false;
+  remove ("Game_info", "image", true);
 
   remove ("Interface", "active_menu_item", true);
   remove ("Interface", "gamepad_active_menu_item", true);
