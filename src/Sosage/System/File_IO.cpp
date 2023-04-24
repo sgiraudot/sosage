@@ -163,9 +163,8 @@ void File_IO::clean_content()
        }
 
        // Remove finishing actions
-       if (C::cast<C::Action>(c))
-         if (startswith(c->entity(), "Finishing"))
-           return true;
+       if (startswith(c->entity(), "Finishing_"))
+         return true;
 
        // Force remove comments
        if (startswith(c->entity(), "Comment"))
@@ -187,7 +186,8 @@ void File_IO::clean_content()
     read_init_global_items (input);
   }
 
-  emit("Game", "clear_managers");
+  emit ("Game", "clear_managers");
+  emit ("Dialog", "clean");
 }
 
 void File_IO::read_config()

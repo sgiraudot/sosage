@@ -731,7 +731,7 @@ bool Logic::apply_next_step (C::Action_handle action)
 {
   m_current_action = action;
   const C::Action::Step& s = action->next_step();
-  debug << m_current_time << ", applying " << s.to_string() << std::endl;
+  debug << m_current_time << ", " << action->entity() << ", applying " << s.to_string() << std::endl;
   check (m_dispatcher.find(s.function()) != m_dispatcher.end(),
          s.function() + " is not a valid function");
   return m_dispatcher[s.function()](s.args());

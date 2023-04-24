@@ -200,7 +200,7 @@ void Control::begin_status (const Status& s)
           if (inventory->get(i) == source->value())
           {
             if (i == inventory->size() - 1
-                || i == inventory->position() + Config::displayed_inventory_size - 1)
+                || (i < 0 && i == inventory->position() + Config::displayed_inventory_size - 1))
               set<C::String>("Interface", "active_object", inventory->get(i-1));
             else
               set<C::String>("Interface", "active_object", inventory->get(i+1));
