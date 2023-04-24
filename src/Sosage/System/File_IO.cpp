@@ -162,6 +162,11 @@ void File_IO::clean_content()
            return false;
        }
 
+       // Remove finishing actions
+       if (C::cast<C::Action>(c))
+         if (startswith(c->entity(), "Finishing"))
+           return true;
+
        // Force remove comments
        if (startswith(c->entity(), "Comment"))
          return true;

@@ -588,7 +588,7 @@ void Logic::run_actions (bool skip)
     // previous stated action so it can finish safely
     auto action = request<C::Action>(a->entity(), a->component());
     if (action != a && (a->on() || !a->scheduled().empty()))
-      set<C::Variable>(a->entity() + "_finishing", "action", a);
+      set<C::Variable>("Finishing_" + a->entity(), "action", a);
   }
 }
 
