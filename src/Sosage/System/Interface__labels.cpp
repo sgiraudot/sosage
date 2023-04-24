@@ -600,10 +600,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     bool is_gamepad = (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD);
 
     if (is_gamepad)
-    {
       get<C::Position>(CURSOR__POSITION)->set(value<C::Position>(id, "label")
                                               - value<C::Position>(CAMERA__POSITION));
-    }
 
     auto position = set<C::Absolute_position>("Action_selector", "position",
                                               value<C::Position>(CURSOR__POSITION));
@@ -626,7 +624,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     if (overflow_down < 0)
     {
       need_update = true;
-      if (gamepad)
+      if (is_gamepad)
         position->set(Point(position->value().x(), position->value().y() + overflow_down));
       else
       {
@@ -644,7 +642,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     if (overflow_up < 0)
     {
       need_update = true;
-      if (gamepad)
+      if (is_gamepad)
         position->set(Point(position->value().x(), position->value().y() - overflow_up));
       else
       {
@@ -661,7 +659,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     if (overflow_left < 0)
     {
       need_update = true;
-      if (gamepad)
+      if (is_gamepad)
         position->set(Point(position->value().x() - overflow_left, position->value().y()));
       else
       {
@@ -678,7 +676,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     if (overflow_right < 0)
     {
       need_update = true;
-      if (gamepad)
+      if (is_gamepad)
         position->set(Point(position->value().x() + overflow_right, position->value().y()));
       else
       {
@@ -690,7 +688,7 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
     }
 
     // If overflow on two sides, fallback to regular selector but moved away
-    if ((overflow_up < 0 || overflow_down < 0) && (overflow_left < 0 || overflow_right < 0 ))
+    if (!is_gamepad && (overflow_up < 0 || overflow_down < 0) && (overflow_left < 0 || overflow_right < 0 ))
     {
       double dx = (overflow_left < 0 ? -overflow_left : overflow_right);
       double dy = (overflow_up < 0 ? -overflow_up : overflow_down);
