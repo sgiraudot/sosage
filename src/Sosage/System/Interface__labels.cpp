@@ -151,8 +151,6 @@ void Interface::create_label (const std::string& id, std::string name,
 
   auto group = set<C::Group>(id , "group");
   int depth = (ltype == LABEL_BUTTON ? Config::action_button_depth : Config::label_depth);
-  if (mode == GAMEPAD)
-    depth = (ltype == LABEL_BUTTON ? Config::menu_text_depth : Config::menu_front_depth);
 
   unsigned char alpha = (ltype == LABEL_BUTTON ? 255 : 100);
 
