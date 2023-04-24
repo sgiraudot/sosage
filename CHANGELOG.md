@@ -7,14 +7,44 @@ History of versions and modifications of the SOSAGE engine.
 ### Release Management
 
 - Handle APK version number with CMake
+- Include SDL Mixer Ext
+- Automatic random test input selected at runtime
+- Fix RGB transparent pixels
+- Add demo mode
+- Force load option in dev mode
+- Clear separation of Release/Beta/Dev/Demo/etc.
+- Parallelize data packager
+
+### Interface and menus
+
+- Wriggly interface
+- Keep track of in-game time
+- Autosave
+- Multiple saves, no exit required
+- Notification system
+- Variable dialog size generalized to variable scale interface
 
 ### Game Engine
 
 - Add possibility to only define highlight mask of object
+- Fast forward mode
+- Custom functions in YAML
+- Multitrack musics
+- Signals in YAML
+- Multiple inventory states
+- Randomized actions
+- Global items
+- Relative label positions
+- Actions on characters
+- Secondary ground map for NPCs
+- Replace ONCE behavior in dialog by signals conditions
+- Hint mechanism replaced by dialogs
+- Pause animations / pause when window minimized
+- Change state synced with animation FP
 
 ### Bug Fixes 
 
-- Fix capitalization of first letter with accents
+- A shitload
   
 ## `v1.2.3 (summer2022demo3)` - 2022-08-31
 
