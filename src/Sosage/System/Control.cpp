@@ -96,6 +96,7 @@ void Control::run()
     remove ("Interface", "active_objects", true);
     remove ("Interface", "source_object", true);
     remove ("Interface", "target_object", true);
+    remove ("Click", "target", true);
   }
 
   if (new_status != m_status || new_mode != m_mode)
