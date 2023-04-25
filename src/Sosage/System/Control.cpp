@@ -192,6 +192,11 @@ void Control::begin_status (const Status& s)
       status()->pop();
       m_status = status()->value();
     }
+    else if (s == IDLE)
+    {
+      // Can remain from mouse mode
+      remove ("Interface", "source_object", true);
+    }
     else if (s == IN_INVENTORY || s == OBJECT_CHOICE)
     {
       auto inventory = get<C::Inventory>("Game", "inventory");
