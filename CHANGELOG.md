@@ -2,7 +2,7 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v1.3.0 (superfluous)` - TBD
+## `v1.3.0 (superfluous)` - 2023-04-25
 
 ### Release Management
 
