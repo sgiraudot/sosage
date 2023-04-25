@@ -71,6 +71,7 @@ public:
 private:
 
   void clear_notifications();
+  void reset_all_actions();
   void cancel_action();
   void console_action (Component::String_handle str);
   void update_scheduled();

@@ -324,7 +324,7 @@ bool Logic::function_look (const std::vector<std::string>& args)
   if (args.empty())
   {
     id = value<C::String>("Player", "name");
-    target = get<C::Action>("Character", "action")->target_entity();
+    target = m_current_action->target_entity();
   }
   else if (args.size() == 1)
   {

@@ -128,8 +128,7 @@ void Logic::run ()
   if (signal("Game", "in_new_room"))
   {
     in_new_room = true;
-    emit ("Cancel", "action");
-    remove ("Character", "triggered_action", true);
+    reset_all_actions();
     status()->pop();
   }
 
@@ -191,6 +190,15 @@ void Logic::clear_notifications()
         > Config::minimum_reaction_time)
       emit (th.second->entity(), "end_notification");
   }
+}
+
+void Logic::reset_all_actions()
+{
+  for (auto c : components("action"))
+    if (auto a = C::cast<C::Action>(c))
+      a->stop();
+  remove ("Character", "action", true);
+  remove ("Character", "triggered_action", true);
 }
 
 void Logic::cancel_action()
