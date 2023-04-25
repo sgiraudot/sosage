@@ -7,6 +7,7 @@ History of versions and modifications of the SOSAGE engine.
 ### Bug Fixes
 
 - Add missing zoom:[] variant
+- Saved dialog not reset after loading
 
 ## `v1.3.0 (superfluous)` - 2023-04-25
 

@@ -124,6 +124,7 @@ void File_IO::clean_content()
     get<C::Action>("Logic", "action")->clear();
     remove ("Character", "action", true);
     remove ("Character", "triggered_action", true);
+    remove ("Game", "current_dialog", true);
 
     for (const std::string& entity : *inventory)
       get<C::Image>(entity , "image")->on() = false;
