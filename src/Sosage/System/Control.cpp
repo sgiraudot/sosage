@@ -200,10 +200,16 @@ void Control::begin_status (const Status& s)
           if (inventory->get(i) == source->value())
           {
             if (i == inventory->size() - 1
-                || (i < 0 && i == inventory->position() + Config::displayed_inventory_size - 1))
+                || (i > 0 && i == inventory->position() + Config::displayed_inventory_size - 1))
+            {
+              debug << "Setting active object to " << i-1 << "/" << inventory->size() << std::endl;
               set<C::String>("Interface", "active_object", inventory->get(i-1));
+            }
             else
+            {
+              debug << "Setting active object to " << i+1 << "/" << inventory->size() << std::endl;
               set<C::String>("Interface", "active_object", inventory->get(i+1));
+            }
             break;
           }
       }
