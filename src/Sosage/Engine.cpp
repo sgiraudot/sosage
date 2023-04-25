@@ -222,9 +222,15 @@ void Engine::handle_cmdline_args (int argc, char** argv)
     else if (arg == "--no-restart" || arg == "-n")
       m_content.emit("Game", "prevent_restart");
     else if (arg == "--mouse" || arg == "-m")
-       m_input_mode = TEST_MOUSE;
+    {
+      m_content.emit ("Game", "test_input_mode");
+      m_input_mode = TEST_MOUSE;
+    }
     else if (arg == "--test" || arg == "-t")
-       m_input_mode = TEST_RANDOM;
+    {
+      m_content.emit ("Game", "test_input_mode");
+      m_input_mode = TEST_RANDOM;
+    }
     else if (arg == "--save" || arg == "-s")
     {
       ++ i;

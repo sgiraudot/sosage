@@ -236,7 +236,7 @@ void File_IO::read_config()
   }
 
   // No sound for automatic tests
-  if (signal("Game", "prevent_restart"))
+  if (signal("Game", "test_input_mode"))
   {
     music_volume = 0;
     sounds_volume = 0;

@@ -272,7 +272,7 @@ void Menu::apply_setting (const std::string& setting, const std::string& v)
   else if (setting == "Fullscreen")
   {
     // Avoid switching fullscreen when testing input
-    if (!signal ("Game", "prevent_restart"))
+    if (!signal ("Game", "test_input_mode"))
     {
       get<C::Boolean>("Window", "fullscreen")->set(v == "Yes");
       emit ("Window", "toggle_fullscreen");
@@ -304,7 +304,7 @@ void Menu::apply_setting (const std::string& setting, const std::string& v)
   }
   else if (setting == "Music_volume")
   {
-    if (!signal ("Game", "prevent_restart"))
+    if (!signal ("Game", "test_input_mode"))
     {
       set<C::Int>("Music", "volume")->set(to_int(v) / 10);
       emit("Music", "volume_changed");
@@ -312,7 +312,7 @@ void Menu::apply_setting (const std::string& setting, const std::string& v)
   }
   else if (setting == "Sound_volume")
   {
-    if (!signal ("Game", "prevent_restart"))
+    if (!signal ("Game", "test_input_mode"))
       set<C::Int>("Sounds", "volume")->set(to_int(v) / 10);
   }
 }
@@ -530,11 +530,14 @@ void Menu::menu_clicked ()
     }
     else if (menu == "Wanna_load")
     {
-      emit ("Game", "load");
-      emit ("Game", "reset");
-      emit ("Music", "stop");
-      hide_menu(menu);
-      status()->pop();
+      if (!signal ("Game", "prevent_restart"))
+      {
+        emit ("Game", "load");
+        emit ("Game", "reset");
+        emit ("Music", "stop");
+        hide_menu(menu);
+        status()->pop();
+      }
     }
     else if (menu == "Credits" || menu == "Settings" || menu == "Phone" ||
              menu == "Save" || menu == "Load")
