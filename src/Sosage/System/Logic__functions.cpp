@@ -1053,13 +1053,28 @@ bool Logic::function_wait (const std::vector<std::string>& args)
 }
 
 /*
-  - zoom: [FLOAT value] -> change zoom to wanted value (1 = normal zoom)
+  - zoom: [FLOAT value]                 -> change zoom to wanted value (1 = normal zoom)
+  - zoom: [FLOAT value, FLOAT duration] -> smooth change zoom to wanted value with wanted duration
  */
 bool Logic::function_zoom (const std::vector<std::string>& args)
 {
-  check (args.size() == 1, "function_zoom takes 1 argument");
+  check (args.size() == 1 || args.size() == 2, "function_zoom takes 1 or 2 argument(s)");
   double zoom = to_double(args[0]);
-  get<C::Double>(CAMERA__ZOOM)->set(zoom);
+
+  if (args.size() == 2)
+  {
+    double duration = to_double(args[1]);
+    double begin_time = m_current_time;
+    double end_time = begin_time + duration;
+
+    auto anim = set<C::Array<double, 4>>
+          ("Camera", "change_zoom", value<C::Double>(CAMERA__ZOOM), zoom,
+           begin_time, end_time);
+    m_current_action->schedule (end_time, C::make_handle<C::Base>("Camera_zoom", "dummy"));
+  }
+  else
+    get<C::Double>(CAMERA__ZOOM)->set(zoom);
+
   return true;
 }
 

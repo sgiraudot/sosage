@@ -2,6 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.3.1 (superfluous1)` - TBD
+
+### Bug Fixes
+
+- Add missing zoom:[] variant
+
 ## `v1.3.0 (superfluous)` - 2023-04-25
 
 ### Release Management

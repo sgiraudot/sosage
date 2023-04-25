@@ -113,6 +113,19 @@ void Animation::run_gui_frame()
     get<C::Absolute_position>(CAMERA__POSITION)->set
         (Point(x_start + shift * current_intensity, 0));
   }
+  if (auto zoom = request<C::Array<double,4>>("Camera", "change_zoom"))
+  {
+    double ftime = current_time;
+    double ratio = (ftime - (*zoom)[2]) / ((*zoom)[3] - (*zoom)[2]);
+    ratio *= ratio;
+    double current = ratio * (*zoom)[1] + (1 - ratio) * (*zoom)[0];
+    if (ratio > 1)
+    {
+      current = (*zoom)[1];
+      remove(zoom);
+    }
+    get<C::Double>(CAMERA__ZOOM)->set (current);
+  }
 
   std::vector<C::Handle> to_remove;
   for (auto c : components("animation"))

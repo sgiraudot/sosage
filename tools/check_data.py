@@ -369,7 +369,8 @@ possible_functions = [ [ "add", is_integer_id, is_convertible_to_int ],
                        [ "wait" ],
                        [ "wait", is_convertible_to_float ],
                        [ "wait", is_timer_id, is_convertible_to_float ],
-                       [ "zoom", is_convertible_to_float ] ]
+                       [ "zoom", is_convertible_to_float ],
+                       [ "zoom", is_convertible_to_float, is_convertible_to_float ] ]
 
 
 def test_step(action, args):
