@@ -314,6 +314,23 @@ void Input::handle_exit_pause_speed (const Event& ev)
     status()->push(PAUSED);
     std::cerr << "PAUSE" << std::endl;
   }
+
+  if (ev == Event(TOUCH_DOWN, LEFT)
+#ifdef SOSAGE_DEV
+      || (m_fake_touchscreen && ev == Event(MOUSE_DOWN, LEFT))
+#endif
+      )
+  {
+    // Very specific case of fast forward
+    if (ev.x() > Config::world_width - 150 && ev.y() < 150)
+      emit ("Time", "speedup");
+  }
+  else if (ev == Event(TOUCH_UP, LEFT)
+#ifdef SOSAGE_DEV
+               || (m_fake_touchscreen && ev == Event(MOUSE_UP, LEFT))
+#endif
+           )
+    receive ("Time", "speedup");
 }
 
 void Input::handle_debug_tools (const Event& ev)
@@ -399,25 +416,13 @@ void Input::update_touchscreen (const Event& ev)
       || (m_fake_touchscreen && ev == Event(MOUSE_DOWN, LEFT))
 #endif
       )
-  {
-    // Very specific case of fast forward
-    if (ev.x() > Config::world_width - 150 && ev.y() < 150)
-      emit ("Time", "speedup");
-    else
+    // Ignore if touch in fast forward rectangle
+    if (!(ev.x() > Config::world_width - 150 && ev.y() < 150))
     {
       get<C::Position>
           (CURSOR__POSITION)->set(Point(ev.x(), ev.y()));
       emit ("Cursor", "clicked");
     }
-  }
-  else if (ev == Event(TOUCH_UP, LEFT)
-#ifdef SOSAGE_DEV
-               || (m_fake_touchscreen && ev == Event(MOUSE_UP, LEFT))
-#endif
-           )
-  {
-    receive ("Time", "speedup");
-  }
 }
 
 bool Input::update_gamepad (const Event& ev)
