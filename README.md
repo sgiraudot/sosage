@@ -5,7 +5,7 @@
  - SDL2 (>= 2.0.14)
  - SDL2_Image
  - SDL2_TTF
- - SDL2_Mixer
+ - SDL2_Mixer_ext (or SDL2_Mixer, but it is not advised)
  - libyaml
  - liblz4
 
