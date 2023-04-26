@@ -52,6 +52,9 @@ Debug::~Debug()
 std::string Debug::debug_str()
 {
   std::string out = "[Debug info]\n";
+  out += "Clock time = " + to_string(m_content.value<Component::Double>(CLOCK__TIME)) + "\n";
+  out += "Saved time = " + to_string(m_content.value<Component::Double>(CLOCK__SAVED_TIME)) + "\n";
+  out += "Discounted time = " + to_string(m_content.value<Component::Double>(CLOCK__DISCOUNTED_TIME)) + "\n";
   out += "In game time = " + in_game_time() + "\n";
   out += "FPS = " + std::to_string(int(std::round(m_clock.fps()))) + "Hz\n";
   out += "CPU = " + std::to_string(int(std::round(100. * m_cpu))) + "%\n";

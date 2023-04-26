@@ -105,15 +105,16 @@ void Time::run()
   }
   get<C::Double> (CLOCK__TIME)->set(t);
 
+  if (signal("Game", "reset"))
+  {
+    get<C::Double>(CLOCK__DISCOUNTED_TIME)->set(m_clock.time());
+    get<C::Double>(CLOCK__SAVED_TIME)->set(0);
+  }
+
   // Do not count time spent in menu for in-game time computation
   if (!signal("Game", "save") &&
       (status()->is(IN_MENU) || request<C::String>("Game", "new_room")))
   {
-    if (signal("Game", "reset"))
-    {
-      get<C::Double>(CLOCK__DISCOUNTED_TIME)->set(m_clock.time());
-      get<C::Double>(CLOCK__SAVED_TIME)->set(0);
-    }
 
     get_or_set<C::Double>("Time", "in_menu_start", m_clock.time());
   }
