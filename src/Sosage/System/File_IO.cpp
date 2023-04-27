@@ -1021,12 +1021,13 @@ void File_IO::parse_function (const std::vector<std::string>& args,
 }
 
 void File_IO::create_locale_dependent_text (const std::string& id, Component::Font_handle font,
-                                            const std::string& color, const std::string& text)
+                                            const std::string& color, const std::string& text, int z)
 {
   auto available = value<C::Vector<std::string>>("Game", "available_locales");
   if (available.size() == 1)
   {
     auto img = set<C::Image>(id , "image", font, color, text);
+    img->z() = z;
     img->set_scale(0.75);
     img->set_collision(UNCLICKABLE);
     img->on() = false;
@@ -1042,6 +1043,7 @@ void File_IO::create_locale_dependent_text (const std::string& id, Component::Fo
   {
     get<C::String>(GAME__CURRENT_LOCAL)->set(l);
     auto img = C::make_handle<C::Image>(id , "image", font, color, locale(text));
+    img->z() = z;
     img->set_scale(0.75);
     img->set_collision(UNCLICKABLE);
     img->on() = false;

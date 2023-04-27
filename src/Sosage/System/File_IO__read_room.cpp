@@ -1104,8 +1104,9 @@ void File_IO::read_text (const std::string& id, const Core::File_IO::Node& node)
    std::string color = (node.has("color") ? node["color"].string() : default_color);
    int x = node["coordinates"][0].integer();
    int y = node["coordinates"][1].integer();
+   int z = node["coordinates"][2].integer();
    set<C::Absolute_position>(id , "position", Point(x,y));
-   create_locale_dependent_text (id, dialog_font, color, text);
+   create_locale_dependent_text (id, dialog_font, color, text, z);
  }
  else
    set<C::String>(id, "text", text);
