@@ -2,13 +2,15 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v1.3.1 (superfluous1)` - TBD
+## `v1.3.1 (superfluous1)` - 2023-04-27
 
 ### Bug Fixes
 
 - Add missing zoom:[] variant
 - Saved dialog not reset after loading
 - Fix time not correctly reset after game reset
+- Memory error, replace free() by SDL_free()
+- Remove right-clic to skip cutscene, too easy to do it unintentionnally
 
 ## `v1.3.0 (superfluous)` - 2023-04-25
 
