@@ -11,6 +11,7 @@ History of versions and modifications of the SOSAGE engine.
 - Fix time not correctly reset after game reset
 - Memory error, replace free() by SDL_free()
 - Remove right-clic to skip cutscene, too easy to do it unintentionnally
+- States not changed if cutscene is skipped
 
 ## `v1.3.0 (superfluous)` - 2023-04-25
 

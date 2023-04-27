@@ -793,6 +793,8 @@ void Logic::skip_step (const C::Action::Step& step)
   }
   else if (function == "stop")
     function_stop (args);
+  else if (function == "set" || function == "set12fps")
+    function_set (args);
 }
 
 bool Logic::subfunction_fade (bool fadein, double duration)
