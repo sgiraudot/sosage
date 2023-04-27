@@ -322,6 +322,10 @@ bool Animation::handle_moves()
       double ftime = frame_time(value<C::Double>(CLOCK__TIME));
       double ratio = (ftime - a->get<4>()) / (a->get<5>() - a->get<4>());
 
+      // 0 = immediate move, avoid nan
+      if (a->get<4>() == a->get<5>())
+        ratio = 1.;
+
       Point current = ratio * a->get<1>() + (1 - ratio) * a->get<0>();
       if (ratio > 1)
         current = a->get<1>();
@@ -338,6 +342,10 @@ bool Animation::handle_moves()
     {
       double ftime = frame_time(value<C::Double>(CLOCK__TIME));
       double ratio = (ftime - a->get<2>()) / (a->get<3>() - a->get<2>());
+
+      // 0 = immediate move, avoid nan
+      if (a->get<2>() == a->get<3>())
+        ratio = 1.;
 
       double scale = ratio * a->get<1>() + (1 - ratio) * a->get<0>();
       if (ratio > 1)
