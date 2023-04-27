@@ -56,7 +56,6 @@ constexpr bool mac = false;
 constexpr bool windows = true;
 constexpr bool gnunux = false;
 constexpr bool emscripten = false;
-#define WINVER 0x0600 // Enable use of locale functions
 
 #elif defined(__linux__)
 #define SOSAGE_GNUNUX
