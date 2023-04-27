@@ -83,7 +83,7 @@ std::string base_path()
 {
   char* bp = SDL_GetBasePath();
   std::string out = bp;
-  free(bp);
+  SDL_free(bp);
   return out;
 }
 
@@ -91,7 +91,7 @@ std::string pref_path()
 {
   char* pp = SDL_GetPrefPath(SOSAGE_PREF_PATH, SOSAGE_PREF_SUBPATH);
   std::string out = pp;
-  free(pp);
+  SDL_free(pp);
   return out;
 }
 
