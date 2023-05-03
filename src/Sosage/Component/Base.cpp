@@ -88,7 +88,10 @@ std::string Base::target_entity() const
     if (pos != std::string::npos)
       return std::string (entity().begin(), entity().begin() + pos);
   }
-  return std::string (entity().begin(), entity().begin() + entity().find_last_of('_'));
+  std::size_t pos = entity().find_last_of('_');
+  if (pos != std::string::npos)
+    return std::string (entity().begin(), entity().begin() + pos);
+  return std::string("");
 }
 
 const std::string& Base::component() const
