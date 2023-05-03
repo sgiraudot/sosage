@@ -153,7 +153,7 @@ void SDL_mixer::play_sound (const SDL_mixer::Sound& sound, double volume, double
   Mix_PlayChannel(channel, sound, 0);
 }
 
-double SDL_Mixer::position (const SDL_mixer::Music&) const
+double SDL_mixer::position (const SDL_mixer::Music&) const
 {
   return 0.; // Not available
 }

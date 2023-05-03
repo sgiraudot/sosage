@@ -112,6 +112,8 @@ public:
   static Font_manager m_fonts;
   static void* m_buffer;
   static void* m_hbuffer;
+  static int m_max_texture_width;
+  static int m_max_texture_height;
   Surface m_icon;
 
 public:
