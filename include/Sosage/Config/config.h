@@ -51,7 +51,7 @@ constexpr int animation_fps = 12;
 
 constexpr auto possible_actions = { "look", "move", "take", "inventory", "use", "combine", "goto" };
 
-constexpr auto save_ids = { "1", "2", "3", "4", "5", "auto" };
+constexpr auto save_ids = { "auto", "1", "2", "3", "4", "5" };
 
 constexpr double default_sound_fade_time = 0.2;
 

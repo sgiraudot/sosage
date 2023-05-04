@@ -48,11 +48,15 @@ void Menu::init_loadsave_menus ()
       save_infos;
 
   for (const std::string& save_id : Config::save_ids)
+  {
+    if (save_id == "auto")
+      continue;
     if (auto info = request<C::Tuple<std::string, double, int>>
         ("Save_" + save_id, "info"))
       save_infos.emplace_back (info);
     else
       break;
+  }
 
   std::size_t nb_saves = save_infos.size();
   // Additional free slot if enough space
