@@ -42,6 +42,37 @@ namespace Sosage::System
 
 namespace C = Component;
 
+void Menu::init_controls_menu()
+{
+  auto controls_menu = set<C::Menu>("Controls", "menu");
+  controls_menu->split(VERTICALLY, 3);
+  make_text_menu_title((*controls_menu)[0], "Controls");
+
+  auto reference = get<C::Position>("Menu", "reference");
+  auto font = get<C::Font>("Interface", "light_font");
+  double scale = 0.4;
+
+  std::string text = "";
+  if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == MOUSE)
+    text = locale_get("Controls_mouse", "text");
+  else if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == TOUCHSCREEN)
+    text = locale_get("Controls_touchscreen", "text");
+  else // if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+    text = locale_get("Controls_gamepad", "text");
+
+  auto img = set<C::Image>("Controls_text", "image", font, "FFFFFF", text);
+  img->z() = Config::menu_text_depth;
+  img->on() = false;
+  img->set_scale(scale);
+  img->set_relative_origin(0, 0);
+  img->set_collision(UNCLICKABLE);
+  auto pos = set<C::Relative_position>("Controls_text", "position", reference,
+                                       Point(Config::menu_small_margin * 2. * scale,
+                                             Config::settings_menu_start));
+  (*controls_menu)[1].init(img, pos);
+  make_oknotok_item ((*controls_menu)[2], true);
+}
+
 void Menu::init_loadsave_menus ()
 {
   std::deque<C::Tuple_handle<std::string, double, int>>
@@ -352,7 +383,7 @@ void Menu::make_text_menu_title (Component::Menu::Node node, const std::string& 
   node.init(img, pos);
 }
 
-void Menu::make_text_menu_text (Component::Menu::Node node, const std::string& id, bool credits)
+void Menu::make_text_menu_text (Component::Menu::Node node, const std::string& id)
 {
   auto reference = get<C::Position>("Menu", "reference");
   auto font = get<C::Font>("Interface", "light_font");
@@ -374,9 +405,9 @@ void Menu::make_text_menu_text (Component::Menu::Node node, const std::string& i
   }
   while (pos != std::string::npos);
 
-  double scale = (credits ? 0.4 : 0.5);
+  double scale = 0.5;
   node.split(VERTICALLY, lines.size());
-  int y = (credits ? Config::settings_menu_start : Config::exit_menu_start);
+  int y = Config::exit_menu_start;
 
   for (std::size_t i = 0; i < lines.size(); ++ i)
   {

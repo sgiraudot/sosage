@@ -354,7 +354,7 @@ void Interface::update_active_objects()
 {
   SOSAGE_UPDATE_DBG_LOCATION("Interface::update_active_objects()");
   // Clear if input mode changed
-  if (receive("Input_mode", "changed") || status()->is (IN_MENU) ||
+  if (signal("Input_mode", "changed") || status()->is (IN_MENU) ||
       signal("Game", "in_new_room"))
   {
     if (!m_active_objects.empty())

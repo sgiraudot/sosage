@@ -37,13 +37,13 @@ namespace Sosage
 namespace Config
 {
 constexpr auto exit_menu_items
-= {  "Phone", "Settings", "Credits", "New_game"
+= {  "Phone", "Settings", "Controls", "New_game"
      #ifndef SOSAGE_EMSCRIPTEN
      , "Load", "Save", "Quit"
      #endif
   };
 constexpr auto menus
-= {  "Exit", "Phone", "Settings", "Credits"
+= {  "Exit", "Phone", "Settings", "Controls"
      #ifndef SOSAGE_EMSCRIPTEN
      , "Load", "Save"
      #endif
@@ -100,12 +100,13 @@ private:
   // Implemented in Menu__creation.cpp
   void init_menus();
   void init_loadsave_menus();
+  void init_controls_menu();
   void create_callback (const std::string& menu, const std::string& button,
                         const Callback& callback);
   void make_oknotok_item (Component::Menu::Node node, bool only_ok);
   void make_exit_menu_item (Component::Menu::Node node, const std::string& id, int y);
   void make_text_menu_title (Component::Menu::Node node, const std::string& id);
-  void make_text_menu_text (Component::Menu::Node node, const std::string& id, bool credits = false);
+  void make_text_menu_text (Component::Menu::Node node, const std::string& id);
   void make_settings_item (Component::Menu::Node node, const std::string& id, int y);
 
   std::pair<Component::Image_handle, Component::Position_handle>

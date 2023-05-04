@@ -133,7 +133,7 @@ Menu::Menu(Content& content)
     show_menu("Load");
   });
 
-  for (const std::string& menu : { "Credits", "Phone", "Settings",
+  for (const std::string& menu : { "Controls", "Phone", "Settings",
                                    "Save", "Load" })
     create_callback (menu, "Ok", [&](const std::string& m, const std::string&)
     {
@@ -193,6 +193,12 @@ void Menu::run()
     delete_menu ("Load");
     delete_menu ("Save");
     init_loadsave_menus();
+  }
+
+  if (receive("Input_mode", "changed"))
+  {
+    delete_menu("Controls");
+    init_controls_menu();
   }
 
   if (!status()->is (IN_MENU))
@@ -322,11 +328,7 @@ void Menu::init()
   make_text_menu_text((*saved)[1], "Saved");
   make_oknotok_item ((*saved)[2], true);
 
-  auto credits_menu = set<C::Menu>("Credits", "menu");
-  credits_menu->split(VERTICALLY, 3);
-  make_text_menu_title((*credits_menu)[0], "Credits");
-  make_text_menu_text((*credits_menu)[1], "Credits_text", true);
-  make_oknotok_item ((*credits_menu)[2], true);
+  init_controls_menu();
 
   auto phone_menu = set<C::Menu>("Phone", "menu");
   phone_menu->split(VERTICALLY, 3);
