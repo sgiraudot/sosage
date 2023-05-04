@@ -323,7 +323,7 @@ void compile_package (const std::string& input_folder, const std::string& output
   display_compression (package_size_before, package_size_after);
 }
 
-void decompile_package (const std::string& ifolder, const std::string& folder)
+void decompile_package (const std::string& ifolder, std::string folder)
 {
   if (!Asset_manager::init(ifolder))
   {
@@ -331,65 +331,79 @@ void decompile_package (const std::string& ifolder, const std::string& folder)
     return;
   }
 
+  folder += '/';
+
   for (const auto& asset : Asset_manager::asset_map())
   {
     const std::string& fname = asset.first;
-    auto pos = fname.find(".png.");
-    if (pos != std::string::npos)
+
+    // Do not extract tiles one by one
+    if (contains(fname, ".png."))
+      continue;
+
+    // Do not extract graphs
+    if (contains(fname, ".graph"))
+      continue;
+
+    if (endswith(fname, ".png"))
     {
-      std::string postfix (fname.begin() + pos + 4, fname.end());
-      bool is_hl = false;
-      auto pos2 = postfix.find(".HL");
-      if (pos2 != std::string::npos)
-      {
-        is_hl = true;
-        postfix.resize(pos2);
-      }
-      std::string iname = fname;
-      iname.resize(pos);
-      std::string aname = iname + postfix + ".png";
-      iname += ".png";
-      if (postfix == ".mask")
+      debug << fname << std::endl;
+
+      // Do not decompile highlights
+      if (contains(fname, ".HL."))
         continue;
-      debug << aname << ": ";
 
-      pos2 = postfix.find('x');
-      Uint32 x = std::atoi(std::string(postfix.begin() + 1, postfix.begin() + pos2).c_str());
-      Uint32 y = std::atoi(std::string(postfix.begin() + pos2 + 1, postfix.end()).c_str());
-      int width = -1, height = -1;
-      int format_int = -1;
-      std::tie (width, height, format_int) = Asset_manager::image_info (iname);
-      SDL_Rect rect = Splitter::rect (width, height, x, y);
-      if (contains(iname, "_map.png"))
+      // Do not decompile masks
+      if (contains(fname, ".mask."))
+        continue;
+
+      int width, height, format_int;
+      std::tie (width, height, format_int) = Asset_manager::image_info (fname);
+      Uint32 nb_x = Splitter::nb_sub (width);
+      Uint32 nb_y = Splitter::nb_sub (height);
+      SDL_Surface* surf
+          = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, format_int);
+
+      bool map = contains(fname, "_map.png");
+      if (map)
       {
-        rect.w = width;
-        rect.h = height;
-      }
-      debug << rect.w << "x" << rect.h << std::endl;
-
-      SDL_Surface* surf = SDL_CreateRGBSurfaceWithFormat (0, rect.w, rect.h, 32, format_int);
-      SDL_LockSurface (surf);
-      Asset_manager::open (iname, surf->pixels, x, y, is_hl);
-
-      std::string ofname = aname;
-      std::replace (ofname.begin(), ofname.end(), '/', '_');
-      ofname = folder + ofname;
-      if (is_hl)
-      {
-        ofname.resize(ofname.size() - 3);
-        ofname += "HL.png";
+        nb_x = 1;
+        nb_y = 1;
       }
 
-      SDL_UnlockSurface (surf);
+      for (Uint32 x = 0; x < nb_x; ++ x)
+        for (Uint32 y = 0; y < nb_y; ++ y)
+        {
+          SDL_Rect rect = Splitter::rect (width, height, x, y);
+          if (map)
+          {
+            rect.w = width;
+            rect.h = height;
+          }
+          SDL_Surface* sub
+              = SDL_CreateRGBSurfaceWithFormat
+                (0, rect.w, rect.h, 32, format_int);
+          SDL_LockSurface (sub);
+          Asset_manager::open (fname, sub->pixels, x, y);
+          SDL_UnlockSurface (sub);
+          SDL_BlitSurface (sub, nullptr, surf, &rect);
+          SDL_FreeSurface(sub);
+        }
+
+      std::string ofname = folder + fname;
+      std::string directories_to_create = ofname;
+      directories_to_create.resize (directories_to_create.find_last_of('/'));
+      std::filesystem::create_directories(directories_to_create);
       IMG_SavePNG(surf, ofname.c_str());
       SDL_FreeSurface(surf);
     }
-    else if (!contains(fname, ".png"))
+    else
     {
       debug << fname << std::endl;
-      std::string ofname = fname;
-      std::replace (ofname.begin(), ofname.end(), '/', '_');
-      ofname = folder + ofname;
+      std::string ofname = folder + fname;
+      std::string directories_to_create = ofname;
+      directories_to_create.resize (directories_to_create.find_last_of('/'));
+      std::filesystem::create_directories(directories_to_create);
 
       Asset asset = Asset_manager::open(fname);
       std::ofstream ofile(ofname, std::ios::binary);

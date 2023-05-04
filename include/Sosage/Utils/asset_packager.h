@@ -46,7 +46,7 @@ Package_files open_packages (const std::string& root);
 void write_file (std::ofstream& ofile, const std::string& filename);
 void write_image (std::ofstream& ofile, const std::string& filename, bool is_object);
 void compile_package (const std::string& input_folder, const std::string& output_folder);
-void decompile_package (const std::string& filename, const std::string& folder);
+void decompile_package (const std::string& filename, std::string folder);
 
 } // namespace Sosage::SCAP
 
