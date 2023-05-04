@@ -37,7 +37,9 @@ namespace Sosage
 
 namespace IO = Third_party::SDL_file;
 
-constexpr auto packages = { "general", "locale", "images", "images_scenery", "sounds" };
+constexpr auto packages = { "general", "locale", "images",
+                            "images_animations",
+                            "images_scenery", "sounds" };
 
 class Asset_manager;
 
