@@ -162,7 +162,7 @@ if data["data"]:
         run_cmd("cp -r " + raw_data_folder + "/resources " + copy_data_dir)
         run_cmd("cp -r " + data_folder + "/data " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/config.cmake " + copy_data_dir)
-#        run_cmd("cp -r " + data_folder + "/LICENSE.md " + copy_data_dir)
+        run_cmd("cp -r " + data_folder + "/LICENSE.md " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/README.md " + copy_data_dir)
         run_cmd("zip -r " + output_dir + "/" + appname + "-data.zip " + copy_data_dir)
         chdir(cwd)
