@@ -71,6 +71,13 @@ namespace System
 
 class Menu : public Base
 {
+private:
+
+  using Button_id = Component::Id;
+  using Callback = std::function<void(const std::string& menu,
+                                      const std::string& effect)>;
+  std::unordered_map<Button_id, Callback, Component::Id_hash> m_callbacks;
+
 public:
 
   Menu (Content& content);
@@ -93,6 +100,8 @@ private:
   // Implemented in Menu__creation.cpp
   void init_menus();
   void init_loadsave_menus();
+  void create_callback (const std::string& menu, const std::string& button,
+                        const Callback& callback);
   void make_oknotok_item (Component::Menu::Node node, bool only_ok);
   void make_exit_menu_item (Component::Menu::Node node, const std::string& id, int y);
   void make_text_menu_title (Component::Menu::Node node, const std::string& id);

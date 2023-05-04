@@ -47,9 +47,9 @@ void Menu::init_loadsave_menus ()
   std::deque<C::Tuple_handle<std::string, double, int>>
       save_infos;
 
-  for (std::size_t idx = 0; idx < 5; ++ idx)
+  for (const std::string& save_id : Config::save_ids)
     if (auto info = request<C::Tuple<std::string, double, int>>
-        ("Save_" + std::to_string(idx+1), "info"))
+        ("Save_" + save_id, "info"))
       save_infos.emplace_back (info);
     else
       break;
@@ -235,6 +235,12 @@ void Menu::make_exit_menu_item (Component::Menu::Node node, const std::string& i
   node.init(button, pos_button);
 
   set<C::String>(id , "effect", id);
+}
+
+void Menu::create_callback (const std::string& menu, const std::string& button,
+                            const Callback& callback)
+{
+  m_callbacks[Button_id (menu, button)] = callback;
 }
 
 void Menu::make_oknotok_item (Component::Menu::Node node, bool only_ok)

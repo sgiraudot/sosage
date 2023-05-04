@@ -855,7 +855,7 @@ void File_IO::read_savefiles (const Core::File_IO& input)
 {
   int most_recent = -1;
   std::string most_recent_save_id = "";
-  for (std::string save_id : { "1", "2", "3", "4", "5", "auto" })
+  for (std::string save_id : Config::save_ids)
   {
     std::string save_path = "save" + value<C::String>("Save", "suffix", "") +
                             "_" + save_id + ".yaml";

@@ -45,7 +45,130 @@ namespace C = Component;
 Menu::Menu(Content& content)
   : Base (content)
 {
+  for (const std::string& effect: Config::exit_menu_items)
+    create_callback ("Exit", effect, [&](const std::string&,
+                                         const std::string& e)
+    {
+      hide_menu ("Exit");
+      show_menu (e);
+    });
 
+  create_callback ("Exit", "Quit", [&](const std::string&, const std::string&)
+  {
+    // Avoid exiting when testing input
+    if (!signal ("Game", "prevent_exit"))
+      emit ("Game", "exit");
+    else
+    {
+      hide_menu("Exit");
+      status()->pop();
+    }
+    emit ("Game", "save");
+    set<C::String>("Savegame", "id", "auto");
+  });
+
+  for (const std::string& menu : { "Exit", "Message", "Saved"})
+    create_callback (menu, "Ok", [&](const std::string& m, const std::string&)
+    {
+      hide_menu(m);
+      status()->pop();
+    });
+
+  create_callback ("New_game", "Ok", [&](const std::string&, const std::string&)
+  {
+    // Avoid restarting when testing input
+    if (!signal ("Game", "prevent_restart"))
+    {
+      if (auto force = request<C::String>("Force_load", "room"))
+      {
+        set<C::Variable>("Game", "new_room", force);
+        if (auto orig = request<C::String>("Force_load", "origin"))
+          set<C::Variable>("Game", "new_room_origin", orig);
+        else
+          set<C::String>("Game", "new_room_origin", force->value() + "_test");
+      }
+      else
+      {
+        set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
+        set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
+      }
+      emit ("Game", "reset");
+      emit ("Music", "stop");
+      hide_menu("New_game");
+      status()->pop();
+      status()->push(LOCKED);
+    }
+  });
+
+  create_callback ("New_game", "Cancel", [&](const std::string&, const std::string&)
+  {
+    hide_menu("New_game");
+    show_menu("Exit");
+  });
+  create_callback ("Wanna_save", "Ok", [&](const std::string&, const std::string&)
+  {
+    emit ("Game", "save");
+    hide_menu("Wanna_save");
+    show_menu("Saved");
+  });
+  create_callback ("Wanna_save", "Cancel", [&](const std::string&, const std::string&)
+  {
+    hide_menu("Wanna_save");
+    show_menu("Save");
+  });
+  create_callback ("Wanna_load", "Ok", [&](const std::string&, const std::string&)
+  {
+    if (!signal ("Game", "prevent_restart"))
+    {
+      emit ("Game", "load");
+      emit ("Game", "reset");
+      emit ("Music", "stop");
+      hide_menu("Wanna_load");
+      status()->pop();
+    }
+  });
+  create_callback ("Wanna_load", "Cancel", [&](const std::string&, const std::string&)
+  {
+    hide_menu("Wanna_load");
+    show_menu("Load");
+  });
+
+  for (const std::string& menu : { "Credits", "Phone", "Settings",
+                                   "Save", "Load" })
+    create_callback (menu, "Ok", [&](const std::string& m, const std::string&)
+    {
+      hide_menu (m);
+      show_menu ("Exit");
+    });
+
+  for (const std::string& save_id : Config::save_ids)
+  {
+    create_callback ("Load", "Load_" + save_id,
+                     [&](const std::string&, const std::string& effect)
+    {
+      std::string save_id (effect.begin() + effect.find('_') + 1, effect.end());
+      set<C::String>("Savegame", "id", save_id);
+      hide_menu("Load");
+      show_menu("Wanna_load");
+    });
+    create_callback ("Save", "Save_" + save_id,
+                     [&](const std::string&, const std::string& effect)
+    {
+      std::string save_id (effect.begin() + effect.find('_') + 1, effect.end());
+      set<C::String>("Savegame", "id", save_id);
+      if (request<C::Tuple<std::string, double, int>>("Save_" + save_id, "info"))
+      {
+        hide_menu("Save");
+        show_menu("Wanna_save");
+      }
+      else
+      {
+        emit ("Game", "save");
+        hide_menu("Save");
+        show_menu("Saved");
+      }
+    });
+  }
 }
 
 void Menu::run()
@@ -175,7 +298,7 @@ void Menu::init()
 
   make_oknotok_item ((*exit_menu)[idx], true);
 
-  auto wanna_restart = set<C::Menu>("Wanna_restart", "menu");
+  auto wanna_restart = set<C::Menu>("New_game", "menu");
   wanna_restart->split(VERTICALLY, 3);
   make_text_menu_title((*wanna_restart)[0], "New_game");
   make_text_menu_text((*wanna_restart)[1], "Wanna_restart");
@@ -450,159 +573,22 @@ void Menu::menu_clicked ()
   if (!effect)
     return;
 
-  emit("Click", "play_sound");
-
-  if (effect->value() == "Quit")
-  {
-    // Avoid exiting when testing input
-    if (!signal ("Game", "prevent_exit"))
-      emit ("Game", "exit");
-    else
-    {
-      hide_menu(menu);
-      status()->pop();
-    }
-    emit ("Game", "save");
-    set<C::String>("Savegame", "id", "auto");
-  }
-  else if (effect->value() == "New_game")
-  {
-    hide_menu(menu);
-    if (menu == "Exit")
-      show_menu ("Wanna_restart");
-    else
-    {
-      // Avoid restarting when testing input
-      if (!signal ("Game", "prevent_restart"))
-      {
-        if (auto force = request<C::String>("Force_load", "room"))
-        {
-          set<C::Variable>("Game", "new_room", force);
-          if (auto orig = request<C::String>("Force_load", "origin"))
-            set<C::Variable>("Game", "new_room_origin", orig);
-          else
-            set<C::String>("Game", "new_room_origin", force->value() + "_test");
-        }
-        else
-        {
-          set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
-          set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
-        }
-        emit ("Game", "reset");
-        emit ("Music", "stop");
-        status()->pop();
-        status()->push(LOCKED);
-      }
-    }
-  }
-  else if (effect->value() == "Ok")
-  {
-    if (menu == "Wanna_restart")
-    {
-      // Avoid restarting when testing input
-      if (!signal ("Game", "prevent_restart"))
-      {
-        if (auto force = request<C::String>("Force_load", "room"))
-        {
-          set<C::Variable>("Game", "new_room", force);
-          if (auto orig = request<C::String>("Force_load", "origin"))
-            set<C::Variable>("Game", "new_room_origin", orig);
-          else
-            set<C::String>("Game", "new_room_origin", force->value() + "_test");
-        }
-        else
-        {
-          set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
-          set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
-        }
-        emit ("Game", "reset");
-        emit ("Music", "stop");
-        hide_menu("Wanna_restart");
-        status()->pop();
-        status()->push(LOCKED);
-      }
-    }
-    else if (menu == "Wanna_save")
-    {
-      emit ("Game", "save");
-      hide_menu(menu);
-      show_menu("Saved");
-    }
-    else if (menu == "Wanna_load")
-    {
-      if (!signal ("Game", "prevent_restart"))
-      {
-        emit ("Game", "load");
-        emit ("Game", "reset");
-        emit ("Music", "stop");
-        hide_menu(menu);
-        status()->pop();
-      }
-    }
-    else if (menu == "Credits" || menu == "Settings" || menu == "Phone" ||
-             menu == "Save" || menu == "Load")
-    {
-      hide_menu (menu);
-      show_menu ("Exit");
-    }
-    else if (menu == "Exit" || menu == "Message" || menu == "Saved")
-    {
-      hide_menu(menu);
-      status()->pop();
-    }
-  }
-  else if (effect->value() == "Credits" || effect->value() == "Settings"
-           || effect->value() == "Phone" || effect->value() == "Save"
-           || effect->value() == "Load")
-  {
-    hide_menu ("Exit");
-    show_menu (effect->value());
-  }
-  else if (effect->value() == "Cancel")
-  {
-    hide_menu(menu);
-    if (menu == "Exit")
-      status()->pop();
-    else if (menu == "Wanna_restart")
-      show_menu("Exit");
-    else if (menu == "Wanna_save")
-      show_menu("Save");
-    else if (menu == "Wanna_load")
-      show_menu("Load");
-  }
-  else if (startswith(effect->value(), "Save_"))
-  {
-    std::string save_id (effect->value().begin() + effect->value().find('_') + 1, effect->value().end());
-    set<C::String>("Savegame", "id", save_id);
-    if (request<C::Tuple<std::string, double, int>>(effect->value(), "info"))
-    {
-      hide_menu(menu);
-      show_menu("Wanna_save");
-    }
-    else
-    {
-      emit ("Game", "save");
-      hide_menu(menu);
-      show_menu("Saved");
-    }
-  }
-  else if (startswith(effect->value(), "Load_"))
-  {
-    std::string save_id (effect->value().begin() + effect->value().find('_') + 1, effect->value().end());
-    set<C::String>("Savegame", "id", save_id);
-    hide_menu(menu);
-    show_menu("Wanna_load");
-  }
-  else if (auto action = request<C::Action>(effect->value() , "action"))
+  if (auto action = request<C::Action>(effect->value() , "action"))
   {
     hide_menu(menu);
     status()->pop();
     set<C::Variable>("Character", "triggered_action", action);
+    return;
   }
-  else
-  {
-    check(false, "Unknown menu effect: " + effect->value());
-  }
+
+
+  Button_id button_id(menu, effect->value());
+  auto callback = m_callbacks.find(button_id);
+  check (callback != m_callbacks.end(),
+         "Unknown menu effect: " + menu + ":" + effect->value());
+
+  emit("Click", "play_sound");
+  callback->second (menu, effect->value());
 }
 
 void Menu::update_phone_menu()
