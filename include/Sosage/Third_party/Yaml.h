@@ -113,22 +113,25 @@ public:
   void write (const std::string& key, const std::vector<std::string>& value);
   void write_list_item (const std::string& value);
 
-  template <typename T>
-  void write_list_item (const std::string& key1, const std::string& value1,
-                        const std::string& key2, const T& value2)
+  template <typename T1, typename T2>
+  void write_list_item (const std::string& key1, const T1& value1,
+                        const std::string& key2, const T2& value2)
   {
     indent();
-    m_file.write ("- { " + key1 + ": \"" + value1 + "\", "
-                   + key2 + ": " + std::to_string(value2) + " }\n");
+    m_file.write ("- { " + key1 + ": \"" + to_string(value1) + "\", "
+                   + key2 + ": " + to_string(value2) + " }\n");
   }
 
-  void write_list_item (const std::string& key1, const std::string& value1,
-                        const std::string& key2, const std::string& value2);
-  void write_list_item (const std::string& key1, const std::string& value1,
-                        const std::string& key2, const bool& value2);
-  void write_list_item (const std::string& key1, const std::string& value1,
-                        const std::string& key2, const bool& value2,
-                        const std::string& key3, const std::string& value3);
+  template <typename T1, typename T2, typename T3>
+  void write_list_item (const std::string& key1, const T1& value1,
+                        const std::string& key2, const T2& value2,
+                        const std::string& key3, const T3& value3)
+  {
+    indent();
+    m_file.write ("- { " + key1 + ": \"" + to_string(value1) + "\", "
+                  + key2 + ": \"" + to_string(value2) + "\", "
+                  + key3 + ": \"" + to_string(value3) + "\" }\n");
+  }
 
   template <typename T>
   void write_list_item (const std::string& key1, const std::string& value1,
