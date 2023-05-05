@@ -40,12 +40,11 @@ constexpr unsigned int minor = SOSAGE_VERSION_MINOR;
 constexpr unsigned int patch = SOSAGE_VERSION_PATCH;
 constexpr const char* name = SOSAGE_VERSION_NAME;
 
-inline std::string str()
+inline std::string str(bool include_name = true)
 {
   return std::to_string(major) + "."
     + std::to_string(minor) + "."
-    + std::to_string(patch) + "-"
-    + name;
+    + std::to_string(patch) + (include_name ? (std::string("-") + name) : "");
 }
 
 inline unsigned int get()

@@ -575,7 +575,7 @@ void File_IO::read_init_general (const Core::File_IO& input)
   check (Version::parse(min_sosage_version) <= Version::get(),
          "Error: min version " + min_sosage_version + " incompatible with Sosage " + Version::str());
 
-  set<C::String>("Version", "string", "v" + min_sosage_version + "-d" + data_version + '-' + data_variant);
+  set<C::String>("Version", "string", "v" + Version::str(false) + "-d" + data_version + '-' + data_variant);
 
   std::string game_name = input["name"].string();
   set<C::String>("Game", "name", game_name);

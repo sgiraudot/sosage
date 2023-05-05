@@ -2,6 +2,17 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.3.2 (superfluous2)` - 2023-05-05
+
+### Release Management
+
+- Change license mechanism to use asset license
+
+### Bug fixes
+
+- Fix engine version not displayed correctly on menu
+- Fix assert depackager
+
 ## `v1.3.1 (superfluous1)` - 2023-04-27
 
 ### Bug Fixes
