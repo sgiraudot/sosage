@@ -93,11 +93,10 @@ void Test_input::run()
 void Test_input::run_mouse()
 {
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
-  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
   if (mode->value() != MOUSE)
   {
     mode->set (MOUSE);
-    gamepad->set (NO_LABEL);
+    remove("Gamepad", "id", true);
     emit("Input_mode", "changed");
   }
 
@@ -287,11 +286,10 @@ void Test_input::run_mouse()
 void Test_input::run_mouse_chaos()
 {
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
-  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
   if (mode->value() != MOUSE)
   {
     mode->set (MOUSE);
-    gamepad->set (NO_LABEL);
+    remove("Gamepad", "id", true);
     emit("Input_mode", "changed");
   }
 
@@ -320,11 +318,10 @@ void Test_input::run_mouse_chaos()
 void Test_input::run_touchscreen()
 {
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
-  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
   if (mode->value() != TOUCHSCREEN)
   {
     mode->set (TOUCHSCREEN);
-    gamepad->set (NO_LABEL);
+    remove("Gamepad", "id", true);
     emit("Input_mode", "changed");
   }
 
@@ -548,11 +545,11 @@ void Test_input::run_touchscreen()
 void Test_input::run_gamepad()
 {
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
-  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
   if (mode->value() != GAMEPAD)
   {
     mode->set (GAMEPAD);
-    gamepad->set (JAPAN);
+    set<C::Simple<Gamepad_info>>("0:0", "gamepad", Gamepad_info());
+    set<C::String>("Gamepad", "id", "0:0");
     emit("Input_mode", "changed");
   }
 
@@ -661,11 +658,10 @@ void Test_input::run_gamepad()
 void Test_input::run_gamepad_chaos()
 {
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
-  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
   if (mode->value() != GAMEPAD)
   {
     mode->set (GAMEPAD);
-    gamepad->set (JAPAN);
+    remove("Gamepad", "id", true);
     emit("Input_mode", "changed");
   }
 

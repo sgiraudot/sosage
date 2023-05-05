@@ -24,6 +24,7 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
+#include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/Gamepad_info.h>
 
 #include <unordered_map>
@@ -31,22 +32,51 @@
 namespace Sosage
 {
 
-std::string gamepad_label (const Gamepad_type& type, const Event_value& value)
+Gamepad_info::Gamepad_info (unsigned short vendor, unsigned short product,
+                            const std::string& name)
+  : name (name)
+{
+  id = "Gamepad(" + to_string (vendor) + ":" + to_string(product) + ")";
+  if (contains (name, "Xbox") ||
+      contains (name, "Steam"))
+  {
+    labels = XBOX;
+    ok_down = true;
+  }
+  else if (startswith(name, "Nintendo") ||
+           startswith(name, "8BitDo"))
+  {
+    labels = NINTENDO;
+    ok_down = false;
+  }
+  else
+  {
+    labels = NO_LABEL;
+    ok_down = true;
+  }
+}
+
+Gamepad_info::Gamepad_info (const std::string& id, const Gamepad_labels& labels, const bool& ok_down)
+  : id(id)
+  , name ("Saved controller")
+  , labels(labels)
+  , ok_down(ok_down)
+{
+
+}
+
+std::string gamepad_label (const Gamepad_info& info, const Event_value& value)
 {
   static std::unordered_map<Event_value, std::string>
-      japan = { {NORTH, "X"}, {EAST, "A"}, {SOUTH, "B"}, {WEST, "Y"} };
+      nintendo = { {NORTH, "X"}, {EAST, "A"}, {SOUTH, "B"}, {WEST, "Y"} };
   static std::unordered_map<Event_value, std::string>
-      usa = { {NORTH, "Y"}, {EAST, "B"}, {SOUTH, "A"}, {WEST, "X"} };
-#ifdef SOSAGE_DEV
-  static std::unordered_map<Event_value, std::string>
-      keyboard = { {NORTH, "I"}, {EAST, "L"}, {SOUTH, "K"}, {WEST, "J"} };
-#endif
+      xbox = { {NORTH, "Y"}, {EAST, "B"}, {SOUTH, "A"}, {WEST, "X"} };
 
-  if (type == JAPAN) return japan[value];
-  if (type == USA) return usa[value];
-#ifdef SOSAGE_DEV
-  if (type == KEYBOARD) return keyboard[value];
-#endif
+  if (info.labels == NINTENDO)
+    return nintendo[value];
+
+  if (info.labels == XBOX)
+    return xbox[value];
 
   // no label
   return "";

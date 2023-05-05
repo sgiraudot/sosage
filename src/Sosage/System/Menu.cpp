@@ -34,6 +34,7 @@
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/datetime.h>
+#include <Sosage/Utils/Gamepad_info.h>
 
 #include <queue>
 
@@ -497,8 +498,8 @@ void Menu::show_menu (const std::string& id)
     auto debug_font = get<C::Font> ("Debug", "font");
     std::string info = value<C::String> ("Version", "string");
 #ifndef SOSAGE_RELEASE
-    if (auto ginfo = request<C::String>("Gamepad", "name"))
-      info += ", " + ginfo->value();
+    if (auto gamepad = request<C::String>("Gamepad", "id"))
+      info += ", " + value<C::Simple<Gamepad_info>>(gamepad->value(), "gamepad").name;
 #endif
 
     auto info_img = set<C::Image> ("Game_info", "image",

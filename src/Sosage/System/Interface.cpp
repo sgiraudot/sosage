@@ -37,6 +37,7 @@
 #include <Sosage/System/Interface.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/conversions.h>
+#include <Sosage/Utils/Gamepad_info.h>
 
 #include <queue>
 
@@ -656,8 +657,12 @@ void Interface::update_object_switcher()
         if (active_objects->value().size() > 1)
         {
 #ifdef SOSAGE_DEV
-          keyboard_on = (value<C::Simple<Gamepad_type>>(GAMEPAD__TYPE) == KEYBOARD);
-          gamepad_on = !keyboard_on;
+          if (auto info = request<C::String>("Gamepad", "id"))
+          {
+            keyboard_on = (value<C::Simple<Gamepad_info>>(info->value(), "gamepad").name
+                           == "Keyboard");
+            gamepad_on = !keyboard_on;
+          }
 #else
           gamepad_on = true;
 #endif

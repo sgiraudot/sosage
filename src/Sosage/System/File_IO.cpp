@@ -45,6 +45,7 @@
 #include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/conversions.h>
+#include <Sosage/Utils/Gamepad_info.h>
 #include <Sosage/Utils/helpers.h>
 #include <Sosage/Utils/locale.h>
 #include <Sosage/Utils/profiling.h>
@@ -197,7 +198,6 @@ void File_IO::read_config()
   std::string locale = "";
   bool fullscreen = !Config::emscripten;
   int input_mode = (Config::android ? TOUCHSCREEN : MOUSE);
-  int gamepad_type = NO_LABEL;
 
   int dialog_speed = Config::MEDIUM_SPEED;
   int interface_scale = Config::SMALL;
@@ -221,7 +221,18 @@ void File_IO::read_config()
     if (input.has("locale")) locale = input["locale"].string();
     if (input.has("fullscreen")) fullscreen = input["fullscreen"].boolean();
     if (input.has("input_mode")) input_mode = input["input_mode"].integer();
-    if (input.has("gamepad_type")) gamepad_type = input["gamepad_type"].integer();
+
+    if (input.has("gamepads"))
+      for (std::size_t i = 0; i < input["gamepads"].size(); ++ i)
+      {
+        const auto& node = input["gamepads"][i];
+        set<C::Simple<Gamepad_info>>(node["id"].string(), "gamepad",
+                                     Gamepad_info(node["id"].string(),
+                                                  Gamepad_labels(node["labels"].integer()),
+                                                  node["ok_down"].boolean()));
+      }
+
+
     if (input.has("dialog_speed")) dialog_speed = input["dialog_speed"].floating();
     if (input.has("interface_scale"))
       interface_scale = input["interface_scale"].integer();
@@ -246,7 +257,6 @@ void File_IO::read_config()
   set<C::Boolean>("Window", "fullscreen", fullscreen);
   debug << "INPUT MODE = " << input_mode << std::endl;
   set_fac<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE, "Interface", "input_mode", Input_mode(input_mode));
-  set_fac<C::Simple<Gamepad_type>>(GAMEPAD__TYPE, "Gamepad", "type", Gamepad_type(gamepad_type));
 
   set<C::Int>("Dialog", "speed", dialog_speed);
   set<C::Int>("Interface", "scale", interface_scale);
@@ -268,7 +278,15 @@ void File_IO::write_config()
   output.write ("locale", value<C::String>(GAME__CURRENT_LOCAL));
   output.write ("fullscreen", value<C::Boolean>("Window", "fullscreen"));
   output.write ("input_mode", value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE));
-  output.write ("gamepad_type", value<C::Simple<Gamepad_type>>(GAMEPAD__TYPE));
+
+  output.start_section ("gamepads");
+  for (C::Handle c : components("gamepad"))
+      if (auto info = C::cast<C::Simple<Gamepad_info>>(c))
+      output.write_list_item("id", info->value().id,
+                             "labels", info->value().labels,
+                             "ok_down", info->value().ok_down);
+  output.end_section();
+
 
   output.write ("dialog_speed", value<C::Int>("Dialog", "speed"));
   output.write ("interface_scale", value<C::Int>("Interface", "scale"));

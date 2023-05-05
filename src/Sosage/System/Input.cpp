@@ -190,7 +190,6 @@ void Input::update_mode()
 #endif
 
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
-  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
 
   // Only allow mode change when idle or cutscene
   if (status()->is(IDLE, CUTSCENE))
@@ -203,18 +202,20 @@ void Input::update_mode()
         )
     {
       mode->set (TOUCHSCREEN);
-      gamepad->set (NO_LABEL);
+      remove ("Gamepad", "id", true);
     }
     else if (mouse_used)
     {
       mode->set (MOUSE);
-      gamepad->set (NO_LABEL);
+      remove ("Gamepad", "id", true);
     }
 #ifdef SOSAGE_DEV
     else if (keyboard_used)
     {
       mode->set (GAMEPAD);
-      gamepad->set (KEYBOARD);
+      get_or_set<C::Simple<Gamepad_info>>
+          ("0:0", "gamepad", Gamepad_info(0, 0, "Keyboard"));
+      set<C::String>("Gamepad", "id", "0:0");
     }
 #endif
     else if (gamepad_used)
@@ -222,15 +223,21 @@ void Input::update_mode()
       mode->set (GAMEPAD);
       if (previous_mode != GAMEPAD)
       {
-        auto info = m_core.gamepad_type();
-        gamepad->set (info.first);
-        set<C::String>("Gamepad", "name", info.second);
+        auto info = m_core.gamepad_info();
+        if (auto existing = request<C::Simple<Gamepad_info>>(info.id, "gamepad"))
+        {
+          info.labels = existing->value().labels;
+          info.ok_down = existing->value().ok_down;
+        }
+        set<C::Simple<Gamepad_info>>(info.id, "gamepad", info);
+        set<C::String>("Gamepad", "id", info.id);
       }
     }
 
     if (previous_mode != mode->value())
       emit("Input_mode", "changed");
   }
+
 
   if (mode->value() == GAMEPAD)
   {
@@ -241,13 +248,20 @@ void Input::update_mode()
         || value<C::Simple<Vector>>(STICK__DIRECTION) != Vector(0,0))
       get<C::Double>(CLOCK__LATEST_ACTIVE)->set(value<C::Double>(CLOCK__TIME));
 
-    if (!request<C::String>("Gamepad", "name"))
+    if (!request<C::String>("Gamepad", "id"))
     {
-      auto info = m_core.gamepad_type();
-      gamepad->set (info.first);
-      set<C::String>("Gamepad", "name", info.second);
+      auto info = m_core.gamepad_info();
+      if (auto existing = request<C::Simple<Gamepad_info>>(info.id, "gamepad"))
+      {
+        info.labels = existing->value().labels;
+        info.ok_down = existing->value().ok_down;
+      }
+      set<C::Simple<Gamepad_info>>(info.id, "gamepad", info);
+      debug << "Setting " << info.id << ":gamepad" << std::endl;
+      set<C::String>("Gamepad", "id", info.id);
     }
   }
+
 }
 
 void Input::update_keys_on (const Event& ev)
@@ -428,8 +442,14 @@ bool Input::update_gamepad (const Event& ev)
 {
   bool arrow_released = false;
 #ifdef SOSAGE_DEV
-  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
-  if (gamepad->value() == KEYBOARD)
+
+  bool keyboard = false;
+  if (auto info = request<C::String>("Gamepad", "id"))
+    if (value<C::Simple<Gamepad_info>>(info->value(), "gamepad").name
+        == "Keyboard")
+      keyboard = true;
+
+  if (keyboard)
   {
     if (ev.type() == KEY_DOWN)
     {
@@ -541,11 +561,11 @@ void Input::run_demo_mode()
     return;
 
   auto mode = get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
-  auto gamepad = get<C::Simple<Gamepad_type>>(GAMEPAD__TYPE);
+
   if (mode->value() != MOUSE)
   {
     mode->set (MOUSE);
-    gamepad->set (NO_LABEL);
+    remove("Gamepad", "id", true);
     emit("Input_mode", "changed");
   }
 

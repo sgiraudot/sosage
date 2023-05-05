@@ -37,7 +37,7 @@
 #include <Sosage/System/Interface.h>
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/conversions.h>
-#include <Sosage/Utils/gamepad_labels.h>
+#include <Sosage/Utils/Gamepad_info.h>
 #include <Sosage/Utils/helpers.h>
 
 #include <queue>
@@ -569,7 +569,10 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
   m_selector_type = type;
   m_selector_id = id;
 
-  const Gamepad_type& gamepad = value<C::Simple<Gamepad_type>>("Gamepad", "type");
+  Gamepad_info gamepad;
+  if (auto current_gamepad = request<C::String>("Gamepad", "id"))
+    gamepad = value<C::Simple<Gamepad_info>>(current_gamepad->value(), "gamepad");
+
   auto gamepad_pos = get<C::Position>("Gamepad_action_selector", "position");
   if (type == GP_IDLE)
   {

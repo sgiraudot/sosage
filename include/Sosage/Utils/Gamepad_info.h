@@ -39,12 +39,17 @@ enum Gamepad_labels { NO_LABEL, NINTENDO, XBOX };
 
 struct Gamepad_info
 {
-  int id;
+  std::string id;
+  std::string name;
   Gamepad_labels labels;
   bool ok_down;
+
+  Gamepad_info (unsigned short vendor = 0, unsigned short product = 0,
+                const std::string& name = "Default controller");
+  Gamepad_info (const std::string& id, const Gamepad_labels& labels, const bool& ok_down);
 };
 
-std::string gamepad_label (const Gamepad_type& type, const Event_value& value);
+std::string gamepad_label (const Gamepad_info& info, const Event_value& value);
 
 }
 

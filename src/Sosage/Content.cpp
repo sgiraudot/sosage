@@ -40,6 +40,7 @@ Content::Content()
   auto reserved_components
       = { "action",
           "animation",
+          "gamepad",
           "group",
           "image",
           "label",

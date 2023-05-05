@@ -115,25 +115,14 @@ Gamepad_info SDL_events::gamepad_info() const
       SDL_GameController* controller = SDL_GameControllerOpen(i);
       if (controller)
       {
-        SDL_GameControllerType type = SDL_GameControllerGetType(controller);
-        std::string name = SDL_GameControllerName (controller);
-        if (type == SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO)
-          return std::make_pair (JAPAN, name);
-        if (type == SDL_CONTROLLER_TYPE_XBOX360
-            || type == SDL_CONTROLLER_TYPE_XBOXONE
-#if 0 // Might add it later, requires a more recent SDL version than 2.0.14
-            || type == SDL_CONTROLLER_TYPE_AMAZON_LUNA
-            || type == SDL_CONTROLLER_TYPE_GOOGLE_STADIA
-#endif
-            )
-          return std::make_pair (USA, name);
-        // else
-        return std::make_pair (NO_LABEL, name);
+        return Gamepad_info (SDL_GameControllerGetVendor(controller),
+                             SDL_GameControllerGetProduct(controller),
+                             SDL_GameControllerName(controller));
       }
   }
 
   // Default controller, no label
-  return std::make_pair (NO_LABEL, "unknown gamepad");
+  return Gamepad_info();
 }
 
 Event SDL_events::mouse_event (const Event_type& type, const SDL_Event& ev) const
