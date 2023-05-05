@@ -29,6 +29,7 @@
 
 #include <SDL.h>
 #include <Sosage/Utils/Event.h>
+#include <Sosage/Utils/Gamepad_info.h>
 
 #include <utility>
 #include <unordered_map>
@@ -57,7 +58,7 @@ public:
 
   Event next_event();
 
-  std::pair<Gamepad_type, std::string> gamepad_type() const;
+  Gamepad_info gamepad_info() const;
 
 private:
 

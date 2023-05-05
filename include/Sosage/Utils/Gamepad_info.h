@@ -1,5 +1,5 @@
 /*
-  [include/Sosage/Utils/gamepad_labels.h]
+  [include/Sosage/Utils/Gamepad_info.h]
   Handle different types of Gamepad.
 
   =====================================================================
@@ -24,8 +24,8 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#ifndef SOSAGE_UTILS_GAMEPAD_LABELS_H
-#define SOSAGE_UTILS_GAMEPAD_LABELS_H
+#ifndef SOSAGE_UTILS_GAMEPAD_INFO_H
+#define SOSAGE_UTILS_GAMEPAD_INFO_H
 
 #include <Sosage/Utils/enum.h>
 
@@ -34,8 +34,18 @@
 namespace Sosage
 {
 
+enum Gamepad_labels { NO_LABEL, NINTENDO, XBOX };
+
+
+struct Gamepad_info
+{
+  int id;
+  Gamepad_labels labels;
+  bool ok_down;
+};
+
 std::string gamepad_label (const Gamepad_type& type, const Event_value& value);
 
 }
 
-#endif // SOSAGE_UTILS_GAMEPAD_LABELS_H
+#endif // SOSAGE_UTILS_GAMEPAD_INFO_H

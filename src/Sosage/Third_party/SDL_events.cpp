@@ -107,7 +107,7 @@ Event SDL_events::next_event ()
   return Event(UNUSED);
 }
 
-std::pair<Gamepad_type, std::string> SDL_events::gamepad_type() const
+Gamepad_info SDL_events::gamepad_info() const
 {
   for (int i = 0; i < SDL_NumJoysticks(); ++ i)
     if (SDL_IsGameController(i))

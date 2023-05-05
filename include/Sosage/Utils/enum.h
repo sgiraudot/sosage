@@ -90,16 +90,6 @@ enum Input_mode
   GAMEPAD
 };
 
-enum Gamepad_type
-{
-  NO_LABEL,
-  JAPAN,
-  USA
-#ifdef SOSAGE_DEV
-  , KEYBOARD
-#endif
-};
-
 enum Event_type
 {
   EMPTY,

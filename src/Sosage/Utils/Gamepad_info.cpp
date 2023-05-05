@@ -1,5 +1,5 @@
 /*
-  [src/Sosage/Utils/gamepad_labels.cpp]
+  [src/Sosage/Utils/Gamepad_info.cpp]
   Handle different types of Gamepad.
 
   =====================================================================
@@ -24,7 +24,7 @@
   Author(s): Simon Giraudot <sosage@ptilouk.net>
 */
 
-#include <Sosage/Utils/gamepad_labels.h>
+#include <Sosage/Utils/Gamepad_info.h>
 
 #include <unordered_map>
 
