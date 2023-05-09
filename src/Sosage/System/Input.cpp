@@ -94,6 +94,8 @@ void Input::run()
 
     update_window (ev);
 
+    update_active_gamepad (ev);
+
     if (ev.type() == MOUSE_MOVE
         && (mode->value() == MOUSE
             || (mode->value() == TOUCHSCREEN
@@ -128,24 +130,12 @@ void Input::run()
 
 void Input::update_mode()
 {
-#ifdef SOSAGE_DEV
-  bool keyboard_used = false;
-#endif
   bool mouse_used = false;
   bool touchscreen_used = false;
   bool gamepad_used = false;
 
   while (Event ev = m_core.next_event ())
   {
-#ifdef SOSAGE_DEV
-    if ((ev.type() == KEY_DOWN || ev.type() == KEY_UP)
-        && (ev.value() == UP_ARROW || ev.value() == RIGHT_ARROW ||
-            ev.value() == LEFT_ARROW || ev.value() == DOWN_ARROW ||
-            ev.value() == TAB || ev.value() == I || ev.value() == J ||
-            ev.value() == K ||ev.value() == L))
-      keyboard_used = true;
-    else
-#endif
     if (ev.type() == MOUSE_DOWN || ev.type() == MOUSE_UP)
       mouse_used = true;
     else if (ev.type() == TOUCH_DOWN || ev.type() == TOUCH_MOVE || ev.type() == TOUCH_UP)
@@ -195,7 +185,11 @@ void Input::update_mode()
   if (status()->is(IDLE, CUTSCENE))
   {
     Input_mode previous_mode = mode->value();
-    if (touchscreen_used
+    if (gamepad_used)
+    {
+      mode->set (GAMEPAD);
+    }
+    else if (touchscreen_used
 #ifdef SOSAGE_DEV
         || m_fake_touchscreen
 #endif
@@ -209,30 +203,6 @@ void Input::update_mode()
       mode->set (MOUSE);
       remove ("Gamepad", "id", true);
     }
-#ifdef SOSAGE_DEV
-    else if (keyboard_used)
-    {
-      mode->set (GAMEPAD);
-      get_or_set<C::Simple<Gamepad_info>>
-          ("0:0", "gamepad", Gamepad_info(0, 0, "Keyboard"));
-      set<C::String>("Gamepad", "id", "0:0");
-    }
-#endif
-    else if (gamepad_used)
-    {
-      mode->set (GAMEPAD);
-      if (previous_mode != GAMEPAD)
-      {
-        auto info = m_core.gamepad_info();
-        if (auto existing = request<C::Simple<Gamepad_info>>(info.id, "gamepad"))
-        {
-          info.labels = existing->value().labels;
-          info.ok_down = existing->value().ok_down;
-        }
-        set<C::Simple<Gamepad_info>>(info.id, "gamepad", info);
-        set<C::String>("Gamepad", "id", info.id);
-      }
-    }
 
     if (previous_mode != mode->value())
       emit("Input_mode", "changed");
@@ -242,26 +212,9 @@ void Input::update_mode()
   if (mode->value() == GAMEPAD)
   {
     if (gamepad_used
-#ifdef SOSAGE_DEV
-        || keyboard_used
-#endif
         || value<C::Simple<Vector>>(STICK__DIRECTION) != Vector(0,0))
       get<C::Double>(CLOCK__LATEST_ACTIVE)->set(value<C::Double>(CLOCK__TIME));
-
-    if (!request<C::String>("Gamepad", "id"))
-    {
-      auto info = m_core.gamepad_info();
-      if (auto existing = request<C::Simple<Gamepad_info>>(info.id, "gamepad"))
-      {
-        info.labels = existing->value().labels;
-        info.ok_down = existing->value().ok_down;
-      }
-      set<C::Simple<Gamepad_info>>(info.id, "gamepad", info);
-      debug << "Setting " << info.id << ":gamepad" << std::endl;
-      set<C::String>("Gamepad", "id", info.id);
-    }
   }
-
 }
 
 void Input::update_keys_on (const Event& ev)
@@ -412,6 +365,56 @@ void Input::update_window (const Event& ev)
   }
 }
 
+void Input::update_active_gamepad (const Event& ev)
+{
+  if (ev.type() == NEW_GAMEPAD)
+  {
+    debug << "New gamepad " << ev.x() << std::endl;
+    // Set pointer
+    Gamepad_ptr ptr;
+    int joystick_id;
+    std::tie(ptr, joystick_id) = m_core.open_gamepad (ev.x());
+    set<C::Simple<Gamepad_ptr>>("Gamepad_" + to_string(joystick_id), "pointer", ptr);
+
+    // Get (or update) info
+    auto info = m_core.gamepad_info (ptr);
+    if (auto existing = request<C::Simple<Gamepad_info>>(info.id, "gamepad"))
+    {
+      info.labels = existing->value().labels;
+      info.ok_down = existing->value().ok_down;
+    }
+    set<C::Simple<Gamepad_info>>(info.id, "gamepad", info);
+
+    // Map SDL id to ingame ID
+    set<C::String>("Gamepad_" + to_string(joystick_id), "ingame_id", info.id);
+
+    // Set current gamepad
+    debug << "Setting " << info.id << ":gamepad" << std::endl;
+    set<C::String>("Gamepad", "id", info.id);
+  }
+  else if (ev.type() == DELETE_GAMEPAD)
+  {
+    debug << "Deleted gamepad " << ev.x() << std::endl;
+    auto ptr = get<C::Simple<Gamepad_ptr>>("Gamepad_" + to_string(ev.x()),
+                                           "pointer");
+
+    // If deleted gamepad was being used, remove ID
+    if (auto current = request<C::String>("Gamepad", "id"))
+      if (current->value()
+          == value<C::String>("Gamepad_" + to_string(ev.x()), "ingame_id"))
+        remove (current);
+
+    m_core.close_gamepad (ptr->value());
+    remove (ptr);
+  }
+  else if (ev.type() == GAMEPAD_CHANGED)
+  {
+    debug << "Changed gamepad " << ev.x() << std::endl;
+    set<C::String>("Gamepad", "id",
+                   value<C::String>("Gamepad_" + to_string(ev.x()), "ingame_id"));
+  }
+}
+
 void Input::update_mouse (const Event& ev)
 {
   if (ev == Event(MOUSE_DOWN, LEFT))
@@ -441,71 +444,36 @@ void Input::update_touchscreen (const Event& ev)
 bool Input::update_gamepad (const Event& ev)
 {
   bool arrow_released = false;
-#ifdef SOSAGE_DEV
 
-  bool keyboard = false;
-  if (auto info = request<C::String>("Gamepad", "id"))
-    if (value<C::Simple<Gamepad_info>>(info->value(), "gamepad").name
-        == "Keyboard")
-      keyboard = true;
-
-  if (keyboard)
+  if (ev == Event (STICK_MOVE, LEFT))
   {
-    if (ev.type() == KEY_DOWN)
-    {
-      if (ev.value() == TAB)
-        set<C::Boolean>("Switch", "right", true);
-      else if (ev.value() == I)
-        emit("Action", "move");
-      else if (ev.value() == J)
-        emit("Action", "take");
-      else if (ev.value() == L)
-        emit("Action", "look");
-      else if (ev.value() == K)
-        emit("Action", "inventory");
-    }
-    else if (ev.type() == KEY_UP)
-    {
-      if (ev.value() == UP_ARROW
-          || ev.value() == DOWN_ARROW
-          || ev.value() == LEFT_ARROW
-          || ev.value() == RIGHT_ARROW)
-        arrow_released = true;
-    }
+    if (ev.y() == Config::no_value)
+      m_x = ev.x() / Config::stick_max;
+    if (ev.x() == Config::no_value)
+      m_y = ev.y() / Config::stick_max;
   }
-  else // Real gamepad (no keyboard)
-#endif
+  else if (ev.type() == BUTTON_DOWN)
   {
-    if (ev == Event (STICK_MOVE, LEFT))
-    {
-      if (ev.y() == Config::no_value)
-        m_x = ev.x() / Config::stick_max;
-      if (ev.x() == Config::no_value)
-        m_y = ev.y() / Config::stick_max;
-    }
-    else if (ev.type() == BUTTON_DOWN)
-    {
-      if (ev.value() == LEFT_SHOULDER)
-        set<C::Boolean>("Switch", "right", false);
-      else if (ev.value() == RIGHT_SHOULDER)
-        set<C::Boolean>("Switch", "right", true);
-      else if (ev.value() == NORTH)
-        emit("Action", "move");
-      else if (ev.value() == WEST)
-        emit("Action", "take");
-      else if (ev.value() == EAST)
-        emit("Action", "look");
-      else if (ev.value() == SOUTH)
-        emit("Action", "inventory");
-    }
-    else if (ev.type() == BUTTON_UP)
-    {
-      if (ev.value() == UP_ARROW
-          || ev.value() == DOWN_ARROW
-          || ev.value() == LEFT_ARROW
-          || ev.value() == RIGHT_ARROW)
-        arrow_released = true;
-    }
+    if (ev.value() == LEFT_SHOULDER)
+      set<C::Boolean>("Switch", "right", false);
+    else if (ev.value() == RIGHT_SHOULDER)
+      set<C::Boolean>("Switch", "right", true);
+    else if (ev.value() == NORTH)
+      emit("Action", "move");
+    else if (ev.value() == WEST)
+      emit("Action", "take");
+    else if (ev.value() == EAST)
+      emit("Action", "look");
+    else if (ev.value() == SOUTH)
+      emit("Action", "inventory");
+  }
+  else if (ev.type() == BUTTON_UP)
+  {
+    if (ev.value() == UP_ARROW
+        || ev.value() == DOWN_ARROW
+        || ev.value() == LEFT_ARROW
+        || ev.value() == RIGHT_ARROW)
+      arrow_released = true;
   }
   return arrow_released;
 }

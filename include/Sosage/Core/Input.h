@@ -31,6 +31,7 @@
 
 namespace Sosage::Core
 {
+using Gamepad_ptr = Third_party::Gamepad_ptr;
 using Input = Third_party::SDL_events;
 } // namespace Sosage::Core
 

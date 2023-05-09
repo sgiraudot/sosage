@@ -33,6 +33,7 @@
 
 #include <utility>
 #include <unordered_map>
+#include <vector>
 
 namespace Sosage
 {
@@ -46,9 +47,13 @@ constexpr int deadzone = 6000;
 namespace Third_party
 {
 
+using Gamepad_ptr = SDL_GameController*;
+
 class SDL_events
 {
   std::unordered_map<SDL_EventType, Event_type> m_type_map;
+  mutable bool m_gamepad_changed;
+  mutable int m_latest_gamepad_used;
 
 public:
 
@@ -58,7 +63,10 @@ public:
 
   Event next_event();
 
-  Gamepad_info gamepad_info() const;
+  std::pair<Gamepad_ptr, int> open_gamepad (int idx) const;
+  void close_gamepad (Gamepad_ptr ptr) const;
+
+  Gamepad_info gamepad_info(Gamepad_ptr ptr) const;
 
 private:
 

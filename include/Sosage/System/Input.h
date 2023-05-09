@@ -75,6 +75,7 @@ private:
   void handle_exit_pause_speed(const Event& ev);
   void handle_debug_tools(const Event& ev);
   void update_window(const Event& ev);
+  void update_active_gamepad(const Event& ev);
   void update_mouse(const Event& ev);
   void update_touchscreen(const Event& ev);
   bool update_gamepad(const Event& ev);

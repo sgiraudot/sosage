@@ -47,15 +47,24 @@ SDL_events::SDL_events ()
        {SDL_CONTROLLERAXISMOTION, STICK_MOVE},
        {SDL_KEYDOWN, KEY_DOWN},
        {SDL_KEYUP, KEY_UP} })
-{ }
-
-SDL_events::~SDL_events ()
+  , m_gamepad_changed (false)
+  , m_latest_gamepad_used(-1)
 {
-
 }
+
+
+SDL_events::~SDL_events () { }
 
 Event SDL_events::next_event ()
 {
+  // If latest event used a different gamepad, generate
+  // fake event with gamepad change
+  if (m_gamepad_changed)
+  {
+    m_gamepad_changed = false;
+    return Event(GAMEPAD_CHANGED, NONE, m_latest_gamepad_used);
+  }
+
   SDL_Event ev;
   if (SDL_PollEvent(&ev) != 1)
     return Event();
@@ -85,10 +94,9 @@ Event SDL_events::next_event ()
     }
   }
   if (ev.type == SDL_CONTROLLERDEVICEADDED)
-  {
-    SDL_GameControllerOpen(ev.cdevice.which);
     return Event (NEW_GAMEPAD, NONE, ev.cdevice.which);
-  }
+  if (ev.type == SDL_CONTROLLERDEVICEREMOVED)
+    return Event (DELETE_GAMEPAD, NONE, ev.cdevice.which);
 
   auto iter = m_type_map.find(SDL_EventType(ev.type));
   if (iter == m_type_map.end())
@@ -107,22 +115,26 @@ Event SDL_events::next_event ()
   return Event(UNUSED);
 }
 
-Gamepad_info SDL_events::gamepad_info() const
+std::pair<Gamepad_ptr, int> SDL_events::open_gamepad (int idx) const
 {
-  for (int i = 0; i < SDL_NumJoysticks(); ++ i)
-    if (SDL_IsGameController(i))
-    {
-      SDL_GameController* controller = SDL_GameControllerOpen(i);
-      if (controller)
-      {
-        return Gamepad_info (SDL_GameControllerGetVendor(controller),
-                             SDL_GameControllerGetProduct(controller),
-                             SDL_GameControllerName(controller));
-      }
-  }
+  Gamepad_ptr ptr = SDL_GameControllerOpen (idx);
+  int joystick = SDL_JoystickInstanceID (SDL_GameControllerGetJoystick(ptr));
+  m_latest_gamepad_used = joystick;
+  return std::make_pair(ptr, joystick);
+}
 
-  // Default controller, no label
-  return Gamepad_info();
+void SDL_events::close_gamepad (Gamepad_ptr ptr) const
+{
+  SDL_GameControllerClose (ptr);
+}
+
+Gamepad_info SDL_events::gamepad_info (Gamepad_ptr ptr) const
+{
+  if (ptr == nullptr)
+    return Gamepad_info();
+  return Gamepad_info (SDL_GameControllerGetVendor(ptr),
+                       SDL_GameControllerGetProduct(ptr),
+                       SDL_GameControllerName(ptr));
 }
 
 Event SDL_events::mouse_event (const Event_type& type, const SDL_Event& ev) const
@@ -178,6 +190,11 @@ Event SDL_events::touch_event (const Event_type& type, const SDL_Event& ev) cons
 }
 Event SDL_events::gamepad_event (const Event_type& type, const SDL_Event& ev) const
 {
+  if (ev.cdevice.which != m_latest_gamepad_used)
+  {
+    m_gamepad_changed = true;
+    m_latest_gamepad_used = ev.cdevice.which;
+  }
   if (type == STICK_MOVE)
   {
     if (ev.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX)

@@ -855,18 +855,6 @@ void SDL::init (int& window_width, int& window_height, bool fullscreen)
 
   Asset db = Asset_manager::open ("data/gamecontrollerdb.txt");
   SDL_GameControllerAddMappingsFromRW (db.base(), 1);
-
-  SDL_GameController *controller = NULL;
-  for (int i = 0; i < SDL_NumJoysticks(); ++i) {
-      if (SDL_IsGameController(i)) {
-          controller = SDL_GameControllerOpen(i);
-          if (controller) {
-              break;
-          } else {
-              fprintf(stderr, "Could not open gamecontroller %i: %s\n", i, SDL_GetError());
-          }
-      }
-  }
 }
 
 SDL::~SDL ()
