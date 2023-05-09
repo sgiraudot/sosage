@@ -1100,20 +1100,24 @@ void File_IO::create_locale_dependent_text (const std::string& id, Component::Fo
   get<C::String>(GAME__CURRENT_LOCAL)->set(current);
 }
 
-void File_IO::load_locale_dependent_image (const std::string& entity, const std::string& component,
-                                           const std::string& filename,
-                                           const std::function<C::Image_handle(std::string)>& func)
+C::Handle File_IO::load_locale_dependent_image (const std::string& entity,
+                                                const std::string& component,
+                                                const std::string& filename,
+                                                const std::function<C::Image_handle(std::string)>& func,
+                                                bool insert_to_data)
 {
   auto img = func (filename);
 
   auto available = value<C::Vector<std::string>>("Game", "available_locales");
   if (available.size() == 1)
   {
-    set<C::Image>(entity, component, img);
-    return;
+    auto out = C::make_handle<C::Image>(entity, component, img);
+    if (insert_to_data)
+      set(out);
+    return out;
   }
 
-  auto cond_img = set<C::String_conditional>(entity, component, get<C::String>(GAME__CURRENT_LOCAL));
+  auto cond_img = C::make_handle<C::String_conditional>(entity, component, get<C::String>(GAME__CURRENT_LOCAL));
   cond_img->add(available[0], img);
 
   bool has_locale = true;
@@ -1134,9 +1138,16 @@ void File_IO::load_locale_dependent_image (const std::string& entity, const std:
 
   if (!has_locale)
   {
-    remove (cond_img);
-    set<C::Image> (entity, component, img);
+    auto out = C::make_handle<C::Image> (entity, component, img);
+    if (insert_to_data)
+      set(out);
+    return out;
   }
+
+  if (insert_to_data)
+    set(cond_img);
+
+  return cond_img;
 }
 
 

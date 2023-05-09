@@ -80,9 +80,11 @@ private:
                        Component::Action_handle action);
   void create_locale_dependent_text (const std::string& id, Component::Font_handle font,
                                      const std::string& color, const std::string& text, int z);
-  void load_locale_dependent_image (const std::string& entity, const std::string& component,
+  Component::Handle load_locale_dependent_image (const std::string& entity,
+                                                 const std::string& component,
                                     const std::string& filename,
-                                    const std::function<Component::Image_handle(std::string)>& func);
+                                    const std::function<Component::Image_handle(std::string)>& func,
+                                                 bool insert_to_data = true);
 
   // Implemented in File_IO__read_room.cpp:
   void read_room (const std::string& file_name);

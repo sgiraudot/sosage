@@ -1062,10 +1062,18 @@ void File_IO::read_scenery (const std::string& id, const Core::File_IO::Node& no
       else
       {
         std::string skin = istate["skin"].string("images", "scenery", "png");
-        auto img = C::make_handle<C::Image>(id , "conditional_image",
-                                            skin, z);
-        img->set_collision(UNCLICKABLE);
-        img->set_relative_origin(0.5, 1.0);
+
+        auto img = load_locale_dependent_image
+            (id, "image", skin,
+             [&](const std::string& skin) -> C::Image_handle
+        {
+          auto img = C::make_handle<C::Image>(id, "image", skin, z);
+          img->set_collision(UNCLICKABLE);
+          img->set_relative_origin(0.5, 1.0);
+          debug << "Scenery " << id << " at position " << img->z() << std::endl;
+          return img;
+        }, false);
+
         conditional_handle->add (state, img);
       }
     }
