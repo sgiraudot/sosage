@@ -965,6 +965,13 @@ void File_IO::read_locale()
   {
     std::vector<std::string> user_locales = get_locales();
 
+#ifdef SOSAGE_DEBUG
+    debug << "User locales = [";
+    for (const std::string& locale : user_locales)
+      debug << " " << locale << " ";
+    debug << "]" << std::endl;
+#endif
+
     std::string prefered = "";
 
     for (const std::string& user : user_locales)
@@ -973,8 +980,8 @@ void File_IO::read_locale()
       {
         if (user == available)
         {
-          debug << "Best available locale is " << user << std::endl;
-          prefered = user;
+          debug << "Found locale " << user << ", using it" << std::endl;
+          prefered = available;
           break;
         }
       }
@@ -986,13 +993,36 @@ void File_IO::read_locale()
     {
       for (const std::string& user : user_locales)
       {
-        for (std::string available : available->value())
+        for (const std::string& available : available->value())
         {
-          available.resize(2);
-          if (user == available)
+          std::string shortened = available;
+          shortened.resize(2);
+          if (user == shortened)
           {
-            debug << "Best available locale is " << available << std::endl;
-            prefered = user;
+            debug << "Found locale " << user << ", using " << available << std::endl;
+            prefered = available;
+            break;
+          }
+        }
+        if (prefered != "")
+          break;
+      }
+    }
+
+    if (prefered == "")
+    {
+      for (const std::string& user : user_locales)
+      {
+        for (const std::string& available : available->value())
+        {
+          std::string shortened = available;
+          shortened.resize(2);
+          std::string ushortened = user;
+          ushortened.resize(2);
+          if (ushortened == shortened)
+          {
+            debug << "Found locale " << user << ", using " << available << std::endl;
+            prefered = available;
             break;
           }
         }
