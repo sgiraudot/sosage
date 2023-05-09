@@ -146,7 +146,7 @@ void SDL_mixer_ext::play_sound (const SDL_mixer_ext::Sound& sound, double volume
   int channel = reserve_channel();
   int left = int((panning) * Config::max_panning);
   int right= int((1. - panning) * Config::max_panning);
-  Mix_Volume (channel, volume * Config::max_music_volume);
+  Mix_Volume (channel, volume * Config::max_sound_volume);
   Mix_SetPanning(channel, left, right);
   Mix_PlayChannel(channel, sound, 0);
 }

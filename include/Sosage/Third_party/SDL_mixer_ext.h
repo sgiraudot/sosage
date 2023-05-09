@@ -44,7 +44,8 @@ namespace Sosage
 
 namespace Config
 {
-constexpr int max_music_volume = 128;
+constexpr int max_music_volume = 64;
+constexpr int max_sound_volume = 128;
 constexpr int max_panning = 255;
 constexpr int sound_channels = 16;
 } // namespace Config
