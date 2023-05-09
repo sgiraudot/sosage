@@ -497,6 +497,10 @@ void Input::finalize_gamepad (bool arrow_released)
   else
     receive ("Time", "speedup");
 
+  if (status()->is(LOCKED, CUTSCENE))
+    return;
+
+
   // If D-PAD is used, ignore stick
   if (arrow_released || key_on(UP_ARROW)
       || key_on(DOWN_ARROW) || key_on(LEFT_ARROW)
