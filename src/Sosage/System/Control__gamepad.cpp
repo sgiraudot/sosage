@@ -695,8 +695,8 @@ std::vector<std::string> Control::detect_active_objects()
         Box box;
         box.xmin = position.x() - gap;
         box.xmax = position.x() + gap;
-        box.ymin = position.y() - gap - height * 0.5;
-        box.ymax = position.y() + gap + height * 0.5;
+        box.ymin = position.y() - gap - height * 0.75;
+        box.ymax = position.y() + gap + height * 0.75;
         if (auto gt = request<C::Boolean>(id + "_goto", "right"))
         {
           width += margin_goto;
