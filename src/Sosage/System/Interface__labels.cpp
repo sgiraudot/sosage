@@ -158,7 +158,14 @@ void Interface::create_label (const std::string& id, std::string name,
   if (name != "")
   {
     capitalize(name);
-    label = set<C::Image>(id , "image", get<C::Font>("Interface", "font"), "FFFFFF", name);
+    if (startswith(name, "Playstation_"))
+    {
+      label = set<C::Image>(id, "image", get<C::Image>(name, "image"));
+      label->on() = true;
+      name = " ";
+    }
+    else
+      label = set<C::Image>(id , "image", get<C::Font>("Interface", "font"), "FFFFFF", name);
     group->add(label);
 
     label->set_relative_origin(0.5, 0.5);

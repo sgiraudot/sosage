@@ -49,6 +49,16 @@ Gamepad_info::Gamepad_info (unsigned short vendor, unsigned short product,
     labels = NINTENDO;
     ok_down = false;
   }
+  else if (contains(name, "PlayStation") ||
+           contains(name, "PS2") ||
+           contains(name, "PS3") ||
+           contains(name, "PS4") ||
+           contains(name, "PS5") ||
+           contains(name, "PSX"))
+  {
+    labels = PLAYSTATION;
+    ok_down = true;
+  }
   else
   {
     labels = NO_LABEL;
@@ -71,12 +81,20 @@ std::string gamepad_label (const Gamepad_info& info, const Event_value& value)
       nintendo = { {NORTH, "X"}, {EAST, "A"}, {SOUTH, "B"}, {WEST, "Y"} };
   static std::unordered_map<Event_value, std::string>
       xbox = { {NORTH, "Y"}, {EAST, "B"}, {SOUTH, "A"}, {WEST, "X"} };
+  static std::unordered_map<Event_value, std::string>
+      playstation = { {NORTH, "Playstation_triangle"},
+                      {EAST, "Playstation_circle"},
+                      {SOUTH, "Playstation_cross"},
+                      {WEST, "Playstation_square"} };
 
   if (info.labels == NINTENDO)
     return nintendo[value];
 
   if (info.labels == XBOX)
     return xbox[value];
+
+  if (info.labels == PLAYSTATION)
+    return playstation[value];
 
   // no label
   return "";

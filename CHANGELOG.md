@@ -2,6 +2,14 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.4.0 (returnz)` - TBD
+
+### Interface and menus
+
+- Controls are sumed up in menu
+- Customize gamepad button styles and OK/Cancel orientation
+- Support PlayStation button style
+
 ## `v1.3.3 (superfluous3)` - 2023-05-09
 
 ### Bug fixes

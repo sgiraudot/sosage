@@ -724,6 +724,15 @@ void File_IO::read_init_interface (const Core::File_IO& input)
   auto white_right_circle_img = set<C::Image>("White_right_circle", "image", white_right_circle, 1, BOX, true);
   white_right_circle_img->on() = false;
 
+  for (const auto button : { std::make_pair("triangle", 0), std::make_pair("square", 1),
+                             std::make_pair("cross", 2), std::make_pair("circle", 3) })
+  {
+    std::string ps_button = input["playstation"][button.second].string("images", "interface", "png");
+    auto ps_img = set<C::Image>("Playstation_" + std::string(button.first),
+                                "image", ps_button, 1, UNCLICKABLE, true);
+    ps_img->on() = false;
+  }
+
   std::string fast_forward = input["fast_forward"].string("images", "interface", "png");
   auto fast_forward_img = C::make_handle<C::Image>("Fast_forward", "image", fast_forward,
                                                    Config::notification_depth, BOX);
