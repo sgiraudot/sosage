@@ -2,6 +2,14 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.3.3 (superfluous3)` - 2023-05-09
+
+### Bug fixes
+
+- Fix locale badly detected if `fr_COUNTRY` (with `COUNTRY != FR`) or
+  `en_COUNTRY` (with `COUNTRY != US`)
+- Fix localized scenery not loaded if scenery has states
+
 ## `v1.3.2 (superfluous2)` - 2023-05-05
 
 ### Release Management
