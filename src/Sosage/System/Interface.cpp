@@ -70,6 +70,8 @@ void Interface::run()
   update_code_hover();
   update_dialog_choices();
   update_cursor();
+
+  receive ("Interface", "force_refresh");
   SOSAGE_TIMER_STOP(System_Interface__run);
 }
 
@@ -185,7 +187,7 @@ void Interface::init()
 
 void Interface::update_object_labels()
 {
-  if (!receive("Game", "new_room_loaded") && !receive ("Interface", "update_scale"))
+  if (!receive("Game", "new_room_loaded") && !signal ("Interface", "force_refresh"))
     return;
 
   SOSAGE_TIMER_START(System_Interface__update_object_labels);

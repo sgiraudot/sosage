@@ -226,7 +226,8 @@ void File_IO::read_config()
       for (std::size_t i = 0; i < input["gamepads"].size(); ++ i)
       {
         const auto& node = input["gamepads"][i];
-        set<C::Simple<Gamepad_info>>(node["id"].string(), "gamepad",
+        set<C::Simple<Gamepad_info>>("Gamepad(" + node["id"].string() +")",
+                                     "gamepad",
                                      Gamepad_info(node["id"].string(),
                                                   Gamepad_labels(node["labels"].integer()),
                                                   node["ok_down"].boolean()));

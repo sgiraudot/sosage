@@ -378,19 +378,29 @@ void Input::update_active_gamepad (const Event& ev)
 
     // Get (or update) info
     auto info = m_core.gamepad_info (ptr);
-    if (auto existing = request<C::Simple<Gamepad_info>>(info.id, "gamepad"))
+    std::string id = "Gamepad(" + info.id + ")";
+    if (auto existing = request<C::Simple<Gamepad_info>>(id, "gamepad"))
     {
+      debug << "Found existing configuration for "
+            << info.name << " (" << info.id << ")" << std::endl;
       info.labels = existing->value().labels;
       info.ok_down = existing->value().ok_down;
     }
-    set<C::Simple<Gamepad_info>>(info.id, "gamepad", info);
+    else
+    {
+      debug << "Using default configuration for "
+            << info.name << " (" << info.id << ")" << std::endl;
+    }
+    set<C::Simple<Gamepad_info>>(id, "gamepad", info);
 
     // Map SDL id to ingame ID
-    set<C::String>("Gamepad_" + to_string(joystick_id), "ingame_id", info.id);
+    set<C::String>("Gamepad_" + to_string(joystick_id), "ingame_id", id);
 
     // Set current gamepad
-    debug << "Setting " << info.id << ":gamepad" << std::endl;
-    set<C::String>("Gamepad", "id", info.id);
+    debug << "Setting " << id << ":gamepad" << std::endl;
+    set<C::String>("Gamepad", "id", id);
+
+    emit("Input_mode", "changed");
   }
   else if (ev.type() == DELETE_GAMEPAD)
   {
@@ -412,6 +422,7 @@ void Input::update_active_gamepad (const Event& ev)
     debug << "Changed gamepad " << ev.x() << std::endl;
     set<C::String>("Gamepad", "id",
                    value<C::String>("Gamepad_" + to_string(ev.x()), "ingame_id"));
+    emit("Input_mode", "changed");
   }
 }
 

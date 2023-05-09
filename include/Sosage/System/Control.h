@@ -127,6 +127,8 @@ private:
   Event_value stick_up_down();
   Event_value stick_left_right_up_down();
   Vector stick_direction();
+  bool is_ok (const std::string& key);
+  bool is_notok (const std::string& key);
 };
 
 } // namespace System

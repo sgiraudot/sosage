@@ -31,6 +31,7 @@
 #include <Sosage/Component/Variable.h>
 #include <Sosage/System/Control.h>
 #include <Sosage/Utils/conversions.h>
+#include <Sosage/Utils/Gamepad_info.h>
 
 #include <queue>
 
@@ -231,7 +232,7 @@ void Control::object_choice_sub_triggered (const std::string& key)
 {
   auto active_object = request<C::String>("Interface", "active_object");
 
-  if (key == "look")
+  if (is_ok(key))
   {
     if (auto target = request<C::String>("Interface", "target_object"))
     {
@@ -251,7 +252,7 @@ void Control::object_choice_sub_triggered (const std::string& key)
     status()->pop();
     emit("Click", "play_sound");
   }
-  else if (key == "inventory")
+  else if (is_notok(key))
   {
     status()->pop();
     remove("Interface", "target_object", true);
@@ -470,9 +471,9 @@ void Control::menu_gamepad()
     if (receive("Action", key))
       received_key = key;
 
-  if (received_key == "inventory")
+  if (is_notok(received_key))
     menu_sub_triggered (SOUTH);
-  else if (received_key == "look")
+  else if (is_ok(received_key))
     menu_sub_triggered (EAST);
 
   flush_gamepad_keys();
@@ -481,7 +482,7 @@ void Control::menu_gamepad()
 void Control::menu_sub_triggered (const Event_value& key)
 {
   const std::string& menu = value<C::String>("Game", "current_menu");
-  bool settings = (menu == "Settings");
+  bool settings = (menu == "Settings" || menu == "Controls");
 
   auto active_item = request<C::String>("Interface", "gamepad_active_menu_item");
   if (!active_item)
@@ -541,7 +542,7 @@ void Control::menu_sub_switch_active_item (bool right)
 {
   const std::string& id = value<C::String>("Game", "current_menu");
   auto menu = get<C::Menu>(id , "menu");
-  bool settings = (id == "Settings");
+  bool settings = (id == "Settings" || id == "Controls");
 
   auto active_item = get<C::String>("Interface", "gamepad_active_menu_item");
 
@@ -575,6 +576,10 @@ void Control::menu_sub_switch_active_item (bool right)
     for (std::size_t i = 0; i < current.nb_children(); ++ i)
       todo.push (current[i]);
   }
+
+  for (const auto& m : nodes)
+    debug << m << " ";
+  debug << std::endl;
 
   check (nb_current != std::size_t(-1), "Node " + active_item->value() + " not found in menu");
   if (right)
@@ -816,6 +821,24 @@ Vector Control::stick_direction()
     return value<C::Simple<Vector>>(STICK__DIRECTION);
   }
   return Vector(0,0);
+}
+
+bool Control::is_ok (const std::string& key)
+{
+  if (auto current_gamepad = request<C::String>("Gamepad", "id"))
+    if (!value<C::Simple<Gamepad_info>>(current_gamepad->value(), "gamepad").ok_down)
+      return key == "look";
+  // else
+  return key == "inventory";
+}
+
+bool Control::is_notok (const std::string& key)
+{
+  if (auto current_gamepad = request<C::String>("Gamepad", "id"))
+    if (!value<C::Simple<Gamepad_info>>(current_gamepad->value(), "gamepad").ok_down)
+      return key == "inventory";
+  // else
+  return key == "look";
 }
 
 

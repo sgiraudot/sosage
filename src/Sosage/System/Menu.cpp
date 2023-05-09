@@ -222,7 +222,7 @@ void Menu::run()
 
   const std::string& id = value<C::String>("Game", "current_menu");
   auto menu = get<C::Menu>(id , "menu");
-  bool settings = (id == "Settings");
+  bool settings = (id == "Settings" || id == "Controls");
 
   std::string active_item = "";
   std::string setting_item = "";
@@ -417,7 +417,7 @@ void Menu::apply_setting (const std::string& setting, const std::string& v)
       iscale->set(Config::HUGE_);
     Config::interface_scale = iscale->value() / double(6.);
     emit ("Interface", "reinit");
-    emit ("Interface", "update_scale");
+    emit ("Interface", "force_refresh");
   }
   else if (setting == "Text_speed")
   {
@@ -440,6 +440,33 @@ void Menu::apply_setting (const std::string& setting, const std::string& v)
   {
     if (!signal ("Game", "test_input_mode"))
       set<C::Int>("Sounds", "volume")->set(to_int(v) / 10);
+  }
+  else if (setting == "Gamepad_style")
+  {
+    if (auto gamepad = request<C::String>("Gamepad", "id"))
+    {
+      auto info = value<C::Simple<Gamepad_info>>(gamepad->value(), "gamepad");
+      if (v == "Xbox")
+        info.labels = XBOX;
+      else if (v == "Nintendo")
+        info.labels = NINTENDO;
+      else if (v == "Playstation")
+        info.labels = PLAYSTATION;
+      else
+        info.labels = NO_LABEL;
+      set<C::Simple<Gamepad_info>>(gamepad->value(), "gamepad", info);
+      emit ("Interface", "force_refresh");
+    }
+  }
+  else if (setting == "Gamepad_orient")
+  {
+    if (auto gamepad = request<C::String>("Gamepad", "id"))
+    {
+      auto info = value<C::Simple<Gamepad_info>>(gamepad->value(), "gamepad");
+      info.ok_down = (v == "Ok_down");
+      set<C::Simple<Gamepad_info>>(gamepad->value(), "gamepad", info);
+      emit ("Interface", "force_refresh");
+    }
   }
 }
 
@@ -549,7 +576,7 @@ void Menu::menu_clicked ()
 
   auto effect = request<C::String>(entity , "effect");
 
-  if (menu == "Settings")
+  if (menu == "Settings" || menu == "Controls")
   {
     if (!effect)
     {
@@ -564,9 +591,9 @@ void Menu::menu_clicked ()
 
       std::string setting (entity.begin(), entity.begin() + pos);
       if (left_arrow)
-        apply_setting (setting, get<C::Menu>("Settings", "menu")->decrement(setting));
+        apply_setting (setting, get<C::Menu>(menu, "menu")->decrement(setting));
       else
-        apply_setting (setting, get<C::Menu>("Settings", "menu")->increment(setting));
+        apply_setting (setting, get<C::Menu>(menu, "menu")->increment(setting));
       emit("Click", "play_sound");
     }
     else if (effect->value() != "Ok")

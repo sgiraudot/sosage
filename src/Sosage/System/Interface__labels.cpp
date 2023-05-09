@@ -557,7 +557,8 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
   SOSAGE_UPDATE_DBG_LOCATION("Interface::set_action_selector()");
 
   // Already up to date, do nothing
-  if (m_selector_type == type && m_selector_id == id)
+  if (m_selector_type == type && m_selector_id == id
+      && !signal ("Interface", "force_refresh"))
     return;
 
   SOSAGE_TIMER_START(Interface__set_action_selector);
@@ -570,8 +571,23 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
   m_selector_id = id;
 
   Gamepad_info gamepad;
+
+  Button_orientation
+      ok_orientation = DOWN,
+      notok_orientation = RIGHT_BUTTON;
+  Event_value
+      ok_value = SOUTH,
+      notok_value = EAST;
+
   if (auto current_gamepad = request<C::String>("Gamepad", "id"))
+  {
     gamepad = value<C::Simple<Gamepad_info>>(current_gamepad->value(), "gamepad");
+    if (!gamepad.ok_down)
+    {
+      std::swap (ok_orientation, notok_orientation);
+      std::swap (ok_value, notok_value);
+    }
+  }
 
   auto gamepad_pos = get<C::Position>("Gamepad_action_selector", "position");
   if (type == GP_IDLE)
@@ -585,16 +601,16 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
   else if (type == OKNOTOK)
   {
     generate_action ("", "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), gamepad_pos, FADE_LABEL_ONLY);
-    generate_action ("oknotok", "Ok", RIGHT_BUTTON, gamepad_label(gamepad, EAST), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("oknotok", "Ok", ok_orientation, gamepad_label(gamepad, ok_value), gamepad_pos, FADE_LABEL_ONLY);
     generate_action ("", "move", UP, gamepad_label(gamepad, NORTH), gamepad_pos, FADE_LABEL_ONLY);
-    generate_action ("oknotok", "Cancel", DOWN, gamepad_label(gamepad, SOUTH), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("oknotok", "Cancel", notok_orientation, gamepad_label(gamepad, notok_value), gamepad_pos, FADE_LABEL_ONLY);
   }
   else if (type == OKCONTINUE)
   {
     generate_action ("", "take", LEFT_BUTTON, gamepad_label(gamepad, WEST), gamepad_pos, FADE_LABEL_ONLY);
-    generate_action ("okcontinue", "Ok", RIGHT_BUTTON, gamepad_label(gamepad, EAST), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("okcontinue", "Ok", ok_orientation, gamepad_label(gamepad, ok_value), gamepad_pos, FADE_LABEL_ONLY);
     generate_action ("", "move", UP, gamepad_label(gamepad, NORTH), gamepad_pos, FADE_LABEL_ONLY);
-    generate_action ("okcontinue", "Continue", DOWN, gamepad_label(gamepad, SOUTH), gamepad_pos, FADE_LABEL_ONLY);
+    generate_action ("okcontinue", "Continue", notok_orientation, gamepad_label(gamepad, notok_value), gamepad_pos, FADE_LABEL_ONLY);
   }
   else if (type == ACTION_SEL)
   {

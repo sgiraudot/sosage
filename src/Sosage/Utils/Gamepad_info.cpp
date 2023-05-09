@@ -36,7 +36,7 @@ Gamepad_info::Gamepad_info (unsigned short vendor, unsigned short product,
                             const std::string& name)
   : name (name)
 {
-  id = "Gamepad(" + to_string (vendor) + ":" + to_string(product) + ")";
+  id = to_string (vendor) + ":" + to_string(product);
   if (contains (name, "Xbox") ||
       contains (name, "Steam"))
   {

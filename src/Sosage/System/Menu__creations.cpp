@@ -34,6 +34,7 @@
 #include <Sosage/Utils/color.h>
 #include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/datetime.h>
+#include <Sosage/Utils/Gamepad_info.h>
 
 #include <queue>
 
@@ -45,7 +46,11 @@ namespace C = Component;
 void Menu::init_controls_menu()
 {
   auto controls_menu = set<C::Menu>("Controls", "menu");
-  controls_menu->split(VERTICALLY, 3);
+
+  std::size_t menu_size = 3;
+  if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+    menu_size = 5;
+  controls_menu->split(VERTICALLY, menu_size);
   make_text_menu_title((*controls_menu)[0], "Controls");
 
   auto reference = get<C::Position>("Menu", "reference");
@@ -60,6 +65,21 @@ void Menu::init_controls_menu()
   else // if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
     text = locale_get("Controls_gamepad", "text");
 
+  if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+    if (auto gamepad = request<C::String>("Gamepad", "id"))
+    {
+      auto info = value<C::Simple<Gamepad_info>>(gamepad->value(), "gamepad");
+      std::string name = info.name;
+      if (name.size() > 20)
+      {
+        name.resize(20);
+        name += "...";
+      }
+      name += " (" + info.id + ")";
+      text += "\n " + name;
+    }
+
+
   auto img = set<C::Image>("Controls_text", "image", font, "FFFFFF", text);
   img->z() = Config::menu_text_depth;
   img->on() = false;
@@ -70,7 +90,37 @@ void Menu::init_controls_menu()
                                        Point(Config::menu_small_margin * 2. * scale,
                                              Config::settings_menu_start));
   (*controls_menu)[1].init(img, pos);
-  make_oknotok_item ((*controls_menu)[2], true);
+
+  if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+  {
+    int y = Config::settings_menu_start
+            + 4 * (Config::settings_menu_height + Config::settings_menu_margin);
+
+    make_settings_item ((*controls_menu)[2], "Gamepad_style", y);
+    y += Config::settings_menu_height + Config::settings_menu_margin;
+    make_settings_item ((*controls_menu)[3], "Gamepad_orient", y);
+
+    if (auto gamepad = request<C::String>("Gamepad", "id"))
+    {
+      auto info = value<C::Simple<Gamepad_info>>(gamepad->value(), "gamepad");
+      if (info.labels == XBOX)
+        controls_menu->update_setting ("Gamepad_style", "Xbox");
+      else if (info.labels == NINTENDO)
+        controls_menu->update_setting ("Gamepad_style", "Nintendo");
+      else if (info.labels == PLAYSTATION)
+        controls_menu->update_setting ("Gamepad_style", "Playstation");
+      else
+        controls_menu->update_setting ("Gamepad_style", "Empty");
+
+      if (info.ok_down)
+        controls_menu->update_setting ("Gamepad_orient", "Ok_down");
+      else
+        controls_menu->update_setting ("Gamepad_orient", "Ok_right");
+    }
+
+  }
+
+  make_oknotok_item ((*controls_menu)[menu_size - 1], true);
 }
 
 void Menu::init_loadsave_menus ()
@@ -470,6 +520,10 @@ void Menu::make_settings_item (Component::Menu::Node node, const std::string& id
       possible_values = { "0", "10", "20", "30", "40",
                           "50", "60", "70", "80", "90",
                           "100" };
+    else if (id == "Gamepad_style")
+      possible_values = { "Xbox", "Nintendo", "Playstation", "Empty" };
+    else if (id == "Gamepad_orient")
+      possible_values = { "Ok_right", "Ok_down" };
 
     auto pos = set<C::Relative_position>(id , "position", reference,
                                          Vector (Config::settings_menu_margin

@@ -34,7 +34,7 @@
 namespace Sosage
 {
 
-enum Gamepad_labels { NO_LABEL, NINTENDO, XBOX };
+enum Gamepad_labels { NO_LABEL, NINTENDO, XBOX, PLAYSTATION };
 
 
 struct Gamepad_info
