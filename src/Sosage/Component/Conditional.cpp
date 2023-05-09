@@ -57,6 +57,23 @@ Handle Conditional::get() const
   return (m_condition->value() ? m_if_true : m_if_false);
 }
 
+Functional_conditional::Functional_conditional
+  (const std::string& entity, const std::string& component,
+   const Function& function, const std::string& arg)
+  : Conditional_base(entity, component)
+  , m_function (function), m_arg (arg)
+{ }
+
+void Functional_conditional::add (Handle h)
+{
+  m_handles.emplace_back(h);
+}
+
+Handle Functional_conditional::get() const
+{
+  return m_handles[m_function(m_arg)];
+}
+
 Random_conditional::Random_conditional (const std::string& entity, const std::string& component)
   : Conditional_base(entity, component)
 { }

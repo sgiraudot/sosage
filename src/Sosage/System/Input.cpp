@@ -75,6 +75,7 @@ void Input::run()
     {
       remove(t);
       emit ("Time", "speedup");
+      emit ("Time", "speedup_wanted");
     }
   }
 
@@ -266,6 +267,7 @@ void Input::handle_exit_pause_speed (const Event& ev)
     if (auto t = request<C::Double>("Skip_or_speed", "time"))
       remove(t);
     receive ("Time", "speedup");
+    receive ("Time", "speedup_wanted");
   }
 
   if (ev == Event(WINDOW, FOREGROUND)
@@ -289,14 +291,20 @@ void Input::handle_exit_pause_speed (const Event& ev)
   {
     // Very specific case of fast forward
     if (ev.x() > Config::world_width - 150 && ev.y() < 150)
+    {
       emit ("Time", "speedup");
+      emit ("Time", "speedup_wanted");
+    }
   }
   else if (ev == Event(TOUCH_UP, LEFT)
 #ifdef SOSAGE_DEV
                || (m_fake_touchscreen && ev == Event(MOUSE_UP, LEFT))
 #endif
            )
+  {
     receive ("Time", "speedup");
+    receive ("Time", "speedup_wanted");
+  }
 }
 
 void Input::handle_debug_tools (const Event& ev)
@@ -492,10 +500,16 @@ bool Input::update_gamepad (const Event& ev)
 void Input::finalize_gamepad (bool arrow_released)
 {
   // Speed-up
-  if (key_on(RIGHT_SHOULDER) && key_on(LEFT_SHOULDER) && !status()->is(CUTSCENE))
+  if (key_on(RIGHT_SHOULDER) && key_on(LEFT_SHOULDER))
+  {
     emit ("Time", "speedup");
+    emit ("Time", "speedup_wanted");
+  }
   else
+  {
     receive ("Time", "speedup");
+    receive ("Time", "speedup_wanted");
+  }
 
   if (status()->is(LOCKED, CUTSCENE))
     return;

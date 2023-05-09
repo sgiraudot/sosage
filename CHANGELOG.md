@@ -9,6 +9,11 @@ History of versions and modifications of the SOSAGE engine.
 - Controls are sumed up in menu
 - Customize gamepad button styles and OK/Cancel orientation
 - Support PlayStation button style
+- Display a forbidden sign when trying to speed up cutscene
+
+### Bug fixes
+
+- Prevent player from moving using DPAD when locked/cutscene
 
 ## `v1.3.3 (superfluous3)` - 2023-05-09
 

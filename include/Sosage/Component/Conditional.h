@@ -126,6 +126,23 @@ using Simple_conditional_handle = std::shared_ptr<Simple_conditional<T>>;
 using String_conditional = Simple_conditional<std::string>;
 using String_conditional_handle = std::shared_ptr<String_conditional>;
 
+class Functional_conditional : public Conditional_base
+{
+  using Function = std::function<std::size_t(const std::string&)>;
+  Function m_function;
+  std::vector<Handle> m_handles;
+  std::string m_arg;
+
+public:
+
+  Functional_conditional (const std::string& entity, const std::string& component,
+                          const Function& function, const std::string& arg);
+  void add (Handle h);
+  virtual Handle get() const;
+};
+
+using Functional_conditional_handle = std::shared_ptr<Functional_conditional>;
+
 class Random_conditional : public Conditional_base
 {
   std::vector<Handle> m_handles;

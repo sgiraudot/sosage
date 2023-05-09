@@ -733,29 +733,45 @@ void File_IO::read_init_interface (const Core::File_IO& input)
     ps_img->on() = false;
   }
 
-  std::string fast_forward = input["fast_forward"].string("images", "interface", "png");
+  std::string fast_forward = input["fast_forward"][0].string("images", "interface", "png");
   auto fast_forward_img = C::make_handle<C::Image>("Fast_forward", "image", fast_forward,
                                                    Config::notification_depth, BOX);
   fast_forward_img->set_relative_origin(1.0, 0.0);
   fast_forward_img->set_alpha(64);
+
+  std::string forbidden = input["fast_forward"][1].string("images", "interface", "png");
+  auto forbidden_img = C::make_handle<C::Image>("Fast_forward", "image", forbidden,
+                                                Config::notification_depth, BOX);
+  forbidden_img->set_relative_origin(1.0, 0.0);
+  forbidden_img->set_alpha(64);
+
   set<C::Absolute_position>("Fast_forward", "position", Point(Config::world_width - 20, 20));
 
-  // Fast forward only displayed in touchscreen mode AND not cutscene
-  set<C::Conditional>
-      ("Fast_forward", "image",
-       C::make_or
-       (C::make_and
-        (C::make_simple_condition
-         (get<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE), TOUCHSCREEN),
-         C::make_not(C::make_value_condition
-                     (get<C::Value<Status>>(GAME__STATUS), CUTSCENE))),
-        C::make_handle<C::Functional_condition>
-        ("Is_sped_up", "condition",
-         [&](const std::string&) -> bool
-         {
-           return signal("Time", "speedup");
-         }, "")),
-        fast_forward_img);
+  auto func = set<C::Functional_conditional>("Fast_forward", "image",
+                                             [&](const std::string&) -> std::size_t
+  {
+    if (status()->is(CUTSCENE))
+    {
+      // If CUTSCENE and speedup is wanted, display forbidden
+      if (signal("Time", "speedup_wanted"))
+        return 1;
+      // else display nothing
+      return 2;
+    }
+    // else, if TOUCHSCREEN, always display fast forward
+    if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == TOUCHSCREEN)
+      return 0;
+
+    // else, display if wanted
+    if (signal("Time", "speedup_wanted"))
+      return 0;
+
+    // else, display nothing
+    return 2;
+  }, "");
+  func->add(fast_forward_img);
+  func->add(forbidden_img);
+  func->add(C::Handle());
 
   std::string menu_background = input["menu_background"].string("images", "interface", "png");
   auto menu_background_img = set<C::Image> ("Menu_background", "image", menu_background);
