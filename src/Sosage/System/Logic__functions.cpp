@@ -342,25 +342,26 @@ bool Logic::function_look (const std::vector<std::string>& args)
   if (target == "Default")
     return true;
 
-  if (auto t = request<C::String>("Click", "target"))
-  {
-    set<C::Absolute_position>(id , "lookat",
-                              value<C::Position>(t->value(), "position"));
-    remove(t);
-  }
-  else if (!request<C::Position>(target , "position"))
-  {
-    const Point& cursor = value<C::Position>(CURSOR__POSITION);
-    const Point& camera = value<C::Absolute_position>(CAMERA__POSITION);
-    set<C::Absolute_position>(id , "lookat", cursor + camera);
-  }
-  else
+  if (request<C::Position>(target , "position"))
   {
     auto state = request<C::String>(target , "state");
     if (!state || state->value() != "inventory")
       set<C::Absolute_position>(id , "lookat",
                                 value<C::Position>(target , "position"));
   }
+  else if (auto t = request<C::String>("Click", "target"))
+  {
+    set<C::Absolute_position>(id , "lookat",
+                              value<C::Position>(t->value(), "position"));
+    remove(t);
+  }
+  else
+  {
+    const Point& cursor = value<C::Position>(CURSOR__POSITION);
+    const Point& camera = value<C::Absolute_position>(CAMERA__POSITION);
+    set<C::Absolute_position>(id , "lookat", cursor + camera);
+  }
+
   return true;
 }
 

@@ -20,6 +20,7 @@ History of versions and modifications of the SOSAGE engine.
 
 - Prevent player from moving using DPAD when locked/cutscene
 - Cutscene only skips until unlock now
+- Fix look:[] function when target is different from object
 
 ## `v1.3.3 (superfluous3)` - 2023-05-09
 
@@ -92,13 +93,13 @@ History of versions and modifications of the SOSAGE engine.
 - Pause animations / pause when window minimized
 - Change state synced with animation FP
 
-### Bug Fixes 
+### Bug Fixes
 
 - A shitload
-  
+
 ## `v1.2.3 (summer2022demo3)` - 2022-08-31
 
-### Bug Fixes 
+### Bug Fixes
 
 - Update Android framework to latest SDL version to fix AAB-compatibility
 
@@ -112,7 +113,7 @@ History of versions and modifications of the SOSAGE engine.
 - Use HC LZ4 compression
 - Precompute highlights and masks
 
-### Bug Fixes 
+### Bug Fixes
 
 - Use vsync to avoid artifacts in fullscreen
 - Memory leaks on sound/music objects fixed
