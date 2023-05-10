@@ -100,6 +100,23 @@ Menu::Menu(Content& content)
       status()->push(LOCKED);
     }
   });
+  create_callback ("End", "End_new_game", [&](const std::string&,
+                                          const std::string&)
+  {
+    set<C::Variable>("Game", "new_room", get<C::String>("Game", "init_new_room"));
+    set<C::Variable>("Game", "new_room_origin", get<C::String>("Game", "init_new_room_origin"));
+    emit ("Game", "reset");
+    emit ("Music", "stop");
+    hide_menu("End");
+    status()->pop();
+    status()->push(LOCKED);
+  });
+  create_callback ("End", "End_quit", [&](const std::string&,
+                                          const std::string&)
+  {
+    emit ("Game", "exit");
+  });
+
 
   create_callback ("New_game", "Cancel", [&](const std::string&, const std::string&)
   {
@@ -339,6 +356,8 @@ void Menu::init()
 
   init_loadsave_menus();
   set<C::Menu>("Message", "menu");
+  set<C::Menu>("End", "menu");
+
 
   auto settings_menu = set<C::Menu>("Settings", "menu");
   if constexpr (Config::emscripten || Config::android)
@@ -516,6 +535,8 @@ void Menu::show_menu (const std::string& id)
   }
   else if (id == "Phone")
     update_phone_menu();
+  else if (id == "End")
+    update_end_menu();
 
   get<C::Image>("Menu_background", "image")->on() = true;
   get<C::Image>("Menu_overlay", "image")->on() = true;
@@ -731,5 +752,42 @@ void Menu::update_phone_menu()
 
   make_oknotok_item ((*phone_menu)[idx], true);
 }
+
+void Menu::update_end_menu()
+{
+  auto end_menu = set<C::Menu>("End", "menu");
+  end_menu->split(VERTICALLY, 4);
+  make_text_menu_title((*end_menu)[0], "End");
+
+  auto reference = get<C::Position>("Menu", "reference");
+  auto font = get<C::Font>("Interface", "light_font");
+  double scale = 0.4;
+
+  double time = value<C::Double>(CLOCK__SAVED_TIME) + value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__DISCOUNTED_TIME);
+
+  std::string text = locale_get("End_message", "text");
+  std::string gtime = locale_get("Game_time", "text");
+  capitalize(gtime);
+  text += "\n" + gtime + " = " + time_to_string(time);
+
+  auto img = set<C::Image>("End_message_text", "image", font, "FFFFFF", text);
+  img->z() = Config::menu_text_depth;
+  img->on() = false;
+  img->set_scale(scale);
+  img->set_relative_origin(0, 0);
+  img->set_collision(UNCLICKABLE);
+  auto pos = set<C::Relative_position>("End_message_text", "position", reference,
+                                       Point(Config::menu_small_margin * 2. * scale,
+                                             Config::settings_menu_start));
+  (*end_menu)[1].init(img, pos);
+
+  int y = Config::settings_menu_start
+          + 3 * (Config::settings_menu_height + Config::settings_menu_margin);
+  make_exit_menu_item ((*end_menu)[2], "End_new_game", y);
+  y += Config::settings_menu_height + Config::settings_menu_margin;
+  make_exit_menu_item ((*end_menu)[3], "End_quit", y);
+
+}
+
 
 } // namespace Sosage::System

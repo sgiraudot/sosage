@@ -165,8 +165,13 @@ void Control::update_exit()
       if (status()->is (IN_MENU))
       {
         const std::string& menu = value<C::String>("Game", "current_menu");
-        set<C::String>("Menu", "delete", menu);
-        status()->pop();
+        if (menu == "End")
+          emit ("Game", "exit");
+        else
+        {
+          set<C::String>("Menu", "delete", menu);
+          status()->pop();
+        }
       }
       else
       {

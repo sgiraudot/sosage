@@ -96,6 +96,7 @@ private:
   void menu_clicked ();
   void apply_setting (const std::string& setting, const std::string& value);
   void update_phone_menu();
+  void update_end_menu();
 
   // Implemented in Menu__creation.cpp
   void init_menus();
