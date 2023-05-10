@@ -582,6 +582,9 @@ void Logic::run_actions (bool skip)
       a->reset_scheduled();
       if (!a->on())
         continue;
+
+      if (s.function() == "unlock")
+        skip = false;
     }
     if (!a->ready())
       continue;
