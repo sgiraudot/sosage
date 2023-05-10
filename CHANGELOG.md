@@ -7,6 +7,8 @@ History of versions and modifications of the SOSAGE engine.
 ### Release Management
 
 - Integrate Steam API to properly detect language on Steam Deck
+- Integrate data version in CMake
+- Better version name and code for Android
 
 ### Interface and menus
 

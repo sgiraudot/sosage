@@ -16,7 +16,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 31
         versionCode ${SOSAGE_VERSION_NUMBER}
-        versionName "${SOSAGE_VERSION_NAME}"
+        versionName "v${SOSAGE_VERSION_MAJOR}.${SOSAGE_VERSION_MINOR}.${SOSAGE_VERSION_PATCH}-d${SOSAGE_DATA_VERSION}"
         externalNativeBuild {
             ndkBuild {
                 arguments "APP_PLATFORM=android-16"

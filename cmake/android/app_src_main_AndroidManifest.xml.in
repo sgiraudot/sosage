@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="${SOSAGE_EDITOR_EXT}.${SOSAGE_EDITOR_PATH}.${SOSAGE_ACTIVITY}"
-    android:versionCode="${SOSAGE_VERSION_MAJOR}0${SOSAGE_VERSION_MINOR}00${SOSAGE_VERSION_PATCH}"
-    android:versionName="${SOSAGE_VERSION_MAJOR}.${SOSAGE_VERSION_MINOR}.${SOSAGE_VERSION_PATCH}-${SOSAGE_VERSION_NAME}"
+    android:versionCode="${SOSAGE_VERSION_NUMBER}"
+    android:versionName="v${SOSAGE_VERSION_MAJOR}.${SOSAGE_VERSION_MINOR}.${SOSAGE_VERSION_PATCH}-d${SOSAGE_DATA_VERSION}"
     android:installLocation="auto">
 
     <!-- OpenGL ES 2.0 -->
