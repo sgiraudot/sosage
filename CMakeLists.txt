@@ -85,6 +85,10 @@ sosage_option(SOSAGE_CFG_USE_SDL_MIXER_EXT "Use more advanced fork of SDL_Mixer"
 sosage_option(SOSAGE_CFG_GUILESS "Do not instanciate window/renderer, for testing purposes" OFF)
 sosage_option(SOSAGE_COMPILE_SCAP "Compile Sosage Compressed Data Packager" OFF)
 sosage_option(SOSAGE_CONFIG_ANDROID "Configure Sosage for Android" OFF)
+
+set(STEAMSDK_ROOT "" CACHE PATH "Root of Steam SDK (optional)")
+set(SOSAGE_STEAM_APP_ID "" CACHE STRING "App ID of the game on Steam (optional)")
+
 set(SOSAGE_BUILD_TYPE "Release" CACHE STRING "Is sosage built for Release/Beta/Demo/Dev (this is different from CMAKE_BUILD_TYPE)")
 if (SOSAGE_BUILD_TYPE STREQUAL "Release")
   add_definitions(-DSOSAGE_RELEASE)
@@ -173,6 +177,13 @@ if (LZ4_FOUND)
 else()
   message(STATUS "LZ4 is required and not found")
   set(SOSAGE_DEPENDENCIES_OKAY false)
+endif()
+
+if(NOT STEAMSDK_ROOT STREQUAL "" AND NOT SOSAGE_STEAM_APP_ID STREQUAL "")
+  list(APPEND SOSAGE_COMPILE_DEFINITIONS "SOSAGE_LINKED_WITH_STEAMSDK")
+  list(APPEND SOSAGE_COMPILE_DEFINITIONS "SOSAGE_STEAM_APP_ID=${SOSAGE_STEAM_APP_ID}")
+  list(APPEND SOSAGE_INCLUDE_DIRECTORIES "${STEAMSDK_ROOT}/public/")
+  list(APPEND SOSAGE_LINK_LIBRARIES "${STEAMSDK_ROOT}/redistributable_bin/linux64/libsteam_api.so")
 endif()
 
 ## Abort if at least one dependency is missing

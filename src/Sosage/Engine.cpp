@@ -47,6 +47,7 @@
 #include <Sosage/System/Menu.h>
 #include <Sosage/System/Sound.h>
 #include <Sosage/System/Time.h>
+#include <Sosage/Third_party/Steam.h>
 #include <Sosage/Utils/Asset_manager.h>
 #include <Sosage/Utils/error.h>
 #include <Sosage/Utils/profiling.h>
@@ -86,6 +87,8 @@ Engine::Engine (int argc, char** argv)
 
   handle_cmdline_args(argc, argv);
 
+  Steam::init();
+
 #ifdef SOSAGE_EMSCRIPTEN
   emscripten_global_engine_ptr = this;
 #endif
@@ -95,6 +98,8 @@ Engine::~Engine()
 {
   // Clear content before shutting down systems
   m_content.clear();
+
+  Steam::shutdown();
 }
 
 bool Engine::run (const std::string& folder_name)

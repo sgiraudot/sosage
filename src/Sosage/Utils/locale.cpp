@@ -25,6 +25,7 @@
 */
 
 #include <Sosage/Config/platform.h>
+#include <Sosage/Third_party/Steam.h>
 #include <Sosage/Utils/locale.h>
 
 #include <SDL_locale.h>
@@ -35,6 +36,10 @@ namespace Sosage
 
 std::vector<std::string> get_locales()
 {
+#ifdef SOSAGE_LINKED_WITH_STEAMSDK
+  return { Steam::game_language() };
+#endif
+
   SDL_Locale* locale = SDL_GetPreferredLocales();
   std::vector<std::string> out;
   while (locale->language != nullptr)

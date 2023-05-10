@@ -246,11 +246,16 @@ if data["steam"]:
         cfg_cmd += ' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
         cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_steam/lib/libSDL2_mixer_ext.a'
         cfg_cmd += ' -DLZ4_INCLUDE_DIR=' + data["lz4_source_path"] + '/lib/'
+        cfg_cmd += ' -DSTEAMSDK_ROOT:PATH=' + data["steam_sdk"]
+        cfg_cmd += ' -DSOSAGE_STEAM_APP_ID=' + data["steam_app_id"]
         cfg_cmd += ' -DCMAKE_INSTALL_PREFIX=./install ' + cwd
         run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "' + cfg_cmd + '"')
         if not configure_only:
             run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "make -j ' + str(data["threads"]) + '"')
             run_cmd('schroot --chroot steamrt_scout_amd64 -- sh -c "make install"')
+            run_cmd("mkdir -p install/lib")
+            run_cmd('cp ' + data["steam_sdk"] + "/redistributable_bin/linux64/libsteam_api.so install/lib")
+            run_cmd('patchelf --replace-needed libsteam_api.so ../lib/libsteam_api.so install/bin/' + gamename)
             run_cmd("rm -rf " + steam_dir + "/linux")
             run_cmd("cp -r install " + steam_dir + "/linux")
         chdir(cwd)

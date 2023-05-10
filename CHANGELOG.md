@@ -4,16 +4,22 @@ History of versions and modifications of the SOSAGE engine.
 
 ## `v1.4.0 (returnz)` - TBD
 
+### Release Management
+
+- Integrate Steam API to properly detect language on Steam Deck
+
 ### Interface and menus
 
 - Controls are sumed up in menu
 - Customize gamepad button styles and OK/Cancel orientation
 - Support PlayStation button style
 - Display a forbidden sign when trying to speed up cutscene
+- End menu with options to start a new game or quit
 
 ### Bug fixes
 
 - Prevent player from moving using DPAD when locked/cutscene
+- Cutscene only skips until unlock now
 
 ## `v1.3.3 (superfluous3)` - 2023-05-09
 
