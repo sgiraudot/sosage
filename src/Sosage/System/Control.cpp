@@ -109,7 +109,7 @@ void Control::run()
 
   update_exit();
 
-  auto key = std::make_pair (m_status, m_mode);
+  auto key = std::make_pair (status()->value(), m_mode);
   auto iter = m_dispatcher.find(key);
   if (iter != m_dispatcher.end())
     (iter->second)();
