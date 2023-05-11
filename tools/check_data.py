@@ -12,7 +12,9 @@ root_folder = sys.argv[1]
 verbose = False
 if len(sys.argv) > 2 and sys.argv[2] == '-v':
     verbose = True
+
 exit_at_first_error = False
+test_ids = False
 
 clean_unused = False
 if len(sys.argv) > 2 and sys.argv[2] == '-c':
@@ -182,14 +184,20 @@ current_room = ""
 current_music = ""
 is_num = False
 def is_action_id(tested_id):
+    if not test_ids:
+        return True
     return tested_id in items["actions"]
 def is_animation_id(tested_id):
+    if not test_ids:
+        return True
     return tested_id in items["animations"]
 def is_character_id(tested_id):
     if tested_id == "Hinter":
         return True
     if is_num:
         return True # Too complicated to test
+    if not test_ids:
+        return True
     elif inventory_step:
         return tested_id in all_items["characters"]
     else:
@@ -198,8 +206,12 @@ def is_character_animation_id(tested_id):
     # Shouldn't be hardcoded...
     return tested_id in { "action", "telephone", "melange1", "melange2", "photo", "hareng" }
 def is_dialog_id(tested_id):
+    if not test_ids:
+        return True
     return tested_id in items["dialogs"]
 def is_integer_id(tested_id):
+    if not test_ids:
+        return True
     return tested_id in items["integers"]
 def is_string_line(tested):
     if not isinstance(tested, str):
@@ -207,8 +219,12 @@ def is_string_line(tested):
     check_line(tested)
     return True
 def is_list_id(tested_id):
+    if not test_ids:
+        return True
     return tested_id == "phone_numbers"
 def is_lookable_id(tested_id):
+    if not test_ids:
+        return True
     if inventory_step:
         return tested_id in all_items["characters"] or tested_id in all_items["objects"]
     else:
@@ -216,8 +232,12 @@ def is_lookable_id(tested_id):
 def is_menu_id(tested_id):
     return tested_id in { "End", "Exit" }
 def is_movable_id(tested_id):
+    if not test_ids:
+        return True
     return tested_id in set().union(items["objects"], items["scenery"], items["animations"], items["characters"])
 def is_music_id(tested_id):
+    if not test_ids:
+        return True
     global current_music
     current_music = tested_id
     return tested_id in items["musics"]
@@ -234,6 +254,8 @@ def queue_room(tested_id):
     todo.append([current_room, tested_id])
     return True
 def is_scalable_id(tested_id):
+    if not test_ids:
+        return True
     return tested_id in set().union(items["objects"], items["scenery"], items["animations"])
 received = {}
 sent = {}
@@ -254,15 +276,23 @@ def is_sent_signal_id(tested_id):
     sent[tested_id].add(refname)
     return True
 def is_showable_id(tested_id):
+    if not test_ids:
+        return True
     if inventory_step:
         return tested_id in set().union(items["objects"], all_items["characters"], items["scenery"], items["texts"], items["windows"], items["codes"])
     else:
         return tested_id in set().union(items["objects"], items["characters"], items["scenery"], items["texts"], items["windows"], items["codes"])
 def is_sound_id(tested_id):
+    if not test_ids:
+        return True
     return tested_id in items["sounds"]
 def is_source_id(tested_id):
+    if not test_ids:
+        return True
     return current_music in sources and tested_id in sources[current_music]
 def is_stated_id(tested_id):
+    if not test_ids:
+        return True
     if is_num:
         return True # Too complicated to test
     global current_stated
@@ -272,6 +302,8 @@ def is_stated_id(tested_id):
     else:
         return tested_id in states
 def is_state_id(tested_id):
+    if not test_ids:
+        return True
     if is_num:
         return True # Too complicated to test
     elif inventory_step:
@@ -279,8 +311,12 @@ def is_state_id(tested_id):
     else:
         return current_stated in states and tested_id in states[current_stated]
 def is_target_id(tested_id):
+    if not test_ids:
+        return True
     return tested_id in items["objects"] or tested_id in items["characters"]
 def is_text_id(tested_id):
+    if not test_ids:
+        return True
     return tested_id in items["texts"]
 current_timer = ""
 def register_timer_id(tested_id):
@@ -536,7 +572,8 @@ test(data, "circle/1", file_exists, ["images/interface", "png"])
 test(data, "circle/2", file_exists, ["images/interface", "png"])
 test(data, "circle/3", file_exists, ["images/interface", "png"])
 test(data, "circle/4", file_exists, ["images/interface", "png"])
-test(data, "fast_forward", file_exists, ["images/interface", "png"])
+test(data, "fast_forward/0", file_exists, ["images/interface", "png"])
+test(data, "fast_forward/1", file_exists, ["images/interface", "png"])
 test(data, "code_results/0", file_exists, ["images/interface", "png"])
 test(data, "code_results/1", file_exists, ["images/interface", "png"])
 test(data, "menu_background", file_exists, ["images/interface", "png"])
@@ -578,7 +615,7 @@ for s in sections:
             for item in data[s]:
                 global_items[s].add(item)
 
-register_access = False
+#register_access = False
 
 
 print("# TESTING INVENTORY OBJECTS")
@@ -995,7 +1032,7 @@ while todo:
                     continue
                 tests[s](ldata)
 
-register_access = False
+#register_access = False
 
 for section, it in global_items.items():
     for item_id in it:
