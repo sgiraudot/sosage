@@ -382,34 +382,47 @@ void Input::update_active_gamepad (const Event& ev)
     Gamepad_ptr ptr;
     int joystick_id;
     std::tie(ptr, joystick_id) = m_core.open_gamepad (ev.x());
-    set<C::Simple<Gamepad_ptr>>("Gamepad_" + to_string(joystick_id), "pointer", ptr);
 
     // Get (or update) info
     auto info = m_core.gamepad_info (ptr);
     std::string id = "Gamepad(" + info.id + ")";
-    if (auto existing = request<C::Simple<Gamepad_info>>(id, "gamepad"))
+
+    auto is_open = get_or_set<C::Boolean>(id, "is_open", false);
+    if (is_open->value())
     {
-      debug << "Found existing configuration for "
-            << info.name << " (" << info.id << ")" << std::endl;
-      info.labels = existing->value().labels;
-      info.ok_down = existing->value().ok_down;
+      // Fix problem when controllers is opened twice
+      debug << id << " is already opened, cancelling" << std::endl;
+      m_core.close_gamepad (ptr);
     }
     else
     {
-      debug << "Using default configuration for "
-            << info.name << " (" << info.id << ")" << std::endl;
+      is_open->set(true);
+      set<C::Simple<Gamepad_ptr>>("Gamepad_" + to_string(joystick_id), "pointer", ptr);
+
+      if (auto existing = request<C::Simple<Gamepad_info>>(id, "gamepad"))
+      {
+        debug << "Found existing configuration for "
+              << info.name << " (" << info.id << ")" << std::endl;
+        info.labels = existing->value().labels;
+        info.ok_down = existing->value().ok_down;
+      }
+      else
+      {
+        debug << "Using default configuration for "
+              << info.name << " (" << info.id << ")" << std::endl;
+      }
+      set<C::Simple<Gamepad_info>>(id, "gamepad", info);
+
+      // Map SDL id to ingame ID
+      set<C::String>("Gamepad_" + to_string(joystick_id), "ingame_id", id);
+
+      // Set current gamepad
+      debug << "Setting " << id << ":gamepad" << std::endl;
+      set<C::String>("Gamepad", "id", id);
+
+      emit("Input_mode", "changed");
     }
-    set<C::Simple<Gamepad_info>>(id, "gamepad", info);
-
-    // Map SDL id to ingame ID
-    set<C::String>("Gamepad_" + to_string(joystick_id), "ingame_id", id);
-
-    // Set current gamepad
-    debug << "Setting " << id << ":gamepad" << std::endl;
-    set<C::String>("Gamepad", "id", id);
-
-    emit("Input_mode", "changed");
-  }
+    }
   else if (ev.type() == DELETE_GAMEPAD)
   {
     debug << "Deleted gamepad " << ev.x() << std::endl;
