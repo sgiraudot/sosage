@@ -2,6 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.4.1 (returnz1)` - 2023-05-11
+
+### Bug fixes
+
+- Fix notifications sometimes not displayed
+
 ## `v1.4.0 (returnz)` - 2023-05-11
 
 ### Release Management

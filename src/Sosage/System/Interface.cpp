@@ -802,6 +802,9 @@ void Interface::update_notifications()
 
   for (auto tr : to_remove)
     remove(tr);
+
+  // Flush end signals in case some got lost
+  components("end_notification").clear();
 }
 
 void Interface::update_inventory()

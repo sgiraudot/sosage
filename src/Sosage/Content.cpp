@@ -40,6 +40,7 @@ Content::Content()
   auto reserved_components
       = { "action",
           "animation",
+          "end_notification",
           "gamepad",
           "group",
           "image",
