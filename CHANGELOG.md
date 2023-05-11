@@ -2,11 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v1.4.1 (returnz1)` - 2023-05-11
+## `v1.4.1 (returnz1)` - TBD
 
 ### Bug fixes
 
 - Fix notifications sometimes not displayed
+- Fix Menu bug when coming from inventory
 
 ## `v1.4.0 (returnz)` - 2023-05-11
 

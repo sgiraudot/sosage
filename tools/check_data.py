@@ -129,6 +129,8 @@ def is_time(key, value):
 accessed_files = set()
 register_access = True
 
+accessed_files.add(root_folder + "/data/gamecontrollerdb.txt")
+
 def file_exists(key, value, args):
     fname = args[0] + "/" + value + "." + args[1]
     if not os.path.exists(root_folder + "/" + fname):
@@ -484,7 +486,7 @@ for root, directories, filenames in os.walk(data_folder):
         basename = os.path.basename(fullname)
         name, ext = os.path.splitext(basename)
         if ext != ".yaml":
-            if "locale.yaml" not in fullname:
+            if "locale.yaml" not in fullname and "gamecontrollerdb.txt" not in fullname:
                 print("Warning: non yaml file found: " + fullname)
             continue
 
@@ -574,6 +576,10 @@ test(data, "circle/3", file_exists, ["images/interface", "png"])
 test(data, "circle/4", file_exists, ["images/interface", "png"])
 test(data, "fast_forward/0", file_exists, ["images/interface", "png"])
 test(data, "fast_forward/1", file_exists, ["images/interface", "png"])
+test(data, "playstation/0", file_exists, ["images/interface", "png"])
+test(data, "playstation/1", file_exists, ["images/interface", "png"])
+test(data, "playstation/2", file_exists, ["images/interface", "png"])
+test(data, "playstation/3", file_exists, ["images/interface", "png"])
 test(data, "code_results/0", file_exists, ["images/interface", "png"])
 test(data, "code_results/1", file_exists, ["images/interface", "png"])
 test(data, "menu_background", file_exists, ["images/interface", "png"])
