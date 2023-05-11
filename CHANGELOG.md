@@ -2,7 +2,7 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v1.4.0 (returnz)` - TBD
+## `v1.4.0 (returnz)` - 2023-05-11
 
 ### Release Management
 
