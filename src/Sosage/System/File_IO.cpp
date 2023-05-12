@@ -907,6 +907,12 @@ void File_IO::read_savefiles (const Core::File_IO& input)
     if (!input.parse())
       continue;
 
+    std::string room_id = input["room"].string();
+    // Get room name (if file not found, save is outdated, just ignore all
+    Core::File_IO room_content ("data/rooms/" + room_id + ".yaml");
+    if (!room_content.parse())
+      break;
+
     int date = 0;
     if (input.has("date"))
       date = input["date"].integer();
@@ -916,11 +922,7 @@ void File_IO::read_savefiles (const Core::File_IO& input)
       most_recent_save_id = save_id;
     }
     double time = input["time"].floating();
-    std::string room_id = input["room"].string();
 
-    // Get room name
-    Core::File_IO room_content ("data/rooms/" + room_id + ".yaml");
-    room_content.parse();
     std::string room_name = room_content["name"].string();
 
     set<C::Tuple<std::string, double, int>>("Save_" + save_id,
