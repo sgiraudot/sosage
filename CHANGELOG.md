@@ -11,6 +11,7 @@ History of versions and modifications of the SOSAGE engine.
 - Fix crash if savegame with outdated room
 - Fix cutscene skipping lefting some moves unfinished
 - Fix hidden characters sometimes reappearing
+- Remove character's path if move:[] is called
 
 ## `v1.4.0 (returnz)` - 2023-05-11
 

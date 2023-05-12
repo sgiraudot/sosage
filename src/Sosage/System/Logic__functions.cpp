@@ -420,6 +420,9 @@ bool Logic::function_move (const std::vector<std::string>& args)
       set<C::Int>(target , "z", z);
     }
 
+    // Cancel movement if character was walking
+    remove (target, "path", true);
+
     get<C::Absolute_position>(target, "position")->set(Point(x, y));
 
     if (request<C::Group>(target , "group")) // not fake character with no skin
