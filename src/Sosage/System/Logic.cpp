@@ -532,30 +532,47 @@ bool Logic::skip_cutscene()
 {
   bool skip = false;
   if (status()->is(CUTSCENE))
-  {
     skip = receive ("Game", "skip_cutscene");
-    if (skip)
-    {
-      status()->pop();
-      // Finish all paths
-      for (auto c : components("path"))
-        if (auto path = C::cast<C::Path>(c))
-        {
-          Point destination = (*path)[path->size() - 1];
-          function_move ({path->entity(), to_string (destination.X()),
-                          to_string (destination.Y()),
-                          to_string(is_looking_right(path->entity()))});
-          emit(path->entity(), "stop_walking");
-        }
-      components("path").clear();
-    }
-  }
 
-  // Quick'n'dirty workaround for the cutscene camera
-  // bug. I should rework the full wait/schedule/etc.
-  // framework to be clean.
   if (skip)
-    remove("Camera", "move60fps", true);
+  {
+    status()->pop();
+    // Finish all paths
+    for (auto c : components("path"))
+      if (auto path = C::cast<C::Path>(c))
+      {
+        Point destination = (*path)[path->size() - 1];
+        function_move ({path->entity(), to_string (destination.X()),
+                        to_string (destination.Y()),
+                        to_string(is_looking_right(path->entity()))});
+        emit(path->entity(), "stop_walking");
+      }
+    components("path").clear();
+
+    // Finish all moves
+    for (auto c : components("move"))
+      if (auto a = C::cast<C::Tuple<Point, Point, int, int, double, double>>(c))
+      {
+        get<C::Position>(a->entity() , "position")->set (a->get<1>());
+        get<C::Image>(a->entity(), "image")->z() = a->get<3>();
+      }
+    components("move").clear();
+    for (auto c : components("move60fps"))
+      if (auto a = C::cast<C::Tuple<Point, Point, double, double>>(c))
+        get<C::Position>(a->entity() , "position")->set (a->get<1>());
+    components("move60fps").clear();
+
+    // Finish all rescale
+    for (auto c : components("rescale"))
+      if (auto a = C::cast<C::Tuple<double, double, double, double>>(c))
+        get<C::Image>(a->entity() , "image")->set_scale (a->get<1>());
+    components("rescale").clear();
+
+    for (auto c : components("rescale60fps"))
+      if (auto a = C::cast<C::Tuple<double, double, double, double>>(c))
+        get<C::Image>(a->entity() , "image")->set_scale (a->get<1>());
+    components("rescale60fps").clear();
+  }
 
   return skip;
 }
