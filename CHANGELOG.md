@@ -10,6 +10,7 @@ History of versions and modifications of the SOSAGE engine.
 - Fix Menu bug when coming from inventory
 - Fix crash if savegame with outdated room
 - Fix cutscene skipping lefting some moves unfinished
+- Fix hidden characters sometimes reappearing
 
 ## `v1.4.0 (returnz)` - 2023-05-11
 

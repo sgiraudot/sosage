@@ -426,6 +426,7 @@ void Animation::handle_state_changes()
     const std::string& id = c->entity();
     auto g = get<C::Group>(id , "group");
     g->apply<C::Image>([](auto img) { img->on() = false; });
+    emit(id, "is_hidden");
     m_to_remove.push_back(c);
   }
 
@@ -435,6 +436,7 @@ void Animation::handle_state_changes()
     const std::string& id = c->entity();
     auto g = get<C::Group>(id , "group");
     g->apply<C::Image>([](auto img) { img->on() = true; });
+    receive(id, "is_hidden");
     m_to_remove.push_back(c);
   }
 }
@@ -599,7 +601,7 @@ void Animation::set_move_animation (const std::string& id, const Vector& directi
   auto head = get<C::Animation>(id + "_head", "image");
   auto mouth = get<C::Animation>(id + "_mouth", "image");
 
-  image->on() = true;
+  image->on() = !signal(id, "is_hidden");
 
   if (head->on())
   {
@@ -729,7 +731,7 @@ void Animation::generate_random_idle_body_animation (const std::string& id, bool
   auto image = get<C::Animation>(id + "_body", "image");
 
   // Reset all
-  image->on() = true;
+  image->on() = !signal(id, "is_hidden");
   image->reset();
   image->frames().clear();
 
