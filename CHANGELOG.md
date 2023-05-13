@@ -2,7 +2,7 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v1.4.1 (returnz1)` - TBD
+## `v1.4.1 (returnz1)` - 2023-05-13
 
 ### Bug fixes
 
