@@ -572,6 +572,13 @@ bool Logic::skip_cutscene()
       if (auto a = C::cast<C::Tuple<double, double, double, double>>(c))
         get<C::Image>(a->entity() , "image")->set_scale (a->get<1>());
     components("rescale60fps").clear();
+
+    // Finish zoom
+    if (auto zoom = request<C::Array<double, 4>> ("Camera", "change_zoom"))
+    {
+      get<C::Double>(CAMERA__ZOOM)->set((*zoom)[0]);
+      remove(zoom);
+    }
   }
 
   return skip;
@@ -815,6 +822,8 @@ void Logic::skip_step (const C::Action::Step& step)
     function_stop (args);
   else if (function == "set" || function == "set12fps")
     function_set (args);
+  else if (function == "zoom")
+    function_zoom ({ args[0] });
 }
 
 bool Logic::subfunction_fade (bool fadein, double duration)
