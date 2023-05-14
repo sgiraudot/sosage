@@ -282,6 +282,8 @@ if (SOSAGE_CONFIG_ANDROID)
   set(SDL2_TTF_SOURCE_PATH "" CACHE PATH "Source of the SDL TTF library")
   set(YAML_SOURCE_PATH "" CACHE PATH "Source of the YAML library")
   set(LZ4_SOURCE_PATH "" CACHE PATH "Source of the LZ4 library")
+  set(SOSAGE_KEYSTORE_ALIAS "" CACHE STRING "Alias of the keystore file for Android signing")
+  set(SOSAGE_KEYSTORE_PASSWORD "" CACHE STRING "Password of the keystore file for Android signing")
   set(HACK_VARIANT_NAME "\$\{variant.name.capitalize()\}")
 
   if (SOSAGE_CFG_USE_SDL_MIXER_EXT)

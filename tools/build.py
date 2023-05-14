@@ -296,6 +296,8 @@ if data["androidapk"] or data["androidaab"]:
         run_cmd("mkdir -p " + android_buildir)
         chdir(android_buildir)
         run_cmd(cmake_cmd + " -DSOSAGE_CONFIG_ANDROID:BOOL=True"
+                + " -DSOSAGE_KEYSTORE_ALIAS=" + data["keystore_alias"]
+                + " -DSOSAGE_KEYSTORE_PASSWORD=" + data["keystore_password"]
                 + " -DSDL2_SOURCE_PATH:PATH=" + data["sdl2_source_path"]
                 + " -DSDL2_IMAGE_SOURCE_PATH:PATH=" + data["sdl2_image_source_path"]
                 + " -DSDL2_MIXER_SOURCE_PATH:PATH=" + (data["sdl2_mixer_ext_source_path"] if data["use_sdl_mixer_ext"] else data["sdl2_mixer_source_path"])

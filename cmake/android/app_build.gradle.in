@@ -26,12 +26,10 @@ android {
     }
     signingConfigs {
          release {
-            if (project.hasProperty('SUPERFLUOUS_UPLOAD_STORE_FILE')) {
-                storeFile file(SUPERFLUOUS_UPLOAD_STORE_FILE)
-                storePassword SUPERFLUOUS_UPLOAD_STORE_PASSWORD
-                keyAlias SUPERFLUOUS_UPLOAD_KEY_ALIAS
-                keyPassword SUPERFLUOUS_UPLOAD_KEY_PASSWORD
-            }
+            storeFile file("${SOSAGE_KEYSTORE_ALIAS}.keystore")
+            storePassword "${SOSAGE_KEYSTORE_PASSWORD}"
+            keyAlias "${SOSAGE_KEYSTORE_ALIAS}"
+            keyPassword "${SOSAGE_KEYSTORE_PASSWORD}"
         }
     }
     buildTypes {
