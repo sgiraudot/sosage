@@ -2,6 +2,13 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.4.2 (returnz2)` - 2023-05-15
+
+### Bug fixes
+
+- Fix Android AAB generation using Play Asset Delivery
+- Fix bug in cutscene skipping (one step missed)
+
 ## `v1.4.1 (returnz1)` - 2023-05-13
 
 ### Bug fixes

@@ -600,8 +600,8 @@ void Logic::run_actions (bool skip)
       C::Action::Step s = a->next_step();
       while (s.function() != "unlock" && a->on())
       {
-        s = a->next_step();
         skip_step(s);
+        s = a->next_step();
       }
       a->reset_scheduled();
       if (!a->on())
@@ -777,6 +777,8 @@ void Logic::skip_step (const C::Action::Step& step)
 {
   const std::string& function = step.function();
   const std::vector<std::string>& args = step.args();
+
+  debug << "Skipping " << step.to_string() << std::endl;
 
   // For all steps that change a final step, just skip to the end
   if (function == "move")
