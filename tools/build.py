@@ -290,7 +290,7 @@ if data["win"]:
 
 if data["androidapk"] or data["androidaab"]:
     try:
-        print("### BUILDING ANDROID")
+        print("### BUILDING ANDROID APK")
         begin = time.perf_counter()
         run_cmd("rm -rf " + android_buildir)
         run_cmd("mkdir -p " + android_buildir)
@@ -304,15 +304,18 @@ if data["androidapk"] or data["androidaab"]:
                 + " -DSDL2_TTF_SOURCE_PATH:PATH=" + data["sdl2_ttf_source_path"]
                 + " -DYAML_SOURCE_PATH:PATH=" + data["libyaml_source_path"]
                 + " -DLZ4_SOURCE_PATH:PATH=" + data["lz4_source_path"] + " " + cwd)
-        chdir("android")
-        if not configure_only:
-            if data["androidapk"]:
-                run_cmd("./gradlew assembleDebug --parallel --max-workers=" + str(data["threads"]))
-                run_cmd("cp app/build/outputs/apk/debug/*.apk " + output_dir + "/" + appname + "-android.apk")
-            if data["androidaab"]:
-                run_cmd("cp " + raw_data_folder + "/*.keystore app/")
-                run_cmd("./gradlew bundleRelease --parallel --max-workers=" + str(data["threads"]))
-                run_cmd("cp app/build/outputs/bundle/release/*.aab " + output_dir + "/" + appname + "-android.aab")
+
+        if not configure_only and data["androidapk"]:
+            chdir("android_apk")
+            run_cmd("./gradlew assembleDebug --parallel --max-workers=" + str(data["threads"]))
+            run_cmd("cp app/build/outputs/apk/debug/*.apk " + output_dir + "/" + appname + "-android.apk")
+            chdir("..")
+        if not configure_only and data["androidaab"]:
+            chdir("android_aab")
+            run_cmd("cp " + raw_data_folder + "/*.keystore app/")
+            run_cmd("./gradlew bundleRelease --parallel --max-workers=" + str(data["threads"]))
+            run_cmd("cp app/build/outputs/bundle/release/*.aab " + output_dir + "/" + appname + "-android.aab")
+            chdir("..")
         chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")

@@ -9,6 +9,7 @@ else {
 
 android {
     compileSdkVersion 31
+    ${SOSAGE_ANDROID_ASSETPACK}
     defaultConfig {
         if (buildAsApplication) {
             applicationId "${SOSAGE_EDITOR_EXT}.${SOSAGE_EDITOR_PATH}.${SOSAGE_ACTIVITY}"

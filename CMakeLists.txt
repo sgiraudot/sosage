@@ -259,8 +259,97 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL Darwin)
 
 endif()
 
+
+function(Sosage_generate_android_tree Is_apk)
+
+  if (Is_apk)
+    set(SOSAGE_ANDROID_ROOT "android_apk")
+    set(SOSAGE_ANDROID_INCLUDE_GAMEDATA "")
+    set(SOSAGE_ANDROID_ASSETPACK "")
+  else()
+    set(SOSAGE_ANDROID_ROOT "android_aab")
+    set(SOSAGE_ANDROID_INCLUDE_GAMEDATA "include ':gamedata'")
+    set(SOSAGE_ANDROID_ASSETPACK "assetPacks = [\":gamedata\"]")
+  endif()
+  
+  if (SOSAGE_CFG_USE_SDL_MIXER_EXT)
+    set(SDL2_MIXER_ANDROID_MK "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/jni/SDL_mixer_ext/Android.mk")
+    set(CMAKE_ANDROID_FLAGS "${CMAKE_ANDROID_FLAGS} -DSOSAGE_LINKED_WITH_SDL_MIXER_EXT")
+  else()
+    set(SDL2_MIXER_ANDROID_MK "${SDL2_MIXER_SOURCE_PATH}/Android.mk")
+    set(CMAKE_ANDROID_FLAGS "${CMAKE_ANDROID_FLAGS} -DSOSAGE_LINKED_WITH_SDL_MIXER")
+  endif()
+
+  file(COPY "${CMAKE_SOURCE_DIR}/platform/android/" DESTINATION "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/")
+
+  if (EXISTS ${SOSAGE_DATA_FOLDER}/data/general.data)
+    file(GLOB_RECURSE SOSAGE_COMPRESSED_DATA "${SOSAGE_DATA_FOLDER}/data/*.data")
+
+    if (Is_apk)
+      file(COPY ${SOSAGE_COMPRESSED_DATA} DESTINATION "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/assets/data/")
+    else()
+      file(COPY ${SOSAGE_COMPRESSED_DATA} DESTINATION "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/gamedata/src/main/assets/data/")
+    endif()
+  else()
+    if (Is_apk)
+      file(COPY "${SOSAGE_DATA_FOLDER}/data/" DESTINATION "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/assets/data/")
+    else()
+      file(COPY "${SOSAGE_DATA_FOLDER}/data/" DESTINATION "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/gamedata/src/main/assets/data/")
+    endif()
+  endif()
+
+  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon.png"
+    DESTINATION "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-xxxhdpi/")
+  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon144x144.png"
+    DESTINATION "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-xxhdpi/")
+  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon96x96.png"
+    DESTINATION "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-xhdpi/")
+  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon72x72.png"
+    DESTINATION "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-hdpi/")
+  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon48x48.png"
+    DESTINATION "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-mdpi/")
+
+  file(RENAME "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-xxxhdpi/icon.png"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png")
+  file(RENAME "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-xxhdpi/icon144x144.png"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-xxhdpi/ic_launcher.png")
+  file(RENAME "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-xhdpi/icon96x96.png"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-xhdpi/ic_launcher.png")
+  file(RENAME "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-hdpi/icon72x72.png"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-hdpi/ic_launcher.png")
+  file(RENAME "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-mdpi//icon48x48.png"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/mipmap-mdpi/ic_launcher.png")
+
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/settings.gradle.in"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/settings.gradle")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_build.gradle.in"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/build.gradle")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_Android.mk.in"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/jni/Android.mk")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_LZ4_Android.mk.in"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/jni/LZ4/Android.mk")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_SDL_mixer_ext_Android.mk.in"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/jni/SDL_mixer_ext/Android.mk")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_src_Android.mk.in"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/jni/src/Android.mk")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_yaml_Android.mk.in"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/jni/yaml/Android.mk")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_AndroidManifest.xml.in"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/AndroidManifest.xml")
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_java_net_main.java.in"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/java/${SOSAGE_EDITOR_EXT}/${SOSAGE_EDITOR_PATH}/${SOSAGE_ACTIVITY}/${SOSAGE_ACTIVITY}.java")
+
+  set(SOSAGE_LOCALE_NAME ${SOSAGE_NAME})
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_res_values_strings.xml.in"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/values/strings.xml")
+  set(SOSAGE_LOCALE_NAME ${SOSAGE_NAME_FR})
+  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_res_values_strings.xml.in"
+    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/values-fr/strings.xml")
+endfunction()
+
 if (SOSAGE_CONFIG_ANDROID)
 
+  # First, APK config
   if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_ANDROID_FLAGS ${CMAKE_CXX_FLAGS_RELEASE})
   elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
@@ -269,9 +358,6 @@ if (SOSAGE_CONFIG_ANDROID)
     set(CMAKE_ANDROID_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
   endif()
 
-  if(SOSAGE_CFG_TEST_INPUT)
-    set(CMAKE_ANDROID_FLAGS "${CMAKE_ANDROID_FLAGS} -DSOSAGE_CFG_TEST_INPUT")
-  endif()
   if(SOSAGE_CFG_DISPLAY_DEBUG_INFO)
     set(CMAKE_ANDROID_FLAGS "${CMAKE_ANDROID_FLAGS} -DSOSAGE_CFG_DISPLAY_DEBUG_INFO")
   endif()
@@ -286,69 +372,9 @@ if (SOSAGE_CONFIG_ANDROID)
   set(SOSAGE_KEYSTORE_PASSWORD "" CACHE STRING "Password of the keystore file for Android signing")
   set(HACK_VARIANT_NAME "\$\{variant.name.capitalize()\}")
 
-  if (SOSAGE_CFG_USE_SDL_MIXER_EXT)
-    set(SDL2_MIXER_ANDROID_MK "${CMAKE_BINARY_DIR}/android/app/jni/SDL_mixer_ext/Android.mk")
-    set(CMAKE_ANDROID_FLAGS "${CMAKE_ANDROID_FLAGS} -DSOSAGE_LINKED_WITH_SDL_MIXER_EXT")
-  else()
-    set(SDL2_MIXER_ANDROID_MK "${SDL2_MIXER_SOURCE_PATH}/Android.mk")
-    set(CMAKE_ANDROID_FLAGS "${CMAKE_ANDROID_FLAGS} -DSOSAGE_LINKED_WITH_SDL_MIXER")
-  endif()
+  Sosage_generate_android_tree(TRUE)
+  Sosage_generate_android_tree(FALSE)
 
-
-  file(COPY "${CMAKE_SOURCE_DIR}/platform/android/" DESTINATION "${CMAKE_BINARY_DIR}/android/")
-
-  if (EXISTS ${SOSAGE_DATA_FOLDER}/data/general.data)
-    file(GLOB_RECURSE SOSAGE_COMPRESSED_DATA "${SOSAGE_DATA_FOLDER}/data/*.data")
-    file(COPY ${SOSAGE_COMPRESSED_DATA} DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/assets/data/")
-  else()
-    file(COPY "${SOSAGE_DATA_FOLDER}/data/" DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/assets/data/")
-  endif()
-
-  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon.png"
-    DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxxhdpi/")
-  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon144x144.png"
-    DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxhdpi/")
-  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon96x96.png"
-    DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xhdpi/")
-  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon72x72.png"
-    DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-hdpi/")
-  file(COPY "${SOSAGE_DATA_FOLDER}/resources/icon48x48.png"
-    DESTINATION "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-mdpi/")
-
-  file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxxhdpi/icon.png"
-    "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png")
-  file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxhdpi/icon144x144.png"
-    "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png")
-  file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xhdpi/icon96x96.png"
-    "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png")
-  file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-hdpi/icon72x72.png"
-    "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-hdpi/ic_launcher.png")
-  file(RENAME "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-mdpi//icon48x48.png"
-    "${CMAKE_BINARY_DIR}/android/app/src/main/res/mipmap-mdpi/ic_launcher.png")
-
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_build.gradle.in"
-    "${CMAKE_BINARY_DIR}/android/app/build.gradle")
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_Android.mk.in"
-    "${CMAKE_BINARY_DIR}/android/app/jni/Android.mk")
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_LZ4_Android.mk.in"
-    "${CMAKE_BINARY_DIR}/android/app/jni/LZ4/Android.mk")
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_SDL_mixer_ext_Android.mk.in"
-    "${CMAKE_BINARY_DIR}/android/app/jni/SDL_mixer_ext/Android.mk")
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_src_Android.mk.in"
-    "${CMAKE_BINARY_DIR}/android/app/jni/src/Android.mk")
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_jni_yaml_Android.mk.in"
-    "${CMAKE_BINARY_DIR}/android/app/jni/yaml/Android.mk")
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_AndroidManifest.xml.in"
-    "${CMAKE_BINARY_DIR}/android/app/src/main/AndroidManifest.xml")
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_java_net_main.java.in"
-    "${CMAKE_BINARY_DIR}/android/app/src/main/java/${SOSAGE_EDITOR_EXT}/${SOSAGE_EDITOR_PATH}/${SOSAGE_ACTIVITY}/${SOSAGE_ACTIVITY}.java")
-
-  set(SOSAGE_LOCALE_NAME ${SOSAGE_NAME})
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_res_values_strings.xml.in"
-    "${CMAKE_BINARY_DIR}/android/app/src/main/res/values/strings.xml")
-  set(SOSAGE_LOCALE_NAME ${SOSAGE_NAME_FR})
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_res_values_strings.xml.in"
-    "${CMAKE_BINARY_DIR}/android/app/src/main/res/values-fr/strings.xml")
 endif()
 
 include(CPack)

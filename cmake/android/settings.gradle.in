@@ -1,0 +1,2 @@
+include ':app'
+${SOSAGE_ANDROID_INCLUDE_GAMEDATA}

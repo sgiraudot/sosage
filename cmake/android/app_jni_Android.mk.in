@@ -2,6 +2,6 @@ include ${SDL2_SOURCE_PATH}/Android.mk
 include ${SDL2_IMAGE_SOURCE_PATH}/Android.mk
 include ${SDL2_MIXER_ANDROID_MK}
 include ${SDL2_TTF_SOURCE_PATH}/Android.mk
-include ${CMAKE_BINARY_DIR}/android/app/jni/src/Android.mk
-include ${CMAKE_BINARY_DIR}/android/app/jni/yaml/Android.mk
-include ${CMAKE_BINARY_DIR}/android/app/jni/LZ4/Android.mk
+include ${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/jni/src/Android.mk
+include ${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/jni/yaml/Android.mk
+include ${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/jni/LZ4/Android.mk
