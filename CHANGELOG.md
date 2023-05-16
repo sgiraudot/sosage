@@ -7,6 +7,8 @@ History of versions and modifications of the SOSAGE engine.
 ### Bug fixes
 
 - Fix wrong OK/Cancel buttons when solving a code
+- Wait until player is close to 2 objects to show selector and count
+  60 seconds before hiding it
 
 ## `v1.4.2 (returnz2)` - 2023-05-15
 

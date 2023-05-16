@@ -572,10 +572,13 @@ void Interface::update_action_selector()
     if (status()->is(IDLE))
     {
       double inactive_time = value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__LATEST_ACTIVE);
-      if (auto first_idle = request<C::Double>("First_idle", "time"))
+
+      if (signal("Game", "just_launched"))
+        inactive_time = 100;
+      else if (auto first_idle = request<C::Double>("First_idle", "time"))
       {
-        // Keep selector alive for the 30 first seconds of game
-        if (value<C::Double>(CLOCK__TIME) - first_idle->value() < 30)
+        // Keep selector alive for the 60 first seconds of game
+        if (value<C::Double>(CLOCK__TIME) - first_idle->value() < 60)
           inactive_time = 100;
         else
           remove (first_idle);
@@ -636,56 +639,32 @@ void Interface::update_object_switcher()
 {
   SOSAGE_UPDATE_DBG_LOCATION("Interface::update_object_switcher()");
 
-#ifdef SOSAGE_DEV
-  bool keyboard_on = false;
-#endif
   bool gamepad_on = false;
 
+  const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
+  if (mode == GAMEPAD && !status()->is(IN_MENU))
+    if (auto active_objects = request<C::Vector<std::string>>("Interface", "active_objects"))
+      if (active_objects->value().size() > 1)
+        gamepad_on = true;
+
+  if (gamepad_on)
+    if (receive("Game", "just_launched"))
+      set<C::Double> ("First_idle", "time", value<C::Double>(CLOCK__TIME));
+
   double inactive_time = value<C::Double>(CLOCK__TIME) - value<C::Double>(CLOCK__LATEST_ACTIVE);
+
   if (auto first_idle = request<C::Double>("First_idle", "time"))
   {
-    // Keep switcher alive for the 30 first seconds of game
-    if (value<C::Double>(CLOCK__TIME) - first_idle->value() < 30)
+    // Keep switcher alive for the 60 first seconds of game
+    if (value<C::Double>(CLOCK__TIME) - first_idle->value() < 60)
       inactive_time = 100;
     else
       remove (first_idle);
   }
 
-  if (inactive_time >= 5)
-  {
-    const Input_mode& mode = value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE);
-    if (mode == GAMEPAD && !status()->is(IN_MENU))
-      if (auto active_objects = request<C::Vector<std::string>>("Interface", "active_objects"))
-        if (active_objects->value().size() > 1)
-        {
-#ifdef SOSAGE_DEV
-          if (auto info = request<C::String>("Gamepad", "id"))
-          {
-            keyboard_on = (value<C::Simple<Gamepad_info>>(info->value(), "gamepad").name
-                           == "Keyboard");
-            gamepad_on = !keyboard_on;
-          }
-#else
-          gamepad_on = true;
-#endif
-        }
-  }
+  if (inactive_time < 5)
+    gamepad_on = false;
 
-#if 0 // Just to test gamepad display using keyboard
-  std::swap(keyboard_on, gamepad_on);
-#endif
-
-#ifdef SOSAGE_DEV
-  if (keyboard_on)
-  {
-    auto img = get<C::Image>("Keyboard_switcher_left", "image");
-    if (img->alpha() != 255)
-    {
-      img->on() = true;
-      fade_action_selector ("Keyboard_switcher", true);
-    }
-  }
-#endif
   if (gamepad_on)
   {
     auto img = get<C::Image>("Gamepad_switcher_left", "image");
@@ -695,17 +674,7 @@ void Interface::update_object_switcher()
       fade_action_selector ("Gamepad_switcher", true);
     }
   }
-#ifdef SOSAGE_DEV
-  if (!keyboard_on)
-  {
-    auto img = get<C::Image>("Keyboard_switcher_left", "image");
-    if (img->alpha() != 0)
-      fade_action_selector ("Keyboard_switcher", false);
-    else
-      img->on() = false;
-  }
-#endif
-  if (!gamepad_on)
+  else
   {
     auto img = get<C::Image>("Gamepad_switcher_left", "image");
     if (img->alpha() != 0)

@@ -42,9 +42,6 @@ namespace C = Component;
 
 void Control::idle_gamepad()
 {
-  if (receive("Game", "just_launched"))
-    set<C::Double> ("First_idle", "time", value<C::Double>(CLOCK__TIME));
-
   if (signal("Stick", "moved"))
   {
     remove ("Player", "not_moved_yet", true);
