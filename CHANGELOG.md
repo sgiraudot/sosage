@@ -2,6 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.4.3 (returnz3)` - 2023-05-16
+
+### Bug fixes
+
+- Fix wrong OK/Cancel buttons when solving a code
+
 ## `v1.4.2 (returnz2)` - 2023-05-15
 
 ### Bug fixes

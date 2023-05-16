@@ -392,14 +392,14 @@ void Control::code_gamepad()
 
   auto code = get<C::Code>("Game", "code");
   auto window = get<C::Image>("Game", "window");
-  if (received_key == "inventory")
+  if (is_notok(received_key))
   {
     emit ("Interface", "hide_window");
     code->reset();
     remove("Code_hover", "image", true);
     status()->pop();
   }
-  else if (received_key == "look")
+  else if (is_ok(received_key))
     if (code->click())
       emit ("code", "button_clicked");
 
