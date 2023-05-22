@@ -39,6 +39,7 @@
 #include <Sosage/Component/Status.h>
 #include <Sosage/Component/Variable.h>
 #include <Sosage/System/Logic.h>
+#include <Sosage/Third_party/Steam.h>
 #include <Sosage/Utils/conversions.h>
 #include <Sosage/Utils/error.h>
 #include <Sosage/Utils/geometry.h>
@@ -493,10 +494,14 @@ bool Logic::function_notify (const std::vector<std::string>& args)
 
   if (args.size() == 1) // Achievement
   {
+#ifdef SOSAGE_LINKED_WITH_STEAMSDK
+    Steam::set_achievement(args[0]);
+#else
     std::string text = locale_get("Achievement", "text") + " " + locale_get(args[0], "text");
     double duration = 3;
     std::string id = push_notification(text, duration);
     emit(id, "is_achievement");
+#endif
   }
   else
   {

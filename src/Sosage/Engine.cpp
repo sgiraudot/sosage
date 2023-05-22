@@ -206,6 +206,7 @@ bool Engine::run()
 {
   for (System::Handle system : m_systems)
     system->run();
+  Steam::run();
   return !m_content.receive("Game", "exit");
 }
 
