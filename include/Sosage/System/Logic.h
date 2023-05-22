@@ -75,7 +75,7 @@ private:
   void reset_all_actions();
   void cancel_action();
   void console_action (Component::String_handle str);
-  void update_scheduled();
+  void update_scheduled(Component::Action_handle a, bool skip_dialog);
   void update_character_path();
   void update_code();
   void update_follower();

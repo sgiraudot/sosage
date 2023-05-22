@@ -123,6 +123,9 @@ void Logic::run ()
   if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU)
       || signal("Game", "reset"))
   {
+    // Keep updating notifications during dialogs
+    update_scheduled (get<C::Action>("Notifications", "action"), false);
+
     SOSAGE_TIMER_STOP(System_Logic__run);
     return;
   }
@@ -144,7 +147,12 @@ void Logic::run ()
   if (auto str = request<C::String>("Test", "console_action"))
     console_action (str);
 
-  update_scheduled();
+  bool skip_dialog = receive("Game", "skip_dialog");
+
+  for (auto c : components("action"))
+    if (auto a = C::cast<C::Action>(c))
+      if (c->entity() != "Character")
+        update_scheduled(a, skip_dialog);
 
 #if 1
   if (receive ("Game", "test"))
@@ -207,6 +215,10 @@ void Logic::notify_end_achievements()
                  + value<C::Double>(CLOCK__TIME)
                  - value<C::Double>(CLOCK__DISCOUNTED_TIME));
 
+  if (request<C::String>("ACH_END", "text"))
+    function_notify ({ "ACH_END" });
+
+  // Speedruns, etc.
   for (const auto c : components("value"))
     if (auto i = C::cast<C::Int>(c))
       if (startswith(i->entity(), "ACH_"))
@@ -307,80 +319,73 @@ void Logic::console_action (C::String_handle str)
   remove (str);
 }
 
-void Logic::update_scheduled()
+void Logic::update_scheduled(Component::Action_handle a, bool skip_dialog)
 {
-  bool skip_dialog = receive("Game", "skip_dialog");
-
-  for (auto c : components("action"))
-    if (auto a = C::cast<C::Action>(c))
-      if (c->entity() != "Character")
+  a->update_scheduled
+      ([&](const C::Action::Timed_handle& th) -> bool
+  {
+    if (th.first == 0) // special case for Path and animations
+    {
+      if (auto saved_path = C::cast<C::Path>(th.second))
       {
-        a->update_scheduled
-            ([&](const C::Action::Timed_handle& th) -> bool
-        {
-          if (th.first == 0) // special case for Path and animations
-          {
-            if (auto saved_path = C::cast<C::Path>(th.second))
-            {
-              auto current_path = request<C::Path>(saved_path->entity(), saved_path->component());
-              if (saved_path == current_path)
-                return true;
-              remove (saved_path->entity(), "nofollow", true);
-              return false;
-            }
-            // else
-            auto anim = C::cast<C::Animation>(th.second);
-            if (anim->is_last_frame())
-              return false;
-            return true;
-          }
-          if (th.first <= m_current_time)
-          {
-            if (C::cast<C::Signal>(th.second))
-              set (th.second);
-            else if (th.second->component() == "notification")
-            {
-              if (request<C::Image>(th.second->entity(), "image"))
-                emit (th.second->entity(), "end_notification");
-            }
-            else if (th.second->entity() != "wait")
-            {
-              debug << a->str() << " remove " << th.second->str() << std::endl;
-
-              // avoid removing new dialog with an outdated timed dialog
-              if (startswith(th.second->entity(), "Comment_"))
-              {
-                auto saved_dialog = C::cast<C::Image>(th.second);
-                auto current_dialog = request<C::Image>(saved_dialog->entity(),
-                                                        saved_dialog->component());
-                if (saved_dialog == current_dialog)
-                  remove (current_dialog);
-              }
-              else
-                remove (th.second, true);
-            }
-            return false;
-          }
-          else if (skip_dialog
-                   // Only skip dialog if displayed for at least a short time
-                   && m_current_time - value<C::Double>("Dialog", "creation_time", 0)
-                   > Config::minimum_reaction_time)
-          {
-            if (contains(th.second->entity(), "Comment_"))
-            {
-              // comments might already have been removed
-              remove (th.second, true);
-              return false;
-            }
-            else if (th.second->component() == "stop_talking")
-            {
-              set (th.second);
-              return false;
-            }
-          }
+        auto current_path = request<C::Path>(saved_path->entity(), saved_path->component());
+        if (saved_path == current_path)
           return true;
-        });
+        remove (saved_path->entity(), "nofollow", true);
+        return false;
       }
+      // else
+      auto anim = C::cast<C::Animation>(th.second);
+      if (anim->is_last_frame())
+        return false;
+      return true;
+    }
+    if (th.first <= m_current_time)
+    {
+      if (C::cast<C::Signal>(th.second))
+        set (th.second);
+      else if (th.second->component() == "notification")
+      {
+        if (request<C::Image>(th.second->entity(), "image"))
+          emit (th.second->entity(), "end_notification");
+      }
+      else if (th.second->entity() != "wait")
+      {
+        debug << a->str() << " remove " << th.second->str() << std::endl;
+
+        // avoid removing new dialog with an outdated timed dialog
+        if (startswith(th.second->entity(), "Comment_"))
+        {
+          auto saved_dialog = C::cast<C::Image>(th.second);
+          auto current_dialog = request<C::Image>(saved_dialog->entity(),
+                                                  saved_dialog->component());
+          if (saved_dialog == current_dialog)
+            remove (current_dialog);
+        }
+        else
+          remove (th.second, true);
+      }
+      return false;
+    }
+    else if (skip_dialog
+             // Only skip dialog if displayed for at least a short time
+             && m_current_time - value<C::Double>("Dialog", "creation_time", 0)
+             > Config::minimum_reaction_time)
+    {
+      if (contains(th.second->entity(), "Comment_"))
+      {
+        // comments might already have been removed
+        remove (th.second, true);
+        return false;
+      }
+      else if (th.second->component() == "stop_talking")
+      {
+        set (th.second);
+        return false;
+      }
+    }
+    return true;
+  });
 }
 
 void Logic::update_character_path()
@@ -928,7 +933,12 @@ bool Logic::subfunction_trigger_dialog (const std::vector<std::string>& args)
 
     action->add ("talk", { character, line });
     if (dialog->has_signal())
-      action->add ("emit", {dialog->signal()});
+    {
+      if (startswith(dialog->signal(), "ACH_")) // Achievement
+        action->add ("notify", {dialog->signal()});
+      else
+        action->add ("emit", {dialog->signal()});
+    }
     action->add ("wait", {});
     action->add ("trigger", { id, "continue" });
 
