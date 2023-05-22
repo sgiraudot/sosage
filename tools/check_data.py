@@ -825,7 +825,8 @@ def test_dialogs(data):
                     test(l, "line/1", is_line)
                     if len(l["line"]) == 3:
                         if l["line"][2].startswith("ACH_"):
-                            is_achievement_id(l["line"][2])
+                            if not is_achievement_id(l["line"][2]):
+                                error("id " + l["line"][2] + " is not a valid achievement id")
                         else:
                             is_sent_signal_id(l["line"][2])
             elif "target" not in l:
