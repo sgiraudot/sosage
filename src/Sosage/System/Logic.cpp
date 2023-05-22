@@ -117,6 +117,9 @@ void Logic::run ()
   if (receive ("Game", "clear_notifications"))
     clear_notifications();
 
+  if (receive ("Game", "notify_end_achievements"))
+    notify_end_achievements();
+
   if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU)
       || signal("Game", "reset"))
   {
@@ -196,6 +199,19 @@ void Logic::clear_notifications(bool hardclear)
         > Config::minimum_reaction_time)
       emit (th.second->entity(), "end_notification");
   }
+}
+
+void Logic::notify_end_achievements()
+{
+  int time = int(value<C::Double>(CLOCK__SAVED_TIME)
+                 + value<C::Double>(CLOCK__TIME)
+                 - value<C::Double>(CLOCK__DISCOUNTED_TIME));
+
+  for (const auto c : components("value"))
+    if (auto i = C::cast<C::Int>(c))
+      if (startswith(i->entity(), "ACH_"))
+        if (time < i->value())
+          function_notify ({ i->entity() });
 }
 
 void Logic::reset_all_actions()

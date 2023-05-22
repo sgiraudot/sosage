@@ -536,7 +536,10 @@ void Menu::show_menu (const std::string& id)
   else if (id == "Phone")
     update_phone_menu();
   else if (id == "End")
+  {
     update_end_menu();
+    emit("Game", "notify_end_achievements");
+  }
 
   get<C::Image>("Menu_background", "image")->on() = true;
   get<C::Image>("Menu_overlay", "image")->on() = true;

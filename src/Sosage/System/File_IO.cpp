@@ -652,6 +652,9 @@ void File_IO::read_init_achievement (const Core::File_IO& input)
     {
       const Core::File_IO::Node& iach = input["achievements"][i];
       set<C::String>(iach[0].string(), "text", iach[1].string());
+
+      if (iach.size() == 3)
+        set<C::Int>(iach[0].string(), "value", iach[2].integer());
     }
 
     std::string left_circle = input["achievement_notif"][0].string
