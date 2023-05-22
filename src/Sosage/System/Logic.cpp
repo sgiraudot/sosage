@@ -145,7 +145,11 @@ void Logic::run ()
 
 #if 1
   if (receive ("Game", "test"))
+  {
     push_notification ("Test de notif", 1);
+    std::string achievement = push_notification("Test de succès", 3);
+    emit(achievement, "is_achievement");
+  }
 #endif
 
   update_character_path();
@@ -1029,7 +1033,7 @@ void Logic::create_dialog (const std::string& character,
 
 }
 
-void Logic::push_notification (const std::string& text, double duration)
+std::string Logic::push_notification (const std::string& text, double duration)
 {
   int number = 0;
   while (request<C::String>("Notification_" + to_string(number), "notification"))
@@ -1044,6 +1048,7 @@ void Logic::push_notification (const std::string& text, double duration)
 
   auto action = get<C::Action>("Notifications", "action");
   action->schedule (end_time, notif);
+  return id;
 }
 
 } // namespace Sosage::System

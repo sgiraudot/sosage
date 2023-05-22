@@ -349,6 +349,9 @@ void Interface::animate_label (const std::string& id, const Animation_style& sty
         unsigned char alpha = get<C::Image>(id, "image")->alpha();
         set<C::GUI_image_animation>(id , "animation", current_time, current_time + Config::inventory_speed,
                                     get<C::Image>(id , "image"), img->scale(), img->scale(), 0, alpha);
+        if (auto star = request<C::Image>(id + "_star", "image"))
+          set<C::GUI_image_animation>(id + "_star", "animation", current_time, current_time + Config::inventory_speed,
+                                      star, star->scale(), star->scale(), 0, alpha);
       }
     }
   }

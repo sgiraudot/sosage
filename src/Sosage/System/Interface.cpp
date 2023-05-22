@@ -706,6 +706,8 @@ void Interface::update_notifications()
     if (request<C::Image>(id, "image"))
       continue;
 
+    bool is_achievement = receive(id, "is_achievement");
+
     set<C::Double> (id, "creation_time", value<C::Double>(CLOCK__TIME));
 
     auto group = set<C::Group>(id, "group");
@@ -714,10 +716,10 @@ void Interface::update_notifications()
     int number = to_int(std::string(id.begin() + id.find('_') + 1, id.end()));
 
     int depth = Config::notification_depth;
-    unsigned int alpha = 170;
+    unsigned int alpha = (is_achievement ? 191 : 170);
 
     auto label = set<C::Image>(id, "image", get<C::Font>("Interface", "font"),
-                               "000000", text);
+                               (is_achievement ? "443700" : "000000"), text);
     label->set_relative_origin(0.5, 0.5);
     label->set_alpha(alpha);
     label->set_scale(0.5 * Config::interface_scale);
@@ -725,15 +727,37 @@ void Interface::update_notifications()
     label->set_collision(UNCLICKABLE);
     group->add(label);
 
+    C::Image_handle star;
+    if (is_achievement)
+    {
+      star = set<C::Image>(id + "_star", "image", get<C::Image>("Star", "image"));
+      star->on() = true;
+      star->set_relative_origin(0.5, 0.5);
+      star->set_alpha(alpha);
+      star->set_scale(0.5 * Config::interface_scale);
+      star->z() = depth+1;
+      star->set_collision(UNCLICKABLE);
+      group->add(star);
+    }
+
     auto left = C::make_handle<C::Image>(id + "_left_circle", "image",
-                                         get<C::Image>("White_left_circle", "image"));
+                                         (is_achievement
+                                          ? get<C::Image>("Yellow_left_circle", "image")
+                                          : get<C::Image>("White_left_circle", "image")));
     auto right = C::make_handle<C::Image>(id + "_right_circle", "image",
-                                          get<C::Image>("White_right_circle", "image"));
+                                          (is_achievement
+                                           ? get<C::Image>("Yellow_right_circle", "image")
+                                           : get<C::Image>("White_right_circle", "image")));
+
 
     int width = label->width() * 0.5;
+    if (is_achievement)
+      width += star->width() * 0.25 + Config::label_margin;
+
     auto back = C::make_handle<C::Image>(id + "_back", "image", 2 * width,
-                              2 * Config::label_height,
-                              255, 255, 255);
+                                         2 * Config::label_height,
+                                         255, (is_achievement ? 240 : 255),
+                                         (is_achievement ? 182 : 255));
     left->compose_with (back);
     back = left;
     back->compose_with (right);
@@ -752,6 +776,8 @@ void Interface::update_notifications()
       double scale = (Config::world_width - 2 * Config::label_margin) / double(back->width());
       back->set_scale(scale);
       label->set_scale(scale);
+      if (is_achievement)
+        star->set_scale(scale);
     }
 
     int y = Config::label_margin + number * Config::label_margin
@@ -763,9 +789,23 @@ void Interface::update_notifications()
 
     set<C::Absolute_position>(id + "_back", "position",
                               Point (Config::label_margin, y));
-    set<C::Absolute_position>(id, "position",
-                              Point (Config::label_margin + 0.5 * back->width() * back->scale(),
-                                     y + 0.5 * back->height() * back->scale()));
+
+    if (is_achievement)
+    {
+      auto star_pos = set<C::Absolute_position>
+                      (id + "_star", "position",
+                       Point (Config::label_margin + 0.5 * back->scale() * (star->width() + 2 * Config::label_margin),
+                              y + 0.5 * back->height() * back->scale()));
+      debug << star_pos->value() << std::endl;
+      set<C::Absolute_position>(id, "position",
+                                Point (star_pos->value().x()
+                                       + 0.5 * back->scale() * (label->width() + 6 * Config::label_margin),
+                                       y + 0.5 * back->height() * back->scale()));
+    }
+    else
+      set<C::Absolute_position>(id, "position",
+                                Point (Config::label_margin + 0.5 * back->width() * back->scale(),
+                                       y + 0.5 * back->height() * back->scale()));
     animate_label(id, FADE);
   }
 

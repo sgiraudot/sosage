@@ -67,6 +67,7 @@ public:
 private:
 
   void read_init_general (const Core::File_IO& input);
+  void read_init_achievement (const Core::File_IO& input);
   void read_init_cursor (const Core::File_IO& input);
   void read_init_inventory (const Core::File_IO& input);
   void read_init_interface (const Core::File_IO& input);

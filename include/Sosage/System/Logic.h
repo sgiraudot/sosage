@@ -96,7 +96,7 @@ private:
   void create_dialog (const std::string& character,
                       const std::string& text,
                       std::vector<Component::Image_handle>& dialog);
-  void push_notification (const std::string& text, double duration);
+  std::string push_notification (const std::string& text, double duration);
 
   // Implemented in Logic__functions.cpp
   bool function_add (const std::vector<std::string>& args);

@@ -484,14 +484,26 @@ bool Logic::function_move60fps (const std::vector<std::string>& args)
 }
 
 /*
+  - notify: [ID achievement_id]           -> Notifies the achievement
   - notify: [STRING text, FLOAT duration] -> Emit a notification with text content for the wanted duration
  */
 bool Logic::function_notify (const std::vector<std::string>& args)
 {
-  check (args.size() == 2, "function_notify takes 2 arguments");
-  std::string text = locale(args[0]);
-  double duration = to_double (args[1]);
-  push_notification(text, duration);
+  check (args.size() == 1 || args.size() == 2, "function_notify takes 1 or 2 arguments");
+
+  if (args.size() == 1) // Achievement
+  {
+    std::string text = locale_get("Achievement", "text") + " " + locale_get(args[0], "text");
+    double duration = 3;
+    std::string id = push_notification(text, duration);
+    emit(id, "is_achievement");
+  }
+  else
+  {
+    std::string text = locale(args[0]);
+    double duration = to_double (args[1]);
+    push_notification(text, duration);
+  }
   return true;
 }
 

@@ -571,6 +571,7 @@ void File_IO::read_init ()
   input.parse();
 
   read_init_general (input);
+  read_init_achievement (input);
   read_init_cursor (input);
   read_init_inventory (input);
   read_init_interface (input);
@@ -641,6 +642,37 @@ void File_IO::read_init_general (const Core::File_IO& input)
 
   std::string dialog_font = input["dialog_font"].string("fonts", "ttf");
   set<C::Font> ("Dialog", "font", dialog_font, 80);
+}
+
+void File_IO::read_init_achievement (const Core::File_IO& input)
+{
+  if (input.has("achievements"))
+  {
+    for (std::size_t i = 0; i < input["achievements"].size(); ++ i)
+    {
+      const Core::File_IO::Node& iach = input["achievements"][i];
+      set<C::String>(iach[0].string(), "text", iach[1].string());
+    }
+
+    std::string left_circle = input["achievement_notif"][0].string
+                              ("images", "interface", "png");
+    auto left_circle_img = set<C::Image>("Yellow_left_circle", "image",
+                                         left_circle, 1, BOX, true);
+    left_circle_img->on() = false;
+
+    std::string right_circle = input["achievement_notif"][1].string
+                               ("images", "interface", "png");
+    auto right_circle_img = set<C::Image>("Yellow_right_circle", "image",
+                                          right_circle, 1, BOX, true);
+    right_circle_img->on() = false;
+
+    std::string star = input["achievement_notif"][2].string
+                       ("images", "interface", "png");
+    auto star_img = set<C::Image>("Star", "image",
+                                  star, 1, BOX, true);
+    star_img->on() = false;
+
+  }
 }
 
 void File_IO::read_init_cursor (const Core::File_IO& input)
