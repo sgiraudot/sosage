@@ -70,7 +70,7 @@ public:
 
 private:
 
-  void clear_notifications();
+  void clear_notifications(bool hardclear = false);
   void reset_all_actions();
   void cancel_action();
   void console_action (Component::String_handle str);

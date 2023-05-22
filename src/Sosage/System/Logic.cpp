@@ -183,7 +183,7 @@ void Logic::run ()
   SOSAGE_TIMER_STOP(System_Logic__run);
 }
 
-void Logic::clear_notifications()
+void Logic::clear_notifications(bool hardclear)
 {
   debug << "Clear notifications" << std::endl;
   auto action = get<C::Action>("Notifications", "action");
@@ -191,7 +191,8 @@ void Logic::clear_notifications()
   {
     // Only remove notification if it was displayed long enough
     // for user to react
-    if (m_current_time - value<C::Double>(th.second->entity(), "creation_time", 0)
+    if (hardclear ||
+        m_current_time - value<C::Double>(th.second->entity(), "creation_time", 0)
         > Config::minimum_reaction_time)
       emit (th.second->entity(), "end_notification");
   }
@@ -540,6 +541,8 @@ bool Logic::skip_cutscene()
 
   if (skip)
   {
+    clear_notifications(true);
+
     status()->pop();
     // Finish all paths
     for (auto c : components("path"))
