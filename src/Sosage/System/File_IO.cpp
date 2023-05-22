@@ -489,9 +489,14 @@ void File_IO::write_savefile()
 
   output.start_section("states");
   for (C::Handle c : components("state"))
-    if (!c->is_system() && c->was_altered())
+  {
+    C::String_handle set_state = request<C::String>(c->entity(), "set_state");
+    if (!c->is_system() &&
+        (c->was_altered() || set_state))
       if (auto s = C::cast<C::String>(c))
-        output.write_list_item ("id", c->entity(), "value", s->value());
+        output.write_list_item ("id", c->entity(), "value",
+                                (set_state ? set_state->value() : s->value()));
+  }
   output.end_section();
 
   output.start_section("signals");
@@ -543,7 +548,7 @@ void File_IO::write_savefile()
 
   output.start_section("hidden");
   for (const std::string& id : hidden)
-    if (!contains(components("set_visible"), C::Id(id, "set_visible")))
+    if (!signal(id, "set_visible"))
       output.write_list_item (id);
   output.end_section();
 
@@ -551,7 +556,8 @@ void File_IO::write_savefile()
   for (C::Handle c : components("image"))
     if (!c->is_system())
       if (auto a = C::cast<C::Animation>(c))
-        if (a->on() && a->loop())
+        if (a->loop() && (a->on() || signal(a->entity(), "start_animation"))
+            && !signal(a->entity(), "stop_animation"))
           if (auto s = request<C::String>(a->entity() , "state"))
             if (s->value() == "Dummy")
               output.write_list_item (a->entity());

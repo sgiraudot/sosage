@@ -2,6 +2,19 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.5.0 (achievements)` - TBD
+
+### Interface and menus
+
+- Steam achievements
+- Fallback on special notification achievements without Steam
+
+### Bug fixes
+
+- Notifications sometimes staying forever
+- Missing Steam includes
+- Fix saves not registering changes made by 12fps animation
+
 ## `v1.4.3 (returnz3)` - 2023-05-16
 
 ### Bug fixes
