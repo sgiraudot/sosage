@@ -149,7 +149,7 @@ def test_id_unicity(ids, ref, new_id):
             error(new_id + " already used in " + ref[new_id])
     else:
         ids.add(new_id)
-        if not refname.startswith("dialogs/") and new_id[0].isupper():
+        if not refname.startswith("dialogs/") and new_id[0].isupper() and not new_id.startswith("ACH_"):
             error(new_id + " has uppercase first letter, reserved for system IDs")
         if ref is not None:
             ref[new_id] = filename
@@ -185,6 +185,8 @@ current_stated = ""
 current_room = ""
 current_music = ""
 is_num = False
+def is_achievement_id(tested_id):
+    return tested_id in achievement_ids
 def is_action_id(tested_id):
     if not test_ids:
         return True
@@ -361,6 +363,7 @@ possible_functions = [ [ "add", is_integer_id, is_convertible_to_int ],
                        [ "move", is_movable_id, is_convertible_to_int, is_convertible_to_int, is_convertible_to_int ],
                        [ "move", is_movable_id, is_convertible_to_int, is_convertible_to_int, is_convertible_to_int, is_convertible_to_float ],
                        [ "move60fps", is_movable_id, is_convertible_to_int, is_convertible_to_int, is_convertible_to_int, is_convertible_to_float ],
+                       [ "notify", is_achievement_id ],
                        [ "notify", is_string_line, is_convertible_to_float ],
                        [ "pause", is_animation_id ],
                        [ "play", is_animation_id ],
@@ -574,6 +577,9 @@ test(data, "circle/1", file_exists, ["images/interface", "png"])
 test(data, "circle/2", file_exists, ["images/interface", "png"])
 test(data, "circle/3", file_exists, ["images/interface", "png"])
 test(data, "circle/4", file_exists, ["images/interface", "png"])
+test(data, "achievement_notif/0", file_exists, ["images/interface", "png"])
+test(data, "achievement_notif/1", file_exists, ["images/interface", "png"])
+test(data, "achievement_notif/2", file_exists, ["images/interface", "png"])
 test(data, "fast_forward/0", file_exists, ["images/interface", "png"])
 test(data, "fast_forward/1", file_exists, ["images/interface", "png"])
 test(data, "playstation/0", file_exists, ["images/interface", "png"])
@@ -610,6 +616,13 @@ for act in ["look", "move", "take", "inventory", "use",
         for e in data["default"][act]["effect"]:
             test(e, "talk/0", is_line)
 
+achievement_ids = set()
+if test(data, "achievements"):
+    for ach in data["achievements"]:
+        ids, _ = test_id_unicity(achievement_ids, None, ach[0])
+    test(ach, "1", is_line)
+    if len(ach) == 3:
+        test(ach, "2", is_int)
 
 print("# GETTING GLOBAL ITEMS")
 global_items = {}
@@ -811,7 +824,10 @@ def test_dialogs(data):
                 if test(l, "line", is_array):
                     test(l, "line/1", is_line)
                     if len(l["line"]) == 3:
-                        is_sent_signal_id(l["line"][2])
+                        if l["line"][2].startswith("ACH_"):
+                            is_achievement_id(l["line"][2])
+                        else:
+                            is_sent_signal_id(l["line"][2])
             elif "target" not in l:
                 if test(l, "goto"):
                     if l["goto"] not in ids:
