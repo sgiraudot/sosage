@@ -377,6 +377,15 @@ bool File_IO::read_savefile (const std::string& save_id)
     emit (isignal.string(), "signal");
   }
 
+  if (input.has("achievements"))
+    for (std::size_t i = 0; i < input["achievements"].size(); ++ i)
+    {
+      const Core::File_IO::Node& iach = input["achievements"][i];
+      emit (iach["id"].string(), "done");
+      if (iach["stored"].boolean())
+        emit (iach["id"].string(), "stored");
+    }
+
   for (std::size_t i = 0; i < input["positions"].size(); ++ i)
   {
     const Core::File_IO::Node& iposition = input["positions"][i];
@@ -505,6 +514,15 @@ void File_IO::write_savefile()
       if (auto s = C::cast<C::Signal>(c))
         output.write_list_item (c->entity());
   output.end_section();
+
+  if (auto achievements = request<C::Vector<std::string>>("Achievements", "list"))
+  {
+    output.start_section("achievements");
+    for (const std::string& ach : achievements->value())
+      if (signal (ach, "done"))
+        output.write_list_item ("id", ach, "stored", signal (ach, "stored"));
+    output.end_section();
+  }
 
   output.start_section("positions");
   for (C::Handle c : components("position"))
@@ -654,9 +672,13 @@ void File_IO::read_init_achievement (const Core::File_IO& input)
 {
   if (input.has("achievements"))
   {
+    auto achievements = set<C::Vector<std::string>>("Achievements", "list");
+
     for (std::size_t i = 0; i < input["achievements"].size(); ++ i)
     {
       const Core::File_IO::Node& iach = input["achievements"][i];
+
+      achievements->push_back (iach[0].string());
       set<C::String>(iach[0].string(), "text", iach[1].string());
 
       if (iach.size() == 3)

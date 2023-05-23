@@ -494,14 +494,16 @@ bool Logic::function_notify (const std::vector<std::string>& args)
 
   if (args.size() == 1) // Achievement
   {
-#ifdef SOSAGE_LINKED_WITH_STEAMSDK
-    Steam::set_achievement(args[0]);
-#else
-    std::string text = locale_get("Achievement", "text") + " " + locale_get(args[0], "text");
-    double duration = 3;
-    std::string id = push_notification(text, duration);
-    emit(id, "is_achievement");
-#endif
+    emit(args[0], "done");
+    if (Steam::set_achievement(args[0]))
+      emit(args[0], "stored");
+    else
+    {
+      std::string text = locale_get("Achievement", "text") + " " + locale_get(args[0], "text");
+      double duration = 3;
+      std::string id = push_notification(text, duration);
+      emit(id, "is_achievement");
+    }
   }
   else
   {

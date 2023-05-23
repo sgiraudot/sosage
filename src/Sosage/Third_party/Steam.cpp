@@ -68,15 +68,17 @@ std::string game_language()
 #endif
 }
 
-void set_achievement (const std::string& id)
+bool set_achievement (const std::string& id)
 {
 #ifdef SOSAGE_LINKED_WITH_STEAMSDK
   if (achievement_init)
   {
-    SteamUserStats()->SetAchievement(id.c_str());
+    bool out = SteamUserStats()->SetAchievement(id.c_str());
     SteamUserStats()->StoreStats();
+    return out;
   }
 #endif
+  return false;
 }
 
 void shutdown()

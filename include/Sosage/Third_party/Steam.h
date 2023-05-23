@@ -37,7 +37,7 @@ extern bool achievement_init;
 void init();
 void run();
 std::string game_language();
-void set_achievement (const std::string& id);
+bool set_achievement (const std::string& id);
 void shutdown();
 
 }
