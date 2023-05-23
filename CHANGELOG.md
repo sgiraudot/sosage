@@ -2,7 +2,11 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v1.5.0 (achievements)` - TBD
+## `v1.5.0 (achievements)` - 2023-05-23
+
+### Release Management
+
+- Integrate Steam API in Windows and Mac versions
 
 ### Interface and menus
 
