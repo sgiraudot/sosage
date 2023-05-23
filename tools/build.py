@@ -66,10 +66,12 @@ if not data["use_compressed_data"]:
 data_dir = data["buildfolder"] + "/data"
 scap_buildir = data["buildfolder"] + "/scap"
 linux_buildir = data["buildfolder"] + "/linux"
-steam_buildir = data["buildfolder"] + "/steamos"
+steam_linux_buildir = data["buildfolder"] + "/steam_linux"
 android_buildir = data["buildfolder"] + "/android"
 mac_buildir = data["buildfolder"] + "/mac"
-win64_buildir = data["buildfolder"] + "/win"
+steam_mac_buildir = data["buildfolder"] + "/steam_mac"
+win_buildir = data["buildfolder"] + "/win"
+steam_win_buildir = data["buildfolder"] + "/steam_win"
 output_dir = data["output"] + "/release-v" + version
 steam_dir = output_dir + "/steam"
 appname = gamename + "-" + version
@@ -202,13 +204,13 @@ if data["linux"]:
         chdir(cwd)
         print("  -> failed")
 
-if data["steam"]:
+if data["steam_linux"]:
     try:
-        print("### BUILDING LINUX/STEAMOS")
+        print("### BUILDING LINUX FOR STEAM")
         begin = time.perf_counter()
-        run_cmd("rm -rf " + steam_buildir)
-        run_cmd("mkdir -p " + steam_buildir)
-        chdir(steam_buildir)
+        run_cmd("rm -rf " + steam_linux_buildir)
+        run_cmd("mkdir -p " + steam_linux_buildir)
+        chdir(steam_linux_buildir)
         run_cmd("mkdir -p install")
         # Use static SDL2 mixer ext for simplicity
         cfg_cmd = cmake_cmd + ' -DYAML_INCLUDE_DIR=' + data["libyaml_source_path"] + '/include/'
@@ -251,10 +253,36 @@ if data["mac"]:
             run_cmd("make install")
             run_cmd('python3 ' + cwd + '/tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/libs/*.dylib')
             run_cmd('python3 ' + cwd + '/tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/MacOS/' + gamename)
-            run_cmd("rm -rf " + steam_dir + "/mac")
-            run_cmd("cp -r install " + steam_dir + "/mac")
             run_cmd("genisoimage -V " + gamename + ".app -D -R -apple -no-pad -o " + gamename + ".dmg install")
             run_cmd("cp " + gamename + ".dmg " + output_dir + "/" + appname + "-macos.dmg")
+        chdir(cwd)
+        end = time.perf_counter()
+        print("  -> done in " + str(int(end - begin)) + "s\n")
+    except:
+        chdir(cwd)
+        print("  -> failed")
+
+if data["steam_mac"]:
+    try:
+        print("### BUILDING MAC FOR STEAM")
+        begin = time.perf_counter()
+        run_cmd("rm -rf " + steam_mac_buildir)
+        run_cmd("mkdir -p " + steam_mac_buildir)
+        chdir(steam_mac_buildir)
+        cfg_cmd = cmake_cmd +' -DSDL2_MIXER_EXT_INCLUDE_DIR:PATH=' + data["sdl2_mixer_ext_source_path"] + '/include/SDL_mixer_ext'
+        cfg_cmd += ' -DSTEAMSDK_ROOT:PATH=' + data["steam_sdk"]
+        cfg_cmd += ' -DSOSAGE_STEAM_APP_ID=' + data["steam_app_id"]
+        cfg_cmd += ' -DSDL2_MIXER_EXT_LIBRARY:FILEPATH=' + data["sdl2_mixer_ext_source_path"] + '/build_osxcross/lib/libSDL2_mixer_ext.a'
+        run_cmd(cfg_cmd + " -DCMAKE_TOOLCHAIN_FILE=" + cwd + "/cmake/Toolchain-osxcross.cmake"
+                + " -DSDL2_INCLUDE_DIR=" + data["mac_sdl_folder"]
+                + " -DCMAKE_INSTALL_PREFIX=./install " + cwd)
+        if not configure_only:
+            run_cmd("make -j " + str(data["threads"]))
+            run_cmd("make install")
+            run_cmd('python3 ' + cwd + '/tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/libs/*.dylib')
+            run_cmd('python3 ' + cwd + '/tools/fix_mac_lib_paths.py install/' + fullname + '.app/Contents/MacOS/' + gamename)
+            run_cmd("rm -rf " + steam_dir + "/mac")
+            run_cmd("cp -r install " + steam_dir + "/mac")
         chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
@@ -266,16 +294,34 @@ if data["win"]:
     try:
         print("### BUILDING WINDOWS")
         begin = time.perf_counter()
-        run_cmd("rm -rf " + win64_buildir)
-        run_cmd("mkdir -p " + win64_buildir)
-        chdir(win64_buildir)
+        run_cmd("rm -rf " + win_buildir)
+        run_cmd("mkdir -p " + win_buildir)
+        chdir(win_buildir)
         run_cmd(cmake_cmd + " -DCMAKE_TOOLCHAIN_FILE=" + cwd + "/cmake/Toolchain-mingw32-x86_64.cmake "
                 + "-DSDL2_INCLUDE_DIR=" + data["win64_sdl_folder"] + " " + cwd)
         if not configure_only:
             run_cmd("make -j " + str(data["threads"]) + "")
             run_cmd("cpack")
             run_cmd("cp *-win64.exe " + output_dir + "/" + appname + "-windows.exe")
-            run_cmd("cmake -DCMAKE_INSTALL_PREFIX=./install .")
+        chdir(cwd)
+        end = time.perf_counter()
+        print("  -> done in " + str(int(end - begin)) + "s\n")
+    except:
+        chdir(cwd)
+        print("  -> failed")
+
+if data["steam_win"]:
+    try:
+        print("### BUILDING WINDOWS FOR STEAM")
+        begin = time.perf_counter()
+        run_cmd("rm -rf " + steam_win_buildir)
+        run_cmd("mkdir -p " + steam_win_buildir)
+        chdir(steam_win_buildir)
+        run_cmd(cmake_cmd + " -DCMAKE_TOOLCHAIN_FILE=" + cwd + "/cmake/Toolchain-mingw32-x86_64.cmake "
+                + ' -DSOSAGE_STEAM_APP_ID=' + data["steam_app_id"]
+                + ' -DSTEAMSDK_ROOT:PATH=' + data["steam_sdk"] + " -DCMAKE_INSTALL_PREFIX=./install ."
+                + " -DSDL2_INCLUDE_DIR=" + data["win64_sdl_folder"] + " " + cwd)
+        if not configure_only:
             run_cmd("mkdir -p install")
             run_cmd("make -j " + str(data["threads"]))
             run_cmd("make install")
@@ -293,7 +339,7 @@ if data["androidapk"] or data["androidaab"]:
         print("### BUILDING ANDROID APK")
         begin = time.perf_counter()
         run_cmd("rm -rf " + android_buildir)
-        run_cmd("mkdir -p " + android_buildir)
+        run_cmd("mkdir -p " + android_build<ir)
         chdir(android_buildir)
         run_cmd(cmake_cmd + " -DSOSAGE_CONFIG_ANDROID:BOOL=True"
                 + " -DSOSAGE_KEYSTORE_ALIAS=" + data["keystore_alias"]

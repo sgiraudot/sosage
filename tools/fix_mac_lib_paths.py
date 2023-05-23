@@ -36,3 +36,11 @@ for exe in sys.argv[1:]:
                 run_cmd('x86_64-apple-darwin19-install_name_tool -id "' + new + '" "' + exe + '"')
             else:
                 run_cmd('x86_64-apple-darwin19-install_name_tool -change "' + old + '" "' + new + '" "' + exe + '"')
+        elif '@loader_path/' in l:
+            lname = l.split('@loader_path/')[1].split(' ')[0]
+            old = '@loader_path/' + lname
+            new = '@executable_path/../libs/' + lname
+            if lname == exe.split('/')[-1]:
+                run_cmd('x86_64-apple-darwin19-install_name_tool -id "' + new + '" "' + exe + '"')
+            else:
+                run_cmd('x86_64-apple-darwin19-install_name_tool -change "' + old + '" "' + new + '" "' + exe + '"')
