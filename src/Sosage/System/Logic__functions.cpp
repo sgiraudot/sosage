@@ -496,9 +496,13 @@ bool Logic::function_notify (const std::vector<std::string>& args)
   {
     emit(args[0], "done");
     if (Steam::set_achievement(args[0]))
+    {
+      debug << "Achievement " << args[0] << " done and stored" << std::endl;
       emit(args[0], "stored");
+    }
     else
     {
+      debug << "Achievement " << args[0] << " done, not stored" << std::endl;
       std::string text = locale_get("Achievement", "text") + " " + locale_get(args[0], "text");
       double duration = 3;
       std::string id = push_notification(text, duration);
