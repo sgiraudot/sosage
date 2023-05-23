@@ -548,8 +548,8 @@ void Test_input::run_gamepad()
   if (mode->value() != GAMEPAD)
   {
     mode->set (GAMEPAD);
-    set<C::Simple<Gamepad_info>>("0:0", "gamepad", Gamepad_info());
-    set<C::String>("Gamepad", "id", "0:0");
+    set<C::Simple<Gamepad_info>>("Gamepad(0:0)", "gamepad", Gamepad_info());
+    set<C::String>("Gamepad", "id", "Gamepad(0:0)");
     emit("Input_mode", "changed");
   }
 
