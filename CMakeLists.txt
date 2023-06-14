@@ -354,9 +354,12 @@ function(Sosage_generate_android_tree Is_apk)
   set(SOSAGE_LOCALE_NAME ${SOSAGE_NAME})
   configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_res_values_strings.xml.in"
     "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/values/strings.xml")
-  set(SOSAGE_LOCALE_NAME ${SOSAGE_NAME_FR})
-  configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_res_values_strings.xml.in"
-    "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/values-fr/strings.xml")
+
+  foreach (name IN ZIP_LISTS SOSAGE_LOCALES SOSAGE_LOCALE_NAMES)
+    set(SOSAGE_LOCALE_NAME ${name_1})
+    configure_file("${CMAKE_SOURCE_DIR}/cmake/android/app_src_main_res_values_strings.xml.in"
+      "${CMAKE_BINARY_DIR}/${SOSAGE_ANDROID_ROOT}/app/src/main/res/values-${name_0}/strings.xml")
+  endforeach()
 endfunction()
 
 if (SOSAGE_CONFIG_ANDROID)

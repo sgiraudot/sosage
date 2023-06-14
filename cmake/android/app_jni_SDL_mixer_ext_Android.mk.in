@@ -1,0 +1,26 @@
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := SDL2_mixer
+
+LOCAL_C_INCLUDES := ${SDL2_MIXER_SOURCE_PATH}/include/ \
+                    ${SDL2_MIXER_SOURCE_PATH}/include/SDL_mixer_ext/ \
+                    ${SDL2_MIXER_SOURCE_PATH}/src/ \
+                    ${SDL2_MIXER_SOURCE_PATH}/src/codecs/ \
+                    ${SDL2_SOURCE_PATH}/include
+
+LOCAL_SRC_FILES := $(wildcard ${SDL2_MIXER_SOURCE_PATH}/src/*.c) \
+                   ${SDL2_MIXER_SOURCE_PATH}/src/codecs/music_ogg_stb.c \
+                   ${SDL2_MIXER_SOURCE_PATH}/src/codecs/load_aiff.c \
+                   ${SDL2_MIXER_SOURCE_PATH}/src/codecs/load_voc.c
+
+LOCAL_EXPORT_C_INCLUDES += $(LOCAL_C_INCLUDES)
+
+LOCAL_CFLAGS := \
+  -DMUSIC_OGG \
+  -DOGG_USE_STB
+
+LOCAL_SHARED_LIBRARIES := SDL2
+
+include $(BUILD_SHARED_LIBRARY)

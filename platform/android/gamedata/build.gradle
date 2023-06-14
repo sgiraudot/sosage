@@ -1,0 +1,10 @@
+plugins {
+    id 'com.android.asset-pack'
+}
+
+assetPack {
+    packName = "gamedata"
+    dynamicDelivery {
+        deliveryType = "install-time"
+    }
+}

@@ -2,6 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.5.1 (achievements1)` - TBD
+
+### Release Management
+
+- Handle several languages in Android version
+
 ## `v1.5.0 (achievements)` - 2023-05-23
 
 ### Release Management
