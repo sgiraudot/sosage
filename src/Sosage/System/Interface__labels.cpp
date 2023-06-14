@@ -589,15 +589,16 @@ void Interface::set_action_selector (const Selector_type& type, const std::strin
       ok_value = SOUTH,
       notok_value = EAST;
 
-  if (auto current_gamepad = request<C::String>("Gamepad", "id"))
-  {
-    gamepad = value<C::Simple<Gamepad_info>>(current_gamepad->value(), "gamepad");
-    if (!gamepad.ok_down)
+  if (value<C::Simple<Input_mode>>(INTERFACE__INPUT_MODE) == GAMEPAD)
+    if (auto current_gamepad = request<C::String>("Gamepad", "id"))
     {
-      std::swap (ok_orientation, notok_orientation);
-      std::swap (ok_value, notok_value);
+      gamepad = value<C::Simple<Gamepad_info>>(current_gamepad->value(), "gamepad");
+      if (!gamepad.ok_down)
+      {
+        std::swap (ok_orientation, notok_orientation);
+        std::swap (ok_value, notok_value);
+      }
     }
-  }
 
   auto gamepad_pos = get<C::Position>("Gamepad_action_selector", "position");
   if (type == GP_IDLE)

@@ -187,28 +187,19 @@ void Input::update_mode()
   {
     Input_mode previous_mode = mode->value();
     if (gamepad_used)
-    {
       mode->set (GAMEPAD);
-    }
     else if (touchscreen_used
 #ifdef SOSAGE_DEV
         || m_fake_touchscreen
 #endif
         )
-    {
       mode->set (TOUCHSCREEN);
-      remove ("Gamepad", "id", true);
-    }
     else if (mouse_used)
-    {
       mode->set (MOUSE);
-      remove ("Gamepad", "id", true);
-    }
 
     if (previous_mode != mode->value())
       emit("Input_mode", "changed");
   }
-
 
   if (mode->value() == GAMEPAD)
   {
