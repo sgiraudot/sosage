@@ -11,6 +11,7 @@ History of versions and modifications of the SOSAGE engine.
 ### Bug fixes
 
 - Fix gamepad button disappearing if another mode is momentarily used
+- Add some missing source files
 
 ## `v1.5.0 (achievements)` - 2023-05-23
 
