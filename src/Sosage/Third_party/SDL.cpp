@@ -1017,6 +1017,20 @@ void SDL::draw_line (const int xa, const int ya, const int xb, const int yb,
 #ifndef SOSAGE_GUILESS
   SDL_SetRenderDrawColor(m_renderer, Uint8(red), Uint8(green), Uint8(blue), Uint8(alpha));
   SDL_RenderDrawLine (m_renderer, xa, ya, xb, yb);
+
+  // Draw thick line
+  Point pa = Point (xa, ya);
+  Point pb = Point (xb, yb);
+  Vector director (pa, pb);
+  Vector perpendicular = director.perpendicular();
+  perpendicular.normalize();
+  Point pap = pa + perpendicular;
+  Point pbp = pb + perpendicular;
+  SDL_RenderDrawLineF (m_renderer, pap.x(), pap.y(), pbp.x(), pbp.y());
+  perpendicular = (-1.0) * perpendicular;
+  pap = pa + perpendicular;
+  pbp = pb + perpendicular;
+  SDL_RenderDrawLineF (m_renderer, pap.x(), pap.y(), pbp.x(), pbp.y());
 #endif
 }
 

@@ -214,7 +214,7 @@ void Graphic::run()
         ([&](const Point& point)
         {
           Point p = point - camera;
-          m_core.draw_square (p.X(), p.Y(), 5);
+          m_core.draw_square (p.X(), p.Y(), 10);
         });
 
         ground_map->for_each_edge
@@ -223,7 +223,7 @@ void Graphic::run()
           Point s = source - camera;
           Point t = target - camera;
           m_core.draw_line (s.X(), s.Y(), t.X(), t.Y(),
-                            (border ? 255 : 0), 0, (border ? 0 : 255), 128);
+                            (border ? 255 : 0), 0, (border ? 0 : 255), 192);
         });
 
         for (auto c : components("path"))
@@ -259,7 +259,7 @@ void Graphic::run()
 
       m_core.draw_rectangle (view.X(), view.Y(),
                              2 * reach_factor * Config::object_reach_x, 2 * reach_factor * Config::object_reach_y,
-                             128, 0, 0, 128);
+                             255, 255, 255, 92, true);
     }
 
     if (auto music = request<C::Music>("Game", "music"))

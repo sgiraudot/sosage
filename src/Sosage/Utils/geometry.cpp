@@ -126,6 +126,12 @@ void Vector::normalize()
   *this = Vector(x() / l, y() / l);
 }
 
+Vector Vector::perpendicular() const
+{
+  return Vector(y(), -x());
+}
+
+
 Line::Line (const Point& a, const Point& b)
   : m_reference (a),
     m_direction (a, b)

@@ -185,6 +185,7 @@ public:
   Vector (const Point& p);
   double length() const;
   void normalize();
+  Vector perpendicular() const;
 
   friend std::string to_string(const Vector& v)
   {
