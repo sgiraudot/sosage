@@ -166,7 +166,7 @@ if data["data"]:
         run_cmd("cp -r " + data_folder + "/data " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/config.cmake " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/README.md " + copy_data_dir)
-        run_cmd("zip -r " + output_dir + "/" + appname + "-data.zip " + copy_data_dir)
+        run_cmd("zip -r " + output_dir + "/" + appname + "-data-only.zip " + copy_data_dir)
         chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")
@@ -336,10 +336,10 @@ if data["steam_win"]:
 
 if data["androidapk"] or data["androidaab"]:
     try:
-        print("### BUILDING ANDROID APK")
+        print("### CONFIGURING ANDROID")
         begin = time.perf_counter()
         run_cmd("rm -rf " + android_buildir)
-        run_cmd("mkdir -p " + android_build<ir)
+        run_cmd("mkdir -p " + android_buildir)
         chdir(android_buildir)
         run_cmd(cmake_cmd + " -DSOSAGE_CONFIG_ANDROID:BOOL=True"
                 + " -DSOSAGE_KEYSTORE_ALIAS=" + data["keystore_alias"]
@@ -350,18 +350,28 @@ if data["androidapk"] or data["androidaab"]:
                 + " -DSDL2_TTF_SOURCE_PATH:PATH=" + data["sdl2_ttf_source_path"]
                 + " -DYAML_SOURCE_PATH:PATH=" + data["libyaml_source_path"]
                 + " -DLZ4_SOURCE_PATH:PATH=" + data["lz4_source_path"] + " " + cwd)
+        end = time.perf_counter()
+        print("  -> done in " + str(int(end - begin)) + "s\n")
 
         if not configure_only and data["androidapk"]:
+            print("### BUILDING ANDROID APK")
+            begin = time.perf_counter()
             chdir("android_apk")
             run_cmd("./gradlew assembleDebug --parallel --max-workers=" + str(data["threads"]))
             run_cmd("cp app/build/outputs/apk/debug/*.apk " + output_dir + "/" + appname + "-android.apk")
             chdir("..")
+            end = time.perf_counter()
+            print("  -> done in " + str(int(end - begin)) + "s\n")
         if not configure_only and data["androidaab"]:
+            print("### BUILDING ANDROID AAB")
+            begin = time.perf_counter()
             chdir("android_aab")
             run_cmd("cp " + raw_data_folder + "/*.keystore app/")
             run_cmd("./gradlew bundleRelease --parallel --max-workers=" + str(data["threads"]))
             run_cmd("cp app/build/outputs/bundle/release/*.aab " + output_dir + "/" + appname + "-android.aab")
             chdir("..")
+            end = time.perf_counter()
+            print("  -> done in " + str(int(end - begin)) + "s\n")
         chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")

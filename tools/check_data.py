@@ -27,7 +27,7 @@ def warning(string):
     print("[Warning in " + refname + "] " + string)
 
 def missing_translation(locale, string):
-    return
+#    return
     print("[Missing " + locale + " translation in " + refname + "] " + string)
 
 def load_yaml(filename):
@@ -1107,7 +1107,7 @@ for root, directories, filenames in os.walk(root_folder):
             continue
         if basename in {"locale.yaml", "init.yaml"}:
             continue
-        if ext == ".graph" or "en_US" in basename or ".backup." in basename:
+        if ext == ".graph" or "en_US" in basename or "it_IT" in basename or ".backup." in basename:
             continue
         if fullname not in accessed_files:
             to_clean.append(fullname)
