@@ -2,6 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.5.2 (achievements2)` - 2023-07-10
+
+### Bug fixes
+
+- Avoid crashing if setting state of non-existing object in release mode
+
 ## `v1.5.1 (achievements1)` - 2023-06-14
 
 ### Release Management

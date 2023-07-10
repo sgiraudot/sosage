@@ -75,6 +75,7 @@ steam_win_buildir = data["buildfolder"] + "/steam_win"
 output_dir = data["output"] + "/release-v" + version
 steam_dir = output_dir + "/steam"
 appname = gamename + "-" + version
+dataname = gamename + "-d" + v_data
 configure_only = data["configure_only"]
 
 cmake_cmd = "cmake -DCMAKE_BUILD_TYPE=" + data["build"]
@@ -155,18 +156,18 @@ if data["data"]:
     try:
         print("### BUILDING DATA ZIP")
         begin = time.perf_counter()
-        run_cmd("rm -rf " + output_dir + "/" + appname + "-data.zip")
+        run_cmd("rm -rf " + output_dir + "/" + dataname + "-data.zip")
         run_cmd("rm -rf " + data_dir)
         run_cmd("mkdir -p " + data_dir)
         chdir(data_dir)
-        copy_data_dir = appname + "-data"
+        copy_data_dir = dataname + "-data"
         run_cmd("rm -rf " + copy_data_dir)
         run_cmd("mkdir -p " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/resources " + copy_data_dir)
         run_cmd("cp -r " + data_folder + "/data " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/config.cmake " + copy_data_dir)
         run_cmd("cp -r " + raw_data_folder + "/README.md " + copy_data_dir)
-        run_cmd("zip -r " + output_dir + "/" + appname + "-data-only.zip " + copy_data_dir)
+        run_cmd("zip -r " + output_dir + "/" + dataname + "-data-only.zip " + copy_data_dir)
         chdir(cwd)
         end = time.perf_counter()
         print("  -> done in " + str(int(end - begin)) + "s\n")

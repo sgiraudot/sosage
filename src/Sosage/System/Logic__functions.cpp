@@ -763,7 +763,16 @@ bool Logic::function_set (const std::vector<std::string>& args)
     return true;
   }
 
+#ifdef SOSAGE_RELEASE
+  auto current_state = request<C::String>(target , "state");
+  if (!current_state)
+  {
+    debug << "Warning: setting state for non-existing target \"" + target + "\"" << std::endl;
+    return true;
+  }
+#else
   auto current_state = get<C::String>(target , "state");
+#endif
   std::string state = args[1];
 
   if (args.size() == 3)
