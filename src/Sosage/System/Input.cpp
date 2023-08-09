@@ -274,6 +274,22 @@ void Input::handle_exit_pause_speed (const Event& ev)
     std::cerr << "PAUSE" << std::endl;
   }
 
+#ifdef SOSAGE_DEV
+  if (ev == Event(KEY_DOWN, S)) // Stop
+  {
+    if (status()->is(PAUSED))
+    {
+      status()->pop();
+      std::cerr << "RESUME" << std::endl;
+    }
+    else
+    {
+      status()->push(PAUSED);
+      std::cerr << "PAUSE" << std::endl;
+    }
+  }
+#endif
+
   if (ev == Event(TOUCH_DOWN, LEFT)
 #ifdef SOSAGE_DEV
       || (m_fake_touchscreen && ev == Event(MOUSE_DOWN, LEFT))
