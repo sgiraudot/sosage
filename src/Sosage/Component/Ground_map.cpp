@@ -160,8 +160,10 @@ void Ground_map::build_graph (const std::function<void()>& callback)
   std::set<GVertex, std::function<bool(const GVertex&, const GVertex&)> >
     todo ([&] (const GVertex& a, const GVertex& b) -> bool
           {
-            double da = deviation(a);
-            double db = deviation(b);
+            // Optimizations can trigger GCC Bug 323 on 32bits archs,
+            // forbid optimizations here
+            volatile double da = deviation(a);
+            volatile double db = deviation(b);
             if (da == db)
               return a < b;
             return da < db;
