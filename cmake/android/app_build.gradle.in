@@ -8,14 +8,14 @@ else {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
     ${SOSAGE_ANDROID_ASSETPACK}
     defaultConfig {
         if (buildAsApplication) {
             applicationId "${SOSAGE_EDITOR_EXT}.${SOSAGE_EDITOR_PATH}.${SOSAGE_ACTIVITY}"
         }
         minSdkVersion 16
-        targetSdkVersion 31
+        targetSdkVersion 33
         versionCode ${SOSAGE_VERSION_NUMBER}
         versionName "v${SOSAGE_VERSION_MAJOR}.${SOSAGE_VERSION_MINOR}.${SOSAGE_VERSION_PATCH}-d${SOSAGE_DATA_VERSION}"
         externalNativeBuild {
