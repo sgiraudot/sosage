@@ -2,6 +2,18 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.5.3 (achievements3)` - 2023-08-28
+
+### Release Management
+
+- Comply with new Google Play rules and target API version 33
+
+### Bug fixes
+
+- Workaround for GCC Bug 323 (non-deterministic floating-point
+  operations in optimized 32b mode)
+- Characters not stopping when looking at something
+
 ## `v1.5.2 (achievements2)` - 2023-07-10
 
 ### Bug fixes
