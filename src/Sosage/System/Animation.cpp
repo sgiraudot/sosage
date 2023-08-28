@@ -260,10 +260,15 @@ void Animation::handle_character_lookat (bool in_new_room)
     Vector direction (pbody->value(), lookat->value());
     bool looking_right = (direction.x() > 0);
 
-    if (!in_new_room && looking_right == is_looking_right(id))
+    if (!in_new_room && !value<C::Boolean>(id, "walking")
+        && looking_right == is_looking_right(id))
       continue;
 
+    // If character was moving, stop it
+    remove(id, "path", true);
+
     generate_random_idle_animation (id, looking_right);
+      place_and_scale_character(id);
   }
 }
 
