@@ -120,11 +120,25 @@ void Logic::run ()
   if (receive ("Game", "notify_end_achievements"))
     notify_end_achievements();
 
-  if (status()->is (PAUSED, DIALOG_CHOICE, IN_MENU)
+  if (status()->is (PAUSED, IN_MENU)
       || signal("Game", "reset"))
   {
-    // Keep updating notifications during dialogs
+    // Keep updating notifications during menu/pause
     update_scheduled (get<C::Action>("Notifications", "action"), false);
+
+    SOSAGE_TIMER_STOP(System_Logic__run);
+    return;
+  }
+
+  if (status()->is (DIALOG_CHOICE))
+  {
+    // Keep updating actions during dialog (except action dialog)
+    update_scheduled (get<C::Action>("Notifications", "action"), false);
+    for (auto c : components("action"))
+      if (auto a = C::cast<C::Action>(c))
+        if (c->entity() != "Character" && c->entity() != "Logic")
+          update_scheduled(a, false);
+    run_actions(false);
 
     SOSAGE_TIMER_STOP(System_Logic__run);
     return;
@@ -337,7 +351,7 @@ void Logic::update_scheduled(Component::Action_handle a, bool skip_dialog)
       }
       // else
       auto anim = C::cast<C::Animation>(th.second);
-      if (anim->is_last_frame() || !anim->on())
+      if (anim->is_last_frame())
         return false;
       return true;
     }
