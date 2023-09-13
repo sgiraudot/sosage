@@ -238,10 +238,11 @@ void Logic::reset_all_actions()
 void Logic::cancel_action()
 {
   // Cancel current action
-  if (auto action = request<C::Action>("Character", "action"))
+  auto logic_action = get<C::Action>("Logic", "action");
+  auto action = request<C::Action>("Character", "action");
+  if (action && action != logic_action)
   {
     debug << "Cancel action " << action->str() << std::endl;
-    auto logic_action = get<C::Action>("Logic", "action");
 
     for (const auto& th : action->scheduled())
     {

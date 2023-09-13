@@ -7,6 +7,7 @@ History of versions and modifications of the SOSAGE engine.
 ### Bug fixes
 
 - Looped actions could get stuck after dialog choices
+- Fix last line of dialog not disappear if moving
 
 ## `v1.5.3 (achievements3)` - 2023-08-28
 
