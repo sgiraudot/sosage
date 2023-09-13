@@ -336,7 +336,7 @@ void Logic::update_scheduled(Component::Action_handle a, bool skip_dialog)
       }
       // else
       auto anim = C::cast<C::Animation>(th.second);
-      if (anim->is_last_frame())
+      if (anim->is_last_frame() || !anim->on())
         return false;
       return true;
     }

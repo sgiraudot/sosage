@@ -2,6 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.5.4 (achievements4)` - TBD
+
+### Bug fixes
+
+- Looped actions could get stuck after dialog choices
+
 ## `v1.5.3 (achievements3)` - 2023-08-28
 
 ### Release Management
