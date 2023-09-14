@@ -2,7 +2,7 @@
 
 History of versions and modifications of the SOSAGE engine.
 
-## `v1.5.4 (achievements4)` - TBD
+## `v1.5.4 (achievements4)` - 2023-09-14
 
 ### Bug fixes
 
