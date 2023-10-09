@@ -2,6 +2,12 @@
 
 History of versions and modifications of the SOSAGE engine.
 
+## `v1.5.5 (achievements5)` - 2023-10-09
+
+### Bug fixes
+
+- Fix characters ignoring goto when entering new rooms
+
 ## `v1.5.4 (achievements4)` - 2023-09-14
 
 ### Bug fixes
