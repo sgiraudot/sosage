@@ -271,6 +271,10 @@ bool Logic::function_goto (const std::vector<std::string>& init_args)
       m_current_action->schedule (0, get<C::Path>(id , "path"));
   }
 
+  // Lookat cancels goto, but if both were triggered at the same time (when
+  // entering a room, for example), goto should have priority
+  remove (id, "lookat", true);
+
   return true;
 }
 
